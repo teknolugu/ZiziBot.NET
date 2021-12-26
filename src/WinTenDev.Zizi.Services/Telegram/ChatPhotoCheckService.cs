@@ -28,7 +28,7 @@ public class ChatPhotoCheckService
 
     public async Task<bool> CheckChatPhoto(long chatId, long userId, Func<CallbackAnswer, Task> funcCallbackAnswer = null)
     {
-        var op = Operation.Begin("Check Chat Photo for UserId: {UserId}", userId);
+        var op = Operation.Begin("Check Chat Photo on ChatId {ChatId} for UserId: {UserId}", userId);
         var userProfilePhotos = await _chatService.GetChatPhotoAsync(userId);
         var hasPhoto = userProfilePhotos.TotalCount > 0;
 
