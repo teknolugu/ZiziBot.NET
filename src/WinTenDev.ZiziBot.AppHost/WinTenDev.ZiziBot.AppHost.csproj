@@ -5,7 +5,6 @@
     <PropertyGroup>
         <TargetFramework>net6.0</TargetFramework>
         <LangVersion>latest</LangVersion>
-        <UserSecretsId>24bf453e-4b6c-4b49-a4e5-5175b41fb385</UserSecretsId>
     </PropertyGroup>
 
     <ItemGroup>
@@ -94,18 +93,6 @@
         <None Update="Storage\SQL\**">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
-        <None Remove="Storage\SQL\MySql\word_filter-obs.sql"/>
-        <None Remove="Storage\SQL\MySql\warn_username_history-obs.sql"/>
-        <None Remove="Storage\SQL\MySql\tags-obs.sql"/>
-        <None Remove="Storage\SQL\MySql\stickers-obs.sql"/>
-        <None Remove="Storage\SQL\MySql\spells-obs.sql"/>
-        <None Remove="Storage\SQL\MySql\rss_settings-obs.sql"/>
-        <None Remove="Storage\SQL\MySql\notes-obs.sql"/>
-        <None Remove="Storage\SQL\MySql\media_filters-obs.sql"/>
-        <None Remove="Storage\SQL\MySql\hit_activity-obs.sql"/>
-        <None Remove="Storage\SQL\MySql\group_settings-obs.sql"/>
-        <None Remove="Storage\SQL\MySql\fban_admin-obs.sql"/>
-        <None Remove="Storage\SQL\MySql\fban-obs.sql"/>
     </ItemGroup>
     <ItemGroup>
         <Compile Update="I18n\Lang.Designer.cs">
@@ -132,9 +119,5 @@
         <ProjectReference Include="..\WinTenDev.Zizi.Models\WinTenDev.Zizi.Models.csproj"/>
         <ProjectReference Include="..\WinTenDev.Zizi.Handlers\WinTenDev.Zizi.Handlers.csproj"/>
         <ProjectReference Include="..\WinTenDev.Zizi.Services\WinTenDev.Zizi.Services.csproj"/>
-    </ItemGroup>
-    <ItemGroup>
-        <Folder Include="Sentry\BA7C9BB1526717FAF2754840BE3331498EC769CD"/>
-        <Folder Include="Storage\SQL\MySql"/>
     </ItemGroup>
 </Project>

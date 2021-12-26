@@ -32,6 +32,8 @@ public class NewUpdateHandler : IUpdateHandler
     private readonly WordFilterService _wordFilterService;
 
     private ChatSetting _chatSettings;
+    private long _chatId;
+    private long _fromId;
 
     public NewUpdateHandler(
         ILogger<NewUpdateHandler> logger,
@@ -70,6 +72,9 @@ public class NewUpdateHandler : IUpdateHandler
 
         await _telegramService.AddUpdateContext(context);
 
+        _chatId = _telegramService.ChatId;
+        _fromId = _telegramService.FromId;
+
         _telegramService.IsMessageTooOld();
 
         _chatSettings = await _telegramService.GetChatSetting();
@@ -84,36 +89,9 @@ public class NewUpdateHandler : IUpdateHandler
             return;
         }
 
-        // _logger.LogDebug("Handle stop because check isn't passed on pre-task");
         _logger.LogDebug("Continue to next Handler");
 
-        if (_chatSettings.EnableWarnUsername
-            && _telegramService.IsGroupChat())
-        {
-            _logger.LogDebug("Await next condition 1. is enable Warn Username && is Group Chat..");
-            if (_telegramService.HasUsername || _telegramService.MessageOrEdited.Text == null)
-            {
-                // Next, do what bot should do.
-                _logger.LogDebug("Await next condition on sub condition 1. is has Username || AnyMessageText == null");
-                await next(context, cancellationToken);
-            }
-        }
-        else if (_telegramService.IsPrivateChat)
-        {
-            _logger.LogDebug("Await next condition 2. if private chat");
-            await next(context, cancellationToken);
-        }
-        else
-        {
-            _logger.LogDebug("Await next else condition..");
-            await next(context, cancellationToken);
-        }
-
-        //
-        // if (_telegramService.MessageOrEdited.Text == null)
-        // {
-        //     await next(context, cancellationToken);
-        // }
+        await next(context, cancellationToken);
 
         // Last, do additional task which bot may do
         RunPostTasks();
@@ -121,15 +99,19 @@ public class NewUpdateHandler : IUpdateHandler
 
     private async Task<bool> RunPreTasks()
     {
-        var op = Operation.Begin("Run PreTask");
+        var op = Operation.Begin("Run PreTask for ChatId: {ChatId}", _telegramService.ChatId);
 
-        var hasRestricted = await EnsureChatRestrictionAsync();
+        var hasRestricted = await CheckChatHasRestrictedAsync();
         if (hasRestricted)
         {
             return false;
         }
 
-        await CheckUsernameAsync();
+        var checkUsernameResult = await CheckHasUsernameAsync();
+        if (!checkUsernameResult)
+        {
+            return false;
+        }
 
         var hasAntiSpamCheck = await AntiSpamCheck();
         if (hasAntiSpamCheck.IsAnyBanned)
@@ -137,9 +119,13 @@ public class NewUpdateHandler : IUpdateHandler
             return false;
         }
 
-        await ScanMessageAsync();
+        var isDelete = await ScanMessageAsync();
+        if (isDelete)
+        {
+            return false;
+        }
 
-        var hasPhotoProfile = await CheckPhotoProfileAsync();
+        var hasPhotoProfile = await CheckHasPhotoProfileAsync();
         if (!hasPhotoProfile)
         {
             return false;
@@ -168,10 +154,9 @@ public class NewUpdateHandler : IUpdateHandler
 
     #region Pre Task
 
-    private async Task<bool> EnsureChatRestrictionAsync()
+    private async Task<bool> CheckChatHasRestrictedAsync()
     {
-        var chatId = _telegramService.ChatId;
-        var op = Operation.Begin("Check Chat Restriction on ChatId:'{ChatId}'", chatId);
+        var op = Operation.Begin("Check Chat Restriction on ChatId:'{ChatId}'", _chatId);
         try
         {
             if (_telegramService.IsPrivateChat)
@@ -187,11 +172,11 @@ public class NewUpdateHandler : IUpdateHandler
 
             if (!isRestricted || !globalRestrict) return false;
 
-            _logger.LogWarning("I must leave right now!");
+            _logger.LogWarning("I should leave right now!");
             var msgOut = "Sepertinya saya salah alamat, saya pamit dulu..";
 
             await _telegramService.SendTextMessageAsync(msgOut);
-            await _telegramService.LeaveChat(chatId);
+            await _telegramService.LeaveChat(_chatId);
 
             op.Complete();
             return true;
@@ -221,33 +206,42 @@ public class NewUpdateHandler : IUpdateHandler
         return antiSpamResult;
     }
 
-    private async Task CheckUsernameAsync()
+    private async Task<bool> CheckHasUsernameAsync()
     {
         if (_telegramService.IsPrivateChat)
         {
-            _logger.LogWarning("Warn Username is disabled for Private chat!");
-            return;
+            _logger.LogWarning("Check Username is disabled for Private chat!");
+            return true;
+        }
+
+        if (!_chatSettings.EnableWarnUsername)
+        {
+            _logger.LogWarning("Check Username on ChatId: '{ChatId}' is disabled by settings", _chatId);
+            return true;
+        }
+
+        if (_telegramService.HasUsername)
+        {
+            _logger.LogWarning("Check Username on ChatId: '{ChatId}' should stop because UserId '{UserId}' has Username",
+            _chatId, _fromId);
+
+            return true;
         }
 
         await _telegramService.RunCheckUsername();
+
+        return false;
     }
 
-    private async Task<bool> CheckPhotoProfileAsync()
+    private async Task<bool> CheckHasPhotoProfileAsync()
     {
-        var userId = _telegramService.FromId;
-        var chatId = _telegramService.ChatId;
-
-        var op = Operation.Begin("Check Chat Photo Handler for UserId: {UserId}", userId);
-
-        var checkPhoto = await _chatPhotoCheckService.CheckChatPhoto(chatId, userId,
+        var checkPhoto = await _chatPhotoCheckService.CheckChatPhoto(_chatId, _fromId,
         answer => _telegramService.AnswerCallbackAsync(answer));
-
-        op.Complete();
 
         return checkPhoto;
     }
 
-    private async Task ScanMessageAsync()
+    private async Task<bool> ScanMessageAsync()
     {
         try
         {
@@ -256,7 +250,7 @@ public class NewUpdateHandler : IUpdateHandler
             if (callbackQuery != null)
             {
                 _logger.LogWarning("Look this message is callbackQuery!");
-                return;
+                return false;
             }
 
             var message = _telegramService.MessageOrEdited;
@@ -264,45 +258,46 @@ public class NewUpdateHandler : IUpdateHandler
             if (message == null)
             {
                 _logger.LogInformation("This Message don't contain any Message");
-                return;
+                return false;
             }
 
-            var chatId = _telegramService.ChatId;
             var msgId = message.MessageId;
 
             if (!_chatSettings.EnableWordFilterGroupWide)
             {
-                _logger.LogDebug("Word Filter on {ChatId} is disabled!", chatId);
-                return;
+                _logger.LogDebug("Word Filter on {ChatId} is disabled!", _chatId);
+                return false;
             }
 
             var text = message.Text ?? message.Caption;
             if (text.IsNullOrEmpty())
             {
                 _logger.LogInformation("No message Text for scan..");
+                return false;
             }
-            else
+
+            var result = await _wordFilterService.IsMustDelete(text);
+            var isMustDelete = result.IsSuccess;
+
+            if (isMustDelete) _logger.LogInformation("Starting scan image if available..");
+
+            _logger.LogInformation("Message {MsgId} IsMustDelete: {IsMustDelete}", msgId, isMustDelete);
+
+            if (isMustDelete)
             {
-                var result = await _wordFilterService.IsMustDelete(text);
-                var isMustDelete = result.IsSuccess;
+                _logger.LogDebug("Result: {V}", result.ToJson(true));
+                var note = "Pesan di Obrolan di hapus karena terdeteksi filter Kata.\n" + result.Notes;
+                await _telegramService.SendEventAsync(note);
 
-                if (isMustDelete) _logger.LogInformation("Starting scan image if available..");
-
-                _logger.LogInformation("Message {MsgId} IsMustDelete: {IsMustDelete}", msgId, isMustDelete);
-
-                if (isMustDelete)
-                {
-                    _logger.LogDebug("Result: {V}", result.ToJson(true));
-                    var note = "Pesan di Obrolan di hapus karena terdeteksi filter Kata.\n" + result.Notes;
-                    await _telegramService.SendEventAsync(note);
-
-                    await _telegramService.DeleteAsync(message.MessageId);
-                }
+                await _telegramService.DeleteAsync(message.MessageId);
             }
+
+            return isMustDelete;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error occured when run {V}", nameof(ScanMessageAsync).Humanize());
+            return false;
         }
     }
 
@@ -319,8 +314,6 @@ public class NewUpdateHandler : IUpdateHandler
             _logger.LogInformation("Starting check AFK");
 
             var message = _telegramService.MessageOrEdited;
-            var fromId = _telegramService.FromId;
-            var chatId = _telegramService.ChatId;
 
             if (!_chatSettings.EnableAfkStat)
             {
@@ -351,10 +344,10 @@ public class NewUpdateHandler : IUpdateHandler
                 }
             }
 
-            var fromAfk = await _afkService.GetAfkById(fromId);
+            var fromAfk = await _afkService.GetAfkById(_fromId);
             if (fromAfk == null)
             {
-                _logger.LogDebug("No AFK data for '{FromId}' because never recorded as AFK", fromId);
+                _logger.LogDebug("No AFK data for '{FromId}' because never recorded as AFK", _fromId);
                 return;
             }
 
@@ -367,15 +360,15 @@ public class NewUpdateHandler : IUpdateHandler
 
                 var data = new Dictionary<string, object>
                 {
-                    { "chat_id", chatId },
-                    { "user_id", fromId },
+                    { "chat_id", _chatId },
+                    { "user_id", _fromId },
                     { "is_afk", 0 },
                     { "afk_reason", "" },
                     { "afk_end", DateTime.Now }
                 };
 
                 await _afkService.SaveAsync(data);
-                await _afkService.UpdateAfkByIdCacheAsync(fromId);
+                await _afkService.UpdateAfkByIdCacheAsync(_fromId);
             }
         }
         catch (Exception ex)
@@ -396,11 +389,9 @@ public class NewUpdateHandler : IUpdateHandler
             if (_telegramService.MessageOrEdited == null) return;
 
             var message = _telegramService.MessageOrEdited;
-            var fromId = message.From.Id;
             var fromUsername = message.From.Username;
             var fromFName = message.From.FirstName;
             var fromLName = message.From.LastName;
-            var chatId = message.Chat.Id;
 
             var chatSettings = await _telegramService.GetChatSetting();
             if (!chatSettings.EnableZiziMata)
@@ -414,13 +405,12 @@ public class NewUpdateHandler : IUpdateHandler
 
             _logger.LogInformation("Starting SangMata check..");
 
-            var hitActivityCache = await _mataService.GetMataCore(fromId);
-            // var hitActivity = _telegramService.GetChatCache<HitActivity>(fromId.ToString());
+            var hitActivityCache = await _mataService.GetMataCore(_fromId);
             if (hitActivityCache.IsNull)
             {
-                _logger.LogInformation("This may first Hit from User {V}. In {V1}", fromId, sw.Elapsed);
+                _logger.LogInformation("This may first Hit from User {V}. In {V1}", _fromId, sw.Elapsed);
 
-                await _mataService.SaveMataAsync(fromId, new HitActivity
+                await _mataService.SaveMataAsync(_fromId, new HitActivity
                 {
                     ViaBot = botUser.Username,
                     MessageType = message.Type.ToString(),
@@ -439,13 +429,11 @@ public class NewUpdateHandler : IUpdateHandler
                 return;
             }
 
-            // _logger.LogDebug("ZiziMata: {V}", hitActivity.ToJson(true));
-
             var changesCount = 0;
             var msgBuild = new StringBuilder();
 
             msgBuild.AppendLine("😽 <b>MataZizi</b>");
-            msgBuild.AppendLine($"<b>UserID:</b> {fromId}");
+            msgBuild.AppendLine($"<b>UserID:</b> {_fromId}");
 
             var hitActivity = hitActivityCache.Value;
 
@@ -474,7 +462,7 @@ public class NewUpdateHandler : IUpdateHandler
             {
                 await _telegramService.SendTextMessageAsync(msgBuild.ToString().Trim());
 
-                await _mataService.SaveMataAsync(fromId, new HitActivity
+                await _mataService.SaveMataAsync(_fromId, new HitActivity
                     // _telegramService.SetChatCache(fromId.ToString(), new HitActivity
                     {
                         ViaBot = botUser.Username,
@@ -507,16 +495,15 @@ public class NewUpdateHandler : IUpdateHandler
     private async Task EnsureChatHealthAsync()
     {
         var message = _telegramService.AnyMessage;
-        var chatId = _telegramService.ChatId;
         var chatType = message.Chat.Type.Humanize();
         var fromFullName = _telegramService.From.GetFullName();
         var isBotAdmin = await _telegramService.CheckBotAdmin();
 
-        var op = Operation.Begin("Ensure Chat Settings for ChatId: '{ChatId}'", chatId);
+        var op = Operation.Begin("Ensure Chat Settings for ChatId: '{ChatId}'", _chatId);
 
         var data = new Dictionary<string, object>
         {
-            { "chat_id", chatId },
+            { "chat_id", _chatId },
             { "chat_title", message.Chat.Title ?? fromFullName },
             { "chat_type", chatType },
             { "is_admin", isBotAdmin }
@@ -525,7 +512,7 @@ public class NewUpdateHandler : IUpdateHandler
         var saveSettings = await _settingsService.SaveSettingsAsync(data);
         op.Complete("SaveSettings", saveSettings);
 
-        _logger.LogDebug("Ensure Settings for ChatID: '{ChatId}' result {SaveSettings}", chatId, saveSettings);
+        _logger.LogDebug("Ensure Settings for ChatID: '{ChatId}' result {SaveSettings}", _chatId, saveSettings);
     }
 
     #endregion Post Task
