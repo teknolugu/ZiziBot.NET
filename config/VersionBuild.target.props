@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release'">
+        <MajorNumber>2021</MajorNumber>
+        <MinorNumber>11</MinorNumber>
+        <BuildNumber>$([System.DateTime]::Now.Date.Subtract($([System.DateTime]::Parse("2000-01-01"))).TotalDays)</BuildNumber>
+        <RevNumber>$([System.Math]::Floor($([MSBuild]::Divide($([System.DateTime]::Now.TimeOfDay.TotalSeconds),1.32))))</RevNumber>
+        <VersionNumber>$(MajorNumber).$(MinorNumber).$(BuildNumber).$(RevNumber)</VersionNumber>
+
+        <FileVersion>$(MajorNumber).$(MinorNumber).$(BuildNumber).$(RevNumber)</FileVersion>
+        <Version>$(MajorNumber).$(MinorNumber).$(BuildNumber).$(RevNumber)</Version>
+    </PropertyGroup>
+</Project>

@@ -1,0 +1,28 @@
+﻿using FluentMigrator;
+using WinTenDev.Zizi.DbMigrations.Extensions;
+
+namespace WinTenDev.Zizi.DbMigrations.FluentMigrations;
+
+[Migration(120200603195301)]
+public class CreateTableSpells : Migration
+{
+    private const string TableName = "spells";
+
+    public override void Up()
+    {
+        if (Schema.Table(TableName).Exists()) return;
+
+        Create.Table(TableName)
+            .WithColumn("id").AsInt32().PrimaryKey().Identity()
+            .WithColumn("typo").AsMySqlVarchar(100)
+            .WithColumn("fix").AsMySqlVarchar(100)
+            .WithColumn("from_id").AsInt32()
+            .WithColumn("chat_id").AsInt16()
+            .WithColumn("created_at").AsMySqlTimestamp().WithDefault(SystemMethods.CurrentDateTime);
+    }
+
+    public override void Down()
+    {
+        Delete.Table(TableName);
+    }
+}
