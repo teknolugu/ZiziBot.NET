@@ -83,6 +83,10 @@ public class NewUpdateHandler : IUpdateHandler
 
         // Pre-Task is should be awaited.
         var preTaskResult = await RunPreTasks();
+
+        // Last, do additional task which bot may do
+        RunPostTasks();
+
         if (!preTaskResult)
         {
             _logger.LogDebug("Next handler is ignored because pre-task is not success");
@@ -93,8 +97,6 @@ public class NewUpdateHandler : IUpdateHandler
 
         await next(context, cancellationToken);
 
-        // Last, do additional task which bot may do
-        RunPostTasks();
     }
 
     private async Task<bool> RunPreTasks()
