@@ -129,8 +129,8 @@ public class TelegramService
         IsChatRestricted = CheckRestriction();
         IsPrivateChat = CheckIsChatPrivate();
 
-        MessageOrEditedText = MessageOrEdited.Text;
         AnyMessageText = AnyMessage.Text;
+        MessageOrEditedText = MessageOrEdited?.Text;
         MessageTextParts = MessageOrEditedText?.SplitText(" ")
             .Where(s => s.IsNotNullOrEmpty()).ToArray();
 
