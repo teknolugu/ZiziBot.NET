@@ -635,14 +635,17 @@ public class TelegramService
         return SentMessage;
     }
 
-    public async Task EditMessageCallback(string sendText, InlineKeyboardMarkup replyMarkup = null,
-        bool disableWebPreview = true)
+    public async Task EditMessageCallback(
+        string sendText,
+        InlineKeyboardMarkup replyMarkup = null,
+        bool disableWebPreview = true
+    )
     {
         try
         {
             Log.Information("Editing {CallBackMessageId}", CallBackMessageId);
             await Client.EditMessageTextAsync(
-            Message.Chat,
+            ChatId,
             CallBackMessageId,
             sendText,
             ParseMode.Html,
