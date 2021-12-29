@@ -67,8 +67,12 @@ public class PrivilegeService
     /// <returns></returns>
     public bool IsFromSudo(long userId)
     {
+        bool isSudo = false;
         var sudoers = _restrictionConfig.Sudoers;
-        var isSudo = sudoers.Contains(userId.ToString());
+        if (sudoers != null)
+        {
+            isSudo = sudoers.Contains(userId.ToString());
+        }
 
         Log.Debug("Is UserId '{UserId}' Sudo? '{IsSudo}'", userId, isSudo);
 

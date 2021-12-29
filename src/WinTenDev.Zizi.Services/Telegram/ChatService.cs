@@ -47,6 +47,29 @@ public class ChatService
         _settingsService = settingsService;
     }
 
+    public bool CheckChatRestriction(long chatId)
+    {
+        try
+        {
+            var isRestricted = false;
+            var restrictArea = _restrictionConfig.RestrictionArea;
+            if (restrictArea != null)
+            {
+                var match = restrictArea.FirstOrDefault(x => x == chatId.ToString());
+
+                if (match == null) isRestricted = true;
+            }
+
+            Log.Information("Check Chat restriction result on ChatId: {ChatId}? IsRestricted: {IsRestricted}", chatId, isRestricted);
+            return isRestricted;
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Error when check Chat Restriction on {ChatId}", chatId);
+            return false;
+        }
+    }
+
     /// <summary>
     /// Gets the chat using the specified chat id
     /// </summary>

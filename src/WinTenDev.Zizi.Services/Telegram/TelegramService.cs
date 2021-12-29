@@ -29,7 +29,6 @@ namespace WinTenDev.Zizi.Services.Telegram;
 
 public class TelegramService
 {
-    private readonly AppConfig _appConfig;
     private readonly ChatService _chatService;
     private readonly CommonConfig _commonConfig;
     private readonly BotService _botService;
@@ -76,7 +75,6 @@ public class TelegramService
     public ITelegramBotClient Client { get; private set; }
 
     public TelegramService(
-        AppConfig appConfig,
         ChatService chatService,
         CommonConfig commonConfig,
         BotService botService,
@@ -85,7 +83,6 @@ public class TelegramService
         CheckUsernameService checkUsernameService
     )
     {
-        _appConfig = appConfig;
         _chatService = chatService;
         _commonConfig = commonConfig;
         _botService = botService;
@@ -151,22 +148,7 @@ public class TelegramService
 
     public bool CheckRestriction()
     {
-        try
-        {
-            var isRestricted = false;
-            var restrictArea = _appConfig.RestrictArea;
-            var match = restrictArea.FirstOrDefault(x => x == ChatId.ToString());
-
-            if (match == null) isRestricted = true;
-
-            Log.Information("ChatId: {ChatId} IsRestricted: {IsRestricted}", ChatId, isRestricted);
-            return isRestricted;
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "Error Chat Restriction");
-            return false;
-        }
+        return _chatService.CheckChatRestriction(ChatId);
     }
 
     public async Task<string> GetMentionAdminsStr()
