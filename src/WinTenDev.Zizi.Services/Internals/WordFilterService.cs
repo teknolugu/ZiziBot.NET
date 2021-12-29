@@ -131,7 +131,7 @@ public class WordFilterService
                     var distinctChar = forCompare.DistinctChar();
                     forFilter = forFilter.CleanExceptAlphaNumeric();
                     isShould = forCompare.Contains(forFilter);
-                    Log.Debug("'{ForCompare}' LIKE '{ForFilter}' ? {IsShould}. Global: {IsGlobal}",
+                    Log.Verbose("'{ForCompare}' LIKE '{ForFilter}' ? {IsShould}. Global: {IsGlobal}",
                     forCompare, forFilter, isShould, isGlobal);
 
                     if (!isShould)
