@@ -27,10 +27,6 @@ public static class FileUtil
 
     public static string ReplaceExt(this string fileName, string toExt)
     {
-        // var fileExt = Path.GetExtension(fileName);
-        // var newFile = fileName.Replace(fileExt,toExt);
-        // return newFile;
-
         return Path.ChangeExtension(fileName, toExt);
     }
 
@@ -72,22 +68,14 @@ public static class FileUtil
         return text;
     }
 
-    // public static void WriteText(this string content, string filePath)
-    // {
-    //     var cachePath = BotSettings.PathCache;
-    //
-    //     filePath = $"{cachePath}/{filePath}";
-    //     Log.Information($"Writing content to {filePath}");
-    //
-    //     Path.GetDirectoryName(filePath).EnsureDirectory();
-    //
-    //     File.WriteAllText(filePath, content);
-    //     Log.Information("Writing file success..");
-    // }
-
     public static long FileSize(this string filePath)
     {
-        return new FileInfo(filePath).Length;
+        return filePath.FileInfo().Length;
+    }
+
+    public static FileInfo FileInfo(this string filePath)
+    {
+        return new FileInfo(filePath);
     }
 
     public static bool IsFileExist(this string filePath)
@@ -95,12 +83,21 @@ public static class FileUtil
         return File.Exists(filePath);
     }
 
+    public static bool IsDirExist(this string filePath)
+    {
+        return Directory.Exists(filePath);
+    }
+
     public static IEnumerable<string> EnumerateFiles(
         this string path,
+        string searchPattern = "*",
         bool recursive = false
     )
     {
-        var files = Directory.EnumerateFiles(path);
+        var files = Directory.EnumerateFiles(path, searchPattern, new EnumerationOptions
+        {
+            RecurseSubdirectories = recursive
+        });
 
         return files;
     }
