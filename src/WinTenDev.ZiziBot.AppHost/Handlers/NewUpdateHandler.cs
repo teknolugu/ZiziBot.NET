@@ -238,7 +238,7 @@ public class NewUpdateHandler : IUpdateHandler
     private async Task<bool> CheckHasPhotoProfileAsync()
     {
         var checkPhoto = await _chatPhotoCheckService.CheckChatPhoto(_chatId, _fromId,
-        answer => _telegramService.AnswerCallbackAsync(answer));
+        answer => _telegramService.CallbackAnswerAsync(answer));
 
         return checkPhoto;
     }

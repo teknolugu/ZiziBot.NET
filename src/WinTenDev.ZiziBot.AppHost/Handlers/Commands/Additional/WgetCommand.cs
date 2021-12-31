@@ -60,7 +60,7 @@ public class WgetCommand : CommandBase
         if (param1.IsMegaUrl())
         {
             await _megamapiService.DownloadFileAsync(param1, answer => {
-                return _telegramService.AnswerCallbackAsync(answer);
+                return _telegramService.CallbackAnswerAsync(answer);
             });
         }
         else if (param1.IsUptoboxUrl())

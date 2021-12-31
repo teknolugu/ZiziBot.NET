@@ -1,4 +1,5 @@
 ﻿using System;
+using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 using WinTenDev.Zizi.Models.Enums;
 
@@ -12,4 +13,9 @@ public class CallbackAnswer
     public InlineKeyboardMarkup CallbackAnswerInlineMarkup { get; set; }
     public string CallbackAnswerText { get; set; }
     public TimeSpan MuteMemberTimeSpan { get; set; }
+}
+
+public class CallbackResult
+{
+    public Message UpdatedMessage { get; set; }
 }

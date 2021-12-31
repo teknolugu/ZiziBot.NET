@@ -321,10 +321,13 @@ public class TelegramService
         }
     }
 
-    public async Task AnswerCallbackAsync(CallbackAnswer callbackAnswer)
+    public async Task<CallbackResult> CallbackAnswerAsync(CallbackAnswer callbackAnswer)
     {
+        CallbackResult callbackResult = new();
+
         var answerModes = callbackAnswer.CallbackAnswerModes;
         var answerCallback = callbackAnswer.CallbackAnswerText;
+        var answerReplyMarkup = callbackAnswer.CallbackAnswerInlineMarkup;
         var muteTimeSpan = callbackAnswer.MuteMemberTimeSpan;
 
         await Parallel.ForEachAsync(answerModes, async (answerMode, cancel) =>
@@ -337,12 +340,12 @@ public class TelegramService
                     break;
 
                 case CallbackAnswerMode.SendMessage:
-                    await SendTextMessageAsync(answerCallback);
+                    callbackResult.UpdatedMessage = await SendTextMessageAsync(answerCallback, answerReplyMarkup);
                     break;
 
                 case CallbackAnswerMode.EditMessage:
                     var messageMarkup = callbackAnswer.CallbackAnswerInlineMarkup;
-                    await EditMessageTextAsync(answerCallback, messageMarkup);
+                    callbackResult.UpdatedMessage = await EditMessageTextAsync(answerCallback, messageMarkup);
                     break;
 
                 case CallbackAnswerMode.BanMember:
@@ -352,11 +355,18 @@ public class TelegramService
                     await RestrictMemberAsync(FromId, until: muteTimeSpan.ToDateTime());
                     break;
 
+                case CallbackAnswerMode.DeleteMessage:
+                    var messageId = callbackAnswer.CallbackDeleteMessageId;
+                    await DeleteAsync(messageId);
+                    break;
+
                 default:
                     Log.Debug("No Callback Answer mode for this section. {@V}", answerMode);
                     break;
             }
         });
+
+        return callbackResult;
     }
 
     #endregion Bot
