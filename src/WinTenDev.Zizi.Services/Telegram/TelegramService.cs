@@ -894,6 +894,11 @@ public class TelegramService
         return tgResult;
     }
 
+    public async Task<TelegramResult> UnmuteChatMemberAsync(long userId)
+    {
+        return await RestrictMemberAsync(userId, true);
+    }
+
     #endregion Member
 
     #region Username
