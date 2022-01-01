@@ -24,11 +24,16 @@ public static class NumberUtil
     {
         var sizeD = size.ToDouble();
         return SizeFormat(sizeD, suffix);
-
     }
 
     public static string NumberSeparator(this int number)
     {
         return number.ToString("N0", new CultureInfo("id-ID"));
+    }
+
+    public static int RandomInt(int min = 0, int max = 0)
+    {
+        Random ran = new();
+        return ran.Next(min, max);
     }
 }
