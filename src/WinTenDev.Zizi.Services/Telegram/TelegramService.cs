@@ -235,6 +235,11 @@ public class TelegramService
         return cmd;
     }
 
+    public bool IsCommand(string command)
+    {
+        return GetCommand() == command;
+    }
+
     #endregion Chat
 
     #region Privilege
