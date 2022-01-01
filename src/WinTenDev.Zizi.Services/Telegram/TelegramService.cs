@@ -472,7 +472,8 @@ public class TelegramService
     {
         TimeProc = AnyMessage.Date.GetDelay();
 
-        if (sendText.IsNotNullOrEmpty()) sendText += $"\n\n⏱ <code>{TimeInit} s</code> | ⌛️ <code>{TimeProc} s</code>";
+        if (sendText.IsNotNullOrEmpty() && CallbackQuery == null)
+            sendText += $"\n\n⏱ <code>{TimeInit} s</code> | ⌛️ <code>{TimeProc} s</code>";
 
         var chatTarget = AnyMessage.Chat.Id;
         if (customChatId < -1) chatTarget = customChatId;
