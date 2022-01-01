@@ -56,7 +56,7 @@ public class WordFilterService
         return insert > 0;
     }
 
-    public async Task<IEnumerable<WordFilter>> GetAllWordsOnCloud()
+    public async Task<IEnumerable<WordFilter>> GetWordsListCore()
     {
         Log.Debug("Getting Words from Database");
         var queryFactory = _queryService.CreateMySqlConnection();
@@ -65,10 +65,10 @@ public class WordFilterService
         return wordFilters;
     }
 
-    public async Task<IEnumerable<WordFilter>> GetWords()
+    public async Task<IEnumerable<WordFilter>> GetWordsList()
     {
         var data = await _cacheService.GetOrSetAsync(CacheKey, async () => {
-            var data = await GetAllWordsOnCloud();
+            var data = await GetWordsListCore();
 
             return data;
         });
@@ -78,9 +78,9 @@ public class WordFilterService
 
     public async Task UpdateWordsCache()
     {
-        var data = await GetAllWordsOnCloud();
+        var data = await GetWordsListCore();
 
-        Log.Debug("Updating Cache Words with key {0}", CacheKey);
+        Log.Debug("Updating Cache Words with key {CacheKey}", CacheKey);
 
         await _cachingProvider.SetAsync(CacheKey, data, TimeSpan.FromMinutes(1));
     }
@@ -97,7 +97,7 @@ public class WordFilterService
             return telegramResult;
         }
 
-        var listWords = await GetWords();
+        var listWords = await GetWordsList();
 
         var partedWord = words.Split(
             new[] { '\n', '\r', ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries)
