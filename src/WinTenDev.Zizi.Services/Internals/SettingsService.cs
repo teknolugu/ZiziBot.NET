@@ -69,15 +69,10 @@ public class SettingsService
         Log.Information("Get settings chat {ChatId}", chatId);
         var cacheKey = GetCacheKey(chatId);
 
-        var settings = await _cacheService.GetOrSetAsync<ChatSetting>(cacheKey, async () => {
-            var where = new Dictionary<string, object>
-            {
-                { "chat_id", chatId }
-            };
-
+        var settings = await _cacheService.GetOrSetAsync(cacheKey, async () => {
             var queryFactory = _queryService.CreateMySqlConnection();
             var data = await queryFactory.FromTable(BaseTable)
-                .Where(where)
+                .Where("chat_id", chatId)
                 .FirstOrDefaultAsync<ChatSetting>();
 
             return data ?? new ChatSetting();
