@@ -684,7 +684,7 @@ public class TelegramService
     {
         Thread.Sleep(delay);
 
-        var msgId = messageId != -1 ? messageId : SentMessageId;
+        var msgId = messageId != -1 ? messageId : SentMessage.MessageId;
 
         try
         {
