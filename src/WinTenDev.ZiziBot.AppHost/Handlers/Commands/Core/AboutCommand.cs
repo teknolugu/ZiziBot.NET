@@ -64,13 +64,11 @@ public class AboutCommand : CommandBase
             },
             new[]
             {
-                InlineKeyboardButton.WithUrl("💽 Source Code (.NET)", "https://github.com/WinTenDev/WinTenBot.NET"),
+                InlineKeyboardButton.WithUrl("💽 Source Code (.NET)", "https://github.com/WinTenDev/ZiziBot.NET"),
                 InlineKeyboardButton.WithUrl("🏗 Akmal Projext", "https://t.me/AkmalProjext")
             },
             new[]
             {
-                InlineKeyboardButton.WithUrl("💰 Donate", "https://paypal.me/Azhe403"),
-                InlineKeyboardButton.WithUrl("💰 Dana.ID", "https://link.dana.id/qr/5xcp0ma"),
                 InlineKeyboardButton.WithUrl("💰 Saweria", "https://saweria.co/azhe403")
             }
         });
