@@ -5,6 +5,7 @@ public enum CallbackAnswerMode
     AnswerCallback,
     SendMessage,
     EditMessage,
+    DeleteMessage,
     BanMember,
     MuteMember
 }

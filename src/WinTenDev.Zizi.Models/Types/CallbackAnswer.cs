@@ -12,6 +12,7 @@ public class CallbackAnswer
     public IReplyMarkup CallbackAnswerMarkup { get; set; }
     public InlineKeyboardMarkup CallbackAnswerInlineMarkup { get; set; }
     public string CallbackAnswerText { get; set; }
+    public int CallbackDeleteMessageId { get; set; }
     public TimeSpan MuteMemberTimeSpan { get; set; }
 }
 
