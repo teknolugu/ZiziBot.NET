@@ -477,15 +477,15 @@ public class TelegramService
         bool disableWebPreview = false
     )
     {
-        TimeProc = AnyMessage.Date.GetDelay();
+        TimeProc = MessageDate.GetDelay();
 
         if (sendText.IsNotNullOrEmpty() && CallbackQuery == null)
             sendText += $"\n\n⏱ <code>{TimeInit} s</code> | ⌛️ <code>{TimeProc} s</code>";
 
-        var chatTarget = AnyMessage.Chat.Id;
+        var chatTarget = Chat.Id;
         if (customChatId < -1) chatTarget = customChatId;
 
-        if (replyToMsgId == -1) replyToMsgId = MessageOrEdited.MessageId;
+        if (replyToMsgId == -1) replyToMsgId = AnyMessage?.MessageId ?? -1;
 
         if (sendText.IsNullOrEmpty())
         {
@@ -604,7 +604,7 @@ public class TelegramService
     public async Task<Message> EditMessageTextAsync(string sendText, InlineKeyboardMarkup replyMarkup = null,
         bool disableWebPreview = true)
     {
-        TimeProc = Message.Date.GetDelay();
+        TimeProc = MessageDate.GetDelay();
 
         if (sendText.IsNotNullOrEmpty()) sendText += $"\n\n⏱ <code>{TimeInit} s</code> | ⌛️ <code>{TimeProc} s</code>";
 
