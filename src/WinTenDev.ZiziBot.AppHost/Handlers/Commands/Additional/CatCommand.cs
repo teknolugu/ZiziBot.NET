@@ -1,46 +1,29 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading;
+using System.Linq;
 using System.Threading.Tasks;
 using Flurl.Http;
 using Nito.AsyncEx;
 using Serilog;
 using Telegram.Bot.Framework.Abstractions;
 using Telegram.Bot.Types;
-using Telegram.Bot.Types.Enums;
 using WinTenDev.Zizi.Models.Types;
 using WinTenDev.Zizi.Services.Telegram;
 using WinTenDev.Zizi.Utils;
-using File=System.IO.File;
 
 namespace WinTenDev.ZiziBot.AppHost.Handlers.Commands.Additional;
 
-/// <summary>
-/// Get Kochenk (cat) single or many by param.<br/>
-/// Ex: <c>/cat</c> or <c>/cat 5</c>
-/// </summary>
 public class CatCommand : CommandBase
 {
     private readonly TelegramService _telegramService;
     private const string CatSource = "https://aws.random.cat/meow";
 
-    /// <summary>
-    /// CatCommand constructor
-    /// </summary>
-    /// <param name="telegramService"></param>
     public CatCommand(TelegramService telegramService)
     {
         _telegramService = telegramService;
     }
 
-    /// <summary>
-    /// Handle CatCommand
-    /// </summary>
-    /// <param name="context"></param>
-    /// <param name="next"></param>
-    /// <param name="args"></param>
-    /// <param name="cancellationToken"></param>
     public override async Task HandleAsync(
         IUpdateContext context,
         UpdateDelegate next,
@@ -52,25 +35,33 @@ public class CatCommand : CommandBase
         var message = _telegramService.Message;
         var partsText = message.Text.SplitText(" ").ToArray();
         var catNum = 1;
-        var param1 = partsText.ValueOfIndex(1);
+        var param1 = partsText.ElementAtOrDefault(1);
 
-        if (param1.IsNotNullOrEmpty())
+        if (_telegramService.IsCommand("/cats"))
         {
-            if (!param1.IsNumeric())
+            catNum = NumberUtil.RandomInt(1, 10);
+        }
+        else
+        {
+            try
+            {
+                if (param1.IsNotNullOrEmpty())
+                {
+                    catNum = param1.ToInt();
+                }
+            }
+            catch (Exception e)
             {
                 await _telegramService.SendTextMessageAsync("Pastikan jumlah kochenk yang diminta berupa angka.");
-
                 return;
             }
+        }
 
-            catNum = param1.ToInt();
+        if (catNum > 10)
+        {
+            await _telegramService.SendTextMessageAsync("Berdasarkan Bot API, Batas maksimal Kochenk yg dapat di minta adalah 10.");
 
-            if (catNum > 10)
-            {
-                await _telegramService.SendTextMessageAsync("Berdasarkan Bot API, Batas maksimal Kochenk yg dapat di minta adalah 10.");
-
-                return;
-            }
+            return;
         }
 
         PrepareKochenk(catNum).Ignore();
@@ -92,21 +83,14 @@ public class CatCommand : CommandBase
             Log.Debug("Adding kochenk {UrlFile}", urlFile);
 
             var fileName = Path.GetFileName(urlFile);
-            var timeStamp = DateTime.UtcNow.ToString("yyyy-MM-dd");
-            var uniqueId = StringUtil.GenerateUniqueId(5);
-            var saveName = Path.Combine("Cats", $"kochenk_{timeStamp}_{uniqueId}_{fileName}");
-            var savedPath = urlFile.SaveToCache(saveName);
 
-            var fileStream = File.OpenRead(savedPath);
-
-            var inputMediaPhoto = new InputMediaPhoto(new InputMedia(fileStream, fileName))
+            listAlbum.Add(new InputMediaPhoto(new InputMedia(urlFile)
             {
-                Caption = $"Kochenk {i}",
-                ParseMode = ParseMode.Html
-            };
-            listAlbum.Add(inputMediaPhoto);
-
-            Thread.Sleep(100);
+                FileName = fileName
+            })
+            {
+                Caption = $"Kochenk {i}"
+            });
         }
 
         await _telegramService.DeleteAsync();
