@@ -63,6 +63,8 @@ public class TelegramService
     public User From { get; set; }
     public Chat Chat { get; set; }
 
+    public DateTime MessageDate { get; set; }
+
     public Message AnyMessage { get; set; }
     public Message Message { get; set; }
     public Message EditedMessage { get; set; }
@@ -72,7 +74,9 @@ public class TelegramService
     public Message CallbackMessage { get; set; }
     public CallbackQuery CallbackQuery { get; set; }
     public IUpdateContext Context { get; private set; }
+    public Update Update { get; private set; }
     public ITelegramBotClient Client { get; private set; }
+    public ChatMemberUpdated MyChatMember { get; set; }
 
     public TelegramService(
         ChatService chatService,
@@ -96,9 +100,11 @@ public class TelegramService
         var op = Operation.Begin("Add context for '{ChatId}'", ChatId);
 
         Context = updateContext;
+        Update = updateContext.Update;
         Client = updateContext.Bot.Client;
 
         CallbackQuery = updateContext.Update.CallbackQuery;
+        MyChatMember = updateContext.Update.MyChatMember;
 
         Message = updateContext.Update.Message;
         EditedMessage = updateContext.Update.EditedMessage;
@@ -108,12 +114,13 @@ public class TelegramService
         ReplyToMessage = MessageOrEdited?.ReplyToMessage;
         AnyMessage = CallbackMessage ?? Message ?? EditedMessage;
 
-        TimeInit = Message?.Date.GetDelay();
-
         ReplyFromId = ReplyToMessage?.From?.Id ?? 0;
 
-        From = CallbackQuery?.From ?? MessageOrEdited?.From;
-        Chat = CallbackQuery?.Message?.Chat ?? MessageOrEdited?.Chat;
+        From = MyChatMember?.From ?? CallbackQuery?.From ?? MessageOrEdited?.From;
+        Chat = MyChatMember?.Chat ?? CallbackQuery?.Message?.Chat ?? MessageOrEdited?.Chat;
+        MessageDate = MyChatMember?.Date ?? CallbackQuery?.Message?.Date ?? MessageOrEdited?.Date ?? DateTime.Now;
+
+        TimeInit = MessageDate.GetDelay();
 
         FromId = From?.Id ?? 0;
         ChatId = Chat?.Id ?? 0;
@@ -126,7 +133,7 @@ public class TelegramService
         IsChatRestricted = CheckRestriction();
         IsPrivateChat = CheckIsChatPrivate();
 
-        AnyMessageText = AnyMessage.Text;
+        AnyMessageText = AnyMessage?.Text;
         MessageOrEditedText = MessageOrEdited?.Text;
         MessageTextParts = MessageOrEditedText?.SplitText(" ")
             .Where(s => s.IsNotNullOrEmpty()).ToArray();
