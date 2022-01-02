@@ -89,7 +89,8 @@ public static class ErrorUtil
             "replied message not found",
             "message to edit not found",
             "message to delete not found",
-            "identifier is not specified"
+            "identifier is not specified",
+            "bot is not a member"
         }, StringComparison.CurrentCultureIgnoreCase);
     }
 
