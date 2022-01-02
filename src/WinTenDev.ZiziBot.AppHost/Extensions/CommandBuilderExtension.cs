@@ -61,6 +61,7 @@ public static class CommandBuilderExtension
                             .UseCommand<BanCommand>("ban")
                             .UseCommand<BotCommand>("bot")
                             .UseCommand<CatCommand>("cat")
+                            .UseCommand<CatCommand>("cats")
                             .UseCommand<CheckResiCommand>("resi")
                             .UseCommand<CovidCommand>("covid")
                             .UseCommand<DebugCommand>("dbg")
