@@ -496,8 +496,8 @@ public class NewUpdateHandler : IUpdateHandler
 
     private async Task EnsureChatHealthAsync()
     {
-        var message = _telegramService.AnyMessage;
-        var chatType = message.Chat.Type.Humanize();
+        var chat = _telegramService.Chat;
+        var chatType = chat.Type.Humanize();
         var fromFullName = _telegramService.From.GetFullName();
         var isBotAdmin = await _telegramService.CheckBotAdmin();
 
@@ -506,7 +506,7 @@ public class NewUpdateHandler : IUpdateHandler
         var data = new Dictionary<string, object>
         {
             { "chat_id", _chatId },
-            { "chat_title", message.Chat.Title ?? fromFullName },
+            { "chat_title", chat.Title ?? fromFullName },
             { "chat_type", chatType },
             { "is_admin", isBotAdmin }
         };
