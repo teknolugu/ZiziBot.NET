@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using SerilogTimings;
 using Telegram.Bot;
@@ -23,18 +24,15 @@ internal class PingHandler : IUpdateHandler
 
         await _telegramService.AddUpdateContext(context);
 
-        var msg = context.Update.Message;
-
-        var keyboard = new InlineKeyboardMarkup(
-        InlineKeyboardButton.WithCallbackData("Ping", "PONG")
-        );
+        var keyboard = new InlineKeyboardMarkup(InlineKeyboardButton.WithCallbackData("Ping", "PONG"));
 
         var sendText = "ℹ️ Pong!!";
         var isSudoer = _telegramService.IsFromSudo;
 
         if (_telegramService.IsPrivateChat && isSudoer)
         {
-            sendText += "\n🎛 <b>Engine info.</b>";
+            sendText += $"\n🕔 <code>{DateTime.Now}</code>" +
+                        "\n🎛 <b>Engine info.</b>";
             var getWebHookInfo = await _telegramService.Client.GetWebhookInfoAsync();
             if (string.IsNullOrEmpty(getWebHookInfo.Url))
             {
