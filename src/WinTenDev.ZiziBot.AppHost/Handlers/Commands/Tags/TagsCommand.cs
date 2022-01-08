@@ -2,6 +2,7 @@
 using System.Text;
 using System.Threading.Tasks;
 using Serilog;
+using SerilogTimings;
 using Telegram.Bot.Framework.Abstractions;
 using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Services.Telegram;
@@ -30,33 +31,48 @@ public class TagsCommand : CommandBase
     {
         await _telegramService.AddUpdateContext(context);
         var chatId = _telegramService.ChatId;
-        var msg = context.Update.Message;
-
-        var sendText = "Under maintenance";
+        var op = Operation.Begin("/tags command on ChatId {ChatId}", chatId);
+        var msg = _telegramService.Message;
 
         await _telegramService.DeleteAsync(msg.MessageId);
-        await _telegramService.SendTextMessageAsync("🔄 Loading tags..");
-        var tagsData = (await _tagsService.GetTagsByGroupAsync(chatId)).ToList();
-        var tagsStr = new StringBuilder();
+        var sentMessage = await _telegramService.SendTextMessageAsync("🔄 Loading tags..", replyToMsgId: 0);
+        var tagsData = await _tagsService.GetTagsByGroupAsync(chatId);
 
-        foreach (var tag in tagsData)
+        if (!tagsData.Any())
         {
-            tagsStr.Append($"#{tag.Tag} ");
+            await _telegramService.EditMessageTextAsync("Sepertinya belum ada Tags di obrolan ini.");
+            await DeletePrevTagsList(sentMessage.MessageId);
+            op.Complete();
+
+            return;
         }
 
-        sendText = $"#️⃣<b> {tagsData.Count} Tags</b>\n" +
-                   $"\n{tagsStr.ToTrimmedString()}";
+        Log.Debug("Building Tags message for ChatId: '{ChatId}'", chatId);
+        var tagsStr = new StringBuilder();
+        foreach (var tag in tagsData)
+        {
+            tagsStr.Append('#').Append(tag.Tag).Append(' ');
+        }
+
+        var sendText = $"#️⃣<b> {tagsData.Count()} Tags</b>\n" +
+                       $"\n{tagsStr.ToTrimmedString()}";
 
         await _telegramService.EditMessageTextAsync(sendText);
+        await DeletePrevTagsList(sentMessage.MessageId);
+        op.Complete();
+    }
 
+    private async Task DeletePrevTagsList(long messageId)
+    {
+        var chatId = _telegramService.ChatId;
         var currentSetting = await _settingsService.GetSettingsByGroup(chatId);
         var lastTagsMsgId = currentSetting.LastTagsMessageId;
-        Log.Information("LastTagsMsgId: {LastTagsMsgId}", lastTagsMsgId);
 
         if (lastTagsMsgId.ToInt() > 0)
             await _telegramService.DeleteAsync(lastTagsMsgId.ToInt());
 
-        await _tagsService.UpdateCacheAsync(chatId);
-        await _settingsService.UpdateCell(chatId, "last_tags_message_id", _telegramService.SentMessageId);
+        Log.Information("LastTagsMsgId: {LastTagsMsgId}", lastTagsMsgId);
+
+        await _settingsService.UpdateCell(chatId, "last_tags_message_id", messageId);
     }
 }
