@@ -18,6 +18,8 @@ public class CacheService
     private readonly ILogger<CacheService> _logger;
     private readonly CacheStack _cacheStack;
     private readonly CacheSettings _cacheSettings;
+    private readonly int _expireAfter;
+    private readonly int _staleAfter;
 
     public CacheService(
         IOptionsSnapshot<CacheConfig> cachingConfig,
@@ -31,8 +33,8 @@ public class CacheService
         _logger = logger;
         _cacheStack = cacheStack;
 
-        var (expireAfter, staleAfter) = cachingConfig.Value;
-        _cacheSettings = new CacheSettings(TimeSpan.FromMinutes(expireAfter), TimeSpan.FromMinutes(staleAfter));
+        (_expireAfter, _staleAfter) = cachingConfig.Value;
+        _cacheSettings = new CacheSettings(TimeSpan.FromMinutes(_expireAfter), TimeSpan.FromMinutes(_staleAfter));
     }
 
     /// <summary>
@@ -92,14 +94,14 @@ public class CacheService
     public async Task<T> SetAsync<T>(string cacheKey, Func<Task<T>> action)
     {
         var data = await action();
-        var cache = await _cacheStack.SetAsync(cacheKey, data, TimeSpan.FromMinutes(10));
+        var cache = await _cacheStack.SetAsync(cacheKey, data, TimeSpan.FromMinutes(_expireAfter));
 
         return cache.Value;
     }
 
     public async Task<T> SetAsync<T>(string cacheKey, T data)
     {
-        var cache = await _cacheStack.SetAsync(cacheKey, data, TimeSpan.FromMinutes(10));
+        var cache = await _cacheStack.SetAsync(cacheKey, data, TimeSpan.FromMinutes(_expireAfter));
 
         return cache.Value;
     }
