@@ -59,13 +59,15 @@ public static class DirUtil
         return Path.GetDirectoryName(path) ?? path;
     }
 
-    public static void RemoveFiles(this string path, string filter)
+    public static string RemoveFiles(this string path, string filter = "")
     {
         Log.Information("Deleting files in {Path}", path);
         var files = Directory.GetFiles(path)
             .Where(file => file.Contains(filter, StringComparison.CurrentCulture));
 
         foreach (var file in files) File.Delete(file);
+
+        return path;
     }
 
     public static bool IsDirectory(this string path)
