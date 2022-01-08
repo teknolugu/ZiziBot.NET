@@ -10,6 +10,7 @@ using SpamWatch.Types;
 using WinTenDev.Zizi.Models.Configs;
 using WinTenDev.Zizi.Models.Types;
 using WinTenDev.Zizi.Models.Validators;
+using WinTenDev.Zizi.Services.Telegram;
 using WinTenDev.Zizi.Utils;
 
 namespace WinTenDev.Zizi.Services.Internals;
@@ -20,6 +21,7 @@ namespace WinTenDev.Zizi.Services.Internals;
 public class AntiSpamService
 {
     private readonly CacheService _cacheService;
+    private readonly ChatService _chatService;
     private readonly GlobalBanService _globalBanService;
     private readonly SpamWatchConfig _spamWatchConfig;
 
@@ -28,15 +30,18 @@ public class AntiSpamService
     /// </summary>
     /// <param name="spamWatchConfig"></param>
     /// <param name="cacheService"></param>
+    /// <param name="chatService"></param>
     /// <param name="globalBanService">The global ban service.</param>
     public AntiSpamService(
         IOptionsSnapshot<SpamWatchConfig> spamWatchConfig,
         CacheService cacheService,
+        ChatService chatService,
         GlobalBanService globalBanService
     )
     {
         _spamWatchConfig = spamWatchConfig.Value;
         _cacheService = cacheService;
+        _chatService = chatService;
         _globalBanService = globalBanService;
     }
 
@@ -48,6 +53,18 @@ public class AntiSpamService
     /// <returns>A Task.</returns>
     public async Task<AntiSpamResult> CheckSpam(long userId, Func<AntiSpamResult, Task> funcAntiSpamResult = null)
     {
+        var spamResult = new AntiSpamResult
+        {
+            UserId = userId
+        };
+
+        var isIgnored = _chatService.CheckUserIdIgnored(userId);
+
+        if (isIgnored)
+        {
+            return spamResult;
+        }
+
         var spamWatchTask = CheckSpamWatch(userId);
         var casBanTask = CheckCasBan(userId);
         var gBanTask = CheckEs2Ban(userId);
@@ -58,11 +75,6 @@ public class AntiSpamService
         var casBan = casBanTask.Result;
         var es2Ban = gBanTask.Result;
         var anyBan = swBan || casBan || es2Ban;
-
-        var spamResult = new AntiSpamResult
-        {
-            UserId = userId
-        };
 
         if (!anyBan)
         {

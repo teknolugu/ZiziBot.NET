@@ -9,4 +9,6 @@ public class RestrictionConfig
     public string[] RestrictionArea { get; set; }
 
     public List<string> Sudoers { get; set; }
+
+    public List<long> IgnoredIds { get; set; }
 }

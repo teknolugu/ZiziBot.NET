@@ -33,7 +33,8 @@ public class ChatService
     /// <param name="restrictionConfig">The</param>
     /// <param name="botClient">The bot client</param>
     /// <param name="settingsService">The settings service</param>
-    public ChatService(CacheService cacheService,
+    public ChatService(
+        CacheService cacheService,
         IOptionsSnapshot<CacheConfig> cachingConfig,
         IOptionsSnapshot<RestrictionConfig> restrictionConfig,
         TelegramBotClient botClient,
@@ -66,6 +67,28 @@ public class ChatService
         catch (Exception ex)
         {
             Log.Error(ex, "Error when check Chat Restriction on {ChatId}", chatId);
+            return false;
+        }
+    }
+
+    public bool CheckUserIdIgnored(long userId)
+    {
+        try
+        {
+            var ignored = false;
+            var ignoredIds = _restrictionConfig.IgnoredIds;
+            if (ignoredIds == null) return false;
+
+            var find = ignoredIds.FirstOrDefault(l => l == userId);
+            if (find != 0) ignored = true;
+
+            Log.Information("Check UserId {UserId} is ignored at Global Ignore ID? {Ignored}", userId, ignored);
+
+            return ignored;
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Error when check Ignore for UserId {UserId}", userId);
             return false;
         }
     }
