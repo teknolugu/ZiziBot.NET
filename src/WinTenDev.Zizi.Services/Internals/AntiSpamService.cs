@@ -135,7 +135,6 @@ public class AntiSpamService
         var op = Operation.Begin("AntiSpam - SpamWatch check for UserId: {UserId}", userId);
         var cacheKey = $"ban-sw_{userId}";
 
-        var isBan = false;
         var isEnabled = _spamWatchConfig.IsEnabled;
         var baseUrl = _spamWatchConfig.BaseUrl;
         var apiToken = _spamWatchConfig.ApiToken;
@@ -148,8 +147,8 @@ public class AntiSpamService
             return false;
         }
 
-        var isValid = _spamWatchConfig.Validate<SpamWatchConfigValidator, SpamWatchConfig>().IsValid;
-        if (!isValid)
+        var validate = await _spamWatchConfig.ValidateAsync<SpamWatchConfigValidator, SpamWatchConfig>();
+        if (!validate.IsValid)
         {
             Log.Warning("SpamWatch is disabled because not properly configured");
             op.Complete();
@@ -157,58 +156,60 @@ public class AntiSpamService
             return false;
         }
 
-        try
-        {
-            var check = await _cacheService.GetOrSetAsync(cacheKey, async () => {
+        var check = await _cacheService.GetOrSetAsync(cacheKey, async () => {
+            var isBan = false;
+
+            try
+            {
                 var check = await baseUrl
                     .AppendPathSegment("banlist")
                     .AppendPathSegment(userId)
                     .WithOAuthBearerToken(apiToken)
                     .GetJsonAsync<Ban>();
 
-                return check;
-            });
-
-            isBan = check.Reason.IsNotNullOrEmpty();
-            Log.Debug("SpamWatch Result: {@V}", check);
-        }
-        catch (FlurlHttpException ex)
-        {
-            if (ex.Message.Contains("timeout", StringComparison.CurrentCultureIgnoreCase))
-            {
-                isBan = false;
+                isBan = check.Reason.IsNotNullOrEmpty();
+                Log.Debug("SpamWatch Result: {@V}", check);
             }
-            else
+            catch (FlurlHttpException ex)
             {
-                var callHttpStatus = ex.Call.HttpResponseMessage.StatusCode;
-
-                // ReSharper disable once SwitchStatementHandlesSomeKnownEnumValuesWithDefault
-                switch (callHttpStatus)
+                if (ex.Message.Contains("timeout", StringComparison.CurrentCultureIgnoreCase))
                 {
-                    case HttpStatusCode.NotFound:
-                        isBan = false;
-                        break;
+                    isBan = false;
+                }
+                else
+                {
+                    var callHttpStatus = ex.Call.HttpResponseMessage.StatusCode;
 
-                    case HttpStatusCode.Unauthorized:
-                        Log.Warning("Please check your SpamWatch API Token!");
-                        Log.Error(ex, "SpamWatch Exception");
-                        break;
+                    // ReSharper disable once SwitchStatementHandlesSomeKnownEnumValuesWithDefault
+                    switch (callHttpStatus)
+                    {
+                        case HttpStatusCode.NotFound:
+                            isBan = false;
+                            break;
 
-                    default:
-                        Log.Error(ex, "SpamWatch - Unknown call status");
-                        break;
+                        case HttpStatusCode.Unauthorized:
+                            Log.Warning("Please check your SpamWatch API Token!");
+                            Log.Error(ex, "SpamWatch Exception");
+                            break;
+
+                        default:
+                            Log.Error(ex, "SpamWatch - Unknown call status");
+                            break;
+                    }
                 }
             }
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "SpamWatch Exception");
-        }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "SpamWatch Exception");
+            }
 
-        Log.Debug("SpamWatch result for UserId: '{UserId}' ? '{IsBan}'", userId, isBan);
+            return isBan;
+        });
+
+        Log.Debug("SpamWatch result for UserId: '{UserId}' ? '{IsBan}'", userId, check);
         op.Complete();
 
-        return isBan;
+        return check;
     }
 
     /// <summary>
