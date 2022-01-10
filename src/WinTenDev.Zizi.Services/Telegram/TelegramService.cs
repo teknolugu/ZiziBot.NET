@@ -216,6 +216,7 @@ public class TelegramService
         return chatAdmin;
     }
 
+    [Obsolete("Please use separated method IsAdminAsync() and property IsPrivateChat instead of this method")]
     public async Task<bool> IsAdminOrPrivateChat()
     {
         var adminOrPrivateChat = await _privilegeService.IsAdminOrPrivateChat(ChatId, FromId);

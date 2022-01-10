@@ -117,6 +117,7 @@ public class PrivilegeService
         return isBotAdmin;
     }
 
+    [Obsolete("Please use separated method IsAdminAsync() and property IsPrivateChat instead of this method.")]
     public async Task<bool> IsAdminOrPrivateChat(long chatId, long userId)
     {
         var isPrivate = await _chatService.IsPrivateChat(chatId);
