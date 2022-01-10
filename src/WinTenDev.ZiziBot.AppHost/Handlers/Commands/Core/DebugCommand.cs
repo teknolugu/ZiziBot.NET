@@ -1,5 +1,5 @@
-﻿using System.Threading.Tasks;
-using Serilog;
+﻿using System.Linq;
+using System.Threading.Tasks;
 using Telegram.Bot.Framework.Abstractions;
 using WinTenDev.Zizi.Services.Telegram;
 using WinTenDev.Zizi.Utils.Text;
@@ -15,17 +15,25 @@ public class DebugCommand : CommandBase
         _telegramService = telegramService;
     }
 
-    public override async Task HandleAsync(IUpdateContext context, UpdateDelegate next, string[] args)
+    public override async Task HandleAsync(
+        IUpdateContext context,
+        UpdateDelegate next,
+        string[] args
+    )
     {
         await _telegramService.AddUpdateContext(context);
 
         var msg = _telegramService.AnyMessage;
-        var json = msg.ToJson(true);
+        var param1 = _telegramService.MessageTextParts.ElementAtOrDefault(1);
 
-        Log.Information("Debug: {0}", json.Length.ToString());
+        var debug = param1 switch
+        {
+            "json" => msg.ToJson(true),
+            _ => msg.ToYaml().HtmlDecode()
+        };
 
         var sendText = $"Debug:\n" +
-                       $"<code>{json}</code>";
+                       $"<code>{debug}</code>";
         await _telegramService.SendTextMessageAsync(sendText);
     }
 }

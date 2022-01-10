@@ -4,7 +4,6 @@ using Newtonsoft.Json.Linq;
 using Serilog;
 using WinTenDev.Zizi.Models.JsonSettings;
 using WinTenDev.Zizi.Utils.IO;
-using YamlConvert;
 using YamlDotNet.Serialization;
 
 namespace WinTenDev.Zizi.Utils.Text;
@@ -13,7 +12,11 @@ public static class JsonUtil
 {
     private static readonly string workingDir = "Storage/Caches";
 
-    public static string ToJson<T>(this T data, bool indented = false, bool followProperty = false)
+    public static string ToJson<T>(
+        this T data,
+        bool indented = false,
+        bool followProperty = false
+    )
     {
         var serializerSetting = new JsonSerializerSettings();
 
@@ -35,14 +38,30 @@ public static class JsonUtil
 
     public static string JsonToYaml(this string json)
     {
-        var serializer = new SerializerBuilder()
-            .WithTypeConverter(new JTokenYamlConverter())
-            .Build();
+        var obj = json.MapObject<dynamic>();
 
-        return YamlConvert.YamlConvert.SerializeObject(json, serializer);
+        var yaml = obj.ToYaml();
+
+        return yaml;
     }
 
-    public static async Task<string> WriteToFileAsync<T>(this T data, string fileJson, bool indented = true)
+    public static string ToYaml(this object obj)
+    {
+        var serializer = new SerializerBuilder()
+            .ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitNull)
+            .Build();
+
+        var yaml = serializer.Serialize(obj)
+            .Trim();
+
+        return yaml;
+    }
+
+    public static async Task<string> WriteToFileAsync<T>(
+        this T data,
+        string fileJson,
+        bool indented = true
+    )
     {
         var filePath = $"{workingDir}/{fileJson}".EnsureDirectory();
         var json = data.ToJson(indented);
