@@ -32,16 +32,18 @@ public class TagCommand : CommandBase
         var msg = _telegramService.Message;
         var chatId = _telegramService.ChatId;
         var fromId = _telegramService.FromId;
-        var isSudoer = _telegramService.IsFromSudo;
-        var isAdmin = await _telegramService.IsAdminOrPrivateChat();
-        var sendText = "Hanya admin yang bisa membuat Tag";
+        var sendText = "Hanya Admin Grup yang dapat membuat Tag";
 
         var cmd = _telegramService.GetCommand();
         var isForceTag = cmd.Contains("/retag");
 
-        if (!isSudoer && !isAdmin)
+        if (
+            !_telegramService.IsFromSudo &&
+            !_telegramService.IsPrivateChat &&
+            !await _telegramService.CheckFromAdmin() &&
+            !_telegramService.CheckFromAnonymous()
+        )
         {
-            // await _telegramService.DeleteAsync(msg.MessageId);
             await _telegramService.SendTextMessageAsync(sendText);
             Log.Information("This User is not Admin or Sudo!");
             return;
@@ -50,10 +52,12 @@ public class TagCommand : CommandBase
         sendText = "ℹ Simpan tag ke Cloud Tags" +
                    "\nContoh: <code>/tag tagnya [tombol|link.tombol]</code> - Reply pesan" +
                    "\nPanjang tag minimal 3 karakter." +
-                   "\nTanda [ ] artinya tidak harus" +
-                   "\n" +
-                   "\n📝 <i>Jika untuk grup, di rekomendasikan membuat sebuah channel, " +
-                   "lalu link ke post di tautkan sebagai tombol.</i>";
+                   "\nTanda [ ] artinya tidak harus";
+
+        if (_telegramService.IsGroupChat)
+            sendText += "\n" +
+                        "\n📝 <i>Jika untuk grup, di rekomendasikan membuat sebuah channel, " +
+                        "lalu link ke post di Channel di tautkan sebagai tombol/link.</i>";
 
         if (msg.ReplyToMessage == null)
         {

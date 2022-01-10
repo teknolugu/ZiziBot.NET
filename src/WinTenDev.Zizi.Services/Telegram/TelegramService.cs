@@ -40,6 +40,7 @@ public class TelegramService
     public bool HasUsername { get; private set; }
     public bool IsFromSudo { get; private set; }
     public bool IsPrivateChat { get; set; }
+    public bool IsGroupChat { get; set; }
     public bool IsChatRestricted { get; set; }
 
     public int SentMessageId { get; set; }
@@ -131,7 +132,8 @@ public class TelegramService
         HasUsername = !CheckUsername();
         IsFromSudo = CheckFromSudoer();
         IsChatRestricted = CheckRestriction();
-        IsPrivateChat = CheckIsChatPrivate();
+        IsPrivateChat = CheckIsPrivateChat();
+        IsGroupChat = CheckIsGroupChat();
 
         AnyMessageText = AnyMessage?.Text;
         MessageOrEditedText = MessageOrEdited?.Text;
@@ -221,15 +223,6 @@ public class TelegramService
         return adminOrPrivateChat;
     }
 
-    public bool IsGroupChat()
-    {
-        var chat = AnyMessage.Chat;
-        var isGroupChat = chat.Type == ChatType.Group || chat.Type == ChatType.Supergroup;
-
-        Log.Debug("Chat with ID {ChatId} IsGroupChat? {IsGroupChat}", ChatId, isGroupChat);
-        return isGroupChat;
-    }
-
     public string GetCommand()
     {
         var cmd = string.Empty;
@@ -278,12 +271,31 @@ public class TelegramService
         return isFromAdmin;
     }
 
-    private bool CheckIsChatPrivate()
+    public bool CheckFromAnonymous()
+    {
+        const int anonId = 1087968824;
+        var isAnonymous = FromId == anonId && ChatId == SenderChat.Id;
+
+        Log.Debug("Check is From Anonymous Admin on ChatId: {ChatId}? {IsAnonymous}", ChatId, isAnonymous);
+
+        return isAnonymous;
+    }
+
+    private bool CheckIsPrivateChat()
     {
         var isPrivate = Chat.Type == ChatType.Private;
 
         Log.Debug("Chat {ChatId} IsPrivateChat => {IsPrivate}", ChatId, isPrivate);
         return isPrivate;
+    }
+
+    public bool CheckIsGroupChat()
+    {
+        var chat = AnyMessage.Chat;
+        var isGroupChat = chat.Type == ChatType.Group || chat.Type == ChatType.Supergroup;
+
+        Log.Debug("Chat with ID {ChatId} IsGroupChat? {IsGroupChat}", ChatId, isGroupChat);
+        return isGroupChat;
     }
 
     #endregion Privilege

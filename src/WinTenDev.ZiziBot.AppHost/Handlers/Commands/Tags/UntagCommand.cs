@@ -22,18 +22,20 @@ public class UntagCommand : CommandBase
     {
         await _telegramService.AddUpdateContext(context);
 
-        var msg = _telegramService.Message;
-
-        var isSudoer = _telegramService.IsFromSudo;
-        var isAdmin = await _telegramService.IsAdminOrPrivateChat();
         var tagVal = _telegramService.MessageTextParts.ValueOfIndex(1);
-        var chatId = _telegramService.Message.Chat.Id;
-        var sendText = "Hanya admin yang bisa membuat Tag.";
+        var chatId = _telegramService.ChatId;
+        var fromId = _telegramService.FromId;
+        var sendText = "Hanya Admin Grup yang dapat menghapus Tag.";
 
-        if (!isAdmin && !isSudoer)
+        if (
+            !await _telegramService.CheckFromAdmin() &&
+            !_telegramService.IsFromSudo &&
+            !_telegramService.IsPrivateChat &&
+            !_telegramService.CheckFromAnonymous()
+        )
         {
             await _telegramService.SendTextMessageAsync(sendText);
-            Log.Information("This User is not Admin or Sudo!");
+            Log.Debug("UserId {UserId} don't have privilege for remove tag on ChatId {ChatId}!", fromId, chatId);
             return;
         }
 
