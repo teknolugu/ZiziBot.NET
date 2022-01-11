@@ -21,7 +21,11 @@ public class GBanRegisterCommand : CommandBase
         _globalBanService = globalBanService;
     }
 
-    public override async Task HandleAsync(IUpdateContext context, UpdateDelegate next, string[] args)
+    public override async Task HandleAsync(
+        IUpdateContext context,
+        UpdateDelegate next,
+        string[] args
+    )
     {
         await _telegramService.AddUpdateContext(context);
 
@@ -50,8 +54,6 @@ public class GBanRegisterCommand : CommandBase
             await _telegramService.EditMessageTextAsync("Jumlah member di Grup ini kurang dari persyaratan minimum.");
             return;
         }
-
-        // await _telegramService.RegisterGBanAdmin();
 
         if (message.ReplyToMessage != null)
         {
@@ -83,7 +85,7 @@ public class GBanRegisterCommand : CommandBase
         }
 
         await _telegramService.EditMessageTextAsync("Sedang meregister ke GBan Admin");
-        await _globalBanService.SaveAdminGban(adminItem);
+        await _globalBanService.SaveAdminBan(adminItem);
 
         await _telegramService.EditMessageTextAsync("Selesai");
     }

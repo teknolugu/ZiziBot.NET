@@ -27,7 +27,7 @@ public class AuthService
             .ToListAsync();
 
         var isAuth = authChat.Any(chat => chat.ChatId == chatId && chat.IsAuthorized);
-        Log.Debug("Is ChatID '{0}' authorized? {1}", chatId, isAuth);
+        Log.Debug("Is ChatID '{ChatId}' authorized? {IsAuth}", chatId, isAuth);
 
         return isAuth;
     }
@@ -42,7 +42,7 @@ public class AuthService
         }
         else
         {
-            Log.Debug("Unauthorizing {0}", authorizedChat.ChatId);
+            Log.Debug("Unauthorizing {ChatId}", authorizedChat.ChatId);
             await authCollection.DeleteManyAsync(chat => chat.ChatId == authorizedChat.ChatId);
         }
 

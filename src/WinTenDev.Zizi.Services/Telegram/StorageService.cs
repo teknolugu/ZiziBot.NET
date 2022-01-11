@@ -63,8 +63,7 @@ public class StorageService : IStorageService
 
             var filteredFile = files.Where(fileInfo =>
                 fileInfo.LastWriteTimeUtc < DateTime.UtcNow.AddDays(-1)
-                || fileInfo.CreationTimeUtc < DateTime.UtcNow.AddDays(-1)
-            ).ToList();
+                || fileInfo.CreationTimeUtc < DateTime.UtcNow.AddDays(-1)).ToList();
 
             var fileCount = filteredFile.Count;
 
@@ -115,7 +114,6 @@ public class StorageService : IStorageService
         Log.Information("Starting reset Hangfire MySQL storage");
 
         const string prefixTable = "_hangfire";
-        var factory = _queryService.CreateMySqlConnection();
         var sbSql = new StringBuilder();
 
         var listTable = new[]
@@ -141,20 +139,21 @@ public class StorageService : IStorageService
             var tableName = $"{prefixTable}{table}";
             var resetMode = resetTableMode.Humanize().ToUpperCase();
 
-            sbSql.Append($"{resetMode} TABLE ");
+            sbSql.Append(resetMode).Append(" TABLE ");
 
-            if (resetMode.Contains("drop", StringComparison.CurrentCultureIgnoreCase)) sbSql.Append("IF EXISTS ");
+            if (resetMode.Contains("drop", StringComparison.CurrentCultureIgnoreCase))
+                sbSql.Append("IF EXISTS ");
 
-            sbSql.AppendLine($"{tableName};");
-
-            // sbSql.AppendLine($"{resetMode} TABLE {tableName};");
+            sbSql.Append(tableName).AppendLine(";");
         }
 
         sbSql.AppendLine("SET FOREIGN_KEY_CHECKS = 1;");
 
         var sqlTruncate = sbSql.ToTrimmedString();
-        var rowCount = await factory.RunSqlAsync(sqlTruncate);
+        var rowCount = await _queryService
+            .CreateMySqlFactory()
+            .RunSqlAsync(sqlTruncate);
 
-        Log.Information("Reset Hangfire MySQL storage finish. Result: {0}", rowCount);
+        Log.Information("Reset Hangfire MySQL storage finish. Result: {RowCount}", rowCount);
     }
 }

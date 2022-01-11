@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using EasyCaching.Core;
 using Serilog;
 using SqlKata.Execution;
 using WinTenDev.Zizi.Models.Types;
@@ -13,17 +11,16 @@ namespace WinTenDev.Zizi.Services.Internals;
 public class AfkService
 {
     private const string BaseTable = "afk";
-    private const string FileJson = "afk.json";
     private const string CacheKey = "afk";
-    private readonly IEasyCachingProvider _cachingProvider;
+    private readonly CacheService _cacheService;
     private readonly QueryService _queryService;
 
     public AfkService(
-        IEasyCachingProvider cachingProvider,
+        CacheService cacheService,
         QueryService queryService
     )
     {
-        _cachingProvider = cachingProvider;
+        _cacheService = cacheService;
         _queryService = queryService;
     }
 
@@ -47,8 +44,10 @@ public class AfkService
     /// </returns>
     public async Task<IEnumerable<Afk>> GetAfkAllCore()
     {
-        var queryFactory = _queryService.CreateMySqlConnection();
-        var data = await queryFactory.FromTable(BaseTable).GetAsync<Afk>();
+        var data = await _queryService
+            .CreateMySqlFactory()
+            .FromTable(BaseTable)
+            .GetAsync<Afk>();
 
         return data;
     }
@@ -60,8 +59,9 @@ public class AfkService
     /// </returns>
     public async Task<Afk> GetAfkByIdCore(long userId)
     {
-        var queryFactory = _queryService.CreateMySqlConnection();
-        var data = await queryFactory.FromTable(BaseTable)
+        var data = await _queryService
+            .CreateMySqlFactory()
+            .FromTable(BaseTable)
             .Where("user_id", userId)
             .FirstOrDefaultAsync<Afk>();
 
@@ -74,14 +74,13 @@ public class AfkService
     public async Task<Afk> GetAfkById(long userId)
     {
         var key = CacheKey + $"-{userId}";
-        var isCached = await _cachingProvider.ExistsAsync(key);
-        if (!isCached)
-        {
-            await UpdateAfkByIdCacheAsync(userId);
-        }
 
-        var cache = await _cachingProvider.GetAsync<Afk>(key);
-        return cache.Value;
+        var data = await _cacheService.GetOrSetAsync(key, async () => {
+            var afk = await GetAfkByIdCore(userId);
+            return afk;
+        });
+
+        return data;
     }
 
     /// <summary>Updates the AFK Cache by User ID</summary>
@@ -90,17 +89,8 @@ public class AfkService
     {
         var key = CacheKey + $"-{userId}";
         var afk = await GetAfkByIdCore(userId);
-        var timeSpan = TimeSpan.FromMinutes(1);
 
-        Log.Debug("Updating AFK by ID cache with key: '{Key}', expire in {TimeSpan}", key, timeSpan);
-
-        if (afk == null)
-        {
-            Log.Warning("Caching AFK UserID {UserId} disabled beacuse AFK Data is null", userId);
-            return;
-        }
-
-        await _cachingProvider.SetAsync(key, afk, timeSpan);
+        await _cacheService.SetAsync(key, afk);
     }
 
     /// <summary>Save AFK data to Database</summary>
@@ -108,8 +98,6 @@ public class AfkService
     public async Task SaveAsync(Dictionary<string, object> data)
     {
         Log.Information("Save: {V}", data.ToJson());
-
-        var queryFactory = _queryService.CreateMySqlConnection();
 
         var where = new Dictionary<string, object>()
         {
@@ -122,13 +110,18 @@ public class AfkService
 
         if (isExist)
         {
-            saveResult = await queryFactory.FromTable(BaseTable)
+            saveResult = await _queryService
+                .CreateMySqlFactory()
+                .FromTable(BaseTable)
                 .Where(where)
                 .UpdateAsync(data);
         }
         else
         {
-            saveResult = await queryFactory.FromTable(BaseTable).InsertAsync(data);
+            saveResult = await _queryService
+                .CreateMySqlFactory()
+                .FromTable(BaseTable)
+                .InsertAsync(data);
         }
 
         Log.Information("SaveAfk: {Insert}", saveResult);

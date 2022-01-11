@@ -17,6 +17,7 @@ public class MetricService
 {
     private readonly QueryService _queryService;
     private readonly CacheService _cacheService;
+
     public MetricService(
         QueryService queryService,
         CacheService cacheService
@@ -24,7 +25,6 @@ public class MetricService
     {
         _queryService = queryService;
         _cacheService = cacheService;
-
     }
 
     public async Task HitActivityAsync(HitActivity hitActivity)
@@ -73,7 +73,7 @@ public class MetricService
         // };
 
         var insertBuffer = hitActivity.AppendRecord(path);
-        Log.Debug("Buffer Hit activity saved to {0}", insertBuffer);
+        Log.Debug("Buffer Hit activity saved to {InsertBuffer}", insertBuffer);
     }
 
     public void HitActivityBackground()
@@ -90,17 +90,17 @@ public class MetricService
 
         var dateFormat = "yyyy-MM-dd HH";
         var dateFormatted = DateTime.Now.ToString(dateFormat);
-        Log.Debug("Filter last hour: {0}", dateFormatted);
+        Log.Debug("Filter last hour: {DateFormatted}", dateFormatted);
         var filteredMetrics = metrics.Find(x =>
             x.Timestamp.ToString(dateFormat) == dateFormatted).ToList();
 
         if (filteredMetrics.Count == 0)
         {
-            Log.Debug("No HitActivity buffed need to flush.");
+            Log.Debug("No HitActivity buffed need to flush");
             return;
         }
 
-        Log.Debug("Flushing {0} of {1} data..", filteredMetrics.Count, metrics.Count());
+        Log.Debug("Flushing {Count} of {CountAll} data..", filteredMetrics.Count, metrics.Count());
         foreach (var m in filteredMetrics)
         {
             var data = new Dictionary<string, object>()
@@ -119,19 +119,22 @@ public class MetricService
                 { "timestamp", m.Timestamp }
             };
 
-            var factory = _queryService.CreateMySqlConnection();
-            var insertHit = await factory.FromTable("hit_activity")
+            var insertHit = await _queryService
+                .CreateMySqlFactory()
+                .FromTable("hit_activity")
                 .InsertAsync(data);
 
-            // Log.Information($"Insert Hit: {insertHit}");
+            Log.Information("Insert Hit: {InsertHit}", insertHit);
         }
 
         Log.Debug("Clearing local data..");
-        filteredMetrics.ForEach(x => { metrics.DeleteMany(y => y.Timestamp == x.Timestamp); });
+        filteredMetrics.ForEach(x => {
+            metrics.DeleteMany(y => y.Timestamp == x.Timestamp);
+        });
 
         LiteDbProvider.Rebuild();
 
-        Log.Information("Flush HitActivity done.");
+        Log.Information("Flush HitActivity done");
     }
 
     // public static async Task GetStat()

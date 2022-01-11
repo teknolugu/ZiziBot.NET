@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using EasyCaching.Core;
 using Flurl.Http;
-using Serilog;
+using SerilogTimings;
 using SqlKata.Execution;
 using WinTenDev.Zizi.Models.Types;
 using WinTenDev.Zizi.Utils;
@@ -14,47 +12,41 @@ namespace WinTenDev.Zizi.Services.Internals;
 
 public class BlockListService
 {
-    private readonly IEasyCachingProvider _cachingProvider;
-    private readonly QueryFactory _queryFactory;
+    private const string TableName = "blocklist";
+    private readonly CacheService _cacheService;
+    private readonly QueryService _queryService;
 
     public BlockListService(
-        IEasyCachingProvider cachingProvider,
-        QueryFactory queryFactory
+        CacheService cacheService,
+        QueryService queryService
     )
     {
-        _cachingProvider = cachingProvider;
-        _queryFactory = queryFactory;
+        _cacheService = cacheService;
+        _queryService = queryService;
     }
 
     public async Task SaveBlockList(BlockList data)
     {
-        await _queryFactory.FromTable("").InsertAsync(data);
+        await _queryService
+            .CreateMySqlFactory()
+            .FromTable(TableName)
+            .InsertAsync(data);
     }
 
     public async Task<BlockListData> ParseList(string url)
     {
-        var sw = Stopwatch.StartNew();
+        var op = Operation.Begin("Read BlockList");
 
-        if (!await _cachingProvider.ExistsAsync(url))
-        {
-            await UpdateCache(url);
-        }
-
-        var cache = await _cachingProvider.GetAsync<string>(url);
-        var data = cache.Value;
+        var data = await _cacheService.GetOrSetAsync(url, async () => {
+            var allUrl = await url.GetStringAsync();
+            return allUrl;
+        });
 
         var parseList = ParseListCore(data);
 
-        Log.Debug("Read BlockList completed in {Elapsed}", sw.Elapsed);
-        sw.Stop();
+        op.Complete();
 
         return parseList;
-    }
-
-    public async Task UpdateCache(string url)
-    {
-        var allUrl = await url.GetStringAsync();
-        await _cachingProvider.SetAsync(url, allUrl, TimeSpan.FromHours(1));
     }
 
     public BlockListData ParseListCore(string rawUrl)
@@ -80,13 +72,11 @@ public class BlockListService
             metaData.Add(key, split[1].Trim());
         }
 
-
         var name = lines[0];
         var source = lines[1];
         var lastUpdate = lines[2];
 
         var listUrl = lines.Skip(3).Where(s => !s.Trim().IsNullOrEmpty()).ToList();
-
 
         data.Name = name;
         data.Source = source;

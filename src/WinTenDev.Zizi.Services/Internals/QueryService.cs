@@ -29,7 +29,7 @@ public class QueryService
     /// Create MySQL query factory
     /// </summary>
     /// <returns></returns>
-    public QueryFactory CreateMySqlConnection()
+    public QueryFactory CreateMySqlFactory()
     {
         var mysqlConn = _connectionStrings.MySql;
 
@@ -37,7 +37,7 @@ public class QueryService
         var connection = new MySqlConnection(mysqlConn);
         var factory = new QueryFactory(connection, compiler)
         {
-            Logger = sql => { Log.Debug("MySql Exec: {Sql}", sql); }
+            Logger = sql => Log.Debug("SQLKata: {Sql}", sql)
         };
 
         return factory;

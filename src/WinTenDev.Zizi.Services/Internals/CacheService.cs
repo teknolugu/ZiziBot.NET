@@ -4,10 +4,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using CacheTower;
 using EasyCaching.Core;
+using Humanizer;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MoreLinq;
 using WinTenDev.Zizi.Models.Configs;
+using WinTenDev.Zizi.Utils.IO;
 
 namespace WinTenDev.Zizi.Services.Internals;
 
@@ -82,16 +84,23 @@ public class CacheService
     /// </summary>
     /// <param name="cacheKey"></param>
     /// <param name="action"></param>
+    /// <typeparam></typeparam>
     /// <typeparam name="T"></typeparam>
     /// <returns></returns>
-    public async Task<T> GetOrSetAsync<T>(string cacheKey, Func<Task<T>> action)
+    public async Task<T> GetOrSetAsync<T>(
+        string cacheKey,
+        Func<Task<T>> action
+    )
     {
         var cache = await _cacheStack.GetOrSetAsync<T>(cacheKey, async (_) => await action(), _cacheSettings);
 
         return cache;
     }
 
-    public async Task<T> SetAsync<T>(string cacheKey, Func<Task<T>> action)
+    public async Task<T> SetAsync<T>(
+        string cacheKey,
+        Func<Task<T>> action
+    )
     {
         var data = await action();
         var cache = await _cacheStack.SetAsync(cacheKey, data, TimeSpan.FromMinutes(_expireAfter));
@@ -99,7 +108,10 @@ public class CacheService
         return cache.Value;
     }
 
-    public async Task<T> SetAsync<T>(string cacheKey, T data)
+    public async Task<T> SetAsync<T>(
+        string cacheKey,
+        T data
+    )
     {
         var cache = await _cacheStack.SetAsync(cacheKey, data, TimeSpan.FromMinutes(_expireAfter));
 

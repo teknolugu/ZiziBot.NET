@@ -10,9 +10,10 @@ using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
 using WinTenDev.Zizi.Models.Interfaces;
 using WinTenDev.Zizi.Models.Types;
+using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Utils;
 
-namespace WinTenDev.Zizi.Services.Internals;
+namespace WinTenDev.Zizi.Services.Telegram;
 
 public class RssFeedService : IRssFeedService
 {
@@ -47,9 +48,6 @@ public class RssFeedService : IRssFeedService
             var recurringId = $"{baseId}-{reducedChatId}-{unique}";
 
             HangfireUtil.RegisterJob<RssFeedService>(recurringId, service => service.ExecuteUrlAsync(chatId, urlFeed), Cron.Minutely);
-
-            // RegisterFeed(chatId, urlFeed);
-            // RegisterScheduler(chatId);
         }
 
         Log.Information("Registering RSS Scheduler complete..");
@@ -57,18 +55,21 @@ public class RssFeedService : IRssFeedService
 
     [AutomaticRetry(Attempts = 2, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
     [Queue("rss-feed")]
-    public async Task<int> ExecuteUrlAsync(long chatId, string rssUrl)
+    public async Task<int> ExecuteUrlAsync(
+        long chatId,
+        string rssUrl
+    )
     {
         var newRssCount = 0;
 
-        Log.Information("Reading feed from {0}. Url: {1}", chatId, rssUrl);
+        Log.Information("Reading feed from {ChatId}. Url: {RssUrl}", chatId, rssUrl);
         var rssFeeds = await FeedReader.ReadAsync(rssUrl);
 
         var rssTitle = rssFeeds.Title;
 
         foreach (var rssFeed in rssFeeds.Items)
         {
-            Log.Debug("Getting last history for {0} url {1}", chatId, rssUrl);
+            Log.Debug("Getting last history for {ChatId} url {RssUrl}", chatId, rssUrl);
 
             var rssHistory = await _rssService.GetRssHistory(new RssHistory()
             {
@@ -162,7 +163,7 @@ public class RssFeedService : IRssFeedService
     public static void UnRegRSS(long chatId)
     {
         var baseId = "rss";
-        var reduceChatId = ChatUtil.ReduceChatId(chatId.ToInt64());
+        var reduceChatId = chatId.ReduceChatId();
         var recurringId = $"{baseId}-{reduceChatId}";
 
         Log.Debug("Deleting RSS Cron {0}", chatId);

@@ -1,9 +1,6 @@
-﻿using System.Data;
-using System.Threading.Tasks;
-using Canducci.SqlKata.Dapper.Extensions.SoftBuilder;
-using Canducci.SqlKata.Dapper.MySql;
+﻿using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using WinTenDev.WebApi.AppHost.Models;
+using WinTenDev.Zizi.Services.Internals;
 
 namespace WinTenDev.WebApi.AppHost.Controllers
 {
@@ -11,22 +8,22 @@ namespace WinTenDev.WebApi.AppHost.Controllers
     [Route("api/[controller]")]
     public class WordFilterController : Controller
     {
-        private readonly IDbConnection _dbConnection;
+        private readonly WordFilterService _wordFilterService;
 
-        public WordFilterController(IDbConnection dbConnection)
+        public WordFilterController(
+            WordFilterService wordFilterService,
+            QueryService queryService
+        )
         {
-            _dbConnection = dbConnection;
+            _wordFilterService = wordFilterService;
         }
 
         // GET
         public async Task<IActionResult> Index()
         {
-            var model = await _dbConnection
-                .SoftBuild()
-                .From("word_filter")
-                .ListAsync<WordFilter>();
+            var data = await _wordFilterService.GetWordsList();
 
-            return Json(model);
+            return Json(data);
         }
     }
 }

@@ -2,45 +2,37 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using EasyCaching.Core;
 using Serilog;
 using SqlKata.Execution;
-using Telegram.Bot.Types;
 using WinTenDev.Zizi.Models.Types;
 using WinTenDev.Zizi.Utils;
-using WinTenDev.Zizi.Utils.Text;
 
 namespace WinTenDev.Zizi.Services.Internals;
 
 public class GlobalBanService
 {
-    private const string FbanTable = "global_bans";
+    private const string GBanTable = "global_bans";
     private const string GBanAdminTable = "gban_admin";
     private const string CacheKey = "global-bans";
-    private readonly string fileJson = "fban_user.json";
 
-    private readonly Message _message;
-
-    private readonly IEasyCachingProvider _cachingProvider;
-    private readonly QueryFactory _queryFactory;
     private readonly QueryService _queryService;
+    private readonly CacheService _cacheService;
 
     public GlobalBanService(
-        QueryFactory queryFactory,
         QueryService queryService,
-        IEasyCachingProvider cachingProvider)
+        CacheService cacheService
+    )
     {
-        _queryFactory = queryFactory;
         _queryService = queryService;
-        _cachingProvider = cachingProvider;
+        _cacheService = cacheService;
     }
 
     public async Task<bool> IsExist(long userId)
     {
-        var query = await GetGlobalBanFromDbById(userId);
+        var query = await GetGlobalBanByIdCore(userId);
 
         var isBan = query != null;
-        Log.Information("UserId '{0}' Is ES2 Ban? {1}", userId, isBan);
+        Log.Information("UserId '{UserId}' Is ES2 Ban? {IsBan}", userId, isBan);
 
         return isBan;
     }
@@ -70,8 +62,10 @@ public class GlobalBanService
             { "reason", reason }
         };
 
-        Log.Information("Inserting new GBan: {0}", globalBanData.ToJson(true));
-        var query = await _queryFactory.FromTable(FbanTable)
+        Log.Information("Inserting new GBan: {@V}", globalBanData);
+        var query = await _queryService
+            .CreateMySqlFactory()
+            .FromTable(GBanTable)
             .InsertAsync(data);
 
         return query > 0;
@@ -84,13 +78,13 @@ public class GlobalBanService
     /// <returns>Delete GBan by userId</returns>
     public async Task<bool> DeleteBanAsync(int userId)
     {
-        var where = new Dictionary<string, object>() { { "user_id", userId } };
-        var delete = await _queryFactory.FromTable(FbanTable)
-            .Where(where)
+        var delete = await _queryService
+            .CreateMySqlFactory()
+            .FromTable(GBanTable)
+            .Where("user_id", userId)
             .DeleteAsync();
 
         return delete > 0;
-        // return await Delete(fbanTable, where);
     }
 
     /// <summary>
@@ -98,15 +92,16 @@ public class GlobalBanService
     /// </summary>
     /// <param name="userId">The user id.</param>
     /// <returns>Banned user by userId</returns>
-    public async Task<GlobalBanData> GetGlobalBanFromDbById(long userId)
+    public async Task<GlobalBanData> GetGlobalBanByIdCore(long userId)
     {
         var where = new Dictionary<string, object>()
         {
             { "user_id", userId }
         };
 
-        var factory = _queryService.CreateMySqlConnection();
-        var query = await factory.FromTable(FbanTable)
+        var query = await _queryService
+            .CreateMySqlFactory()
+            .FromTable(GBanTable)
             .Where(where)
             .FirstOrDefaultAsync<GlobalBanData>();
 
@@ -121,26 +116,25 @@ public class GlobalBanService
     public async Task<GlobalBanData> GetGlobalBanByIdC(long userId)
     {
         var cacheKey = GetCacheKey(userId);
-        if (!await _cachingProvider.ExistsAsync(cacheKey))
-        {
-            var data = await GetGlobalBanFromDbById(userId);
 
-            if (data != null)
-                await _cachingProvider.SetAsync(cacheKey, data, TimeSpan.FromMinutes(10));
-        }
+        var data = await _cacheService.GetOrSetAsync(cacheKey, async () => {
+            var data = await GetGlobalBanByIdCore(userId);
+            return data;
+        });
 
-        var cache = await _cachingProvider.GetAsync<GlobalBanData>(cacheKey);
-
-        return cache.Value;
+        return data;
     }
 
     /// <summary>
     /// Gets the global ban from db.
     /// </summary>
     /// <returns>A IEnumerable GlobalBanData</returns>
-    public async Task<IEnumerable<GlobalBanData>> GetGlobalBanFromDb()
+    public async Task<IEnumerable<GlobalBanData>> GetGlobalBanCore()
     {
-        var query = await _queryFactory.FromTable(FbanTable).GetAsync<GlobalBanData>();
+        var query = await _queryService
+            .CreateMySqlFactory()
+            .FromTable(GBanTable)
+            .GetAsync<GlobalBanData>();
 
         return query;
     }
@@ -152,32 +146,28 @@ public class GlobalBanService
     public async Task<IEnumerable<GlobalBanData>> GetGlobalBans()
     {
         var cacheKey = "global-bans";
-        if (!await _cachingProvider.ExistsAsync(cacheKey))
-        {
-            var data = await GetGlobalBanFromDb();
 
-            await _cachingProvider.SetAsync(cacheKey, data, TimeSpan.FromMinutes(10));
-        }
+        var datas = await _cacheService.GetOrSetAsync(cacheKey, async () => {
+            var datas = await GetGlobalBanCore();
+            return datas;
+        });
 
-        var cache = await _cachingProvider.GetAsync<IEnumerable<GlobalBanData>>(cacheKey);
-
-        return cache.Value;
+        return datas;
     }
 
+    [Obsolete("Manual update cache should no longer required")]
     public async Task UpdateGBanCache(long userId = -1)
     {
         if (userId == -1)
         {
-            var data = await GetGlobalBanFromDb();
-            await _cachingProvider.SetAsync(CacheKey, data, TimeSpan.FromMinutes(10));
+            var data = await GetGlobalBanCore();
+            await _cacheService.SetAsync(CacheKey, data);
         }
         else
         {
             var cacheKey = GetCacheKey(userId);
-            var data = await GetGlobalBanFromDbById(userId);
-
-            if (data != null)
-                await _cachingProvider.SetAsync(cacheKey, data, TimeSpan.FromMinutes(10));
+            var data = await GetGlobalBanByIdCore(userId);
+            await _cacheService.SetAsync(cacheKey, data);
         }
     }
 
@@ -185,20 +175,24 @@ public class GlobalBanService
 
     public async Task<bool> IsGBanAdminAsync(long userId)
     {
-        var querySql = await _queryFactory.FromTable(GBanAdminTable)
+        var querySql = await _queryService
+            .CreateMySqlFactory()
+            .FromTable(GBanAdminTable)
             .Where("user_id", userId)
             .GetAsync<GBanAdminItem>();
 
         var isRegistered = querySql.Any();
-        Log.Debug("UserId {0} is registered on ES2? {1}", userId, isRegistered);
-
+        Log.Debug("UserId {UserId} is registered on ES2? {IsRegistered}", userId, isRegistered);
 
         return isRegistered;
     }
 
     public async Task RegisterAdminAsync(GBanAdminItem gBanAdminItem)
     {
-        var querySql = _queryFactory.FromTable(GBanAdminTable).Where("user_id", gBanAdminItem.UserId);
+        var querySql = _queryService
+            .CreateMySqlFactory()
+            .FromTable(GBanAdminTable)
+            .Where("user_id", gBanAdminItem.UserId);
 
         var get = await querySql.GetAsync();
 
@@ -211,11 +205,14 @@ public class GlobalBanService
         }
     }
 
-    public async Task SaveAdminGban(GBanAdminItem adminItem)
+    public async Task SaveAdminBan(GBanAdminItem adminItem)
     {
-        var querySql = await _queryFactory.FromTable(GBanAdminTable)
+        var insert = await _queryService
+            .CreateMySqlFactory()
+            .FromTable(GBanAdminTable)
             .InsertAsync(adminItem);
-        Log.Debug("Insert GBanReg: {0}", querySql);
+
+        Log.Debug("Insert GBanReg: {Insert}", insert);
     }
 
     #endregion

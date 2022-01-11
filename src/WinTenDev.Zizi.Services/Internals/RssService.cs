@@ -12,18 +12,15 @@ namespace WinTenDev.Zizi.Services.Internals;
 public class RssService
 {
 
-    private readonly QueryFactory _queryFactory;
     private readonly QueryService _queryService;
-    private readonly string CacheKey = "rss-list";
-    private readonly string rssHistoryTable = "RssHistory";
-    private readonly string rssSettingTable = "rss_settings";
+    private const string CacheKey = "rss-list";
+    private const string RSSHistoryTable = "rss_history";
+    private const string RSSSettingTable = "rss_settings";
 
     public RssService(
-        QueryFactory queryFactory,
         QueryService queryService
     )
     {
-        _queryFactory = queryFactory;
         _queryService = queryService;
     }
 
@@ -35,7 +32,9 @@ public class RssService
             { "Url", rssHistory.Url }
         };
 
-        var data = await _queryFactory.FromTable(rssHistoryTable)
+        var data = await _queryService
+            .CreateMySqlFactory()
+            .FromTable(RSSHistoryTable)
             .Where(where)
             .GetAsync();
 
@@ -45,9 +44,14 @@ public class RssService
         return isExist;
     }
 
-    public async Task<bool> IsExistRssAsync(long chatId, string urlFeed)
+    public async Task<bool> IsExistRssAsync(
+        long chatId,
+        string urlFeed
+    )
     {
-        var data = await _queryFactory.FromTable(rssSettingTable)
+        var data = await _queryService
+            .CreateMySqlFactory()
+            .FromTable(RSSSettingTable)
             .Where("chat_id", chatId)
             .Where("url_feed", urlFeed)
             .GetAsync();
@@ -66,34 +70,45 @@ public class RssService
 
     public async Task<bool> SaveRssSettingAsync(Dictionary<string, object> data)
     {
-        var insert = await _queryFactory.FromTable(rssSettingTable).InsertAsync(data);
+        var insert = await _queryService
+            .CreateMySqlFactory()
+            .FromTable(RSSSettingTable)
+            .InsertAsync(data);
 
         return insert.ToBool();
     }
 
     public async Task<int> SaveRssHistoryAsync(RssHistory rssHistory)
     {
-        var insert = await _queryFactory.FromTable(rssHistoryTable).InsertAsync(rssHistory);
+        var insert = await _queryService
+            .CreateMySqlFactory()
+            .FromTable(RSSHistoryTable)
+            .InsertAsync(rssHistory);
 
         return insert;
     }
 
     public async Task<List<RssSetting>> GetRssSettingsAsync(long chatId)
     {
-        var data = await _queryFactory.FromTable(rssSettingTable)
+        var data = await _queryService
+            .CreateMySqlFactory()
+            .FromTable(RSSSettingTable)
             .Where("chat_id", chatId)
             .GetAsync();
 
         var mapped = data.ToJson().MapObject<List<RssSetting>>();
-        Log.Debug("RSSData: {0}", mapped.ToJson(true));
+        Log.Debug("RSSData: {@V}", mapped);
 
         return mapped;
     }
 
     public async Task<IEnumerable<RssSetting>> GetAllRssSettingsAsync()
     {
-        var queryFactory = _queryService.CreateMySqlConnection();
-        var data = await queryFactory.FromTable(rssSettingTable).GetAsync<RssSetting>();
+        var data = await _queryService
+            .CreateMySqlFactory()
+            .FromTable(RSSSettingTable)
+            .GetAsync<RssSetting>();
+
         Log.Debug("RSSData: {@Data}", data);
 
         return data;
@@ -107,39 +122,47 @@ public class RssService
             ["RssSource"] = rssHistory.RssSource
         };
 
-        var query = await _queryFactory.FromTable(rssHistoryTable)
+        var query = await _queryService
+            .CreateMySqlFactory()
+            .FromTable(RSSHistoryTable)
             .Where(where)
             .GetAsync();
 
         return query.ToJson().MapObject<List<RssHistory>>();
     }
 
-    public async Task<bool> DeleteRssAsync(long chatId, string urlFeed)
+    public async Task<bool> DeleteRssAsync(
+        long chatId,
+        string urlFeed
+    )
     {
-        var delete = await _queryFactory.FromTable(rssSettingTable)
+        var delete = await _queryService
+            .CreateMySqlFactory()
+            .FromTable(RSSSettingTable)
             .Where("chat_id", chatId)
             .Where("url_feed", urlFeed)
             .DeleteAsync();
 
-        Log.Information("Delete {UrlFeed} status: {V}", urlFeed, delete.ToBool());
+        Log.Information("Delete {UrlFeed} status: {V}", urlFeed, delete);
 
         return delete.ToBool();
     }
 
     public async Task<int> DeleteAllByChatId(long chatId)
     {
-        var delete = await _queryFactory.FromTable(rssSettingTable)
+        var delete = await _queryService
+            .CreateMySqlFactory()
+            .FromTable(RSSSettingTable)
             .Where("chat_id", chatId)
             .DeleteAsync();
 
-        Log.Information("Deleted RSS {0} Settings {1} rows", chatId, delete);
+        Log.Information("Deleted RSS {ChatId} Settings {Delete} rows", chatId, delete);
 
         return delete;
     }
 
     public async Task DeleteDuplicateAsync()
     {
-        // var duplicate = await rssSettingTable.MysqlDeleteDuplicateRowAsync("url_feed");
-        // Log.Information("Delete duplicate on {RssSettingTable} {Duplicate}", rssSettingTable, duplicate);
+        await Task.CompletedTask;
     }
 }

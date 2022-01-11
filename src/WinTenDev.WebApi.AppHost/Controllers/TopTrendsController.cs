@@ -1,12 +1,12 @@
-﻿using System.Data;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using Canducci.SqlKata.Dapper.Extensions.SoftBuilder;
-using Canducci.SqlKata.Dapper.MySql;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
+using SqlKata.Execution;
 using WinTenDev.WebApi.AppHost.Models;
+using WinTenDev.Zizi.Services.Internals;
+using WinTenDev.Zizi.Utils;
 
 namespace WinTenDev.WebApi.AppHost.Controllers
 {
@@ -14,11 +14,13 @@ namespace WinTenDev.WebApi.AppHost.Controllers
     [Route("api/[controller]")]
     public class TopTrendsController : Controller
     {
-        private readonly IDbConnection _dbConnection;
+        private readonly QueryService _queryService;
 
-        public TopTrendsController(IDbConnection dbConnection)
+        public TopTrendsController(
+            QueryService queryService
+        )
         {
-            _dbConnection = dbConnection;
+            _queryService = queryService;
         }
 
         [HttpGet("top-30d")]
@@ -26,10 +28,11 @@ namespace WinTenDev.WebApi.AppHost.Controllers
         {
             var stopwatch = Stopwatch.StartNew();
 
-            var model = await _dbConnection
-                .SoftBuild()
-                .From("zizibot_data.view_top_hit_activity_last_30d")
-                .ListAsync<TopTrendActivity>();
+            var model = await _queryService
+                .CreateMySqlFactory()
+                .FromTable("zizibot_data.view_top_hit_activity_last_30d")
+                .GetAsync<TopTrendActivity>();
+
             var topTrendActivities = model.ToList();
 
             stopwatch.Stop();

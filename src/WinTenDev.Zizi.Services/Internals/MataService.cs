@@ -31,7 +31,6 @@ public class MataService
         return $"{baseKey}_{fromId}";
     }
 
-
     /// <summary>
     /// Get Mata by userId
     /// </summary>
@@ -49,7 +48,10 @@ public class MataService
     /// </summary>
     /// <param name="fromId"></param>
     /// <param name="hitActivity"></param>
-    public async Task SaveMataAsync(long fromId, HitActivity hitActivity)
+    public async Task SaveMataAsync(
+        long fromId,
+        HitActivity hitActivity
+    )
     {
         var key = GetCacheKey(fromId);
         var timeSpan = TimeUtil.YearSpan(30);

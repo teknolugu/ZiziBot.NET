@@ -10,17 +10,21 @@ namespace WinTenDev.Zizi.Services.Internals;
 
 public class LearningService
 {
-    private readonly QueryFactory _queryFactory;
+    private readonly QueryService _queryService;
     private const string TableName = "words_learning";
 
-    public LearningService(QueryFactory queryFactory)
+    public LearningService(
+        QueryService queryService
+    )
     {
-        _queryFactory = queryFactory;
+        _queryService = queryService;
     }
 
     public bool IsExist(LearnData learnData)
     {
-        var select = _queryFactory.FromTable(TableName)
+        var select = _queryService
+            .CreateMySqlFactory()
+            .FromTable(TableName)
             .Where("message", learnData.Message)
             .Get();
 
@@ -29,14 +33,18 @@ public class LearningService
 
     public IEnumerable<dynamic> GetAll(LearnData learnData)
     {
-        var select = _queryFactory.FromTable(TableName).Get();
+        var select = _queryService
+            .CreateMySqlFactory()
+            .FromTable(TableName).Get();
 
         return select;
     }
 
     public async Task<int> Save(LearnData learnData)
     {
-        var insert = await _queryFactory.FromTable(TableName)
+        var insert = await _queryService
+            .CreateMySqlFactory()
+            .FromTable(TableName)
             .InsertAsync(new Dictionary<string, object>()
             {
                 { "label", learnData.Label },

@@ -20,21 +20,24 @@ public class MediaFilterService
         _queryService = queryService;
     }
 
-    public async Task<bool> IsExist(string key, string value)
+    public async Task<bool> IsExist(
+        string key,
+        string value
+    )
     {
-        var factory = _queryService.CreateMySqlConnection();
-        var query = await factory.FromTable(baseTable)
+        var query = await _queryService
+            .CreateMySqlFactory()
+            .FromTable(baseTable)
             .Where(key, value)
             .GetAsync();
 
         return query.Any();
-
-        // var sql = $"SELECT * FROM {baseTable} WHERE {key} = '{value}'";
-        // var data = await _mySqlProvider.ExecQueryAsync(sql);
-        // return data.Rows.Count > 0;
     }
 
-    public async Task<bool> IsExistInCache(string key, string val)
+    public async Task<bool> IsExistInCache(
+        string key,
+        string val
+    )
     {
         var data = await ReadCacheAsync();
         var search = data.AsEnumerable()
@@ -48,23 +51,23 @@ public class MediaFilterService
 
     public async Task SaveAsync(Dictionary<string, object> data)
     {
-        //            var json = TextHelper.ToJson(data);
-        Log.Information("Data : {0}", data.ToJson(true));
-        var factory = _queryService.CreateMySqlConnection();
-        var insert = await factory.FromTable(baseTable)
+        Log.Information("Data : {Json}", data.ToJson(true));
+
+        var insert = await _queryService
+            .CreateMySqlFactory()
+            .FromTable(baseTable)
             .InsertAsync(data);
 
-        // var insert = await _mySqlProvider.Insert(baseTable, data);
         Log.Information("SaveFile: {Insert}", insert);
     }
 
     public async Task<DataTable> GetAllMedia()
     {
-        var factory = _queryService.CreateMySqlConnection();
-        var query = await factory.FromTable(baseTable)
+        var query = await _queryService
+            .CreateMySqlFactory()
+            .FromTable(baseTable)
             .GetAsync();
-        // var sql = $"SELECT * FROM {baseTable}";
-        // var data = await _mySqlProvider.ExecQueryAsync(sql);
+
         var data = query.ToJson().MapObject<DataTable>();
         return data;
     }

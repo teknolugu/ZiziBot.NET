@@ -26,11 +26,9 @@ public class NotesService
 
     public async Task<DataTable> GetNotesByChatId(long chatId)
     {
-        // var sql = $"SELECT * FROM {tableName} WHERE chat_id = '{chatId}'";
-        // var data = await _mySql.ExecQueryAsync(sql);
-
-        var factory = _queryService.CreateMySqlConnection();
-        var query = await factory.FromTable(TableName)
+        var query = await _queryService
+            .CreateMySqlFactory()
+            .FromTable(TableName)
             .Where("chat_id", chatId)
             .GetAsync();
 
@@ -38,32 +36,32 @@ public class NotesService
         return data;
     }
 
-    public async Task<List<CloudNote>> GetNotesBySlug(long chatId, string slug)
+    public async Task<List<CloudNote>> GetNotesBySlug(
+        long chatId,
+        string slug
+    )
     {
         Log.Information("Getting Notes by Slug..");
 
-        var factory = _queryService.CreateMySqlConnection();
-        var query = await factory.FromTable(TableName)
+        var query = await _queryService
+            .CreateMySqlFactory()
+            .FromTable(TableName)
             .Where("chat_id", chatId)
             .OrWhereContains("slug", slug)
             .GetAsync();
 
         var mapped = query.ToJson().MapObject<List<CloudNote>>();
         return mapped;
-
-        // var sql = $"SELECT * FROM {tableName} WHERE chat_id = '{chatId}' " +
-        // $"AND MATCH(slug) AGAINST('{slug.SqlEscape()}')";
-        // var data = await _mySql.ExecQueryAsync(sql);
-        // return data;
     }
 
     public async Task SaveNote(Dictionary<string, object> data)
     {
         var json = data.ToJson();
-        Log.Information("Json: {0}", json);
+        Log.Information("Json: {Json}", json);
 
-        var factory = _queryService.CreateMySqlConnection();
-        var insert = await factory.FromTable(TableName)
+        var insert = await _queryService
+            .CreateMySqlFactory()
+            .FromTable(TableName)
             .InsertAsync(data);
 
         Log.Information("SaveNote: {Insert}", insert);
