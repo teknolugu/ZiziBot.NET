@@ -2,6 +2,7 @@
 using CacheTower;
 using CacheTower.Extensions;
 using CacheTower.Providers.FileSystem.Json;
+using CacheTower.Providers.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using WinTenDev.Zizi.Models.Configs;
