@@ -104,6 +104,9 @@ public class ChatSetting
     [JsonProperty("enable_warn_username")]
     public bool EnableWarnUsername { get; set; } = true;
 
+    [Column("enable_check_profile_photo")]
+    public bool EnableCheckProfilePhoto { get; set; } = true;
+
     [Column("enable_welcome_message")]
     [JsonProperty("enable_welcome_message")]
     public bool EnableWelcomeMessage { get; set; } = true;

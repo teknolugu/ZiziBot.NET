@@ -1,7 +1,9 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using RepoDb;
+using WinTenDev.Zizi.Models.Enums;
 using WinTenDev.Zizi.Models.Types;
 using WinTenDev.Zizi.Utils;
 
@@ -31,69 +33,185 @@ public class StepHistoriesService
         return key;
     }
 
-    public async Task<IEnumerable<StepHistory>> GetStepHistory(long chatId)
+    public async Task<StepHistory> GetStepHistory(
+        long chatId,
+        long userId,
+        StepHistoryName name
+    )
     {
-        var connection = _queryService.CreateMysqlConnectionCore();
+        var data = await _cacheService.GetOrSetAsync(CacheKey(chatId), () =>
+            GetStepHistoryCore(chatId, userId, name));
 
-        var data = await _cacheService.GetOrSetAsync(CacheKey(chatId), async () => {
-            var data = await connection.QueryAsync<StepHistory>(x =>
-                x.ChatId == chatId
-            );
+        return data;
+    }
+
+    public async Task<StepHistory> GetStepHistoryCore(
+        long chatId,
+        long userId,
+        StepHistoryName name
+    )
+    {
+        var data = await _queryService
+            .CreateMysqlConnectionCore()
+            .QueryAsync<StepHistory>(history =>
+                history.ChatId == chatId &&
+                history.UserId == userId &&
+                history.Name == name);
+
+        return data.FirstOrDefault();
+    }
+
+    public async Task<StepHistory> GetStepHistoryCore(StepHistory stepHistory)
+    {
+        var data = await _queryService
+            .CreateMysqlConnectionCore()
+            .QueryAsync<StepHistory>(history =>
+                history.ChatId == stepHistory.ChatId &&
+                history.UserId == stepHistory.UserId);
+
+        return data.FirstOrDefault();
+    }
+
+    public async Task<IEnumerable<StepHistory>> GetStepHistoryAllCore(StepHistory stepHistory)
+    {
+        var data = await _queryService
+            .CreateMysqlConnectionCore()
+            .QueryAsync<StepHistory>(history =>
+                history.ChatId == stepHistory.ChatId &&
+                history.UserId == stepHistory.UserId);
+
+        return data;
+    }
+
+    public async Task<IEnumerable<StepHistory>> GetStepHistoryVerifyCore(StepHistory stepHistory)
+    {
+        var data = await _queryService
+            .CreateMysqlConnectionCore()
+            .QueryAsync<StepHistory>(history =>
+                history.ChatId == stepHistory.ChatId &&
+                history.UserId == stepHistory.UserId &&
+                history.Status == StepHistoryStatus.NeedVerify);
+
+        return data;
+    }
+
+    public async Task<object> SaveStepHistory(StepHistory stepHistory)
+    {
+        var chatId = stepHistory.ChatId;
+        var userId = stepHistory.UserId;
+        _logger.LogInformation("Saving StepHistory for UserId: {UserId} at {ChatId}", userId, chatId);
+
+        var isExist = await _queryService
+            .CreateMysqlConnectionCore()
+            .ExistsAsync<StepHistory>(history =>
+                history.ChatId == stepHistory.ChatId &&
+                history.UserId == stepHistory.UserId &&
+                history.Name == stepHistory.Name);
+
+        if (isExist)
+        {
+            var update = await _queryService
+                .CreateMysqlConnectionCore()
+                .UpdateAsync(stepHistory, history =>
+                    history.ChatId == stepHistory.ChatId &&
+                    history.UserId == stepHistory.UserId &&
+                    history.Name == stepHistory.Name);
+
+            _logger.LogDebug("Update StepHistory for UserId: {UserId} at {ChatId}. {Update}", userId, chatId, update);
+        }
+        else
+        {
+            var insert = await _queryService
+                .CreateMysqlConnectionCore()
+                .InsertAsync(stepHistory);
+
+            _logger.LogDebug("Insert StepHistory for UserId: {UserId} at {ChatId}. {Insert}", userId, chatId, insert);
+        }
+
+        UpdateCache(chatId, userId).InBackground();
+
+        return true;
+    }
+
+    public async Task<int> DeleteStepHistory(
+        long chatId,
+        long userId,
+        StepHistoryName name
+    )
+    {
+        var delete = await _queryService
+            .CreateMysqlConnectionCore()
+            .DeleteAsync<StepHistory>(history =>
+                history.ChatId == chatId &&
+                history.UserId == userId &&
+                history.Name == name);
+
+        _logger.LogDebug("Delete StepHistory for UserId: {UserId} at {ChatId}. {Delete}", userId, chatId, delete);
+
+        return delete;
+    }
+
+    public async Task<int> UpdateStepHistoryStatus(
+        StepHistory entity,
+        StepHistory where
+    )
+    {
+        var update = await _queryService
+            .CreateMysqlConnectionCore()
+            .UpdateAsync(entity, where);
+
+        UpdateCache(where.ChatId, where.UserId).InBackground();
+
+        return update;
+    }
+
+    public async Task<int> UpdateStepHistoryStatus(
+        StepHistory entity,
+        IEnumerable<Field> fields
+    )
+    {
+        var update = await _queryService
+            .CreateMysqlConnectionCore()
+            .UpdateAsync(entity, fields: fields, where: history =>
+                history.ChatId == entity.ChatId &&
+                history.UserId == entity.UserId);
+
+        UpdateCache(entity.ChatId, entity.UserId).InBackground();
+
+        return update;
+    }
+
+    public async Task<int> UpdateStepHistoryStatus(StepHistory entity)
+    {
+        var fields = Field.Parse<StepHistory>(history => new
+        {
+            history.Status
+        });
+
+        var update = await _queryService
+            .CreateMysqlConnectionCore()
+            .UpdateAsync(entity, fields: fields, where: history =>
+                history.ChatId == entity.ChatId &&
+                history.UserId == entity.UserId);
+
+        return update;
+    }
+
+    private async Task<IEnumerable<StepHistory>> UpdateCache(
+        long chatId,
+        long userId
+    )
+    {
+        var data = await _cacheService.SetAsync(CacheKey(chatId), async () => {
+            var data = await _queryService
+                .CreateMysqlConnectionCore()
+                .QueryAsync<StepHistory>(history =>
+                    history.ChatId == chatId &&
+                    history.UserId == userId);
 
             return data;
         });
 
         return data;
-    }
-
-    public async Task<object> SaveStep(StepHistory stepHistory)
-    {
-        var chatId = stepHistory.ChatId;
-        var userId = stepHistory.UserId;
-        _logger.LogInformation("Starting to save step history for ChatId: {ChatId}, UserId: {UserId}", chatId, userId);
-
-        var connection = _queryService.CreateMysqlConnectionCore();
-
-        var isExist = await connection.ExistsAsync<StepHistory>(x =>
-            x.ChatId == stepHistory.ChatId
-            && x.UserId == stepHistory.UserId
-        );
-
-        if (isExist)
-        {
-            _logger.LogDebug("Updating step history for ChatId: {ChatId}, UserId: {UserId}", chatId, userId);
-            var update = await connection.UpdateAsync(stepHistory, x =>
-                x.ChatId == stepHistory.ChatId && x.UserId == stepHistory.UserId
-            );
-
-            _logger.LogDebug("Update step history for ChatId: {ChatId}, UserId: {UserId}  result: {Update}", chatId, userId, update);
-        }
-        else
-        {
-            _logger.LogDebug("Inserting step history for");
-            var insert = await connection.InsertAsync<StepHistory>(stepHistory);
-
-            _logger.LogDebug("Insert step history for ChatId: {ChatId}, UserId: {UserId}  result: {Insert}", chatId, userId, insert);
-        }
-
-        UpdateCache(chatId).InBackground();
-
-        return true;
-    }
-
-    public async Task UpdateCache(long chatId)
-    {
-        // _logger.LogDebug("Evicting cache step history for ChatId: {ChatId}", chatId);
-        // await _cacheService.EvictAsync(CacheKey(chatId));
-
-        var connection = _queryService.CreateMysqlConnectionCore();
-
-        var data = await _cacheService.SetAsync(CacheKey(chatId), async () => {
-            var data = await connection.QueryAsync<StepHistory>(x =>
-                x.ChatId == chatId
-            );
-
-            return data;
-        });
     }
 }

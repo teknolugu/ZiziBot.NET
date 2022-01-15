@@ -124,27 +124,16 @@ public class ChatService
         return getMemberCount;
     }
 
-    public async Task<ChatMember> GetChatMemberAsync(long chatId, long userId)
+    public async Task<ChatMember> GetChatMemberAsync(
+        long chatId,
+        long userId
+    )
     {
         var cacheKey = "chat-member_" + chatId.ReduceChatId() + $"_{userId}";
         var data = await _cacheService.GetOrSetAsync(cacheKey, async () => {
             var chat = await _botClient.GetChatMemberAsync(chatId, userId);
 
             return chat;
-        });
-
-        return data;
-    }
-
-    public async Task<UserProfilePhotos> GetChatPhotoAsync(long userId)
-    {
-        var (expireAfter, staleAfter) = _cacheConfig;
-        var cacheKey = "user-profile-photos_-" + userId;
-
-        var data = await _cacheService.GetOrSetAsync(cacheKey, async () => {
-            var userProfilePhotos = await _botClient.GetUserProfilePhotosAsync(userId);
-
-            return userProfilePhotos;
         });
 
         return data;
@@ -161,7 +150,7 @@ public class ChatService
         return isPrivateChat;
     }
 
-    public async Task<bool> CheckGroupRestriction(long chatId)
+    public bool CheckGroupRestriction(long chatId)
     {
         Log.Information("Checking Chat Restriction for {ChatId}", chatId);
 
@@ -188,7 +177,11 @@ public class ChatService
 
         var allSettings = await _settingsService.GetAllSettings();
 
-        Parallel.ForEach(allSettings, (chatSetting, state, args) => {
+        Parallel.ForEach(allSettings, (
+            chatSetting,
+            state,
+            args
+        ) => {
             var chatId = chatSetting.ChatId.ToInt64();
             var reducedChatId = chatId.ReduceChatId();
 
@@ -227,7 +220,7 @@ public class ChatService
     //         {
     //             await privilegeService.AdminCheckerJobAsync(chatId);
     //         }
-    //         catch (Exception ex)
+    //         catch (ErrorException ex)
     //         {
     //             var msgEx = ex.Message.ToLower();
     //

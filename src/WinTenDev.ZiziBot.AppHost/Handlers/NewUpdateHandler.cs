@@ -22,13 +22,9 @@ public class NewUpdateHandler : IUpdateHandler
     private readonly ILogger<NewUpdateHandler> _logger;
     private readonly AfkService _afkService;
     private readonly AntiSpamService _antiSpamService;
-    private readonly ChatService _chatService;
-    private readonly ChatPhotoCheckService _chatPhotoCheckService;
     private readonly MataService _mataService;
-    private readonly PrivilegeService _privilegeService;
     private readonly SettingsService _settingsService;
     private readonly TelegramService _telegramService;
-    private readonly CheckUsernameService _checkUsernameService;
     private readonly WordFilterService _wordFilterService;
 
     private ChatSetting _chatSettings;
@@ -39,34 +35,30 @@ public class NewUpdateHandler : IUpdateHandler
         ILogger<NewUpdateHandler> logger,
         AfkService afkService,
         AntiSpamService antiSpamService,
-        ChatService chatService,
-        ChatPhotoCheckService chatPhotoCheckService,
         MataService mataService,
-        PrivilegeService privilegeService,
         SettingsService settingsService,
         TelegramService telegramService,
-        CheckUsernameService checkUsernameService,
         WordFilterService wordFilterService
     )
     {
         _logger = logger;
         _afkService = afkService;
         _antiSpamService = antiSpamService;
-        _chatService = chatService;
-        _chatPhotoCheckService = chatPhotoCheckService;
         _mataService = mataService;
-        _privilegeService = privilegeService;
         _telegramService = telegramService;
         _settingsService = settingsService;
-        _checkUsernameService = checkUsernameService;
         _wordFilterService = wordFilterService;
     }
 
-    public async Task HandleAsync(IUpdateContext context, UpdateDelegate next, CancellationToken cancellationToken)
+    public async Task HandleAsync(
+        IUpdateContext context,
+        UpdateDelegate next,
+        CancellationToken cancellationToken
+    )
     {
         if (When.SkipCheck(context))
         {
-            _logger.LogWarning("Update handler disabled for Channel");
+            _logger.LogDebug("Update handler disabled for some Update");
             return;
         }
 
@@ -79,7 +71,7 @@ public class NewUpdateHandler : IUpdateHandler
 
         _chatSettings = await _telegramService.GetChatSetting();
 
-        _logger.LogDebug("NewUpdate: {@V}", _telegramService.Context.Update);
+        _logger.LogTrace("NewUpdate: {@V}", _telegramService.Update);
 
         // Pre-Task is should be awaited.
         var preTaskResult = await RunPreTasks();
@@ -96,7 +88,6 @@ public class NewUpdateHandler : IUpdateHandler
         _logger.LogDebug("Continue to next Handler");
 
         await next(context, cancellationToken);
-
     }
 
     private async Task<bool> RunPreTasks()
@@ -210,35 +201,16 @@ public class NewUpdateHandler : IUpdateHandler
 
     private async Task<bool> CheckHasUsernameAsync()
     {
-        if (_telegramService.IsPrivateChat)
-        {
-            _logger.LogWarning("Check Username is disabled for Private chat!");
-            return true;
-        }
+        var checkUsername = await _telegramService.RunCheckUserUsername();
 
-        if (!_chatSettings.EnableWarnUsername)
-        {
-            _logger.LogWarning("Check Username on ChatId: '{ChatId}' is disabled by settings", _chatId);
-            return true;
-        }
-
-        if (_telegramService.HasUsername)
-        {
-            _logger.LogWarning("Check Username on ChatId: '{ChatId}' should stop because UserId '{UserId}' has Username",
-            _chatId, _fromId);
-
-            return true;
-        }
-
-        await _telegramService.RunCheckUsername();
-
-        return false;
+        return checkUsername;
     }
 
     private async Task<bool> CheckHasPhotoProfileAsync()
     {
-        var checkPhoto = await _chatPhotoCheckService.CheckChatPhoto(_chatId, _fromId,
-        answer => _telegramService.CallbackAnswerAsync(answer));
+        if (_telegramService.CallbackQuery != null) return true;
+
+        var checkPhoto = await _telegramService.RunCheckUserProfilePhoto();
 
         return checkPhoto;
     }
@@ -375,7 +347,7 @@ public class NewUpdateHandler : IUpdateHandler
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error occured when run {V}", nameof(AfkCheck).Humanize());
+            _logger.LogError(ex, "AFK Check - Error occured on {ChatId}", _chatId);
         }
 
         _logger.LogDebug("AFK check completed. In {Elapsed}", sw.Elapsed);
