@@ -138,27 +138,7 @@ public static class HangfireServiceExtension
             new ProcessMonitor(TimeSpan.FromSeconds(3))
         });
 
-        app.RegisterHangfireJobs();
-
         Log.Information("Hangfire is Running..");
-        return app;
-    }
-
-    public static IApplicationBuilder RegisterHangfireJobs(this IApplicationBuilder app)
-    {
-        HangfireUtil.DeleteAllJobs();
-
-        var appService = app.GetServiceProvider();
-
-        // var rssFeedService = appService.GetRequiredService<IRssFeedService>();
-        // var chatService = appService.GetRequiredService<IChatService>();
-        //
-        // rssFeedService.RegisterScheduler().Ignore();
-        // chatService.RegisterChatHealth().Ignore();
-
-        HangfireUtil.RegisterJob<IStorageService>("log-cleaner", (service) => service.ClearLog(), Cron.Daily);
-        // HangfireUtil.RegisterJob("monkeys-remover", () => MonkeyCacheUtil.DeleteExpired(), Cron.Hourly);
-
         return app;
     }
 }
