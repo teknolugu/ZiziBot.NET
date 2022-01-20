@@ -36,7 +36,7 @@ public class CacheService
         _cacheStack = cacheStack;
 
         (_expireAfter, _staleAfter) = cachingConfig.Value;
-        _cacheSettings = new CacheSettings(TimeSpan.FromMinutes(_expireAfter), TimeSpan.FromMinutes(_staleAfter));
+        _cacheSettings = new CacheSettings(TimeSpan.FromMinutes(_expireAfter), TimeSpan.FromSeconds(_staleAfter));
     }
 
     /// <summary>
