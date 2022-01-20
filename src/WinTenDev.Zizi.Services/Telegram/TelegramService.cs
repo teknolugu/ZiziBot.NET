@@ -298,6 +298,15 @@ public class TelegramService
         return isAnonymous;
     }
 
+    public bool CheckSenderChannel()
+    {
+        var isSenderChannel = SenderChat?.Type == ChatType.Channel;
+
+        Log.Debug("Check is From Sender Channel on ChatId: {ChatId}? {IsAnonymous}", ChatId, isSenderChannel);
+
+        return isSenderChannel;
+    }
+
     private bool CheckIsPrivateChat()
     {
         var isPrivate = Chat.Type == ChatType.Private;
