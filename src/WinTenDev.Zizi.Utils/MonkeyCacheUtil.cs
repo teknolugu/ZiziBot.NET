@@ -7,6 +7,7 @@ using MonkeyCache.FileStore;
 using Serilog;
 using Telegram.Bot.Types;
 using WinTenDev.Zizi.Utils.IO;
+using WinTenDev.Zizi.Utils.Telegram;
 using WinTenDev.Zizi.Utils.Text;
 
 namespace WinTenDev.Zizi.Utils;
@@ -40,7 +41,11 @@ public static class MonkeyCacheUtil
         return isValid;
     }
 
-    public static void AddCache<T>(this T data, string key, int expireIn = 1)
+    public static void AddCache<T>(
+        this T data,
+        string key,
+        int expireIn = 1
+    )
     {
         var expireDate = TimeSpan.FromMinutes(expireIn);
         Log.Debug("Adding Monkeys with key: '{0}'. Expire in: '{1}' ", key, expireDate);
@@ -83,7 +88,11 @@ public static class MonkeyCacheUtil
         Log.Debug("Delete done.");
     }
 
-    public static T SetChatCache<T>(this Message msg, string key, T data)
+    public static T SetChatCache<T>(
+        this Message msg,
+        string key,
+        T data
+    )
     {
         var chatId = msg.Chat.Id.ReduceChatId();
         var msgId = msg.MessageId;
@@ -93,7 +102,10 @@ public static class MonkeyCacheUtil
         return data;
     }
 
-    public static T GetChatCache<T>(this Message msg, string key)
+    public static T GetChatCache<T>(
+        this Message msg,
+        string key
+    )
     {
         var chatId = msg.Chat.Id.ReduceChatId();
         var msgId = msg.MessageId;

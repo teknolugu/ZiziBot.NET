@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using CodeHollow.FeedReader;
 using Hangfire;
 using Serilog;
+using WinTenDev.Zizi.Utils.Telegram;
 using WinTenDev.Zizi.Utils.Text;
 
 namespace WinTenDev.Zizi.Utils;

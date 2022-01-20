@@ -5,6 +5,7 @@ using TL;
 using WinTenDev.Zizi.Models.Interfaces;
 using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Utils;
+using WinTenDev.Zizi.Utils.Telegram;
 using WTelegram;
 
 namespace WinTenDev.Zizi.Services.Telegram;
@@ -32,7 +33,10 @@ public class WTelegramApiService : IWTelegramApiService
         _client = client;
     }
 
-    public async Task<Channels_ChannelParticipants> GetAllParticipants(long chatId, ChannelParticipantsFilter channelParticipantsFilter = null)
+    public async Task<Channels_ChannelParticipants> GetAllParticipants(
+        long chatId,
+        ChannelParticipantsFilter channelParticipantsFilter = null
+    )
     {
         var channelId = chatId.ReduceChatId();
 

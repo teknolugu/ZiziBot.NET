@@ -1,5 +1,5 @@
 ﻿using FluentAssertions;
-using WinTenDev.Zizi.Utils;
+using WinTenDev.Zizi.Utils.Telegram;
 using Xunit;
 
 namespace WinTenDev.Zizi.Tests;

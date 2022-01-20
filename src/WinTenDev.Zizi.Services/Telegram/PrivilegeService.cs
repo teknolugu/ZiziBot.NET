@@ -14,6 +14,7 @@ using Telegram.Bot.Types.ReplyMarkups;
 using WinTenDev.Zizi.Models.Configs;
 using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Utils;
+using WinTenDev.Zizi.Utils.Telegram;
 
 namespace WinTenDev.Zizi.Services.Telegram;
 
@@ -99,7 +100,10 @@ public class PrivilegeService
     /// <param name="chatId"></param>
     /// <param name="userId"></param>
     /// <returns></returns>
-    public async Task<bool> IsAdminAsync(long chatId, long userId)
+    public async Task<bool> IsAdminAsync(
+        long chatId,
+        long userId
+    )
     {
         var listAdmins = await GetChatAdministratorsAsync(chatId);
         var isAdmin = listAdmins.Any(member => member.User.Id == userId);
@@ -118,7 +122,10 @@ public class PrivilegeService
     }
 
     [Obsolete("Please use separated method IsAdminAsync() and property IsPrivateChat instead of this method.")]
-    public async Task<bool> IsAdminOrPrivateChat(long chatId, long userId)
+    public async Task<bool> IsAdminOrPrivateChat(
+        long chatId,
+        long userId
+    )
     {
         var isPrivate = await _chatService.IsPrivateChat(chatId);
         if (isPrivate) return true;

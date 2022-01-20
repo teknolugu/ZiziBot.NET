@@ -11,6 +11,7 @@ using WinTenDev.Zizi.Models.Configs;
 using WinTenDev.Zizi.Models.Enums;
 using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Utils;
+using WinTenDev.Zizi.Utils.Telegram;
 
 namespace WinTenDev.Zizi.Services.Telegram;
 
@@ -23,19 +24,16 @@ public class ChatService
     private readonly SettingsService _settingsService;
     private readonly CacheService _cacheService;
     private readonly RestrictionConfig _restrictionConfig;
-    private readonly CacheConfig _cacheConfig;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ChatService"/> class
     /// </summary>
     /// <param name="cacheService"></param>
-    /// <param name="cachingConfig">The caching config</param>
     /// <param name="restrictionConfig">The</param>
     /// <param name="botClient">The bot client</param>
     /// <param name="settingsService">The settings service</param>
     public ChatService(
         CacheService cacheService,
-        IOptionsSnapshot<CacheConfig> cachingConfig,
         IOptionsSnapshot<RestrictionConfig> restrictionConfig,
         TelegramBotClient botClient,
         SettingsService settingsService
@@ -44,7 +42,6 @@ public class ChatService
         _botClient = botClient;
         _cacheService = cacheService;
         _restrictionConfig = restrictionConfig.Value;
-        _cacheConfig = cachingConfig.Value;
         _settingsService = settingsService;
     }
 

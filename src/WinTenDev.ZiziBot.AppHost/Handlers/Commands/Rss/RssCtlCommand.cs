@@ -6,6 +6,7 @@ using Telegram.Bot.Framework.Abstractions;
 using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Services.Telegram;
 using WinTenDev.Zizi.Utils;
+using WinTenDev.Zizi.Utils.Telegram;
 
 namespace WinTenDev.ZiziBot.AppHost.Handlers.Commands.Rss;
 
@@ -23,7 +24,11 @@ public class RssCtlCommand : CommandBase
         _telegramService = telegramService;
     }
 
-    public override async Task HandleAsync(IUpdateContext context, UpdateDelegate next, string[] args)
+    public override async Task HandleAsync(
+        IUpdateContext context,
+        UpdateDelegate next,
+        string[] args
+    )
     {
         await _telegramService.AddUpdateContext(context);
 
