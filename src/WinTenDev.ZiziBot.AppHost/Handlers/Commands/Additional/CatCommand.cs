@@ -93,7 +93,15 @@ public class CatCommand : CommandBase
             });
         }
 
-        await _telegramService.DeleteAsync();
-        await _telegramService.SendMediaGroupAsync(listAlbum);
+        var sentMessage = await _telegramService.EditMessageTextAsync($"Sedang mengirim {catNum} Kochenk");
+        var sendMediaGroup = await _telegramService.SendMediaGroupAsync(listAlbum);
+
+        await _telegramService.DeleteAsync(sentMessage.MessageId);
+
+        if (sendMediaGroup.ErrorException != null)
+        {
+            var exception = sendMediaGroup.ErrorException;
+            await _telegramService.SendTextMessageAsync("Suatu kesalahan terjadi. Silakan dicoba kembali nanti.\n" + exception.Message);
+        }
     }
 }
