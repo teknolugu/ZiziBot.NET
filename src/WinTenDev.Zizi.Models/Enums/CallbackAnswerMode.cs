@@ -7,5 +7,7 @@ public enum CallbackAnswerMode
     EditMessage,
     DeleteMessage,
     BanMember,
+    KickMember,
+    ScheduleKickMember,
     MuteMember
 }

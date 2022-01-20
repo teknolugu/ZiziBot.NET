@@ -390,11 +390,9 @@ public class TelegramService
         var muteTimeSpan = callbackAnswer.MuteMemberTimeSpan;
 
         await Parallel.ForEachAsync(answerModes, async (
-                answerMode,
-                cancel
-            ) =>
-            // foreach (var answerMode in answerModes)
-        {
+            answerMode,
+            cancel
+        ) => {
             switch (answerMode)
             {
                 case CallbackAnswerMode.AnswerCallback:
@@ -422,12 +420,18 @@ public class TelegramService
                     await DeleteAsync(messageId);
                     break;
 
+                case CallbackAnswerMode.KickMember:
+                    break;
+
+                case CallbackAnswerMode.ScheduleKickMember:
+                    await ScheduleKickJob(StepHistoryName.HumanVerification);
+                    break;
+
                 default:
                     Log.Debug("No Callback Answer mode for this section. {@V}", answerMode);
                     break;
             }
         });
-
         return callbackResult;
     }
 
