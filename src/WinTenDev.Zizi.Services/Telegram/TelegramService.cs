@@ -317,8 +317,7 @@ public class TelegramService
 
     public bool CheckIsGroupChat()
     {
-        var chat = AnyMessage.Chat;
-        var isGroupChat = chat.Type == ChatType.Group || chat.Type == ChatType.Supergroup;
+        var isGroupChat = Chat.Type == ChatType.Group || Chat.Type == ChatType.Supergroup;
 
         Log.Debug("Chat ID '{ChatId}' IsGroupChat? {IsGroupChat}", ChatId, isGroupChat);
         return isGroupChat;
