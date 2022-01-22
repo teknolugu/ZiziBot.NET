@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Serilog;
@@ -7,9 +8,12 @@ namespace WinTenDev.Zizi.Utils.IO;
 
 public static class DirUtil
 {
-    public static string EnsureDirectory(this string dirPath, bool isDir = false)
+    public static string EnsureDirectory(
+        this string dirPath,
+        bool isDir = false
+    )
     {
-        Log.Debug("EnsuringDir: {0}", dirPath);
+        Log.Debug("EnsuringDir: {DirPath}", dirPath);
 
         var path = Path.GetDirectoryName(dirPath);
         if (isDir) path = dirPath;
@@ -17,8 +21,9 @@ public static class DirUtil
         if (path.IsNullOrEmpty()) return dirPath;
         if (Directory.Exists(path)) return dirPath;
 
-        Log.Debug("Creating directory {0}..", path);
-        Directory.CreateDirectory(path);
+        Log.Debug("Creating directory {Path}..", path);
+        if (path != null)
+            Directory.CreateDirectory(path);
 
         return dirPath;
     }
@@ -31,16 +36,14 @@ public static class DirUtil
 
     public static long DirSize(this string path)
     {
-        long size = 0;
-
         var d = new DirectoryInfo(path);
         // Add file sizes.
-        var fis = d.GetFiles();
-        foreach (var fi in fis) size += fi.Length;
+        var fileInfos = d.GetFiles();
+        var size = fileInfos.Sum(fi => fi.Length);
 
         // Add subdirectory sizes.
-        var dis = d.GetDirectories();
-        foreach (var unused in dis) size += DirSize(unused.FullName);
+        var directoryInfos = d.GetDirectories();
+        size += directoryInfos.Sum(unused => DirSize(unused.FullName));
 
         Log.Information("{Path} size is {Size}", path, size);
         return size;
@@ -59,7 +62,10 @@ public static class DirUtil
         return Path.GetDirectoryName(path) ?? path;
     }
 
-    public static string RemoveFiles(this string path, string filter = "")
+    public static string RemoveFiles(
+        this string path,
+        string filter = ""
+    )
     {
         Log.Information("Deleting files in {Path}", path);
         var files = Directory.GetFiles(path)
@@ -68,6 +74,17 @@ public static class DirUtil
         foreach (var file in files) File.Delete(file);
 
         return path;
+    }
+
+    public static IEnumerable<string> RemoveFiles(
+        this IEnumerable<string> paths
+    )
+    {
+        Log.Information("Deleting files in {Path}", paths.Count());
+
+        foreach (var file in paths) File.Delete(file);
+
+        return paths;
     }
 
     public static bool IsDirectory(this string path)
@@ -79,7 +96,7 @@ public static class DirUtil
     public static string TrimStartPath(this string filePath)
     {
         var trimStart = filePath.TrimStart(Path.DirectorySeparatorChar).TrimStart(Path.AltDirectorySeparatorChar);
-        Log.Debug("Path trimed {FilePath} to {TrimStart}", filePath, trimStart);
+        Log.Debug("Path trimmed from {FilePath} to {TrimStart}", filePath, trimStart);
         return trimStart;
     }
 }
