@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -69,12 +70,16 @@ public class JobsService
         var chat = await _chatService.GetChatAsync(chatId);
 
         var sb = new StringBuilder()
-            .Append("<b>Action:</b> #KickMember").AppendLine()
-            .Append("<b>User:</b> ").AppendFormat("[<code>{0}</code>] {1} {2}\n", userId.ToString(), history.FirstName, history.LastName)
-            .Append("<b>Chat:</b> ").AppendFormat("[<code>{0}</code>] {1} \n", chatId.ReduceChatId(), chat.Title)
-            .Append("<b>Reason:</b> ").AppendJoin(",", needVerify.Select(x => $"#{x.Name}"));
+            .Append("<b>Action:</b> #KickChatMember").AppendLine()
+            .Append("<b>User:</b> ").AppendFormat("{0}\n", history.UserId.GetNameLink(new[] { history.FirstName, history.LastName }))
+            .Append("<b>Chat:</b> ").AppendFormat("{0} \n", chat.Username.GetChatNameLink(chat.Title))
+            .Append("<b>Reason:</b> ").AppendJoin(",", needVerify.Select(x => $"#{x.Name}")).AppendLine()
+            .AppendFormat("#U{0} #C{1}", userId, chatId.ReduceChatId());
 
-        await _botClient.SendTextMessageAsync(_eventLogConfig.ChannelId, sb.ToTrimmedString(), parseMode: ParseMode.Html);
+        await _botClient.SendTextMessageAsync(text: sb.ToTrimmedString(),
+            disableWebPagePreview: true,
+            chatId: _eventLogConfig.ChannelId,
+            parseMode: ParseMode.Html);
 
         Log.Information("UserId {UserId} successfully kicked from {ChatId}", userId, chatId);
     }
