@@ -1108,10 +1108,7 @@ public class TelegramService
 
         var verifyButton = new InlineKeyboardMarkup(new[]
         {
-            // new[]
-            // {
             InlineKeyboardButton.WithCallbackData("Verifikasi", "verify")
-            // }
         });
 
         await RestrictMemberAsync(FromId, until: KickTimeOffset.ToDateTime());
@@ -1128,7 +1125,11 @@ public class TelegramService
         {
             await DeleteAsync(stepHistory.LastWarnMessageId);
         }
+    }
 
+    public async Task ScheduleKickJob(StepHistoryName name)
+    {
+        Log.Information("Scheduling Job with name: {JobName}", name);
         var jobId = _backgroundJob.Schedule<JobsService>(job =>
             job.MemberKickJob(ChatId, FromId), KickTimeOffset);
 
@@ -1139,10 +1140,10 @@ public class TelegramService
             UserId = FromId,
             FirstName = From.FirstName,
             LastName = From.LastName,
-            Reason = $"User don't have {featureName}",
+            Reason = $"User don't have {name.Humanize()}",
             Status = StepHistoryStatus.NeedVerify,
             HangfireJobId = jobId,
-            LastWarnMessageId = SentMessage.MessageId,
+            LastWarnMessageId = SentMessage?.MessageId ?? -1,
             CreatedAt = DateTime.Now,
             UpdatedAt = DateTime.Now
         });
