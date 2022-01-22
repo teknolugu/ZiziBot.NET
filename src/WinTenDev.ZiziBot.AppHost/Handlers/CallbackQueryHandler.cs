@@ -35,17 +35,21 @@ public class CallbackQueryHandler : IUpdateHandler
         _verifyCallback = verifyCallback;
     }
 
-    public async Task HandleAsync(IUpdateContext context, UpdateDelegate next, CancellationToken cancellationToken)
+    public async Task HandleAsync(
+        IUpdateContext context,
+        UpdateDelegate next,
+        CancellationToken cancellationToken
+    )
     {
         await _telegramService.AddUpdateContext(context);
 
         var callbackQuery = context.Update.CallbackQuery;
         _telegramService.CallBackMessageId = callbackQuery.Message.MessageId;
 
-        Log.Debug("CallbackQuery: {0}", callbackQuery.ToJson(true));
+        Log.Verbose("CallbackQuery: {Json}", callbackQuery.ToJson(true));
 
         var partsCallback = callbackQuery.Data.SplitText(" ");
-        Log.Debug("Callbacks: {0}", partsCallback.ToJson(true));
+        Log.Debug("Callbacks: {CB}", partsCallback);
 
         switch (partsCallback[0])// Level 0
         {

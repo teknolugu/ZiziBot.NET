@@ -30,7 +30,10 @@ public static class KeyboardUtil
         return dict;
     }
 
-    public static InlineKeyboardMarkup CreateInlineKeyboardButton(Dictionary<string, string> buttonList, int columns)
+    public static InlineKeyboardMarkup CreateInlineKeyboardButton(
+        Dictionary<string, string> buttonList,
+        int columns
+    )
     {
         var rows = (int) Math.Ceiling(buttonList.Count / (double) columns);
         var buttons = new InlineKeyboardButton[rows][];
@@ -52,12 +55,18 @@ public static class KeyboardUtil
         return new InlineKeyboardMarkup(buttons);
     }
 
-    public static InlineKeyboardMarkup ToReplyMarkup(this string buttonStr, int columns = 2)
+    public static InlineKeyboardMarkup ToReplyMarkup(
+        this string buttonStr,
+        int columns = 2
+    )
     {
         return CreateInlineKeyboardButton(StringToDict(buttonStr), columns);
     }
 
-    public static async Task<InlineKeyboardMarkup> JsonToButton(this string jsonPath, int chunk = 2)
+    public static async Task<InlineKeyboardMarkup> JsonToButton(
+        this string jsonPath,
+        int chunk = 2
+    )
     {
         string json;
         if (File.Exists(jsonPath))
@@ -81,12 +90,12 @@ public static class KeyboardUtil
             var data = row["data"].ToString();
             if (data.CheckUrlValid())
             {
-                Log.Debug("Appending button URL. Text: '{BtnText}', Url: '{Data}'.", btnText, data);
+                Log.Verbose("Appending button URL. Text: '{BtnText}', Url: '{Data}'", btnText, data);
                 btnList.Add(InlineKeyboardButton.WithUrl(btnText, data));
             }
             else
             {
-                Log.Debug("Appending button callback. Text: '{BtnText}', Data: '{Data}'.", btnText, data);
+                Log.Verbose("Appending button callback. Text: '{BtnText}', Data: '{Data}'", btnText, data);
                 btnList.Add(InlineKeyboardButton.WithCallbackData(btnText, data));
             }
         }

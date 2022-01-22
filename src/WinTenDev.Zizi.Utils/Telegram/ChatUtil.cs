@@ -13,7 +13,7 @@ public static class ChatUtil
 
         chatIdStr = chatIdStr[4..];
 
-        Log.Debug("Reduced ChatId from {0} to {1}", chatId, chatIdStr);
+        Log.Verbose("Reduced ChatId from {ChatId} to {Reduced}", chatId, chatIdStr);
 
         return chatIdStr.ToInt64();
     }
@@ -25,7 +25,7 @@ public static class ChatUtil
 
         chatIdStr = "-100" + chatIdStr;
 
-        Log.Debug("Fixing ChatId from {0} to {1}", chatId, chatIdStr);
+        Log.Verbose("Fixing ChatId from {Reduced} to {ChatId}", chatId, chatIdStr);
 
         return chatIdStr.ToInt64();
     }
