@@ -516,21 +516,11 @@ public class TelegramService
 
     public bool IsMessageTooOld(int offset = 5)
     {
-        var isOld = false;
-
-        if (Message != null)
-        {
-            var date = Message.Date;
-
-            // Skip older than offset minutes
-            var prev10M = DateTime.UtcNow.AddMinutes(-offset);
-            Log.Debug("Msg Date: {V}", date.ToString("yyyy-MM-dd hh:mm:ss tt zz"));
-            Log.Debug("Prev 10m: {V}", prev10M.ToString("yyyy-MM-dd hh:mm:ss tt zz"));
-
-            isOld = prev10M > date;
-        }
-
-        Log.Debug("Is MessageId {MessageId} too old? => {IsOld}", Message?.MessageId, isOld);
+        var messageDate = MessageDate;
+        var prevDate = DateTime.UtcNow.AddMinutes(-offset);
+        var isOld = prevDate > messageDate;
+        Log.Debug("MessageId {MessageId} Date: {V}. OffsetDate: {OffsetDate}. Too old? {IsOld}",
+            AnyMessage.MessageId, messageDate.ToDetailDateTimeString(), prevDate.ToDetailDateTimeString(), isOld);
 
         return isOld;
     }
