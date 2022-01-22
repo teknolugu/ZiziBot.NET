@@ -1,11 +1,6 @@
-﻿using System.Text;
-using System.Threading.Tasks;
-using Serilog;
+﻿using System.Threading.Tasks;
 using Telegram.Bot.Framework.Abstractions;
-using Telegram.Bot.Types.Enums;
 using WinTenDev.Zizi.Services.Telegram;
-using WinTenDev.Zizi.Utils;
-using WinTenDev.Zizi.Utils.Telegram;
 
 namespace WinTenDev.ZiziBot.AppHost.Handlers.Commands.Group;
 
@@ -18,43 +13,23 @@ public class AdminCommand : CommandBase
         _telegramService = telegramService;
     }
 
-    public override async Task HandleAsync(IUpdateContext context, UpdateDelegate next, string[] args)
+    public override async Task HandleAsync(
+        IUpdateContext context,
+        UpdateDelegate next,
+        string[] args
+    )
     {
         await _telegramService.AddUpdateContext(context);
 
         if (_telegramService.IsPrivateChat)
         {
-            Log.Warning("Get admin list only for group");
+            await _telegramService.SendTextMessageAsync("Tidak ada Admin di obrolan Private");
             return;
         }
 
         await _telegramService.SendTextMessageAsync("🍽 Loading..");
 
-        var admins = await _telegramService.GetChatAdmin();
-
-        var creatorStr = string.Empty;
-        var sbAdmin = new StringBuilder();
-
-        var number = 1;
-        foreach (var admin in admins)
-        {
-            var user = admin.User;
-            var nameLink = user.Id.GetNameLink((user.FirstName + " " + user.LastName).Trim());
-            if (admin.Status == ChatMemberStatus.Creator)
-            {
-                creatorStr = nameLink;
-            }
-            else
-            {
-                sbAdmin.AppendLine($"{number++}. {nameLink}");
-            }
-        }
-
-        var sendText = $"👤 <b>Creator</b>" +
-                       $"\n└ {creatorStr}" +
-                       $"\n" +
-                       $"\n👥️ <b>Administrators</b>" +
-                       $"\n{sbAdmin.ToTrimmedString()}";
+        var sendText = await _telegramService.GetChatAdminList();
 
         await _telegramService.EditMessageTextAsync(sendText);
     }

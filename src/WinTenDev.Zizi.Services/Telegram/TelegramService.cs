@@ -231,6 +231,34 @@ public class TelegramService
 
         return chatAdmin;
     }
+    public async Task<string> GetChatAdminList()
+    {
+        var creatorStr = string.Empty;
+        var sbAdmin = new StringBuilder();
+
+        var number = 1;
+        foreach (var admin in await GetChatAdmin())
+        {
+            var user = admin.User;
+            var nameLink = user.GetNameLink();
+            if (admin.Status == ChatMemberStatus.Creator)
+            {
+                creatorStr = nameLink;
+            }
+            else
+            {
+                sbAdmin.Append(number++).Append(". ").AppendLine(nameLink);
+            }
+        }
+
+        var adminList = $"👤 <b>Creator</b>" +
+                        $"\n└ {creatorStr}" +
+                        $"\n" +
+                        $"\n👥️ <b>Administrators</b>" +
+                        $"\n{sbAdmin.ToTrimmedString()}";
+
+        return adminList;
+    }
 
     [Obsolete("Please use separated method IsAdminAsync() and property IsPrivateChat instead of this method")]
     public async Task<bool> IsAdminOrPrivateChat()
