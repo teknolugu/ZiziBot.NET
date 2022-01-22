@@ -11,18 +11,19 @@ public static class MessageUtil
     public static string GetFileId(this Message message)
     {
         var fileId = "";
+
         switch (message.Type)
         {
             case MessageType.Document:
-                fileId = message.Document.FileId;
+                fileId = message.Document?.FileId;
                 break;
 
             case MessageType.Photo:
-                fileId = message.Photo.Last().FileId;
+                fileId = message.Photo?.Last().FileId;
                 break;
 
             case MessageType.Video:
-                fileId = message.Video.FileId;
+                fileId = message.Video?.FileId;
                 break;
         }
 
@@ -34,7 +35,10 @@ public static class MessageUtil
         return GetFileId(message).Substring(0, 17);
     }
 
-    public static string GetTextWithoutCmd(this string message, bool withoutCmd = true)
+    public static string GetTextWithoutCmd(
+        this string message,
+        bool withoutCmd = true
+    )
     {
         var partsMsg = message.Split(' ');
         var text = message;
@@ -55,11 +59,11 @@ public static class MessageUtil
 
         if (chatUsername.IsNullOrEmpty())
         {
-            var trimmedChatId = message.Chat.Id.ToString().Substring(4);
+            var trimmedChatId = message.Chat.Id.ReduceChatId();
             messageLink = $"https://t.me/c/{trimmedChatId}/{messageId}";
         }
 
-        Log.Debug("MessageLink: {0}", messageLink);
+        Log.Debug("MessageLink: {MessageLink}", messageLink);
         return messageLink;
     }
 }
