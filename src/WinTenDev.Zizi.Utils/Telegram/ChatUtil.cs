@@ -32,15 +32,6 @@ public static class ChatUtil
 
     public static string ToAdminMention(this ChatMember[] chatMembers)
     {
-        // var strBuild = new StringBuilder();
-        // foreach (var admin in chatMembers)
-        // {
-        //     var user = admin.User;
-        //     var nameLink = user.Id.GetMention();
-        //
-        //     strBuild.Append(nameLink);
-        // }
-
         var adminMention = chatMembers
             .Select(member => member.User.Id.GetMention())
             .JoinStr("");

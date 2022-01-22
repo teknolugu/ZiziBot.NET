@@ -178,18 +178,10 @@ public class TelegramService
 
     public async Task<string> GetMentionAdminsStr()
     {
-        var admins = await GetChatAdmin();
+        var chatMembers = await GetChatAdmin();
+        var adminMentionStr = chatMembers.ToAdminMention();
 
-        var strBuild = new StringBuilder();
-        foreach (var admin in admins)
-        {
-            var user = admin.User;
-            var nameLink = user.Id.GetMention();
-
-            strBuild.Append(nameLink);
-        }
-
-        return strBuild.ToString();
+        return adminMentionStr;
     }
 
     public async Task LeaveChat(long chatId = 0)
