@@ -114,21 +114,29 @@ public class AntiSpamService
     {
         var op = Operation.Begin("AntiSpam - ES2 Ban check for UserId: {UserId}", userId);
 
+        var isBan = false;
         var cacheKey = $"ban-es2_{userId}";
 
-        var banResult = await _cacheService.GetOrSetAsync(cacheKey, async () => {
-            var ban = await _globalBanService.GetGlobalBanFromDbById(userId);
+        try
+        {
+            var banResult = await _cacheService.GetOrSetAsync(cacheKey, async () => {
+                var ban = await _globalBanService.GetGlobalBanByIdCore(userId);
 
-            var banResult = new GlobalBanResult()
-            {
-                IsBanned = ban != null,
-                Data = ban
-            };
+                var banResult = new GlobalBanResult()
+                {
+                    IsBanned = ban != null,
+                    Data = ban
+                };
 
-            return banResult;
-        });
+                return banResult;
+            });
 
-        var isBan = banResult.IsBanned;
+            isBan = banResult.IsBanned;
+        }
+        catch (Exception exception)
+        {
+            Log.Error(exception, "AntiSpam - Error check ES2 Ban for UserId {UserId}", userId);
+        }
 
         Log.Debug("ES2 Ban result for UserId: '{UserId}' ? '{IsBan}'", userId, isBan);
 
