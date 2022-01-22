@@ -141,11 +141,8 @@ public class PrivilegeService
         return from777K;
     }
 
-    /// <summary>
-    /// Admins the checker job using the specified chat id
-    /// </summary>
-    /// <param name="chatId">The chat id</param>
-    [AutomaticRetry(Attempts = 1, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
+    [JobDisplayName("Admin Checker {0}")]
+    [AutomaticRetry(Attempts = 2, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
     public async Task AdminCheckerJobAsync(long chatId)
     {
         try
@@ -205,7 +202,6 @@ public class PrivilegeService
         catch (Exception e)
         {
             Log.Error(e, "Error when Check Admin in ChatID: '{ChatId}'", chatId);
-            throw;
         }
     }
 }
