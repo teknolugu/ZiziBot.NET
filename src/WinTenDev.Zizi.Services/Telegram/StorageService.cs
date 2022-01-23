@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Hangfire;
 using Humanizer;
 using Microsoft.Extensions.Options;
 using Serilog;
@@ -11,10 +12,11 @@ using Telegram.Bot.Types.InputFiles;
 using WinTenDev.Zizi.Models.Configs;
 using WinTenDev.Zizi.Models.Enums;
 using WinTenDev.Zizi.Models.Interfaces;
+using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Utils;
 using WinTenDev.Zizi.Utils.IO;
 
-namespace WinTenDev.Zizi.Services.Internals;
+namespace WinTenDev.Zizi.Services.Telegram;
 
 /// <summary>
 /// Storage service for storage management
@@ -42,9 +44,7 @@ public class StorageService : IStorageService
         _queryService = queryService;
     }
 
-    /// <summary>
-    /// Log management for delete old log and upload to channel
-    /// </summary>
+    [JobDisplayName("Delete olds Log and Backup")]
     public async Task ClearLog()
     {
         try
