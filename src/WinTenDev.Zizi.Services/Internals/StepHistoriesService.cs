@@ -1,6 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Hangfire;
+using Humanizer;
 using Microsoft.Extensions.Logging;
 using RepoDb;
 using WinTenDev.Zizi.Models.Enums;
@@ -12,16 +15,19 @@ namespace WinTenDev.Zizi.Services.Internals;
 public class StepHistoriesService
 {
     private readonly ILogger<StepHistoriesService> _logger;
+    private readonly IRecurringJobManager _recurringJobManager;
     private readonly CacheService _cacheService;
     private readonly QueryService _queryService;
 
     public StepHistoriesService(
         ILogger<StepHistoriesService> logger,
+        IRecurringJobManager recurringJobManager,
         CacheService cacheService,
         QueryService queryService
     )
     {
         _logger = logger;
+        _recurringJobManager = recurringJobManager;
         _cacheService = cacheService;
         _queryService = queryService;
     }
@@ -197,6 +203,18 @@ public class StepHistoriesService
         return update;
     }
 
+    [JobDisplayName("Delete olds Step History")]
+    public async Task DeleteOldStepHistory()
+    {
+        var delete = await _queryService
+            .CreateMysqlConnectionCore()
+            .DeleteAsync<StepHistory>(history =>
+                history.Status == StepHistoryStatus.ActionDone &&
+                history.UpdatedAt <= DateTime.Now.AddDays(-2));
+
+        _logger.LogInformation("Removed old Step data. {Total}", "Item".ToQuantity(delete));
+    }
+
     private async Task<IEnumerable<StepHistory>> UpdateCache(
         long chatId,
         long userId
@@ -213,5 +231,11 @@ public class StepHistoriesService
         });
 
         return data;
+    }
+
+    public void RegisterJobDeleteOldStep()
+    {
+        _recurringJobManager.AddOrUpdate<StepHistoriesService>("delete-old-steps",
+            service => service.DeleteOldStepHistory(), Cron.Hourly);
     }
 }
