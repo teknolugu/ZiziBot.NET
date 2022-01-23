@@ -14,19 +14,34 @@ public class AfkCommand : CommandBase
     private readonly AfkService _afkService;
     private readonly TelegramService _telegramService;
 
-    public AfkCommand(TelegramService telegramService, AfkService afkService)
+    public AfkCommand(
+        TelegramService telegramService,
+        AfkService afkService
+    )
     {
         _afkService = afkService;
         _telegramService = telegramService;
     }
 
-    public override async Task HandleAsync(IUpdateContext context, UpdateDelegate next, string[] args)
+    public override async Task HandleAsync(
+        IUpdateContext context,
+        UpdateDelegate next,
+        string[] args
+    )
     {
         await _telegramService.AddUpdateContext(context);
 
-        var msg = context.Update.Message;
+        var fromNameLink = _telegramService.FromNameLink;
         var fromId = _telegramService.FromId;
         var chatId = _telegramService.ChatId;
+        var afkReason = _telegramService.MessageOrEditedText.GetTextWithoutCmd();
+
+        if (_telegramService.CheckFromAnonymous() ||
+            _telegramService.CheckSenderChannel())
+        {
+            await _telegramService.SendTextMessageAsync("Mode AFK dimatikan untuk Pengguna Anonymous");
+            return;
+        }
 
         var data = new Dictionary<string, object>()
         {
@@ -37,11 +52,10 @@ public class AfkCommand : CommandBase
             { "afk_end", DateTime.Now }
         };
 
-        var sendText = $"{msg.GetFromNameLink()} Sedang afk.";
+        var sendText = $"{fromNameLink} Sedang afk.";
 
-        if (msg.Text.GetTextWithoutCmd().IsNotNullOrEmpty())
+        if (afkReason.IsNotNullOrEmpty())
         {
-            var afkReason = msg.Text.GetTextWithoutCmd();
             data.Add("afk_reason", afkReason);
 
             sendText += $"\n<i>{afkReason}</i>";
