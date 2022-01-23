@@ -767,6 +767,18 @@ public class TelegramService
         }
     }
 
+    public async Task DeleteSenderMessageAsync()
+    {
+        var messageId = MessageOrEdited.MessageId;
+        await DeleteAsync(messageId);
+    }
+
+    public async Task DeleteSentMessageAsync()
+    {
+        var messageId = SentMessage.MessageId;
+        await DeleteAsync(messageId);
+    }
+
     public async Task DeleteAsync(
         int messageId = -1,
         int delay = 0
