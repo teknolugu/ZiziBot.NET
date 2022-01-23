@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Serilog;
 using Telegram.Bot.Framework.Abstractions;
@@ -7,7 +8,6 @@ using WinTenDev.Zizi.Models.Types;
 using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Services.Telegram;
 using WinTenDev.Zizi.Utils;
-using WinTenDev.Zizi.Utils.Telegram;
 
 namespace WinTenDev.ZiziBot.AppHost.Handlers.Commands.Words;
 
@@ -25,24 +25,29 @@ public class AddKataCommand : CommandBase
         _wordFilterService = wordFilterService;
     }
 
-    public override async Task HandleAsync(IUpdateContext context, UpdateDelegate next, string[] args)
+    public override async Task HandleAsync(
+        IUpdateContext context,
+        UpdateDelegate next,
+        string[] args
+    )
     {
         await _telegramService.AddUpdateContext(context);
 
         var chatId = _telegramService.ChatId;
         var fromId = _telegramService.FromId;
-        var msg = context.Update.Message;
-        var cleanedMsg = msg.Text.GetTextWithoutCmd();
-        var partedMsg = cleanedMsg.Split(" ");
-        var paramOption = partedMsg.ValueOfIndex(1) ?? "";
-        var word = partedMsg.ValueOfIndex(0);
+
+        var messageTextParts = _telegramService.MessageTextParts;
+        var word = messageTextParts.ElementAtOrDefault(1) ?? string.Empty;
+        var paramOption = messageTextParts.ElementAtOrDefault(2) ?? string.Empty;
+
         var isGlobalBlock = false;
 
         var isSudoer = _telegramService.IsFromSudo;
-        var isAdmin = await _telegramService.CheckFromAdmin();
+
         if (!isSudoer)
         {
-            Log.Information("Currently add Kata is limited only Sudo.");
+            await _telegramService.DeleteSenderMessageAsync();
+            Log.Information("Currently add Kata is limited only Sudo");
             return;
         }
 
@@ -55,29 +60,16 @@ public class AddKataCommand : CommandBase
 
         if (paramOption.IsContains("-"))
         {
-            if (paramOption.IsContains("g") && isSudoer)// Global
+            if (paramOption.IsContains("g"))// Global
             {
                 isGlobalBlock = true;
                 await _telegramService.AppendTextAsync("Kata ini akan di blokir Global!");
-            }
-
-            if (paramOption.IsContains("d"))
-            {
-            }
-
-            if (paramOption.IsContains("c"))
-            {
             }
         }
 
         if (!paramOption.IsContains("g"))
         {
-            @where.Add("chat_id", msg.Chat.Id);
-        }
-
-        if (!isSudoer)
-        {
-            await _telegramService.AppendTextAsync("Hanya Sudoer yang dapat memblokir Kata mode Group-wide!");
+            @where.Add("chat_id", chatId);
         }
 
         if (!word.IsNotNullOrEmpty())
@@ -86,7 +78,6 @@ public class AddKataCommand : CommandBase
         }
         else
         {
-            await _telegramService.AppendTextAsync("Sedang menambahkan kata");
 
             var isExist = await _wordFilterService.IsExistAsync(@where);
             if (isExist)
@@ -95,7 +86,8 @@ public class AddKataCommand : CommandBase
             }
             else
             {
-                var save = await _wordFilterService.SaveWordAsync(new WordFilter()
+                await _telegramService.AppendTextAsync("Sedang menambahkan kata");
+                await _wordFilterService.SaveWordAsync(new WordFilter()
                 {
                     Word = word,
                     ChatId = chatId,
@@ -103,10 +95,6 @@ public class AddKataCommand : CommandBase
                     FromId = fromId,
                     CreatedAt = DateTime.Now
                 });
-
-                await _telegramService.AppendTextAsync("Sinkronisasi Kata ke cache");
-                await _wordFilterService.UpdateWordsCache();
-                // await _queryFactory.SyncWordToLocalAsync();
 
                 await _telegramService.AppendTextAsync("Kata berhasil di tambahkan");
             }

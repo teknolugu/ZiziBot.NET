@@ -76,6 +76,20 @@ public class WordFilterService
         return data;
     }
 
+    public async Task<int> DeleteKata(WordFilter wordFilter)
+    {
+        var query = _queryService
+            .CreateMySqlFactory()
+            .FromTable(TableName).Where("word", wordFilter.Word);
+
+        if (wordFilter.ChatId != 0)
+            query.Where("chat_id", wordFilter.ChatId);
+
+        var delete = await query.DeleteAsync();
+
+        return delete;
+    }
+
     public async Task UpdateWordsCache()
     {
         var data = await GetWordsListCore();
