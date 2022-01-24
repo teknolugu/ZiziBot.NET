@@ -71,7 +71,7 @@ public class JobsService
 
         var sb = new StringBuilder()
             .Append("<b>Action:</b> #KickChatMember").AppendLine()
-            .Append("<b>User:</b> ").AppendFormat("{0}\n", history.UserId.GetNameLink(new[] { history.FirstName, history.LastName }))
+            .Append("<b>User:</b> ").AppendFormat("{0}\n", history.UserId.GetNameLink(history.FirstName, history.LastName))
             .Append("<b>Chat:</b> ").AppendFormat("{0} \n", chat.Username.GetChatNameLink(chat.Title))
             .Append("<b>Reason:</b> ").AppendJoin(",", needVerify.Select(x => $"#{x.Name}")).AppendLine()
             .AppendFormat("#U{0} #C{1}", userId, chatId.ReduceChatId());

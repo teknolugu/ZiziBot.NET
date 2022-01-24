@@ -5,9 +5,21 @@ namespace WinTenDev.Zizi.Utils.Telegram;
 
 public static class MemberUtil
 {
-    public static string GetNameLink(this long userId, string name)
+    public static string GetNameLink(
+        this long userId,
+        string name
+    )
     {
         return $"<a href='tg://user?id={userId}'>{name}</a>";
+    }
+
+    public static string GetNameLink(
+        this long userId,
+        params string[] names
+    )
+    {
+        var fullName = names.JoinStr(" ").Trim();
+        return $"<a href='tg://user?id={userId}'>{fullName}</a>";
     }
 
     public static string GetNameLink(this User user)
