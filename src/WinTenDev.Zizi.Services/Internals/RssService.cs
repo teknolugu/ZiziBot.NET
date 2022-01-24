@@ -6,13 +6,11 @@ using SqlKata.Execution;
 using WinTenDev.Zizi.Models.Types;
 using WinTenDev.Zizi.Utils;
 using WinTenDev.Zizi.Utils.Telegram;
-using WinTenDev.Zizi.Utils.Text;
 
 namespace WinTenDev.Zizi.Services.Internals;
 
 public class RssService
 {
-
     private readonly QueryService _queryService;
     private const string CacheKey = "rss-list";
     private const string RSSHistoryTable = "rss_history";
@@ -25,27 +23,26 @@ public class RssService
         _queryService = queryService;
     }
 
-    public async Task<bool> IsHistoryExist(RssHistory rssHistory)
+    public async Task<bool> IsHistoryExist(
+        long chatId,
+        string url
+    )
     {
-        var where = new Dictionary<string, object>()
-        {
-            { "ChatId", rssHistory.ChatId },
-            { "Url", rssHistory.Url }
-        };
-
         var data = await _queryService
             .CreateMySqlFactory()
             .FromTable(RSSHistoryTable)
-            .Where(where)
-            .GetAsync();
+            .Where("chat_id", chatId)
+            .Where("url", url)
+            .GetAsync<RssHistory>();
 
         var isExist = data.Any();
-        Log.Debug("Check RSS History: {IsExist}", isExist);
+        Log.Debug("Check RSS History exist on ChatId {ChatId}? {IsExist}",
+            chatId, isExist);
 
         return isExist;
     }
 
-    public async Task<bool> IsExistRssAsync(
+    public async Task<bool> IsRssExist(
         long chatId,
         string urlFeed
     )
@@ -55,7 +52,7 @@ public class RssService
             .FromTable(RSSSettingTable)
             .Where("chat_id", chatId)
             .Where("url_feed", urlFeed)
-            .GetAsync();
+            .GetAsync<RssHistory>();
 
         var isExist = data.Any();
         Log.Information("Check RSS Setting: {IsExist}", isExist);
@@ -89,18 +86,17 @@ public class RssService
         return insert;
     }
 
-    public async Task<List<RssSetting>> GetRssSettingsAsync(long chatId)
+    public async Task<IEnumerable<RssSetting>> GetRssSettingsAsync(long chatId)
     {
         var data = await _queryService
             .CreateMySqlFactory()
             .FromTable(RSSSettingTable)
             .Where("chat_id", chatId)
-            .GetAsync();
+            .GetAsync<RssSetting>();
 
-        var mapped = data.ToJson().MapObject<List<RssSetting>>();
-        Log.Debug("RSSData: {@V}", mapped);
+        Log.Debug("RSSData: {@V}", data);
 
-        return mapped;
+        return data;
     }
 
     public async Task<IEnumerable<RssSetting>> GetAllRssSettingsAsync()
@@ -115,21 +111,21 @@ public class RssService
         return data;
     }
 
-    public async Task<List<RssHistory>> GetRssHistory(RssHistory rssHistory)
+    public async Task<IEnumerable<RssHistory>> GetRssHistory(RssHistory rssHistory)
     {
         var where = new Dictionary<string, object>()
         {
-            ["ChatId"] = rssHistory.ChatId,
-            ["RssSource"] = rssHistory.RssSource
+            ["chat_id"] = rssHistory.ChatId,
+            ["rss_source"] = rssHistory.RssSource
         };
 
         var query = await _queryService
             .CreateMySqlFactory()
             .FromTable(RSSHistoryTable)
             .Where(where)
-            .GetAsync();
+            .GetAsync<RssHistory>();
 
-        return query.ToJson().MapObject<List<RssHistory>>();
+        return query;
     }
 
     public async Task<bool> DeleteRssAsync(

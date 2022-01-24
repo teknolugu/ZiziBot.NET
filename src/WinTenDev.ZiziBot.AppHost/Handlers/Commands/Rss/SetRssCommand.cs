@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using Hangfire;
 using Serilog;
 using Telegram.Bot.Framework.Abstractions;
 using WinTenDev.Zizi.Services.Internals;
@@ -13,21 +12,38 @@ namespace WinTenDev.ZiziBot.AppHost.Handlers.Commands.Rss;
 public class SetRssCommand : CommandBase
 {
     private readonly RssService _rssService;
+    private readonly RssFeedService _rssFeedService;
     private readonly TelegramService _telegramService;
 
-    public SetRssCommand(TelegramService telegramService, RssService rssService)
+    public SetRssCommand(
+        TelegramService telegramService,
+        RssService rssService,
+        RssFeedService rssFeedService
+    )
     {
         _telegramService = telegramService;
         _rssService = rssService;
+        _rssFeedService = rssFeedService;
     }
 
-    public override async Task HandleAsync(IUpdateContext context, UpdateDelegate next, string[] args)
+    public override async Task HandleAsync(
+        IUpdateContext context,
+        UpdateDelegate next,
+        string[] args
+    )
     {
         await _telegramService.AddUpdateContext(context);
 
         var chatId = _telegramService.ChatId;
-        var reducedChatId = _telegramService.ReducedChatId;
         var fromId = _telegramService.FromId;
+
+        var checkUserPermission = await _telegramService.CheckUserPermission();
+        if (!checkUserPermission)
+        {
+            Log.Warning("Delete RSS only for admin or private chat!");
+            await _telegramService.DeleteAsync();
+            return;
+        }
 
         var url = _telegramService.Message.Text.GetTextWithoutCmd();
         if (url.IsNullOrEmpty())
@@ -67,7 +83,7 @@ public class SetRssCommand : CommandBase
             }
         }
 
-        var isFeedExist = await _rssService.IsExistRssAsync(chatId, url);
+        var isFeedExist = await _rssService.IsRssExist(chatId, url);
 
         Log.Information("Is Url Exist: {IsFeedExist}", isFeedExist);
 
@@ -86,11 +102,7 @@ public class SetRssCommand : CommandBase
 
             await _telegramService.AppendTextAsync("Memastikan Scheduler sudah berjalan");
 
-            var unique = StringUtil.GenerateUniqueId(5);
-
-            var baseId = "rss";
-            var recurringId = $"{baseId}-{reducedChatId}-{unique}";
-            HangfireUtil.RegisterJob<RssFeedService>(recurringId, service => service.ExecuteUrlAsync(chatId, url), Cron.Minutely, queue: "rss-feed");
+            _rssFeedService.RegisterUrlFeed(chatId, url);
 
             await _telegramService.AppendTextAsync($"Tautan berhasil di simpan");
         }

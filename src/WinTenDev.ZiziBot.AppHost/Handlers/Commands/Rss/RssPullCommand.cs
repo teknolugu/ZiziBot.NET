@@ -15,14 +15,18 @@ public class RssPullCommand : CommandBase
         _telegramService = telegramService;
     }
 
-    public override async Task HandleAsync(IUpdateContext context, UpdateDelegate next, string[] args)
+    public override async Task HandleAsync(
+        IUpdateContext context,
+        UpdateDelegate next,
+        string[] args
+    )
     {
         await _telegramService.AddUpdateContext(context);
 
-        var chatId = _telegramService.Message.Chat.Id;
-        var isAdmin = await _telegramService.CheckFromAdmin();
+        var chatId = _telegramService.ChatId;
 
-        if (!isAdmin && !_telegramService.IsPrivateChat)
+        var checkUserPermission = await _telegramService.CheckUserPermission();
+        if (!checkUserPermission)
         {
             Log.Warning("You must Admin or Private chat");
 

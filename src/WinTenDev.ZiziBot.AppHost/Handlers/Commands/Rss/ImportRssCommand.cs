@@ -14,24 +14,30 @@ public class ImportRssCommand : CommandBase
     private readonly RssService _rssService;
     private readonly TelegramService _telegramService;
 
-    public ImportRssCommand(TelegramService telegramService, RssService rssService)
+    public ImportRssCommand(
+        TelegramService telegramService,
+        RssService rssService
+    )
     {
         _rssService = rssService;
         _telegramService = telegramService;
     }
 
-    public override async Task HandleAsync(IUpdateContext context, UpdateDelegate next, string[] args)
+    public override async Task HandleAsync(
+        IUpdateContext context,
+        UpdateDelegate next,
+        string[] args
+    )
     {
         await _telegramService.AddUpdateContext(context);
 
         var msg = _telegramService.Message;
         var msgId = msg.MessageId;
         var chatId = msg.Chat.Id;
-        var msgText = msg.Text;
         var dateDate = DateTime.UtcNow.ToString("yyyy-MM-dd");
 
-        var isAdminOrPrivate = await _telegramService.IsAdminOrPrivateChat();
-        if (!isAdminOrPrivate)
+        var checkUserPermission = await _telegramService.CheckUserPermission();
+        if (!checkUserPermission)
         {
             var send = "Maaf, hanya Admin yang dapat mengimport daftar RSS";
             await _telegramService.SendTextMessageAsync(send);

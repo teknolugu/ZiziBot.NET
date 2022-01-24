@@ -19,13 +19,20 @@ public class ExportRssCommand : CommandBase
     private readonly RssService _rssService;
     private readonly TelegramService _telegramService;
 
-    public ExportRssCommand(TelegramService telegramService, RssService rssService)
+    public ExportRssCommand(
+        TelegramService telegramService,
+        RssService rssService
+    )
     {
         _telegramService = telegramService;
         _rssService = rssService;
     }
 
-    public override async Task HandleAsync(IUpdateContext context, UpdateDelegate next, string[] args)
+    public override async Task HandleAsync(
+        IUpdateContext context,
+        UpdateDelegate next,
+        string[] args
+    )
     {
         await _telegramService.AddUpdateContext(context);
 
@@ -35,9 +42,8 @@ public class ExportRssCommand : CommandBase
         var msgText = msg.Text;
         var dateDate = DateTime.UtcNow.ToString("yyyy-MM-dd", new DateTimeFormatInfo());
 
-        var isAdminOrPrivate = await _telegramService.IsAdminOrPrivateChat();
-
-        if (!isAdminOrPrivate)
+        var checkUserPermission = await _telegramService.CheckUserPermission();
+        if (!checkUserPermission)
         {
             var send = "Maaf, hanya Admin yang dapat mengekspor daftar RSS";
             await _telegramService.SendTextMessageAsync(send);

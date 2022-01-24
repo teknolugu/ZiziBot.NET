@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Telegram.Bot.Framework.Abstractions;
 using WinTenDev.Zizi.Services.Internals;
@@ -12,20 +13,27 @@ public class RssInfoCommand : CommandBase
     private readonly RssService _rssService;
     private readonly TelegramService _telegramService;
 
-    public RssInfoCommand(RssService rssService, TelegramService telegramService)
+    public RssInfoCommand(
+        RssService rssService,
+        TelegramService telegramService
+    )
     {
         _telegramService = telegramService;
         _rssService = rssService;
     }
 
-    public override async Task HandleAsync(IUpdateContext context, UpdateDelegate next, string[] args)
+    public override async Task HandleAsync(
+        IUpdateContext context,
+        UpdateDelegate next,
+        string[] args
+    )
     {
         await _telegramService.AddUpdateContext(context);
 
-        var chatId = _telegramService.Message.Chat.Id;
-        var isAdmin = await _telegramService.CheckFromAdmin();
+        var chatId = _telegramService.ChatId;
 
-        if (!isAdmin && !_telegramService.IsPrivateChat)
+        var checkUserPermission = await _telegramService.CheckUserPermission();
+        if (!checkUserPermission)
         {
             await _telegramService.SendTextMessageAsync("Kamu bukan admin, atau kamu bisa mengaturnya di japri.");
             return;
@@ -33,7 +41,7 @@ public class RssInfoCommand : CommandBase
 
         await _telegramService.SendTextMessageAsync("🔄 Sedang meload data..");
         var rssData = await _rssService.GetRssSettingsAsync(chatId);
-        var rssCount = rssData.Count;
+        var rssCount = rssData.Count();
 
         var sb = new StringBuilder();
 
