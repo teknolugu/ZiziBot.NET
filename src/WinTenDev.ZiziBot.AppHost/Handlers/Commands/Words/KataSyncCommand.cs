@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using Serilog;
 using Telegram.Bot.Framework.Abstractions;
 using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Services.Telegram;
@@ -19,24 +20,26 @@ public class KataSyncCommand : CommandBase
         _wordFilterService = wordFilterService;
     }
 
-    public override async Task HandleAsync(IUpdateContext context, UpdateDelegate next, string[] args)
+    public override async Task HandleAsync(
+        IUpdateContext context,
+        UpdateDelegate next,
+        string[] args
+    )
     {
         await _telegramService.AddUpdateContext(context);
 
         var isSudoer = _telegramService.IsFromSudo;
-        var isAdmin = await _telegramService.CheckFromAdmin();
+
+        await _telegramService.DeleteSenderMessageAsync();
 
         if (!isSudoer)
         {
+            Log.Debug("Only sudo can do Sync Kata!");
             return;
         }
 
-        await _telegramService.DeleteAsync(_telegramService.Message.MessageId);
-
         await _telegramService.AppendTextAsync("Sedang mengsinkronkan Word Filter");
-        await _wordFilterService.UpdateWordsCache();
-// /            await _queryFactory.SyncWordToLocalAsync();
-
+        await _wordFilterService.UpdateWordListsCache();
 
         await _telegramService.AppendTextAsync("Selesai mengsinkronkan.");
 

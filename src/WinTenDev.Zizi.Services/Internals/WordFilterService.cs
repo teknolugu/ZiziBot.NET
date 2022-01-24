@@ -90,12 +90,12 @@ public class WordFilterService
         return delete;
     }
 
-    public async Task UpdateWordsCache()
+    public async Task UpdateWordListsCache()
     {
-        var data = await GetWordsListCore();
+        await _cacheService.EvictAsync(CacheKey);
 
-        Log.Debug("Updating Cache Words with key {CacheKey}", CacheKey);
-        await _cacheService.SetAsync(CacheKey, data);
+        Log.Debug("Update Wordlist Cache..");
+        await GetWordsList();
     }
 
     public async Task<TelegramResult> IsMustDelete(string words)

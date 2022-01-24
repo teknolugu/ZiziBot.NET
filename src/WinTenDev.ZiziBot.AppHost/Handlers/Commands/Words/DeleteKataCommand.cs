@@ -62,5 +62,7 @@ public class DeleteKataCommand : CommandBase
 
         var deleteResult = delete > 0 ? "Kata berhasil di hapus" : "Kata sudah dihapus";
         await _telegramService.EditMessageTextAsync(deleteResult);
+
+        await _wordFilterService.UpdateWordListsCache();
     }
 }

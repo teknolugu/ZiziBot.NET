@@ -97,6 +97,7 @@ public class AddKataCommand : CommandBase
                 });
 
                 await _telegramService.AppendTextAsync("Kata berhasil di tambahkan");
+                await _wordFilterService.UpdateWordListsCache();
             }
         }
 
