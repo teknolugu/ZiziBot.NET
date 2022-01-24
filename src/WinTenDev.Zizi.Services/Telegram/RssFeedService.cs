@@ -1,14 +1,14 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using CodeHollow.FeedReader;
 using Hangfire;
+using Hangfire.Storage;
+using MoreLinq;
 using Serilog;
 using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
-using WinTenDev.Zizi.Models.Interfaces;
 using WinTenDev.Zizi.Models.Types;
 using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Utils;
@@ -16,21 +16,24 @@ using WinTenDev.Zizi.Utils.Telegram;
 
 namespace WinTenDev.Zizi.Services.Telegram;
 
-public class RssFeedService : IRssFeedService
+public class RssFeedService
 {
     private readonly RssService _rssService;
+    private readonly IRecurringJobManager _recurringJobManager;
     private readonly TelegramBotClient _botClient;
 
     public RssFeedService(
+        IRecurringJobManager recurringJobManager,
         TelegramBotClient botClient,
         RssService rssService
     )
     {
+        _recurringJobManager = recurringJobManager;
         _botClient = botClient;
         _rssService = rssService;
     }
 
-    public async Task RegisterScheduler()
+    public async Task RegisterJobAllRssScheduler()
     {
         Log.Information("Initializing RSS Scheduler..");
 
@@ -39,90 +42,63 @@ public class RssFeedService : IRssFeedService
 
         foreach (var rssSetting in listChatId)
         {
-            var chatId = rssSetting.ChatId.ToInt64();
+            var chatId = rssSetting.ChatId;
             var urlFeed = rssSetting.UrlFeed;
 
-            var reducedChatId = chatId.ReduceChatId();
-            var unique = StringUtil.GenerateUniqueId(5);
-
-            var baseId = "rss";
-            var recurringId = $"{baseId}-{reducedChatId}-{unique}";
-
-            HangfireUtil.RegisterJob<RssFeedService>(recurringId, service => service.ExecuteUrlAsync(chatId, urlFeed), Cron.Minutely);
+            RegisterUrlFeed(chatId, urlFeed);
         }
 
         Log.Information("Registering RSS Scheduler complete..");
     }
 
-    [AutomaticRetry(Attempts = 2, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
-    [Queue("rss-feed")]
-    public async Task<int> ExecuteUrlAsync(
+    public void RegisterUrlFeed(
+        long chatId,
+        string urlFeed
+    )
+    {
+        var reducedChatId = chatId.ReduceChatId();
+        var unique = StringUtil.GenerateUniqueId(3);
+        var recurringId = $"RSS_{reducedChatId}_{unique}";
+
+        _recurringJobManager.AddOrUpdate<RssFeedService>(recurringId, service =>
+            service.ExecuteUrlAsync(chatId, urlFeed), Cron.Minutely);
+    }
+
+    [AutomaticRetry(Attempts = 0, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
+    [JobDisplayName("RSS {0}")]
+    public async Task ExecuteUrlAsync(
         long chatId,
         string rssUrl
     )
     {
-        var newRssCount = 0;
-
         Log.Information("Reading feed from {ChatId}. Url: {RssUrl}", chatId, rssUrl);
         var rssFeeds = await FeedReader.ReadAsync(rssUrl);
 
         var rssTitle = rssFeeds.Title;
+        var rssFeed = rssFeeds.Items.FirstOrDefault();
 
-        foreach (var rssFeed in rssFeeds.Items)
+        Log.Debug("Getting last history for {ChatId} url {RssUrl}", chatId, rssUrl);
+
+        if (rssFeed == null) return;
+
+        Log.Debug("CurrentArticleDate: {Date}", rssFeed.PublishingDate);
+        Log.Debug("Prepare sending article to ChatId {ChatId}", chatId);
+
+        // var titleLink = $"{rssTitle} - {rssFeed.Title}".MkUrl(rssFeed.Link);
+        var category = rssFeed.Categories.MkJoin(", ");
+        var sendText = $"{rssTitle} - {rssFeed.Title}" +
+                       $"\n{rssFeed.Link}" +
+                       $"\nTags: {category}";
+
+        var isExist = await _rssService.IsHistoryExist(chatId, rssFeed.Link);
+
+        if (isExist)
         {
-            Log.Debug("Getting last history for {ChatId} url {RssUrl}", chatId, rssUrl);
-
-            var rssHistory = await _rssService.GetRssHistory(new RssHistory()
-            {
-                ChatId = chatId,
-                RssSource = rssUrl
-            });
-            var lastRssHistory = rssHistory.LastOrDefault();
-
-            if (rssHistory.Count > 0)
-            {
-                Log.Debug("Last send feed {0} => {1}", rssUrl, lastRssHistory.PublishDate);
-
-                var lastArticleDate = lastRssHistory.PublishDate;
-                var currentArticleDate = rssFeed.PublishingDate;
-
-                if (currentArticleDate < lastArticleDate)
-                {
-                    Log.Information("Current article is older than last article. Stopped..");
-                    break;
-                }
-
-                Log.Debug("LastArticleDate: {0}", lastArticleDate);
-                Log.Debug("CurrentArticleDate: {0}", currentArticleDate);
-            }
-
-            Log.Debug("Prepare sending article..");
-
-            var titleLink = $"{rssTitle} - {rssFeed.Title}".MkUrl(rssFeed.Link);
-            var category = rssFeed.Categories.MkJoin(", ");
-            var sendText = $"{rssTitle} - {rssFeed.Title}" +
-                           $"\n{rssFeed.Link}" +
-                           $"\nTags: {category}";
-
-            var where = new Dictionary<string, object>()
-            {
-                { "chat_id", chatId },
-                { "url", rssFeed.Link }
-            };
-
-            var isExist = await _rssService.IsHistoryExist(new RssHistory()
-            {
-                ChatId = chatId,
-                Url = rssFeed.Link
-            });
-
-            if (isExist)
-            {
-                Log.Information("Last article from feed '{0}' has sent to {1}", rssUrl, chatId);
-                break;
-            }
-
-            Log.Information("Sending article from feed {0} to {1}", rssUrl, chatId);
+            Log.Information("Last article from feed '{RssUrl}' has sent to {ChatId}", rssUrl, chatId);
+        }
+        else
+        {
+            Log.Information("Sending article from feed {RssUrl} to {ChatId}", rssUrl, chatId);
 
             try
             {
@@ -140,12 +116,10 @@ public class RssFeedService : IRssFeedService
                     Author = rssFeed.Author ?? "N/A",
                     CreatedAt = DateTime.Now
                 });
-
-                newRssCount++;
             }
             catch (Exception ex)
             {
-                Log.Error(ex.Demystify(), "RSS Broadcaster error");
+                Log.Error(ex.Demystify(), "RSS Broadcaster Error at ChatId {ChatId}. Url: {Url}", chatId, rssUrl);
                 var exMessage = ex.Message;
                 if (exMessage.Contains("bot was blocked by the user"))
                 {
@@ -153,21 +127,26 @@ public class RssFeedService : IRssFeedService
                     Log.Debug("Deleting all RSS Settings");
                     await _rssService.DeleteAllByChatId(chatId);
 
-                    UnRegRSS(chatId);
+                    UnRegisterAllRss(chatId);
                 }
             }
         }
-
-        return newRssCount;
     }
 
-    public static void UnRegRSS(long chatId)
+    public void UnRegisterAllRss(long chatId)
     {
-        var baseId = "rss";
         var reduceChatId = chatId.ReduceChatId();
-        var recurringId = $"{baseId}-{reduceChatId}";
+        var prefixJobId = $"RSS_{reduceChatId}";
 
-        Log.Debug("Deleting RSS Cron {0}", chatId);
-        RecurringJob.RemoveIfExists(recurringId);
+        var connection = JobStorage.Current.GetConnection();
+
+        var recurringJobs = connection.GetRecurringJobs();
+        var filteredJobs = recurringJobs.Where(job =>
+            job.Id.Contains(prefixJobId));
+
+        filteredJobs.ForEach(job => {
+            Log.Debug("Deleting RSS Cron {ChatId}", chatId);
+            _recurringJobManager.RemoveIfExists(job.Id);
+        });
     }
 }
