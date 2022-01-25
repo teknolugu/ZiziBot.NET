@@ -7,12 +7,14 @@ using Hangfire;
 using Hangfire.Storage;
 using MoreLinq;
 using Serilog;
+using SerilogTimings;
 using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
 using WinTenDev.Zizi.Models.Types;
 using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Utils;
 using WinTenDev.Zizi.Utils.Telegram;
+using WinTenDev.Zizi.Utils.Text;
 
 namespace WinTenDev.Zizi.Services.Telegram;
 
@@ -59,6 +61,9 @@ public class RssFeedService
         var reducedChatId = chatId.ReduceChatId();
         var unique = StringUtil.GenerateUniqueId(3);
         var recurringId = $"RSS_{reducedChatId}_{unique}";
+
+        Log.Debug("Registering URl: {UrlFeed} for ChatId: {ChatId} with JobId: {RecurringId}",
+            urlFeed, chatId, recurringId);
 
         _recurringJobManager.AddOrUpdate<RssFeedService>(recurringId, service =>
             service.ExecuteUrlAsync(chatId, urlFeed), Cron.Minutely);
@@ -127,14 +132,16 @@ public class RssFeedService
                     Log.Debug("Deleting all RSS Settings");
                     await _rssService.DeleteAllByChatId(chatId);
 
-                    UnRegisterAllRss(chatId);
+                    UnRegisterRssFeedByChatId(chatId);
                 }
             }
         }
     }
 
-    public void UnRegisterAllRss(long chatId)
+    public void UnRegisterRssFeedByChatId(long chatId)
     {
+        var op = Operation.Begin("UnRegistering RSS by ChatId: {ChatId}", chatId);
+
         var reduceChatId = chatId.ReduceChatId();
         var prefixJobId = $"RSS_{reduceChatId}";
 
@@ -145,8 +152,28 @@ public class RssFeedService
             job.Id.Contains(prefixJobId));
 
         filteredJobs.ForEach(job => {
-            Log.Debug("Deleting RSS Cron {ChatId}", chatId);
+            Log.Debug("Remove RSS Cron With ID {JobId}. Args: {Args}", job.Id, job.Job.Args);
             _recurringJobManager.RemoveIfExists(job.Id);
         });
+
+        op.Complete();
+    }
+
+    public async Task RegisterRssFeedByChatId(long chatId)
+    {
+        var op = Operation.Begin("Registering RSS by ChatId: {ChatId}", chatId);
+
+        var rssSettings = await _rssService.GetRssSettingsAsync(chatId);
+        rssSettings.ForEach(setting => {
+            RegisterUrlFeed(chatId, setting.UrlFeed);
+        });
+
+        op.Complete();
+    }
+
+    public async Task ReRegisterRssFeedByChatId(long chatId)
+    {
+        UnRegisterRssFeedByChatId(chatId);
+        await RegisterRssFeedByChatId(chatId);
     }
 }
