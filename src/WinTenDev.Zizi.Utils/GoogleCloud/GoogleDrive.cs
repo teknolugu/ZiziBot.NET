@@ -37,12 +37,11 @@ public static class GoogleDrive
         Log.Debug("Authorizing client..");
         var credPath = Path.Combine("Storage", "Common", "gdrive-auth-token-store").SanitizeSlash()
             .EnsureDirectory();
-        var credential = GoogleWebAuthorizationBroker.AuthorizeAsync(
-        GoogleClientSecrets.Load(stream).Secrets,
-        Scopes,
-        "user",
-        CancellationToken.None,
-        new FileDataStore(credPath, true)).Result;
+        var credential = GoogleWebAuthorizationBroker.AuthorizeAsync(GoogleClientSecrets.Load(stream).Secrets,
+            Scopes,
+            "user",
+            CancellationToken.None,
+            new FileDataStore(credPath, true)).Result;
 
         Log.Debug("Credential saved to {0}", credPath);
 
@@ -57,7 +56,10 @@ public static class GoogleDrive
         Service = service;
     }
 
-    public static File CreateFolder(string name, string id = "root")
+    public static File CreateFolder(
+        string name,
+        string id = "root"
+    )
     {
         var fileMetadata = new File()
         {
@@ -73,7 +75,10 @@ public static class GoogleDrive
     }
 
 
-    public static void UploadFile(string filePath, Func<CallbackAnswer, Task> answer)
+    public static void UploadFile(
+        string filePath,
+        Func<CallbackAnswer, Task> answer
+    )
     {
         Log.Information("Starting upload {0} to Drive", filePath);
 
@@ -84,7 +89,7 @@ public static class GoogleDrive
             answer(new CallbackAnswer()
             {
                 CallbackAnswerText = notExist,
-                CallbackAnswerModes = new[]
+                CallbackAnswerModes = new List<CallbackAnswerMode>()
                 {
                     CallbackAnswerMode.EditMessage
                 }
@@ -136,7 +141,7 @@ public static class GoogleDrive
             await answer(new CallbackAnswer()
             {
                 CallbackAnswerText = uploadProgress,
-                CallbackAnswerModes = new[]
+                CallbackAnswerModes = new List<CallbackAnswerMode>()
                 {
                     CallbackAnswerMode.EditMessage
                 }
@@ -155,7 +160,7 @@ public static class GoogleDrive
             await answer(new CallbackAnswer()
             {
                 CallbackAnswerText = uploadResult,
-                CallbackAnswerModes = new[]
+                CallbackAnswerModes = new List<CallbackAnswerMode>()
                 {
                     CallbackAnswerMode.EditMessage
                 }

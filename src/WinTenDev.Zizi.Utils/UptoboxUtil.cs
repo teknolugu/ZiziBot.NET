@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Flurl;
 using Flurl.Http;
@@ -57,7 +58,12 @@ public static class UptoboxUtil
         return waiting.LinkData.DlLink;
     }
 
-    public static async Task<string> DownloadUrlAsync(long chatId, string url, Func<CallbackAnswer, Task> answer, bool withoutDownload = false)
+    public static async Task<string> DownloadUrlAsync(
+        long chatId,
+        string url,
+        Func<CallbackAnswer, Task> answer,
+        bool withoutDownload = false
+    )
     {
         try
         {
@@ -86,7 +92,7 @@ public static class UptoboxUtil
             await answer(new CallbackAnswer()
             {
                 CallbackAnswerText = "Terjadi kesalahan ketika mengunduh file dari Uptobox. Pastikan kembali tautan.",
-                CallbackAnswerModes = new[]
+                CallbackAnswerModes = new List<CallbackAnswerMode>()
                 {
                     CallbackAnswerMode.EditMessage
                 }
