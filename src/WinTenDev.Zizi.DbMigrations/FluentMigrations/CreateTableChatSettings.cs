@@ -1,9 +1,11 @@
 ﻿using FluentMigrator;
+using JetBrains.Annotations;
 using WinTenDev.Zizi.DbMigrations.Extensions;
 
 namespace WinTenDev.Zizi.DbMigrations.FluentMigrations;
 
 [Migration(120200621163214)]
+[UsedImplicitly]
 public class CreateTableChatSettings : Migration
 {
     private const string TableName = "group_settings";
@@ -13,12 +15,12 @@ public class CreateTableChatSettings : Migration
         if (Schema.Table(TableName).Exists()) return;
 
         Create.Table(TableName)
-            .WithColumn("id").AsInt32().PrimaryKey().Identity()
-            .WithColumn("chat_id").AsString(20)
-            .WithColumn("chat_title").AsMySqlVarchar(150)
-            .WithColumn("chat_type").AsString(100)
+            .WithColumn("id").AsInt64().PrimaryKey().Identity()
+            .WithColumn("chat_id").AsInt64()
+            .WithColumn("chat_title").AsString()
+            .WithColumn("chat_type").AsString()
             .WithColumn("members_count").AsInt64().WithDefaultValue(-1)
-            .WithColumn("event_log_chat_id").AsInt32().WithDefaultValue(0)
+            .WithColumn("event_log_chat_id").AsInt64().WithDefaultValue(0)
             .WithColumn("is_admin").AsBoolean().WithDefaultValue(0)
             .WithColumn("enable_bot").AsBoolean().WithDefaultValue(1)
             .WithColumn("enable_afk_stats").AsBoolean().WithDefaultValue(1)
@@ -30,6 +32,7 @@ public class CreateTableChatSettings : Migration
             .WithColumn("enable_find_notes").AsBoolean().WithDefaultValue(1)
             .WithColumn("enable_find_tags").AsBoolean().WithDefaultValue(1)
             .WithColumn("enable_human_verification").AsBoolean().WithDefaultValue(0)
+            .WithColumn("enable_profile_photo_check").AsBoolean().WithDefault(0)
             .WithColumn("enable_reply_notification").AsBoolean().WithDefaultValue(1)
             .WithColumn("enable_restriction").AsBoolean().WithDefaultValue(0)
             .WithColumn("enable_security").AsBoolean().WithDefaultValue(1)
@@ -40,9 +43,9 @@ public class CreateTableChatSettings : Migration
             .WithColumn("enable_word_filter_global").AsBoolean().WithDefaultValue(1)
             .WithColumn("enable_word_filter_group").AsBoolean().WithDefaultValue(1)
             .WithColumn("enable_zizi_mata").AsBoolean().WithDefaultValue(1)
-            .WithColumn("last_tags_message_id").AsString(20).WithDefaultValue(-1)
-            .WithColumn("last_warn_username_message_id").AsString(20).WithDefaultValue(-1)
-            .WithColumn("last_welcome_message_id").AsString(20).WithDefaultValue(-1)
+            .WithColumn("last_tags_message_id").AsInt64().WithDefaultValue(-1)
+            .WithColumn("last_warn_username_message_id").AsInt64().WithDefaultValue(-1)
+            .WithColumn("last_welcome_message_id").AsInt64().WithDefaultValue(-1)
             .WithColumn("rules_link").AsMySqlMediumText().WithDefaultValue("")
             .WithColumn("rules_text").AsMySqlMediumText().WithDefaultValue("")
             .WithColumn("warning_username_limit").AsInt16().WithDefaultValue(3)
