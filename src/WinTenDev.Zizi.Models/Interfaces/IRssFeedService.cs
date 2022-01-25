@@ -4,6 +4,9 @@ namespace WinTenDev.Zizi.Models.Interfaces;
 
 public interface IRssFeedService
 {
-    Task RegisterScheduler();
-    Task<int> ExecuteUrlAsync(long chatId, string rssUrl);
+    Task RegisterJobAllRssScheduler();
+    Task ExecuteUrlAsync(
+        long chatId,
+        string rssUrl
+    );
 }
