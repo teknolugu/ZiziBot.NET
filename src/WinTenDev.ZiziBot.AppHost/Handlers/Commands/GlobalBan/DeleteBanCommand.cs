@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Linq;
+using System.Threading.Tasks;
 using Serilog;
 using Telegram.Bot.Framework.Abstractions;
 using WinTenDev.Zizi.Services.Internals;
@@ -12,21 +13,25 @@ public class DeleteBanCommand : CommandBase
     private readonly GlobalBanService _globalBanService;
     private readonly TelegramService _telegramService;
 
-    public DeleteBanCommand(GlobalBanService globalBanService, TelegramService telegramService)
+    public DeleteBanCommand(
+        GlobalBanService globalBanService,
+        TelegramService telegramService
+    )
     {
         _telegramService = telegramService;
         _globalBanService = globalBanService;
     }
 
-    public override async Task HandleAsync(IUpdateContext context, UpdateDelegate next, string[] args)
+    public override async Task HandleAsync(
+        IUpdateContext context,
+        UpdateDelegate next,
+        string[] args
+    )
     {
         await _telegramService.AddUpdateContext(context);
 
-        var msg = _telegramService.Message;
-        var chatId = msg.Chat.Id;
-        var fromId = msg.From.Id;
-        var partedText = msg.Text.Split(" ");
-        var param1 = partedText.ValueOfIndex(1);// User ID
+        var partedText = _telegramService.MessageTextParts;
+        var param1 = partedText.ElementAtOrDefault(1);// User ID
 
         if (!_telegramService.IsFromSudo)
         {
@@ -40,8 +45,7 @@ public class DeleteBanCommand : CommandBase
             return;
         }
 
-        var repMsg = msg.ReplyToMessage;
-        var userId = param1.ToInt();
+        var userId = param1.ToInt64();
 
         Log.Information("Execute Global DelBan");
         await _telegramService.SendTextMessageAsync("Mempersiapkan..");
@@ -59,7 +63,7 @@ public class DeleteBanCommand : CommandBase
         Log.Information("SaveBan: {Save}", save);
 
         await _telegramService.EditMessageTextAsync("Memperbarui Cache..");
-        await SyncUtil.SyncGBanToLocalAsync();
+        await _globalBanService.UpdateCache(userId);
 
         await _telegramService.EditMessageTextAsync("Pengguna berhasil di tambahkan");
     }

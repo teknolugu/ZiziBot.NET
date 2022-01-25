@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Serilog;
@@ -76,7 +75,7 @@ public class GlobalBanService
     /// </summary>
     /// <param name="userId">The user id.</param>
     /// <returns>Delete GBan by userId</returns>
-    public async Task<bool> DeleteBanAsync(int userId)
+    public async Task<bool> DeleteBanAsync(long userId)
     {
         var delete = await _queryService
             .CreateMySqlFactory()
@@ -113,7 +112,7 @@ public class GlobalBanService
     /// </summary>
     /// <param name="userId">The user id.</param>
     /// <returns>A Task.</returns>
-    public async Task<GlobalBanData> GetGlobalBanByIdC(long userId)
+    public async Task<GlobalBanData> GetGlobalBanById(long userId)
     {
         var cacheKey = GetCacheKey(userId);
 
@@ -155,19 +154,19 @@ public class GlobalBanService
         return datas;
     }
 
-    [Obsolete("Manual update cache should no longer required")]
-    public async Task UpdateGBanCache(long userId = -1)
+    public async Task UpdateCache(long userId = -1)
     {
         if (userId == -1)
         {
-            var data = await GetGlobalBanCore();
-            await _cacheService.SetAsync(CacheKey, data);
+            await _cacheService.EvictAsync(CacheKey);
+            await GetGlobalBans();
         }
         else
         {
             var cacheKey = GetCacheKey(userId);
-            var data = await GetGlobalBanByIdCore(userId);
-            await _cacheService.SetAsync(cacheKey, data);
+            await _cacheService.EvictAsync(cacheKey);
+
+            await GetGlobalBanById(userId);
         }
     }
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Serilog;
 using Telegram.Bot.Framework.Abstractions;
@@ -23,7 +24,11 @@ public class GlobalBanCommand : CommandBase
         _telegramService = telegramService;
     }
 
-    public override async Task HandleAsync(IUpdateContext context, UpdateDelegate next, string[] args)
+    public override async Task HandleAsync(
+        IUpdateContext context,
+        UpdateDelegate next,
+        string[] args
+    )
     {
         await _telegramService.AddUpdateContext(context);
 
@@ -32,12 +37,11 @@ public class GlobalBanCommand : CommandBase
 
         var msg = _telegramService.Message;
 
-
-        var chatId = msg.Chat.Id;
-        var fromId = msg.From.Id;
-        var partedText = msg.Text.Split(" ");
-        var param0 = partedText.ValueOfIndex(0) ?? "";
-        var param1 = partedText.ValueOfIndex(1) ?? "";
+        var chatId = _telegramService.ChatId;
+        var fromId = _telegramService.FromId;
+        var partedText = _telegramService.MessageTextParts;
+        var param0 = partedText.ElementAtOrDefault(0) ?? "";
+        var param1 = partedText.ElementAtOrDefault(1) ?? "";
 
         if (!_telegramService.IsFromSudo)
         {
@@ -48,14 +52,25 @@ public class GlobalBanCommand : CommandBase
         if (param1 == "sync")
         {
             await _telegramService.SendTextMessageAsync("Memperbarui cache..");
-            await _globalBanService.UpdateGBanCache();
+            await _globalBanService.UpdateCache();
 
             await _telegramService.EditMessageTextAsync("Selesai memperbarui..");
 
             return;
         }
 
-        if (msg.ReplyToMessage == null)
+        if (_telegramService.ReplyToMessage != null)
+        {
+            var replyToMessage = _telegramService.ReplyToMessage;
+            userId = replyToMessage.From.Id;
+            reason = msg.Text;
+
+            if (reason.IsNotNullOrEmpty())
+                reason = reason
+                    .Replace(param0, "", StringComparison.CurrentCulture)
+                    .Trim();
+        }
+        else
         {
             if (param1.IsNullOrEmpty())
             {
@@ -64,7 +79,7 @@ public class GlobalBanCommand : CommandBase
                 return;
             }
 
-            userId = param1.ToInt();
+            userId = param1.ToInt64();
             reason = msg.Text;
             if (reason.IsNotNullOrEmpty())
                 reason = reason
@@ -72,24 +87,13 @@ public class GlobalBanCommand : CommandBase
                     .Replace(param1, "", StringComparison.CurrentCulture)
                     .Trim();
         }
-        else
-        {
-            var repMsg = msg.ReplyToMessage;
-            userId = repMsg.From.Id;
-            reason = msg.Text;
-
-            if (reason.IsNotNullOrEmpty())
-                reason = reason
-                    .Replace(param0, "", StringComparison.CurrentCulture)
-                    .Trim();
-        }
 
         Log.Information("Execute Global Ban");
-        await _telegramService.SendTextMessageAsync("Mempersiapkan..");
+        await _telegramService.SendTextMessageAsync($"Memeriksa pemblokiran UserId: {userId}");
 
         var banData = new GlobalBanData()
         {
-            UserId = userId.ToInt(),
+            UserId = userId,
             BannedBy = fromId,
             BannedFrom = chatId,
             ReasonBan = reason.IsNullOrEmpty() ? "no-reason" : reason
@@ -110,8 +114,7 @@ public class GlobalBanCommand : CommandBase
         Log.Information("SaveBan: {Save}", save);
 
         await _telegramService.EditMessageTextAsync("Memperbarui cache.");
-        await _globalBanService.UpdateGBanCache(userId);
-        await SyncUtil.SyncGBanToLocalAsync();
+        await _globalBanService.UpdateCache(userId);
 
         await _telegramService.EditMessageTextAsync("Pengguna berhasil di tambahkan.");
     }

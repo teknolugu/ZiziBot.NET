@@ -2,7 +2,6 @@
 using Telegram.Bot.Framework.Abstractions;
 using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Services.Telegram;
-using WinTenDev.Zizi.Utils;
 
 namespace WinTenDev.ZiziBot.AppHost.Handlers.Commands.GlobalBan;
 
@@ -20,7 +19,11 @@ public class GlobalBanSyncCommand : CommandBase
         _telegramService = telegramService;
     }
 
-    public override async Task HandleAsync(IUpdateContext context, UpdateDelegate next, string[] args)
+    public override async Task HandleAsync(
+        IUpdateContext context,
+        UpdateDelegate next,
+        string[] args
+    )
     {
         await _telegramService.AddUpdateContext(context);
 
@@ -28,9 +31,8 @@ public class GlobalBanSyncCommand : CommandBase
 
         await _telegramService.SendTextMessageAsync("Sedang sinkronisasi..");
 
-        await _globalBanService.UpdateGBanCache();
-        var rowCount = await SyncUtil.SyncGBanToLocalAsync();
+        await _globalBanService.UpdateCache();
 
-        await _telegramService.EditMessageTextAsync($"Sinkronisasi sebanyak {rowCount} selesai");
+        await _telegramService.EditMessageTextAsync($"Sinkronisasi selesai");
     }
 }
