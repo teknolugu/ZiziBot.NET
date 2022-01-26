@@ -51,7 +51,10 @@ public class AntiSpamService
     /// <param name="userId">The user id.</param>
     /// <param name="funcAntiSpamResult"></param>
     /// <returns>A Task.</returns>
-    public async Task<AntiSpamResult> CheckSpam(long userId, Func<AntiSpamResult, Task> funcAntiSpamResult = null)
+    public async Task<AntiSpamResult> CheckSpam(
+        long userId,
+        Func<AntiSpamResult, Task> funcAntiSpamResult = null
+    )
     {
         var spamResult = new AntiSpamResult
         {
@@ -185,6 +188,7 @@ public class AntiSpamService
                     .AppendPathSegment("banlist")
                     .AppendPathSegment(userId)
                     .WithOAuthBearerToken(apiToken)
+                    .AllowHttpStatus("404")
                     .GetJsonAsync<Ban>();
 
                 isBan = check.Reason.IsNotNullOrEmpty();
@@ -192,18 +196,15 @@ public class AntiSpamService
             }
             catch (FlurlHttpException ex)
             {
-                if (ex.Message.Contains("timeout", StringComparison.CurrentCultureIgnoreCase))
+                if (!ex.Message.Contains("timeout", StringComparison.CurrentCultureIgnoreCase))
                 {
-                    isBan = false;
-                }
-                else
-                {
-                    var callHttpStatus = ex.Call.HttpResponseMessage.StatusCode;
+                    var callHttpStatus = ex.Call.HttpResponseMessage?.StatusCode;
 
                     // ReSharper disable once SwitchStatementHandlesSomeKnownEnumValuesWithDefault
                     switch (callHttpStatus)
                     {
                         case HttpStatusCode.NotFound:
+                            Log.Debug("No UserId {UserId} found at SpamWatch Fed", userId);
                             isBan = false;
                             break;
 
