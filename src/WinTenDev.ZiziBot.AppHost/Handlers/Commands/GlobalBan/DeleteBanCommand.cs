@@ -65,6 +65,6 @@ public class DeleteBanCommand : CommandBase
         await _telegramService.EditMessageTextAsync("Memperbarui Cache..");
         await _globalBanService.UpdateCache(userId);
 
-        await _telegramService.EditMessageTextAsync("Pengguna berhasil di tambahkan");
+        await _telegramService.EditMessageTextAsync("Pengguna berhasil di hapus");
     }
 }
