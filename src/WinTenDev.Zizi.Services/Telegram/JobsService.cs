@@ -22,21 +22,27 @@ namespace WinTenDev.Zizi.Services.Telegram;
 public class JobsService
 {
     private readonly EventLogConfig _eventLogConfig;
+    private readonly IRecurringJobManager _recurringJobManager;
     private readonly StepHistoriesService _stepHistoriesService;
     private readonly ChatService _chatService;
     private readonly TelegramBotClient _botClient;
+    private readonly SettingsService _settingsService;
 
     public JobsService(
         IOptionsSnapshot<EventLogConfig> eventLogConfig,
+        IRecurringJobManager recurringJobManager,
         StepHistoriesService stepHistoriesService,
         ChatService chatService,
-        TelegramBotClient botClient
+        TelegramBotClient botClient,
+        SettingsService settingsService
     )
     {
         _eventLogConfig = eventLogConfig.Value;
+        _recurringJobManager = recurringJobManager;
         _stepHistoriesService = stepHistoriesService;
         _chatService = chatService;
         _botClient = botClient;
+        _settingsService = settingsService;
     }
 
     [JobDisplayName("Member Kick Job {1}@{0}")]
@@ -82,6 +88,49 @@ public class JobsService
             parseMode: ParseMode.Html);
 
         Log.Information("UserId {UserId} successfully kicked from {ChatId}", userId, chatId);
+    }
+
+    public async Task RegisterJobChatCleanUp()
+    {
+        Log.Information("Starting Check bot is Admin on all Group!");
+
+        var allSettings = await _settingsService.GetAllSettings();
+
+        foreach (var chatSetting in allSettings)
+        {
+            var chatId = chatSetting.ChatId;
+
+            try
+            {
+                switch (chatSetting.ChatType)
+                {
+                    case ChatTypeEx.Group:
+                    case ChatTypeEx.SuperGroup:
+                        _recurringJobManager.AddOrUpdate<PrivilegeService>(chatId.GetChatKey("AC"),
+                            (x) => x.AdminCheckerJobAsync(chatId), Cron.Daily, queue: "admin-checker");
+                        break;
+                    default:
+                        Log.Verbose("Currently no action for type {ChatType}", chatSetting.ChatType);
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex.Demystify(), "Error when checking ChatID: {ChatId}", chatId);
+            }
+        }
+    }
+
+    public void RegisterJobClearLog()
+    {
+        _recurringJobManager.AddOrUpdate<StorageService>("log-cleaner",
+            (service) => service.ClearLog(), Cron.Daily);
+    }
+
+    public void RegisterJobDeleteOldStep()
+    {
+        _recurringJobManager.AddOrUpdate<StepHistoriesService>("delete-old-steps",
+            service => service.DeleteOldStepHistory(), Cron.Hourly);
     }
 
     [AutomaticRetry(Attempts = 2, LogEvents = true, OnAttemptsExceeded = AttemptsExceededAction.Delete)]

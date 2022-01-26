@@ -182,7 +182,7 @@ public class PrivilegeService
         }
         catch (ApiRequestException requestException)
         {
-            Log.Error(requestException, "Error API Request when Check Admin in ChatID: '{ChatId}'", chatId);
+            Log.Error(requestException, "Error when Check Admin on ChatID: '{ChatId}'", chatId);
             var setting = await _settingsService.GetSettingsByGroupCore(chatId);
 
             var exMessage = requestException.Message.ToLower();

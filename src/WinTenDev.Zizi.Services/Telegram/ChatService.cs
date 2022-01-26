@@ -198,38 +198,4 @@ public class ChatService
             }
         });
     }
-
-    // /// <summary>
-    // /// Chats the clean up
-    // /// </summary>
-    // [AutomaticRetry(Attempts = 2, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
-    // public async Task ChatCleanUp()
-    // {
-    //     Log.Information("Starting Check bot is Admin on all Group!");
-    //
-    //     var allSettings = await _settingsService.GetAllSettings();
-    //
-    //     foreach (var chatGroup in allSettings)
-    //     {
-    //         var chatId = chatGroup.ChatId.ToInt64();
-    //
-    //         try
-    //         {
-    //             await privilegeService.AdminCheckerJobAsync(chatId);
-    //         }
-    //         catch (ErrorException ex)
-    //         {
-    //             var msgEx = ex.Message.ToLower();
-    //
-    //             if (msgEx.Contains("bot is not a member"))
-    //             {
-    //                 Log.Warning("This bot may has leave from this chatId '{ChatId}'", chatId);
-    //             }
-    //             else
-    //             {
-    //                 Log.Error(ex.Demystify(), "Error when checking ChatID: {ChatId}", chatId);
-    //             }
-    //         }
-    //     }
-    // }
 }

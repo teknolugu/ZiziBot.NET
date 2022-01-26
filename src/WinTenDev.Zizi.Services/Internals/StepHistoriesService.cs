@@ -15,19 +15,16 @@ namespace WinTenDev.Zizi.Services.Internals;
 public class StepHistoriesService
 {
     private readonly ILogger<StepHistoriesService> _logger;
-    private readonly IRecurringJobManager _recurringJobManager;
     private readonly CacheService _cacheService;
     private readonly QueryService _queryService;
 
     public StepHistoriesService(
         ILogger<StepHistoriesService> logger,
-        IRecurringJobManager recurringJobManager,
         CacheService cacheService,
         QueryService queryService
     )
     {
         _logger = logger;
-        _recurringJobManager = recurringJobManager;
         _cacheService = cacheService;
         _queryService = queryService;
     }
@@ -231,11 +228,5 @@ public class StepHistoriesService
         });
 
         return data;
-    }
-
-    public void RegisterJobDeleteOldStep()
-    {
-        _recurringJobManager.AddOrUpdate<StepHistoriesService>("delete-old-steps",
-            service => service.DeleteOldStepHistory(), Cron.Hourly);
     }
 }
