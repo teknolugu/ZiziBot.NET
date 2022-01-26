@@ -98,11 +98,10 @@ namespace WinTenDev.ZiziBot.App.Handlers
             var checkRestrictionTask = CheckChatRestricted();
             var fireMessageTask = CheckFireMessage();
 
-            await Task.WhenAll(
-            checkAntiSpamTask,
-            checkScanMessageTask,
-            fireMessageTask,
-            checkRestrictionTask);
+            await Task.WhenAll(checkAntiSpamTask,
+                checkScanMessageTask,
+                fireMessageTask,
+                checkRestrictionTask);
 
             var checkAntiSpam = await checkAntiSpamTask;
             var checkScanMessage = await checkScanMessageTask;
@@ -125,7 +124,7 @@ namespace WinTenDev.ZiziBot.App.Handlers
         /// <returns>The check anti spam</returns>
         private async Task<AntiSpamResult> CheckAntiSpam()
         {
-            var checkAntiSpam = await _antiSpamService.CheckSpam(From.Id, async result => {
+            var checkAntiSpam = await _antiSpamService.CheckSpam(Chat.Id, From.Id, async result => {
                 var userId = result.UserId;
 
                 if (result.IsAnyBanned)
@@ -235,7 +234,10 @@ namespace WinTenDev.ZiziBot.App.Handlers
                 // .Where(entity => entity.Type is MessageEntityType.Mention or MessageEntityType.TextMention);
                 var messageMention = MessageOrEdited.Text
                     .Split(" ")
-                    .Where((s, i) => s.Contains("@"));
+                    .Where((
+                        s,
+                        i
+                    ) => s.Contains("@"));
 
                 if (!messageEntities.Any())
                 {
@@ -244,7 +246,10 @@ namespace WinTenDev.ZiziBot.App.Handlers
                 else
                 {
                     anyMention = true;
-                    messageMention.ForEach(async (target, i) => {
+                    messageMention.ForEach(async (
+                        target,
+                        i
+                    ) => {
                         // await SendMessageTextAsync(chatId: target, messageStr: "Lorem ipsum dolor sit amet");
                     });
                 }
@@ -274,11 +279,10 @@ namespace WinTenDev.ZiziBot.App.Handlers
                     }
                 });
 
-                await SendMessageTextAsync(
-                chatId: repFromId,
-                message: htmlMessage,
-                replyMarkup: keyboardMarkup,
-                disableWebPreview: true);
+                await SendMessageTextAsync(chatId: repFromId,
+                    message: htmlMessage,
+                    replyMarkup: keyboardMarkup,
+                    disableWebPreview: true);
             }
 
             return anyMention;
@@ -296,7 +300,7 @@ namespace WinTenDev.ZiziBot.App.Handlers
             {
                 var messageId = CallbackQueryMessage.MessageId;
                 _logger.LogInformation("MessageId '{MessageId}' on ChatID '{ChatId}' is type {Type}",
-                messageId, ChatId, RawUpdate.Type);
+                    messageId, ChatId, RawUpdate.Type);
                 return false;
             }
 
@@ -308,7 +312,7 @@ namespace WinTenDev.ZiziBot.App.Handlers
             if (text == null)
             {
                 _logger.LogDebug("No Message Text/Caption on ChatId '{ChatId}' for MessageId '{MessageId}'",
-                ChatId, message.MessageId);
+                    ChatId, message.MessageId);
 
                 return true;
             }

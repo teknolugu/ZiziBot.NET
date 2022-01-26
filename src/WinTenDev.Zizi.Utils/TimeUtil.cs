@@ -104,7 +104,7 @@ public static class TimeUtil
         else if (hour <= 18) greet = "petang";
         else if (hour <= 24) greet = "malam";
 
-        Log.Information("Current hour: {Hour}, greet: {Greet}", hour, greet);
+        Log.Debug("Current hour: {Hour}, greet: {Greet}", hour, greet);
 
         return greet;
     }

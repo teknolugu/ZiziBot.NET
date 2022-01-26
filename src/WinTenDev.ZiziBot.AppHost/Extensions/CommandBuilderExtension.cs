@@ -15,7 +15,6 @@ using WinTenDev.ZiziBot.AppHost.Handlers.Commands.SpamLearning;
 using WinTenDev.ZiziBot.AppHost.Handlers.Commands.Tags;
 using WinTenDev.ZiziBot.AppHost.Handlers.Commands.Welcome;
 using WinTenDev.ZiziBot.AppHost.Handlers.Commands.Words;
-using WinTenDev.ZiziBot.AppHost.Handlers.Events;
 
 namespace WinTenDev.ZiziBot.AppHost.Extensions;
 
@@ -32,15 +31,15 @@ public static class CommandBuilderExtension
                 .Use<NewUpdateHandler>()
                 // .Use<CustomUpdateLogger>()
                 //.UseWhen<UpdateMembersList>(When.MembersChanged)
-                .UseWhen<NewChatMembersEvent>(When.NewChatMembers)
-                .UseWhen<LeftChatMemberEvent>(When.LeftChatMember)
+                .UseWhen<NewChatMembersHandler>(When.NewChatMembers)
+                .UseWhen<LeftChatMemberHandler>(When.LeftChatMember)
 
                 //.UseWhen(When.MembersChanged, memberChanged => memberChanged
                 //    .UseWhen(When.MembersChanged, cmdBranch => cmdBranch
                 //        .Use<NewChatMembersCommand>()
                 //        )
                 //    )
-                .UseWhen<PinnedMessageEvent>(When.NewPinnedMessage)
+                .UseWhen<PinnedMessageHandler>(When.NewPinnedMessage)
                 // .UseWhen<MediaReceivedHandler>(When.MediaReceived)
                 .UseWhen(When.NewOrEditedMessage, msgBranch => msgBranch
                     .UseWhen(When.CallTagReceived, tagBranch => tagBranch
@@ -128,8 +127,7 @@ public static class CommandBuilderExtension
                         //.Use<NLP>()
                     )
                     // .UseWhen<StickerHandler>(When.StickerMessage)
-                    .UseWhen<WeatherReporter>(When.LocationMessage)
-                )
+                    .UseWhen<WeatherReporter>(When.LocationMessage))
                 .UseWhen<CallbackQueryHandler>(When.CallbackQuery)
 
             //.Use<UnhandledUpdateReporter>()

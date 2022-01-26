@@ -13,17 +13,26 @@ namespace WinTenDev.Zizi.Utils;
 
 public static class StringUtil
 {
-    public static List<string> SplitText(this string text, string delimiter)
+    public static List<string> SplitText(
+        this string text,
+        string delimiter
+    )
     {
         return text?.Split(delimiter).ToList();
     }
 
-    public static string JoinStr(this IEnumerable<string> source, string separator)
+    public static string JoinStr(
+        this IEnumerable<string> source,
+        string separator
+    )
     {
         return string.Join(separator, source);
     }
 
-    public static string ResolveVariable(this string input, object parameters)
+    public static string ResolveVariable(
+        this string input,
+        object parameters
+    )
     {
         Log.Debug("Resolving variable..");
         var type = parameters.GetType();
@@ -49,7 +58,22 @@ public static class StringUtil
         return sb.ToString();
     }
 
-    public static async Task ToFile(this string content, string path)
+    public static string ResolveVariable(
+        this string input,
+        IEnumerable<(string placeholder, string value)> placeHolders
+    )
+    {
+        return placeHolders.Aggregate(input, (
+            current,
+            ph
+        ) => current.Replace($"{{{ph.placeholder}}}", ph.value,
+            StringComparison.CurrentCultureIgnoreCase));
+    }
+
+    public static async Task ToFile(
+        this string content,
+        string path
+    )
     {
         Log.Debug("Writing file to {0}", path);
         await File.WriteAllTextAsync(path, content);
@@ -60,32 +84,32 @@ public static class StringUtil
         if (str.IsNullOrEmpty()) return str;
 
         var escaped = Regex.Replace(str, @"[\x00'""\b\n\r\t\cZ\\%_]",
-        delegate(Match match) {
-            var v = match.Value;
-            switch (v)
-            {
-                case "\x00":// ASCII NUL (0x00) character
-                    return "\\0";
+            delegate(Match match) {
+                var v = match.Value;
+                switch (v)
+                {
+                    case "\x00":// ASCII NUL (0x00) character
+                        return "\\0";
 
-                case "\b":// BACKSPACE character
-                    return "\\b";
+                    case "\b":// BACKSPACE character
+                        return "\\b";
 
-                case "\n":// NEWLINE (linefeed) character
-                    return "\\n";
+                    case "\n":// NEWLINE (linefeed) character
+                        return "\\n";
 
-                case "\r":// CARRIAGE RETURN character
-                    return "\\r";
+                    case "\r":// CARRIAGE RETURN character
+                        return "\\r";
 
-                case "\t":// TAB
-                    return "\\t";
+                    case "\t":// TAB
+                        return "\\t";
 
-                case "\u001A":// Ctrl-Z
-                    return "\\Z";
+                    case "\u001A":// Ctrl-Z
+                        return "\\Z";
 
-                default:
-                    return "\\" + v;
-            }
-        });
+                    default:
+                        return "\\" + v;
+                }
+            });
         escaped = escaped.Replace("'", "\'");
 
         return escaped;
@@ -113,12 +137,18 @@ public static class StringUtil
         return $"{number:#,#.00}";
     }
 
-    public static string MkUrl(this string text, string url)
+    public static string MkUrl(
+        this string text,
+        string url
+    )
     {
         return $"<a href ='{url}'>{text}</a>";
     }
 
-    public static string MkJoin(this ICollection<string> obj, string delim)
+    public static string MkJoin(
+        this ICollection<string> obj,
+        string delim
+    )
     {
         return string.Join(delim, obj.ToArray());
     }
@@ -132,22 +162,34 @@ public static class StringUtil
         return new string(arr);
     }
 
-    public static string RemoveThisChar(this string str, string chars)
+    public static string RemoveThisChar(
+        this string str,
+        string chars
+    )
     {
         return str.IsNullOrEmpty()
             ? str
-            : chars.Aggregate(str, (current, c) =>
+            : chars.Aggregate(str, (
+                    current,
+                    c
+                ) =>
                 current.Replace($"{c}", ""));
     }
 
-    public static string RemoveThisString(this string str, string[] forRemoves)
+    public static string RemoveThisString(
+        this string str,
+        string[] forRemoves
+    )
     {
         foreach (var remove in forRemoves) str = str.Replace(remove, "").Trim();
 
         return str;
     }
 
-    public static string RemoveLastLines(this string str, int lines = 0)
+    public static string RemoveLastLines(
+        this string str,
+        int lines = 0
+    )
     {
         return str.Remove(str.TrimEnd().LastIndexOf(Environment.NewLine, StringComparison.Ordinal) + lines).Trim();
     }
@@ -173,12 +215,19 @@ public static class StringUtil
         return !str.IsNullOrEmpty();
     }
 
-    public static bool IsContains(this string str, string filter)
+    public static bool IsContains(
+        this string str,
+        string filter
+    )
     {
         return str.Contains(filter);
     }
 
-    public static bool ContainsListStr(this string str, string[] listStr, StringComparison stringComparison)
+    public static bool ContainsListStr(
+        this string str,
+        string[] listStr,
+        StringComparison stringComparison
+    )
     {
         return listStr.Any(s => str.Contains(s, stringComparison));
     }
@@ -200,7 +249,10 @@ public static class StringUtil
     }
 
 
-    public static string RemoveStrAfterFirst(this string str, string after)
+    public static string RemoveStrAfterFirst(
+        this string str,
+        string after
+    )
     {
         return str.Substring(0, str.IndexOf(after, StringComparison.Ordinal) + 1);
     }
@@ -242,7 +294,10 @@ public static class StringUtil
         return wordCount;
     }
 
-    public static IEnumerable<string> SplitInParts(this string s, int partLength)
+    public static IEnumerable<string> SplitInParts(
+        this string s,
+        int partLength
+    )
     {
         if (s == null)
             throw new ArgumentNullException(nameof(s));

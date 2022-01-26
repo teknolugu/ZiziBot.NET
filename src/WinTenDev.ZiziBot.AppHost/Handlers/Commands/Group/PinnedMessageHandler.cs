@@ -4,22 +4,26 @@ using Telegram.Bot.Framework.Abstractions;
 using WinTenDev.Zizi.Services.Telegram;
 using WinTenDev.Zizi.Utils.Telegram;
 
-namespace WinTenDev.ZiziBot.AppHost.Handlers.Events;
+namespace WinTenDev.ZiziBot.AppHost.Handlers.Commands.Group;
 
-public class PinnedMessageEvent : IUpdateHandler
+public class PinnedMessageHandler : IUpdateHandler
 {
     private readonly TelegramService _telegramService;
 
-    public PinnedMessageEvent(TelegramService telegramService)
+    public PinnedMessageHandler(TelegramService telegramService)
     {
         _telegramService = telegramService;
     }
 
-    public async Task HandleAsync(IUpdateContext context, UpdateDelegate next, CancellationToken cancellationToken)
+    public async Task HandleAsync(
+        IUpdateContext context,
+        UpdateDelegate next,
+        CancellationToken cancellationToken
+    )
     {
         await _telegramService.AddUpdateContext(context);
 
-        var msg = context.Update.Message;
+        var msg = _telegramService.Message;
 
         var pinnedMsg = msg.PinnedMessage;
         var sendText = $"📌 Pesan di sematkan baru!" +

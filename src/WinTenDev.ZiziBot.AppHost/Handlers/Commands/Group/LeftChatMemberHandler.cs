@@ -5,14 +5,14 @@ using Telegram.Bot.Framework.Abstractions;
 using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Services.Telegram;
 
-namespace WinTenDev.ZiziBot.AppHost.Handlers.Events;
+namespace WinTenDev.ZiziBot.AppHost.Handlers.Commands.Group;
 
-public class LeftChatMemberEvent : IUpdateHandler
+public class LeftChatMemberHandler : IUpdateHandler
 {
     private readonly TelegramService _telegramService;
     private readonly AntiSpamService _antiSpamService;
 
-    public LeftChatMemberEvent(
+    public LeftChatMemberHandler(
         TelegramService telegramService,
         AntiSpamService antiSpamService
     )
@@ -21,15 +21,24 @@ public class LeftChatMemberEvent : IUpdateHandler
         _antiSpamService = antiSpamService;
     }
 
-    public async Task HandleAsync(IUpdateContext context, UpdateDelegate next, CancellationToken cancellationToken)
+    public async Task HandleAsync(
+        IUpdateContext context,
+        UpdateDelegate next,
+        CancellationToken cancellationToken
+    )
     {
         await _telegramService.AddUpdateContext(context);
 
-        var msg = context.Update.Message;
+        var chatId = _telegramService.ChatId;
+        var chatTitle = _telegramService.ChatTitle;
+
+        var msg = _telegramService.Message;
         var leftMember = msg.LeftChatMember;
+
+        if (leftMember == null) return;
+
         var leftUserId = leftMember.Id;
-        var checkSpam = await _antiSpamService.CheckSpam(leftUserId);
-        // var isBan = await leftUserId.CheckGBan();
+        var checkSpam = await _antiSpamService.CheckSpam(chatId, leftUserId);
 
         if (checkSpam.IsAnyBanned)
         {
@@ -39,9 +48,7 @@ public class LeftChatMemberEvent : IUpdateHandler
 
         Log.Information("Left Chat Members...");
 
-        var chatTitle = msg.Chat.Title;
-        var leftChatMember = msg.LeftChatMember;
-        var leftFullName = leftChatMember.FirstName;
+        var leftFullName = leftMember.FirstName;
 
         var sendText = $"Sampai jumpa lagi {leftFullName} " +
                        $"\nKami di <b>{chatTitle}</b> menunggumu kembali.. :(";

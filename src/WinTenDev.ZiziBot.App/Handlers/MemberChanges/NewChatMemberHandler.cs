@@ -59,7 +59,7 @@ namespace WinTenDev.ZiziBot.App.Handlers.MemberChanges
             var welcomeButton = _settings.WelcomeButton;
 
             var newMembers = RawUpdate.Message.NewChatMembers;
-            var passedMember = await ScanMembersAsync(newMembers);
+            var passedMember = await ScanMembersAsync(Chat.Id, newMembers);
 
             if (passedMember.Count < 1)
             {
@@ -86,7 +86,7 @@ namespace WinTenDev.ZiziBot.App.Handlers.MemberChanges
             }
 
 
-            // var htmlMsg = new HtmlString()
+            // var htmlMsg = new HtmlBuilder()
             // .TextBr("");
 
             await SendMessageTextAsync(messageText, replyMarkup: replyMarkup);
@@ -108,7 +108,10 @@ namespace WinTenDev.ZiziBot.App.Handlers.MemberChanges
 
             // var memberStr = users.Select((user, i) => htmlString.User(user.Id, user.GetFullName()));
 
-            users.ForEach((User user, int index) => {
+            users.ForEach((
+                User user,
+                int index
+            ) => {
                 var last = users.Last();
                 if (user == last)
                     htmlString.User(user.Id, user.GetFullName()).Br();
@@ -138,14 +141,17 @@ namespace WinTenDev.ZiziBot.App.Handlers.MemberChanges
             return htmlString;
         }
 
-        private async Task<List<User>> ScanMembersAsync(User[] users)
+        private async Task<List<User>> ScanMembersAsync(
+            long chatId,
+            User[] users
+        )
         {
             var members = new List<User>();
 
             foreach (var user in users)
             {
                 var userId = user.Id;
-                var checkAntiSpam = await _antiSpamService.CheckSpam(userId, FuncAntiSpamResult);
+                var checkAntiSpam = await _antiSpamService.CheckSpam(chatId, userId, FuncAntiSpamResult);
                 if (!checkAntiSpam.IsAnyBanned)
                 {
                     members.Add(user);
