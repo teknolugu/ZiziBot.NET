@@ -138,7 +138,7 @@ public class RssFeedService
         }
     }
 
-    public void UnRegisterRssFeedByChatId(long chatId)
+    public int UnRegisterRssFeedByChatId(long chatId)
     {
         var op = Operation.Begin("UnRegistering RSS by ChatId: {ChatId}", chatId);
 
@@ -157,6 +157,8 @@ public class RssFeedService
         });
 
         op.Complete();
+
+        return filteredJobs.Count();
     }
 
     public async Task RegisterRssFeedByChatId(long chatId)
