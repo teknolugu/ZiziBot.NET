@@ -22,19 +22,23 @@ public class SettingsCommand : CommandBase
         _settingsService = settingsService;
     }
 
-    public override async Task HandleAsync(IUpdateContext context, UpdateDelegate next, string[] args)
+    public override async Task HandleAsync(
+        IUpdateContext context,
+        UpdateDelegate next,
+        string[] args
+    )
     {
         await _telegramService.AddUpdateContext(context);
 
-        var message = _telegramService.Message;
         var chatId = _telegramService.ChatId;
+        var fromId = _telegramService.FromId;
 
-        await _telegramService.DeleteAsync(message.MessageId);
+        await _telegramService.DeleteSenderMessageAsync();
 
-        var adminOrPrivate = await _telegramService.IsAdminOrPrivateChat();
-        if (!adminOrPrivate)
+        if (!await _telegramService.CheckUserPermission())
         {
-            Log.Warning("Settings command only for Admin group or Private chat");
+            Log.Warning("UserId: {UserId} on ChatId: {ChatId} not have permission to modify Settings",
+                fromId, chatId);
             return;
         }
 
