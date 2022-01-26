@@ -12,17 +12,17 @@ public static class TimeUtil
     {
         var date1 = DateTime.Now.ToUniversalTime();
         var date2 = time;
-        // Console.WriteLine($"Date1: {date1}, Date2: {date2}");
 
         var timeSpan = (date1 - date2);
 
         return timeSpan.ToString(@"s\,fff");
     }
 
-    public static string ToHumanDuration(this TimeSpan duration, bool displaySign = false)
+    public static string ToHumanDuration(
+        this TimeSpan duration,
+        bool displaySign = false
+    )
     {
-        // if (duration == null) return null;
-
         var builder = new StringBuilder();
         if (displaySign)
         {
@@ -77,13 +77,14 @@ public static class TimeUtil
         return builder.ToString();
     }
 
-    public static DateTimeOffset ConvertUtcTimeToTimeZone(this DateTime dateTime, string toTimeZoneDesc)
+    public static DateTimeOffset ConvertUtcTimeToTimeZone(
+        this DateTime dateTime,
+        string toTimeZoneDesc
+    )
     {
         if (dateTime.Kind != DateTimeKind.Utc)
         {
-            // throw new Exception("dateTime needs to have Kind property set to Utc");
             Log.Error("dateTime needs to have Kind property set to Utc");
-
         }
 
         var toUtcOffset = TimeZoneInfo.FindSystemTimeZoneById(toTimeZoneDesc).GetUtcOffset(dateTime);
@@ -271,5 +272,10 @@ public static class TimeUtil
         var answer = today.Add(span);
 
         return answer;
+    }
+
+    public static string ToDetailDateTimeString(this DateTime dateTime)
+    {
+        return dateTime.ToString("yyyy-MM-dd hh:mm:ss tt zz");
     }
 }

@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
+using System.Threading.Tasks;
 using Flurl;
+using Flurl.Http;
 using Serilog;
 using WinTenDev.Zizi.Utils.IO;
 using WinTenDev.Zizi.Utils.Text;
@@ -19,7 +21,10 @@ public static class UrlUtil
         return new Uri($"{baseUrl}/v1/create-qr-code/?size=300x300&margin=10&data={strData}");
     }
 
-    public static void SaveUrlTo(this string remoteFileUrl, string localFileName)
+    public static void SaveUrlTo(
+        this string remoteFileUrl,
+        string localFileName
+    )
     {
         var webClient = new WebClient();
 
@@ -28,7 +33,10 @@ public static class UrlUtil
         webClient.Dispose();
     }
 
-    public static string SaveToCache(this string remoteFileUrl, string localFileName)
+    public static string SaveToCache(
+        this string remoteFileUrl,
+        string localFileName
+    )
     {
         var webClient = new WebClient();
 
@@ -38,6 +46,20 @@ public static class UrlUtil
         Log.Debug("Saving {RemoteFileUrl} to {LocalPath}", remoteFileUrl, localPath);
         webClient.DownloadFile(remoteFileUrl, localPath);
         webClient.Dispose();
+
+        return localPath;
+    }
+
+    public static async Task<string> SaveToCacheAsync(
+        this string remoteFileUrl,
+        string localFileName
+    )
+    {
+        var cachePath = Path.Combine("Storage", "Caches");
+        var localPath = Path.Combine(cachePath, localFileName).SanitizeSlash().EnsureDirectory();
+
+        Log.Debug("Saving {RemoteFileUrl} to {LocalPath}", remoteFileUrl, localPath);
+        await remoteFileUrl.DownloadFileAsync(remoteFileUrl, localPath);
 
         return localPath;
     }
@@ -167,8 +189,7 @@ public static class UrlUtil
         webRequest.Method = "HEAD";
         webRequest.AllowAutoRedirect = true;
         var webResponse = (HttpWebResponse) webRequest.GetResponse();
-        // var statusCode = (int)webResponse.StatusCode;
-        Log.Debug("Response: {0}", webResponse.ToJson(true));
+        Log.Debug("Response: {@WebResponse}", webResponse);
 
         return webResponse.ResponseUri;
     }

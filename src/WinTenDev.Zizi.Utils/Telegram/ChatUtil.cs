@@ -30,6 +30,31 @@ public static class ChatUtil
         return chatIdStr.ToInt64();
     }
 
+    public static string GetChatKey(
+        this long chatId,
+        string prefix
+    )
+    {
+        return $"{prefix}_{chatId.ReduceChatId()}";
+    }
+
+    public static string GetUserKey(
+        this long userId,
+        string prefix
+    )
+    {
+        return $"{prefix}_{userId}";
+    }
+
+    public static string GetChatUserKey(
+        this long chatId,
+        long userId,
+        string prefix
+    )
+    {
+        return $"{prefix}_{chatId.ReduceChatId()}_{userId}";
+    }
+
     public static string ToAdminMention(this ChatMember[] chatMembers)
     {
         var adminMention = chatMembers
