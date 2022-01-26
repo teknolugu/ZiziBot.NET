@@ -29,9 +29,13 @@ namespace WinTenDev.ZiziBot.App.Handlers.Modules
         /// <param name="fromId"></param>
         /// <param name="funcAntiSpamResult"></param>
         /// <returns></returns>
-        public async Task<AntiSpamResult> CheckAntiSpam(long fromId, Func<AntiSpamResult, Task> funcAntiSpamResult)
+        public async Task<AntiSpamResult> CheckAntiSpam(
+            long chatId,
+            long fromId,
+            Func<AntiSpamResult, Task> funcAntiSpamResult
+        )
         {
-            var result = await _antiSpamService.CheckSpam(fromId);
+            var result = await _antiSpamService.CheckSpam(chatId, fromId);
 
             await funcAntiSpamResult(result);
 

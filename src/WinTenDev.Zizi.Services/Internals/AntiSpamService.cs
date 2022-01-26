@@ -23,7 +23,9 @@ public class AntiSpamService
     private readonly CacheService _cacheService;
     private readonly ChatService _chatService;
     private readonly GlobalBanService _globalBanService;
+    private readonly SettingsService _settingsService;
     private readonly SpamWatchConfig _spamWatchConfig;
+    private ChatSetting _chatSetting;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AntiSpamService"/> class.
@@ -32,26 +34,31 @@ public class AntiSpamService
     /// <param name="cacheService"></param>
     /// <param name="chatService"></param>
     /// <param name="globalBanService">The global ban service.</param>
+    /// <param name="settingsService"></param>
     public AntiSpamService(
         IOptionsSnapshot<SpamWatchConfig> spamWatchConfig,
         CacheService cacheService,
         ChatService chatService,
-        GlobalBanService globalBanService
+        GlobalBanService globalBanService,
+        SettingsService settingsService
     )
     {
         _spamWatchConfig = spamWatchConfig.Value;
         _cacheService = cacheService;
         _chatService = chatService;
         _globalBanService = globalBanService;
+        _settingsService = settingsService;
     }
 
     /// <summary>
     /// Checks the spam.
     /// </summary>
+    /// <param name="chatId"></param>
     /// <param name="userId">The user id.</param>
     /// <param name="funcAntiSpamResult"></param>
     /// <returns>A Task.</returns>
     public async Task<AntiSpamResult> CheckSpam(
+        long chatId,
         long userId,
         Func<AntiSpamResult, Task> funcAntiSpamResult = null
     )
@@ -67,6 +74,8 @@ public class AntiSpamService
         {
             return spamResult;
         }
+
+        _chatSetting = await _settingsService.GetSettingsByGroup(chatId);
 
         var spamWatchTask = CheckSpamWatch(userId);
         var casBanTask = CheckCasBan(userId);
@@ -115,9 +124,17 @@ public class AntiSpamService
     /// <returns>A Task.</returns>
     public async Task<bool> CheckEs2Ban(long userId)
     {
-        var op = Operation.Begin("AntiSpam - ES2 Ban check for UserId: {UserId}", userId);
+        var op = Operation.Begin("ES2 Fed Ban check for UserId: {UserId}", userId);
 
         var isBan = false;
+
+        if (!_chatSetting.EnableFedEs2)
+        {
+            Log.Warning("ES2 Fed is disabled by Settings at ChatId: {ChatId}", _chatSetting.ChatId);
+            op.Complete();
+
+            return false;
+        }
 
         try
         {
@@ -127,7 +144,7 @@ public class AntiSpamService
         }
         catch (Exception exception)
         {
-            Log.Error(exception, "AntiSpam - Error check ES2 Ban for UserId {UserId}", userId);
+            Log.Error(exception, "Error check ES2 Ban for UserId {UserId}", userId);
         }
 
         Log.Debug("ES2 Ban result for UserId: '{UserId}' ? '{IsBan}'", userId, isBan);
@@ -144,7 +161,7 @@ public class AntiSpamService
     /// <returns>A Task.</returns>
     public async Task<bool> CheckSpamWatch(long userId)
     {
-        var op = Operation.Begin("AntiSpam - SpamWatch check for UserId: {UserId}", userId);
+        var op = Operation.Begin("SpamWatch check for UserId: {UserId}", userId);
         var cacheKey = $"ban-sw_{userId}";
 
         var isEnabled = _spamWatchConfig.IsEnabled;
@@ -163,6 +180,14 @@ public class AntiSpamService
         if (!validate.IsValid)
         {
             Log.Warning("SpamWatch is disabled because not properly configured");
+            op.Complete();
+
+            return false;
+        }
+
+        if (!_chatSetting.EnableFedSpamWatch)
+        {
+            Log.Warning("SpamWatch is disabled by Settings at ChatId: {ChatId}", _chatSetting.ChatId);
             op.Complete();
 
             return false;
@@ -210,7 +235,7 @@ public class AntiSpamService
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "SpamWatch Exception");
+                Log.Error(ex, "SpamWatch Exception UserId: {UserId}", userId);
             }
 
             return isBan;
@@ -229,8 +254,17 @@ public class AntiSpamService
     /// <returns>A Task.</returns>
     public async Task<bool> CheckCasBan(long userId)
     {
-        var op = Operation.Begin("AntiSpam - CAS check for UserId: {UserId}", userId);
+        var op = Operation.Begin("CAS Fed check for UserId: {UserId}", userId);
         var casCacheKey = $"ban-cas_{userId}";
+
+        if (!_chatSetting.EnableFedCasBan)
+        {
+            Log.Warning("CAS Fed is disabled by Settings at ChatId: {ChatId}", _chatSetting.ChatId);
+            op.Complete();
+
+            return false;
+        }
+
         try
         {
             var data = await _cacheService.GetOrSetAsync(casCacheKey, async () => {
@@ -249,8 +283,10 @@ public class AntiSpamService
 
             return isBan;
         }
-        catch
+        catch (Exception exception)
         {
+            Log.Error(exception, "CAS Ban Exception UserId: {UserId}", userId);
+
             op.Complete();
             return false;
         }
