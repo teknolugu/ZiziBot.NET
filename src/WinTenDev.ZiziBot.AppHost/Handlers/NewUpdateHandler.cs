@@ -100,26 +100,26 @@ public class NewUpdateHandler : IUpdateHandler
             return false;
         }
 
-        var checkUsernameResult = await CheckHasUsernameAsync();
-        if (!checkUsernameResult)
+        var hasSpam = await AntiSpamCheck();
+        if (hasSpam.IsAnyBanned)
         {
             return false;
         }
 
-        var hasAntiSpamCheck = await AntiSpamCheck();
-        if (hasAntiSpamCheck.IsAnyBanned)
-        {
-            return false;
-        }
-
-        var isDelete = await ScanMessageAsync();
-        if (isDelete)
+        var hasUsername = await CheckHasUsernameAsync();
+        if (!hasUsername)
         {
             return false;
         }
 
         var hasPhotoProfile = await CheckHasPhotoProfileAsync();
         if (!hasPhotoProfile)
+        {
+            return false;
+        }
+
+        var shouldDelete = await ScanMessageAsync();
+        if (shouldDelete)
         {
             return false;
         }
