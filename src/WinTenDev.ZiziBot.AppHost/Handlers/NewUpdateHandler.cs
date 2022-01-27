@@ -186,7 +186,21 @@ public class NewUpdateHandler : IUpdateHandler
     private async Task<AntiSpamResult> AntiSpamCheck()
     {
         var fromId = _telegramService.FromId;
-        var antiSpamResult = await _antiSpamService.CheckSpam(fromId);
+
+        if (_telegramService.IsPrivateChat)
+        {
+            return new AntiSpamResult
+            {
+                UserId = fromId,
+                MessageResult = string.Empty,
+                IsAnyBanned = false,
+                IsEs2Banned = false,
+                IsCasBanned = false,
+                IsSpamWatched = false,
+            };
+        }
+
+        var antiSpamResult = await _antiSpamService.CheckSpam(_chatId, fromId);
 
         if (antiSpamResult == null) return null;
 
