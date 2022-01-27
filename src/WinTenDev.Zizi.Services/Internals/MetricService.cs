@@ -101,22 +101,22 @@ public class MetricService
         }
 
         Log.Debug("Flushing {Count} of {CountAll} data..", filteredMetrics.Count, metrics.Count());
-        foreach (var m in filteredMetrics)
+        foreach (var hitActivity in filteredMetrics)
         {
             var data = new Dictionary<string, object>()
             {
-                { "via_bot", m.ViaBot },
-                { "message_type", m.MessageType },
-                { "from_id", m.FromId },
-                { "from_first_name", m.FromFirstName },
-                { "from_last_name", m.FromLastName },
-                { "from_username", m.FromUsername },
-                { "from_lang_code", m.FromLangCode },
-                { "chat_id", m.ChatId },
-                { "chat_username", m.ChatUsername },
-                { "chat_type", m.ChatType },
-                { "chat_title", m.ChatTitle },
-                { "timestamp", m.Timestamp }
+                { "via_bot", hitActivity.ViaBot },
+                { "update_type", hitActivity.UpdateType },
+                { "from_id", hitActivity.FromId },
+                { "from_first_name", hitActivity.FromFirstName },
+                { "from_last_name", hitActivity.FromLastName },
+                { "from_username", hitActivity.FromUsername },
+                { "from_lang_code", hitActivity.FromLangCode },
+                { "chat_id", hitActivity.ChatId },
+                { "chat_username", hitActivity.ChatUsername },
+                { "chat_type", hitActivity.ChatType },
+                { "chat_title", hitActivity.ChatTitle },
+                { "timestamp", hitActivity.Timestamp }
             };
 
             var insertHit = await _queryService
