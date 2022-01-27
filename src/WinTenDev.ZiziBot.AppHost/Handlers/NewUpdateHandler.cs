@@ -8,6 +8,7 @@ using Humanizer;
 using Microsoft.Extensions.Logging;
 using SerilogTimings;
 using Telegram.Bot.Framework.Abstractions;
+using Telegram.Bot.Types.Enums;
 using WinTenDev.Zizi.Models.Types;
 using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Services.Telegram;
@@ -396,7 +397,7 @@ public class NewUpdateHandler : IUpdateHandler
                 await _mataService.SaveMataAsync(_fromId, new HitActivity
                 {
                     ViaBot = botUser.Username,
-                    MessageType = message.Type.ToString(),
+                    UpdateType = _telegramService.Update.Type,
                     FromId = message.From.Id,
                     FromFirstName = message.From.FirstName,
                     FromLastName = message.From.LastName,
@@ -404,7 +405,7 @@ public class NewUpdateHandler : IUpdateHandler
                     FromLangCode = message.From.LanguageCode,
                     ChatId = message.Chat.Id,
                     ChatUsername = message.Chat.Username,
-                    ChatType = message.Chat.Type.ToString(),
+                    ChatType = message.Chat.Type,
                     ChatTitle = message.Chat.Title,
                     Timestamp = DateTime.Now
                 });
@@ -446,21 +447,20 @@ public class NewUpdateHandler : IUpdateHandler
                 await _telegramService.SendTextMessageAsync(msgBuild.ToString().Trim());
 
                 await _mataService.SaveMataAsync(_fromId, new HitActivity
-                    // _telegramService.SetChatCache(fromId.ToString(), new HitActivity
-                    {
-                        ViaBot = botUser.Username,
-                        MessageType = message.Type.ToString(),
-                        FromId = message.From.Id,
-                        FromFirstName = message.From.FirstName,
-                        FromLastName = message.From.LastName,
-                        FromUsername = message.From.Username,
-                        FromLangCode = message.From.LanguageCode,
-                        ChatId = message.Chat.Id,
-                        ChatUsername = message.Chat.Username,
-                        ChatType = message.Chat.Type.ToString(),
-                        ChatTitle = message.Chat.Title,
-                        Timestamp = DateTime.Now
-                    });
+                {
+                    ViaBot = botUser.Username,
+                    UpdateType = _telegramService.Update.Type,
+                    FromId = message.From.Id,
+                    FromFirstName = message.From.FirstName,
+                    FromLastName = message.From.LastName,
+                    FromUsername = message.From.Username,
+                    FromLangCode = message.From.LanguageCode,
+                    ChatId = message.Chat.Id,
+                    ChatUsername = message.Chat.Username,
+                    ChatType = _telegramService.Chat.Type,
+                    ChatTitle = message.Chat.Title,
+                    Timestamp = DateTime.Now
+                });
 
                 _logger.LogDebug("Complete update Cache");
             }
