@@ -9,8 +9,8 @@
 
     <ItemGroup>
         <PackageReference Include="Dapper" Version="2.0.123"/>
-        <PackageReference Include="EasyCaching.Disk" Version="1.4.1"/>
-        <PackageReference Include="EasyCaching.SQLite" Version="1.4.1"/>
+        <PackageReference Include="EasyCaching.Disk" Version="1.5.0"/>
+        <PackageReference Include="EasyCaching.SQLite" Version="1.5.0"/>
         <PackageReference Include="JetBrains.Annotations" Version="2021.3.0"/>
         <PackageReference Include="Localtunnel" Version="1.0.4"/>
         <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="6.0.0">
@@ -18,7 +18,7 @@
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="Newtonsoft.Json" Version="13.0.1"/>
-        <PackageReference Include="Roslynator.Analyzers" Version="3.3.0">
+        <PackageReference Include="Roslynator.Analyzers" Version="4.0.0">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
@@ -29,7 +29,7 @@
         <PackageReference Include="Serilog.Sinks.Console" Version="4.0.1"/>
         <PackageReference Include="Serilog.Sinks.File" Version="5.0.0"/>
         <PackageReference Include="SerilogAnalyzer" Version="0.15.0"/>
-        <PackageReference Include="SonarAnalyzer.CSharp" Version="8.33.0.40503">
+        <PackageReference Include="SonarAnalyzer.CSharp" Version="8.34.0.42011">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>

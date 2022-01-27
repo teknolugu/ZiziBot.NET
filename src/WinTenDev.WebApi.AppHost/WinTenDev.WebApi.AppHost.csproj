@@ -10,19 +10,21 @@
     <ItemGroup>
         <PackageReference Include="Canducci.SqlKata.Dapper.MySql" Version="1.2.2"/>
         <PackageReference Include="Dapper" Version="2.0.123"/>
-        <PackageReference Include="EasyCaching.Disk" Version="1.4.1"/>
-        <PackageReference Include="EasyCaching.SQLite" Version="1.4.1"/>
+        <PackageReference Include="EasyCaching.Disk" Version="1.5.0"/>
+        <PackageReference Include="EasyCaching.SQLite" Version="1.5.0"/>
         <PackageReference Include="JetBrains.Annotations" Version="2021.3.0"/>
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.1"/>
         <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="6.0.0">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.15.0"/>
+        <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.15.1"/>
+        <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="6.0.1"/>
         <PackageReference Include="MonkeyCache.FileStore" Version="1.5.2"/>
-        <PackageReference Include="MySqlConnector" Version="2.1.2"/>
+        <PackageReference Include="MySqlConnector" Version="2.1.4"/>
         <PackageReference Include="Newtonsoft.Json" Version="13.0.1"/>
-        <PackageReference Include="Roslynator.Analyzers" Version="3.3.0">
+        <PackageReference Include="NSwag.AspNetCore" Version="13.15.5"/>
+        <PackageReference Include="Roslynator.Analyzers" Version="4.0.0">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
@@ -34,14 +36,15 @@
         <PackageReference Include="Serilog.Sinks.Datadog.Logs" Version="0.3.5"/>
         <PackageReference Include="Serilog.Sinks.File" Version="5.0.0"/>
         <PackageReference Include="SerilogAnalyzer" Version="0.15.0"/>
-        <PackageReference Include="SonarAnalyzer.CSharp" Version="8.33.0.40503">
+        <PackageReference Include="SonarAnalyzer.CSharp" Version="8.34.0.42011">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.15.0"/>
+        <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.15.1"/>
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\WinTenDev.Zizi.Services\WinTenDev.Zizi.Services.csproj"/>
         <ProjectReference Include="..\WinTenDev.Zizi.Utils\WinTenDev.Zizi.Utils.csproj"/>
     </ItemGroup>
 </Project>

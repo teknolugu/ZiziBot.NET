@@ -9,17 +9,17 @@
 
     <ItemGroup>
         <PackageReference Include="CacheTower" Version="0.11.6"/>
-        <PackageReference Include="CodeHollow.FeedReader" Version="1.2.2"/>
+        <PackageReference Include="CodeHollow.FeedReader" Version="1.2.4"/>
         <PackageReference Include="DotNurse.Injector" Version="2.5.2"/>
-        <PackageReference Include="EasyCaching.Core" Version="1.4.1"/>
+        <PackageReference Include="EasyCaching.Core" Version="1.5.0"/>
         <PackageReference Include="Fedorus.Telegram.Bot.Framework" Version="1.0.3"/>
         <PackageReference Include="FluentValidation" Version="10.3.6"/>
-        <PackageReference Include="Flurl" Version="3.0.2"/>
-        <PackageReference Include="Flurl.Http" Version="3.2.0"/>
+        <PackageReference Include="Flurl" Version="3.0.4"/>
+        <PackageReference Include="Flurl.Http" Version="3.2.2"/>
         <PackageReference Include="Google.Apis.Auth" Version="1.55.0"/>
-        <PackageReference Include="Google.Apis.Drive.v3" Version="1.55.0.2502"/>
-        <PackageReference Include="Google.Apis.Iam.v1" Version="1.55.0.2499"/>
-        <PackageReference Include="Google.Cloud.Firestore" Version="2.4.0"/>
+        <PackageReference Include="Google.Apis.Drive.v3" Version="1.55.0.2566"/>
+        <PackageReference Include="Google.Apis.Iam.v1" Version="1.55.0.2568"/>
+        <PackageReference Include="Google.Cloud.Firestore" Version="2.5.0"/>
         <PackageReference Include="Google.Cloud.Vision.V1" Version="2.4.0"/>
         <PackageReference Include="Hangfire.Core" Version="1.7.28"/>
         <PackageReference Include="Hangfire.MaximumConcurrentExecutions" Version="1.1.0"/>
@@ -33,26 +33,27 @@
         </PackageReference>
         <PackageReference Include="ModernTlSharp" Version="1.2.4"/>
         <PackageReference Include="MySqlBackup.NET.MySqlConnector" Version="2.3.6"/>
-        <PackageReference Include="MySqlConnector" Version="2.1.2"/>
+        <PackageReference Include="MySqlConnector" Version="2.1.4"/>
         <PackageReference Include="Nito.AsyncEx" Version="5.1.2"/>
+        <PackageReference Include="NMemory" Version="3.1.3"/>
         <PackageReference Include="RepoDb.MySqlConnector" Version="1.1.4"/>
-        <PackageReference Include="Roslynator.Analyzers" Version="3.3.0">
+        <PackageReference Include="Roslynator.Analyzers" Version="4.0.0">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="Serilog" Version="2.10.0"/>
         <PackageReference Include="SerilogAnalyzer" Version="0.15.0"/>
         <PackageReference Include="SerilogTimings" Version="2.3.0"/>
-        <PackageReference Include="SonarAnalyzer.CSharp" Version="8.33.0.40503">
+        <PackageReference Include="SonarAnalyzer.CSharp" Version="8.34.0.42011">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="SpamWatch" Version="1.1.2"/>
         <PackageReference Include="TDLib" Version="1.7.9"/>
-        <PackageReference Include="Telega" Version="0.5.0"/>
+        <PackageReference Include="Telega" Version="0.5.1"/>
         <PackageReference Include="Telegram.Bot" Version="17.0.0"/>
         <PackageReference Include="TinyMapper" Version="3.0.3"/>
-        <PackageReference Include="WTelegramClient" Version="1.8.2"/>
+        <PackageReference Include="WTelegramClient" Version="2.0.0"/>
     </ItemGroup>
 
     <ItemGroup>
