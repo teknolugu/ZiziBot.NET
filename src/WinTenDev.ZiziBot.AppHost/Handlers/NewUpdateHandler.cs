@@ -219,34 +219,29 @@ public class NewUpdateHandler : IUpdateHandler
     {
         try
         {
-            var callbackQuery = _telegramService.CallbackQuery;
-
-            if (callbackQuery != null)
-            {
-                _logger.LogWarning("Look this message is callbackQuery!");
-                return false;
-            }
-
             var message = _telegramService.MessageOrEdited;
+            if (message == null) return false;
 
-            if (message == null)
-            {
-                _logger.LogInformation("This Message don't contain any Message");
-                return false;
-            }
-
-            var msgId = message.MessageId;
-
+            var messageId = message.MessageId;
             if (!_chatSettings.EnableWordFilterGroupWide)
             {
                 _logger.LogDebug("Word Filter on {ChatId} is disabled!", _chatId);
                 return false;
             }
 
-            var text = message.Text ?? message.Caption;
+            var text = _telegramService.MessageOrEditedText ?? _telegramService.MessageOrEditedCaption;
             if (text.IsNullOrEmpty())
             {
-                _logger.LogInformation("No message Text for scan..");
+                _logger.LogInformation("No Text at MessageId {MessageId} for scan..", messageId);
+                return false;
+            }
+
+            if (_telegramService.IsFromSudo && (
+                    text.StartsWith("/dkata") ||
+                    text.StartsWith("/delkata") ||
+                    text.StartsWith("/kata")))
+            {
+                _logger.LogDebug("Seem User will modify Kata!");
                 return false;
             }
 
@@ -255,7 +250,7 @@ public class NewUpdateHandler : IUpdateHandler
 
             if (isMustDelete) _logger.LogInformation("Starting scan image if available..");
 
-            _logger.LogInformation("Message {MsgId} IsMustDelete: {IsMustDelete}", msgId, isMustDelete);
+            _logger.LogInformation("Message {MsgId} IsMustDelete: {IsMustDelete}", messageId, isMustDelete);
 
             if (isMustDelete)
             {
@@ -263,7 +258,7 @@ public class NewUpdateHandler : IUpdateHandler
                 var note = "Pesan di Obrolan di hapus karena terdeteksi filter Kata.\n" + result.Notes;
                 await _telegramService.SendEventAsync(note);
 
-                await _telegramService.DeleteAsync(message.MessageId);
+                await _telegramService.DeleteAsync(messageId);
             }
 
             return isMustDelete;
