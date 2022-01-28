@@ -28,7 +28,7 @@ public static class SerilogServiceExtension
     private const string DataDogHost = "intake.logs.datadoghq.com";
     private const RollingInterval RollingInterval = Serilog.RollingInterval.Day;
     private static readonly TimeSpan FlushInterval = TimeSpan.FromSeconds(1);
-    private const string TemplateBase = $"[{{Level:u3}}] {{MemoryUsage}}{{ThreadId}}| {{Message:lj}}{{NewLine}}{{Exception}}";
+    private const string TemplateBase = $"[{{Level:u3}}]{{MemoryUsage}}{{ThreadId}} {{Message:lj}}{{NewLine}}{{Exception}}";
     private const string OutputTemplate = $"{{Timestamp:HH:mm:ss.fff}} {TemplateBase}";
 
     /// <summary>
@@ -61,10 +61,16 @@ public static class SerilogServiceExtension
             .MinimumLevel.Override("Hangfire", LogEventLevel.Information)
             .MinimumLevel.Override("MySqlConnector", LogEventLevel.Warning)
             // .Filter.ByExcluding("{@m} not like '%pinged server%'")
-            .WriteTo.Async(a =>
-                a.File(LogPath, rollingInterval: RollingInterval, flushToDiskInterval: FlushInterval, shared: true, outputTemplate: OutputTemplate))
-            .WriteTo.Async(a =>
-                a.Console(theme: SystemConsoleTheme.Colored, outputTemplate: OutputTemplate));
+            .WriteTo.Async
+            (
+                a =>
+                    a.File(LogPath, rollingInterval: RollingInterval, flushToDiskInterval: FlushInterval, shared: true, outputTemplate: OutputTemplate)
+            )
+            .WriteTo.Async
+            (
+                a =>
+                    a.Console(theme: SystemConsoleTheme.Colored, outputTemplate: OutputTemplate)
+            );
         // .WriteTo.Async(logger => logger.Sentry(options =>
         // {
         //     options.MinimumBreadcrumbLevel = LogEventLevel.Debug;
@@ -103,7 +109,10 @@ public static class SerilogServiceExtension
     /// <param name="configuration"></param>
     /// <param name="serviceProvider"></param>
     /// <returns></returns>
-    public static LoggerConfiguration AddSerilogBootstrapper(this LoggerConfiguration configuration, IServiceProvider serviceProvider)
+    public static LoggerConfiguration AddSerilogBootstrapper(
+        this LoggerConfiguration configuration,
+        IServiceProvider serviceProvider
+    )
     {
         SelfLog.Enable(msg => Debug.WriteLine(msg));
 
@@ -124,10 +133,16 @@ public static class SerilogServiceExtension
             .MinimumLevel.Override("Hangfire", LogEventLevel.Information)
             .MinimumLevel.Override("MySqlConnector", LogEventLevel.Information)
             // .Filter.ByExcluding("{@m} not like '%pinged server%'")
-            .WriteTo.Async(a =>
-                a.File(LogPath, rollingInterval: RollingInterval, flushToDiskInterval: FlushInterval, shared: true, outputTemplate: OutputTemplate))
-            .WriteTo.Async(a =>
-                a.Console(theme: SystemConsoleTheme.Colored, outputTemplate: OutputTemplate));
+            .WriteTo.Async
+            (
+                a =>
+                    a.File(LogPath, rollingInterval: RollingInterval, flushToDiskInterval: FlushInterval, shared: true, outputTemplate: OutputTemplate)
+            )
+            .WriteTo.Async
+            (
+                a =>
+                    a.Console(theme: SystemConsoleTheme.Colored, outputTemplate: OutputTemplate)
+            );
 
         if (envConfig.IsProduction)
         {
@@ -153,24 +168,28 @@ public static class SerilogServiceExtension
     /// <param name="logger">The logger</param>
     /// <param name="config">The grafana logger</param>
     /// <returns>The logger</returns>
-    private static LoggerConfiguration AddGrafana(this LoggerConfiguration logger, GrafanaConfig config)
+    private static LoggerConfiguration AddGrafana(
+        this LoggerConfiguration logger,
+        GrafanaConfig config
+    )
     {
         if (!config.IsEnabled) return logger;
         if (!config.LokiUrl.IsNotNullOrEmpty()) return logger;
 
-        logger.WriteTo.GrafanaLoki(
-        uri: config.LokiUrl,
-        queueLimit: 20,
-        labels: new List<LokiLabel>()
-        {
-            new LokiLabel()
+        logger.WriteTo.GrafanaLoki
+        (
+            uri: config.LokiUrl,
+            queueLimit: 20,
+            labels: new List<LokiLabel>()
             {
-                Key = "app-name",
-                Value = "Zizi Beta"
-            }
-        },
-        batchPostingLimit: 20,
-        createLevelLabel: true
+                new LokiLabel()
+                {
+                    Key = "app-name",
+                    Value = "Zizi Beta"
+                }
+            },
+            batchPostingLimit: 20,
+            createLevelLabel: true
         );
 
         return logger;
@@ -182,7 +201,10 @@ public static class SerilogServiceExtension
     /// <param name="logger">The logger</param>
     /// <param name="config">The datadog logger</param>
     /// <returns>The logger</returns>
-    private static LoggerConfiguration AddDatadog(this LoggerConfiguration logger, DataDogConfig config)
+    private static LoggerConfiguration AddDatadog(
+        this LoggerConfiguration logger,
+        DataDogConfig config
+    )
     {
         var datadogKey = config.ApiKey;
 
@@ -191,13 +213,15 @@ public static class SerilogServiceExtension
 
         var datadogConfiguration = new DatadogConfiguration(url: DataDogHost, port: 10516, useSSL: true, useTCP: true);
 
-        logger.WriteTo.DatadogLogs(
-        apiKey: datadogKey,
-        service: "TelegramBot",
-        source: config.Source,
-        host: config.Host,
-        tags: config.Tags.ToArray(),
-        configuration: datadogConfiguration);
+        logger.WriteTo.DatadogLogs
+        (
+            apiKey: datadogKey,
+            service: "TelegramBot",
+            source: config.Source,
+            host: config.Host,
+            tags: config.Tags.ToArray(),
+            configuration: datadogConfiguration
+        );
 
         return logger;
     }
@@ -208,17 +232,23 @@ public static class SerilogServiceExtension
     /// <param name="logger">The logger</param>
     /// <param name="config">The sentry logger</param>
     /// <returns>The logger</returns>
-    private static LoggerConfiguration AddSentry(this LoggerConfiguration logger, SentryConfig config)
+    private static LoggerConfiguration AddSentry(
+        this LoggerConfiguration logger,
+        SentryConfig config
+    )
     {
         if (!config.IsEnabled) return logger;
 
-        logger.WriteTo.Sentry(options => {
-            // options.AutoSessionTracking = true;
-            // options.InitializeSdk = true;
-            // options.DeduplicateMode = DeduplicateMode.All;
-            // options.AttachStacktrace = true;
-            options.Dsn = config.Dsn;
-        });
+        logger.WriteTo.Sentry
+        (
+            options => {
+                // options.AutoSessionTracking = true;
+                // options.InitializeSdk = true;
+                // options.DeduplicateMode = DeduplicateMode.All;
+                // options.AttachStacktrace = true;
+                options.Dsn = config.Dsn;
+            }
+        );
 
         return logger;
     }
@@ -229,24 +259,31 @@ public static class SerilogServiceExtension
     /// <param name="logger">The logger</param>
     /// <param name="config">The event log logger</param>
     /// <returns>The logger</returns>
-    private static LoggerConfiguration AddTelegramBot4EventLog(this LoggerConfiguration logger, EventLogConfig config)
+    private static LoggerConfiguration AddTelegramBot4EventLog(
+        this LoggerConfiguration logger,
+        EventLogConfig config
+    )
     {
         if (!config.IsEnabled) return logger;
         var botToken = config.BotToken;
 
         if (botToken.IsNullOrEmpty()) botToken = config.BotConfig.Token;
 
-        logger.WriteTo.TelegramBot(
-        token: botToken,
-        chatId: config.ChannelId.ToString(),
-        restrictedToMinimumLevel: LogEventLevel.Error,
-        parseMode: ParseMode.HTML
+        logger.WriteTo.TelegramBot
+        (
+            token: botToken,
+            chatId: config.ChannelId.ToString(),
+            restrictedToMinimumLevel: LogEventLevel.Error,
+            parseMode: ParseMode.Markdown
         );
 
         return logger;
     }
 
-    private static LoggerConfiguration AddExceptionless(this LoggerConfiguration logger, ExceptionlessConfig config)
+    private static LoggerConfiguration AddExceptionless(
+        this LoggerConfiguration logger,
+        ExceptionlessConfig config
+    )
     {
         if (!config.IsEnabled) return logger;
 
@@ -264,28 +301,32 @@ public static class SerilogServiceExtension
     /// <returns></returns>
     public static LoggerConfiguration WithThreadId(this LoggerEnrichmentConfiguration enrich)
     {
-        return enrich.WithDynamicProperty("ThreadId", () => {
-            var threadId = Thread.CurrentThread.ManagedThreadId.ToString();
-            return $"ThreadId: {threadId} ";
-        });
+        return enrich.WithDynamicProperty
+        (
+            "ThreadId", () => {
+                var threadId = Thread.CurrentThread.ManagedThreadId.ToString();
+                return $"ThreadId: {threadId} ";
+            }
+        );
     }
 
     /// <summary>
     /// Add MemoryUsage to Logging logger for Serilog
     /// </summary>
     /// <param name="configuration"></param>
-    /// <param name="includeGc"></param>
     /// <returns></returns>
-    public static LoggerConfiguration WithPrettiedMemoryUsage(this LoggerEnrichmentConfiguration configuration, bool includeGc = false)
+    public static LoggerConfiguration WithPrettiedMemoryUsage(
+        this LoggerEnrichmentConfiguration configuration
+    )
     {
-        return configuration.WithDynamicProperty("MemoryUsage", () => {
-            if (includeGc) GC.Collect();
+        return configuration.WithDynamicProperty
+        (
+            "MemoryUsage", () => {
+                var proc = Process.GetCurrentProcess();
+                var mem = proc.PrivateMemorySize64.SizeFormat();
 
-            var proc = Process.GetCurrentProcess();
-            var mem = proc.PrivateMemorySize64.SizeFormat();
-            // var memUsage = GC.GetTotalMemory(true).SizeFormat();
-
-            return $"{mem} ";
-        });
+                return $"{mem} ";
+            }
+        );
     }
 }
