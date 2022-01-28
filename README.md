@@ -15,8 +15,8 @@ Official repository WinTenDev Zizi Bot, written in .NET
 
 ### CI/CD
 
-[![Zizi Bot Dev](https://github.com/WinTenDev/ZiziBot.NET/actions/workflows/zizibot-build.yml/badge.svg?branch=master)](https://github.com/WinTenDev/ZiziBot.NET/actions/workflows/zizibot-dev-build.yml)
-[![Zizi Bot Alpha](https://github.com/WinTenDev/ZiziBot.NET/actions/workflows/zizibot4-build.yml/badge.svg)](https://github.com/WinTenDev/ZiziBot.NET/actions/workflows/zizibot-alpha-build.yml)
+[![Zizi Bot Dev](https://github.com/WinTenDev/ZiziBot.NET/actions/workflows/zizibot-dev-build.yml/badge.svg)](https://github.com/WinTenDev/ZiziBot.NET/actions/workflows/zizibot-dev-build.yml)
+[![Zizi Bot Alpha](https://github.com/WinTenDev/ZiziBot.NET/actions/workflows/zizibot-alpha-build.yml/badge.svg)](https://github.com/WinTenDev/ZiziBot.NET/actions/workflows/zizibot-alpha-build.yml)
 
 # Preparation
 
