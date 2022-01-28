@@ -14,7 +14,10 @@ namespace WinTenDev.ZiziBot.AppHost;
 
 public class Startup
 {
-    public Startup(IConfiguration configuration, IWebHostEnvironment env)
+    public Startup(
+        IConfiguration configuration,
+        IWebHostEnvironment env
+    )
     {
 
     }
@@ -53,7 +56,10 @@ public class Startup
         Log.Information("Services is ready..");
     }
 
-    public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+    public void Configure(
+        IApplicationBuilder app,
+        IWebHostEnvironment env
+    )
     {
         app.AboutApp();
 
@@ -76,9 +82,20 @@ public class Startup
 
         app.UseHangfireDashboardAndServer();
 
-        app.Run(async context => await context.Response.WriteAsync("Hello World!"));
+        app.RegisterHangfireJobs();
 
-        app.UseEndpoints(endpoints => { endpoints.MapHealthChecks("/health"); });
+        app.Run
+        (
+            async context =>
+                await context.Response.WriteAsync("Hello World!")
+        );
+
+        app.UseEndpoints
+        (
+            endpoints => {
+                endpoints.MapHealthChecks("/health");
+            }
+        );
 
         Log.Information("App is ready..");
     }
