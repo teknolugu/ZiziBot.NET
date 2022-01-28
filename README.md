@@ -46,6 +46,8 @@ Official repository WinTenDev Zizi Bot, written in .NET
 
 # Currently available on following bot
 
-- [Zizi Bot](t.me/MissZiziBot) (Stable)
-- [Zizi Beta](t.me/MissZiziBetaBot) (Beta)
-- [Zizi Dev](t.me/MissZiziDevBot) (Dev)
+# Currently, available on following bot
+
+- [Zizi Bot](https://t.me/MissZiziBot) (Stable)
+- [Zizi Beta](https://t.me/MissZiziBetaBot) (Beta)
+- [Zizi Dev](https://t.me/MissZiziDevBot) (Dev)
