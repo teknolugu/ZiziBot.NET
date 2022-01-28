@@ -65,6 +65,7 @@ public class TelegramService
 
     public string AnyMessageText { get; set; }
     public string MessageOrEditedText { get; set; }
+    public string MessageOrEditedCaption { get; set; }
     public string[] MessageTextParts { get; set; }
 
     public User From { get; set; }
@@ -151,6 +152,7 @@ public class TelegramService
 
         AnyMessageText = AnyMessage?.Text;
         MessageOrEditedText = MessageOrEdited?.Text;
+        MessageOrEditedCaption = MessageOrEdited?.Caption;
         MessageTextParts = MessageOrEditedText?.SplitText(" ")
             .Where(s => s.IsNotNullOrEmpty()).ToArray();
 
