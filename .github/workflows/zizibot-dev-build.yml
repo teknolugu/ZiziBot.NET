@@ -27,7 +27,7 @@ jobs:
       - name: Upload Linux64 Artifacs
         uses: actions/upload-artifact@v2
         with:
-          name: zizibot-linux64-fd-build.zip
+          name: zizibot-linux64-fd-build
           path: src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/linux-x64/publish
 
   zizibot-linux64-sf-build:
@@ -50,7 +50,7 @@ jobs:
       - name: Upload Linux64 Single-File Artifacs
         uses: actions/upload-artifact@v2
         with:
-          name: zizibot-linux64-sf-build.zip
+          name: zizibot-linux64-sf-build
           path: src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/linux-x64/publish
 
   zizibot-win64-fd-build:
@@ -72,7 +72,7 @@ jobs:
       - name: Upload Win64 FD Artifacs
         uses: actions/upload-artifact@v2
         with:
-          name: zizibot-win64-fd-build.zip
+          name: zizibot-win64-fd-build
           path: src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/win-x64/publish
 
   zizibot-win64-sf-build:
@@ -95,5 +95,5 @@ jobs:
       - name: Upload Win64 SF Artifacs
         uses: actions/upload-artifact@v2
         with:
-          name: zizibot-win64-sf-build.zip
+          name: zizibot-win64-sf-build
           path: src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/win-x64/publish
