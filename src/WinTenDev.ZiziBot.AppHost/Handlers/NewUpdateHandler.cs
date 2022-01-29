@@ -188,7 +188,9 @@ public class NewUpdateHandler : IUpdateHandler
     {
         var fromId = _telegramService.FromId;
 
-        if (_telegramService.IsPrivateChat)
+        if (_telegramService.IsPrivateChat ||
+            _telegramService.CheckFromAnonymous() ||
+            _telegramService.CheckSenderChannel())
         {
             return new AntiSpamResult
             {
