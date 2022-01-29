@@ -63,11 +63,13 @@ public static class StringUtil
         IEnumerable<(string placeholder, string value)> placeHolders
     )
     {
-        return placeHolders.Aggregate(input, (
-            current,
-            ph
-        ) => current.Replace($"{{{ph.placeholder}}}", ph.value,
-            StringComparison.CurrentCultureIgnoreCase));
+        return placeHolders.Aggregate
+        (
+            input, (
+                current,
+                ph
+            ) => current.Replace($"{{{ph.placeholder}}}", ph.value, StringComparison.CurrentCultureIgnoreCase)
+        );
     }
 
     public static async Task ToFile(
@@ -83,7 +85,9 @@ public static class StringUtil
     {
         if (str.IsNullOrEmpty()) return str;
 
-        var escaped = Regex.Replace(str, @"[\x00'""\b\n\r\t\cZ\\%_]",
+        var escaped = Regex.Replace
+        (
+            str, @"[\x00'""\b\n\r\t\cZ\\%_]",
             delegate(Match match) {
                 var v = match.Value;
                 switch (v)
@@ -109,7 +113,8 @@ public static class StringUtil
                     default:
                         return "\\" + v;
                 }
-            });
+            }
+        );
         escaped = escaped.Replace("'", "\'");
 
         return escaped;
@@ -155,9 +160,12 @@ public static class StringUtil
 
     public static string CleanExceptAlphaNumeric(this string str)
     {
-        var arr = str.Where(c => char.IsLetterOrDigit(c) ||
-                                 char.IsWhiteSpace(c) ||
-                                 c == '-').ToArray();
+        var arr = str.Where
+        (
+            c => char.IsLetterOrDigit(c) ||
+                 char.IsWhiteSpace(c) ||
+                 c == '-'
+        ).ToArray();
 
         return new string(arr);
     }
@@ -169,11 +177,14 @@ public static class StringUtil
     {
         return str.IsNullOrEmpty()
             ? str
-            : chars.Aggregate(str, (
-                    current,
-                    c
-                ) =>
-                current.Replace($"{c}", ""));
+            : chars.Aggregate
+            (
+                str, (
+                        current,
+                        c
+                    ) =>
+                    current.Replace($"{c}", "")
+            );
     }
 
     public static string RemoveThisString(
@@ -230,6 +241,14 @@ public static class StringUtil
     )
     {
         return listStr.Any(s => str.Contains(s, stringComparison));
+    }
+
+    public static bool ContainsListStr(
+        this string str,
+        params string[] listStr
+    )
+    {
+        return listStr.Any(s => str.Contains(s, StringComparison.CurrentCultureIgnoreCase));
     }
 
     public static string ToLowerCase(this string str)

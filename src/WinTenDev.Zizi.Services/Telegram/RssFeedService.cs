@@ -23,21 +23,24 @@ public class RssFeedService
     private readonly RssService _rssService;
     private readonly IRecurringJobManager _recurringJobManager;
     private readonly TelegramBotClient _botClient;
+    private readonly JobsService _jobsService;
 
     public RssFeedService(
         IRecurringJobManager recurringJobManager,
         TelegramBotClient botClient,
+        JobsService jobsService,
         RssService rssService
     )
     {
         _recurringJobManager = recurringJobManager;
         _botClient = botClient;
+        _jobsService = jobsService;
         _rssService = rssService;
     }
 
     public async Task RegisterJobAllRssScheduler()
     {
-        Log.Information("Initializing RSS Scheduler..");
+        var op = Operation.Begin("Registering RSS Job");
 
         Log.Information("Getting list Chat ID");
         var listChatId = await _rssService.GetAllRssSettingsAsync();
@@ -50,7 +53,7 @@ public class RssFeedService
             RegisterUrlFeed(chatId, urlFeed);
         }
 
-        Log.Information("Registering RSS Scheduler complete..");
+        op.Complete();
     }
 
     public void RegisterUrlFeed(
@@ -62,11 +65,17 @@ public class RssFeedService
         var unique = StringUtil.GenerateUniqueId(3);
         var recurringId = $"RSS_{reducedChatId}_{unique}";
 
-        Log.Debug("Registering URl: {UrlFeed} for ChatId: {ChatId} with JobId: {RecurringId}",
-            urlFeed, chatId, recurringId);
+        Log.Debug
+        (
+            "Register RSS for ChatId: {ChatId} with JobId: {RecurringId}. URl: {UrlFeed} ",
+            chatId.ReduceChatId(), recurringId, urlFeed
+        );
 
-        _recurringJobManager.AddOrUpdate<RssFeedService>(recurringId, service =>
-            service.ExecuteUrlAsync(chatId, urlFeed), Cron.Minutely);
+        _recurringJobManager.AddOrUpdate<RssFeedService>
+        (
+            recurringId, service =>
+                service.ExecuteUrlAsync(chatId, urlFeed), Cron.Minutely
+        );
     }
 
     [AutomaticRetry(Attempts = 0, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
@@ -111,28 +120,27 @@ public class RssFeedService
 
                 Log.Debug("Writing to RSS History");
 
-                await _rssService.SaveRssHistoryAsync(new RssHistory()
-                {
-                    Url = rssFeed.Link,
-                    RssSource = rssUrl,
-                    ChatId = chatId,
-                    Title = rssFeed.Title,
-                    PublishDate = rssFeed.PublishingDate ?? DateTime.Now,
-                    Author = rssFeed.Author ?? "N/A",
-                    CreatedAt = DateTime.Now
-                });
+                await _rssService.SaveRssHistoryAsync
+                (
+                    new RssHistory
+                    {
+                        Url = rssFeed.Link,
+                        RssSource = rssUrl,
+                        ChatId = chatId,
+                        Title = rssFeed.Title,
+                        PublishDate = rssFeed.PublishingDate ?? DateTime.Now,
+                        Author = rssFeed.Author ?? "N/A",
+                        CreatedAt = DateTime.Now
+                    }
+                );
             }
             catch (Exception ex)
             {
                 Log.Error(ex.Demystify(), "RSS Broadcaster Error at ChatId {ChatId}. Url: {Url}", chatId, rssUrl);
-                var exMessage = ex.Message;
-                if (exMessage.Contains("bot was blocked by the user"))
-                {
-                    Log.Warning("Seem need clearing all RSS Settings and unregister Cron completely!");
-                    Log.Debug("Deleting all RSS Settings");
-                    await _rssService.DeleteAllByChatId(chatId);
 
-                    UnRegisterRssFeedByChatId(chatId);
+                if (ex.Message.ContainsListStr("blocked", "not found", "deactivated"))
+                {
+                    UnregisterRssFeed(chatId, rssUrl);
                 }
             }
         }
@@ -148,17 +156,50 @@ public class RssFeedService
         var connection = JobStorage.Current.GetConnection();
 
         var recurringJobs = connection.GetRecurringJobs();
-        var filteredJobs = recurringJobs.Where(job =>
-            job.Id.Contains(prefixJobId));
+        var filteredJobs = recurringJobs.Where
+        (
+            job =>
+                job.Id.Contains(prefixJobId)
+        );
 
-        filteredJobs.ForEach(job => {
-            Log.Debug("Remove RSS Cron With ID {JobId}. Args: {Args}", job.Id, job.Job.Args);
-            _recurringJobManager.RemoveIfExists(job.Id);
-        });
+        filteredJobs.ForEach
+        (
+            job => {
+                Log.Debug("Remove RSS Cron With ID {JobId}. Args: {Args}", job.Id, job.Job.Args);
+                _recurringJobManager.RemoveIfExists(job.Id);
+            }
+        );
 
         op.Complete();
 
         return filteredJobs.Count();
+    }
+
+    public void UnregisterRssFeed(
+        long chatId,
+        string urlFeed
+    )
+    {
+        var selectJobs = _jobsService
+            .GetRecurringJobs()
+            .Find
+            (
+                dto => {
+                    var args = dto.Job.Args;
+                    if (args.Count != 2) return false;
+
+                    var argChatId = args.ElementAtOrDefault(0);
+                    var argRssUrl = args.ElementAtOrDefault(1);
+
+                    var isMatch = argChatId?.ToInt64() == chatId && argRssUrl?.ToString() == urlFeed;
+                    return isMatch;
+                }
+            );
+
+        if (selectJobs == null) return;
+
+        Log.Debug("Deleting Job: {Job}. Args: {Args} ", selectJobs.Id, selectJobs.Job.Args);
+        _recurringJobManager.RemoveIfExists(selectJobs.Id);
     }
 
     public async Task RegisterRssFeedByChatId(long chatId)
@@ -166,9 +207,12 @@ public class RssFeedService
         var op = Operation.Begin("Registering RSS by ChatId: {ChatId}", chatId);
 
         var rssSettings = await _rssService.GetRssSettingsAsync(chatId);
-        rssSettings.ForEach(setting => {
-            RegisterUrlFeed(chatId, setting.UrlFeed);
-        });
+        rssSettings.ForEach
+        (
+            setting => {
+                RegisterUrlFeed(chatId, setting.UrlFeed);
+            }
+        );
 
         op.Complete();
     }

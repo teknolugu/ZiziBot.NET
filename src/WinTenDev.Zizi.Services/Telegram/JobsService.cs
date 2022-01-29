@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Hangfire;
+using Hangfire.Storage;
 using Microsoft.Extensions.Options;
 using RepoDb;
 using Serilog;
@@ -155,6 +156,21 @@ public class JobsService
             "delete-old-rss-history",
             service => service.DeleteOldHistory(), Cron.Daily
         );
+    }
+
+    public List<RecurringJobDto> GetRecurringJobs()
+    {
+        var connection = JobStorage.Current.GetConnection();
+        var recurringJobs = connection.GetRecurringJobs();
+
+        return recurringJobs;
+    }
+
+    public RecurringJobDto GetRecurringJobById(string jobId)
+    {
+        var recurringJobs = GetRecurringJobs();
+
+        return recurringJobs.FirstOrDefault(dto => dto.Id == jobId);
     }
 
     [AutomaticRetry(Attempts = 2, LogEvents = true, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
