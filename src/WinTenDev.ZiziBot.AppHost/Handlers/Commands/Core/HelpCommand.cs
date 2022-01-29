@@ -14,17 +14,19 @@ public class HelpCommand : CommandBase
         _telegramService = telegramService;
     }
 
-    public override async Task HandleAsync(IUpdateContext context, UpdateDelegate next, string[] args)
+    public override async Task HandleAsync(
+        IUpdateContext context,
+        UpdateDelegate next,
+        string[] args
+    )
     {
         await _telegramService.AddUpdateContext(context);
 
         var sendText = "Untuk mendapatkan bantuan klik tombol dibawah ini";
         var urlStart = await _telegramService.GetUrlStart("start=help");
-        var ziziDocs = "https://docs.zizibot.azhe.space";
+        var ziziDocs = "https://docs.zizibot.winten.my.id";
 
-        var keyboard = new InlineKeyboardMarkup(
-        InlineKeyboardButton.WithUrl("Dapatkan bantuan", ziziDocs)
-        );
+        var keyboard = new InlineKeyboardMarkup(InlineKeyboardButton.WithUrl("Dapatkan bantuan", ziziDocs));
 
         await _telegramService.SendTextMessageAsync(sendText, keyboard);
     }

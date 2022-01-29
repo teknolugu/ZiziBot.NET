@@ -26,7 +26,11 @@ internal class StartCommand : CommandBase
         _enginesConfig = enginesConfig.Value;
     }
 
-    public override async Task HandleAsync(IUpdateContext context, UpdateDelegate next, string[] args)
+    public override async Task HandleAsync(
+        IUpdateContext context,
+        UpdateDelegate next,
+        string[] args
+    )
     {
         await _telegramService.AddUpdateContext(context);
 
@@ -43,8 +47,8 @@ internal class StartCommand : CommandBase
         var botCompany = _enginesConfig.Company;
 
         var winTenDev = botCompany.MkUrl("https://t.me/WinTenDev");
-        var levelStandardUrl = "https://docs.zizibot.azhe.space/glosarium/admin-dengan-level-standard";
-        var ziziDocs = "https://docs.zizibot.azhe.space";
+        var ziziDocs = "https://docs.zizibot.winten.my.id";
+        var levelStandardUrl = $"{ziziDocs}/glosarium/admin-dengan-level-standard";
         var levelStandard = @"Level standard".MkUrl(levelStandardUrl);
 
         var sendText = $"🤖 {botName} {botVer}" +
@@ -57,13 +61,16 @@ internal class StartCommand : CommandBase
         switch (paramStart)
         {
             case "set-username":
-                var setUsername = new InlineKeyboardMarkup(new[]
-                {
+                var setUsername = new InlineKeyboardMarkup
+                (
                     new[]
                     {
-                        InlineKeyboardButton.WithUrl("Pasang Username", "https://t.me/WinTenDev/29")
+                        new[]
+                        {
+                            InlineKeyboardButton.WithUrl("Pasang Username", "https://t.me/WinTenDev/29")
+                        }
                     }
-                });
+                );
                 var send = "Untuk cara pasang Username, silakan klik tombol di bawah ini";
                 await _telegramService.SendTextMessageAsync(send, setUsername);
                 break;
@@ -75,18 +82,21 @@ internal class StartCommand : CommandBase
                 //
                 // if (_telegramService.IsPrivateChat())
                 // {
-                var keyboard = new InlineKeyboardMarkup(new[]
-                {
+                var keyboard = new InlineKeyboardMarkup
+                (
                     new[]
                     {
-                        InlineKeyboardButton.WithUrl("Bantuan", ziziDocs),
-                        InlineKeyboardButton.WithUrl("Pasang Username", "https://t.me/WinTenDev/29")
-                    },
-                    new[]
-                    {
-                        InlineKeyboardButton.WithUrl("Tambahkan ke Grup", urlAddTo)
+                        new[]
+                        {
+                            InlineKeyboardButton.WithUrl("Bantuan", ziziDocs),
+                            InlineKeyboardButton.WithUrl("Pasang Username", "https://t.me/WinTenDev/29")
+                        },
+                        new[]
+                        {
+                            InlineKeyboardButton.WithUrl("Tambahkan ke Grup", urlAddTo)
+                        }
                     }
-                });
+                );
                 // }
 
                 await _telegramService.SendTextMessageAsync(sendText, keyboard, disableWebPreview: true);
