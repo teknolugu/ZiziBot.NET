@@ -1,6 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Hangfire;
+using Humanizer;
 using Serilog;
 using SqlKata.Execution;
 using WinTenDev.Zizi.Models.Types;
@@ -36,8 +39,11 @@ public class RssService
             .GetAsync<RssHistory>();
 
         var isExist = data.Any();
-        Log.Debug("Check RSS History exist on ChatId {ChatId}? {IsExist}",
-            chatId, isExist);
+        Log.Debug
+        (
+            "Check RSS History exist on ChatId {ChatId}? {IsExist}",
+            chatId, isExist
+        );
 
         return isExist;
     }
@@ -156,6 +162,20 @@ public class RssService
         Log.Information("Deleted RSS {ChatId} Settings {Delete} rows", chatId, delete);
 
         return delete;
+    }
+
+    [JobDisplayName("Delete olds RSS History")]
+    public async Task DeleteOldHistory()
+    {
+        var delete = await _queryService
+            .CreateMySqlFactory()
+            .FromTable(RSSHistoryTable)
+            .WhereDate("created_at", "<", DateTime.Now.AddMonths(-6))
+            .DeleteAsync();
+
+        var rowsItems = "row".ToQuantity(delete);
+
+        Log.Information("About {RowItems} RSS History deleted", rowsItems);
     }
 
     public async Task DeleteDuplicateAsync()

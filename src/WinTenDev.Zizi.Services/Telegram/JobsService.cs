@@ -52,11 +52,14 @@ public class JobsService
         long userId
     )
     {
-        var needVerify = await _stepHistoriesService.GetStepHistoryVerifyCore(new StepHistory()
-        {
-            ChatId = chatId,
-            UserId = userId
-        });
+        var needVerify = await _stepHistoriesService.GetStepHistoryVerifyCore
+        (
+            new StepHistory()
+            {
+                ChatId = chatId,
+                UserId = userId
+            }
+        );
 
         if (!needVerify.Any()) return;
 
@@ -82,10 +85,13 @@ public class JobsService
             .Append("<b>Reason:</b> ").AppendJoin(",", needVerify.Select(x => $"#{x.Name}")).AppendLine()
             .AppendFormat("#U{0} #C{1}", userId, chatId.ReduceChatId());
 
-        await _botClient.SendTextMessageAsync(text: sb.ToTrimmedString(),
+        await _botClient.SendTextMessageAsync
+        (
+            text: sb.ToTrimmedString(),
             disableWebPagePreview: true,
             chatId: _eventLogConfig.ChannelId,
-            parseMode: ParseMode.Html);
+            parseMode: ParseMode.Html
+        );
 
         Log.Information("UserId {UserId} successfully kicked from {ChatId}", userId, chatId);
     }
@@ -106,8 +112,11 @@ public class JobsService
                 {
                     case ChatTypeEx.Group:
                     case ChatTypeEx.SuperGroup:
-                        _recurringJobManager.AddOrUpdate<PrivilegeService>(chatId.GetChatKey("AC"),
-                            (x) => x.AdminCheckerJobAsync(chatId), Cron.Daily, queue: "admin-checker");
+                        _recurringJobManager.AddOrUpdate<PrivilegeService>
+                        (
+                            chatId.GetChatKey("AC"),
+                            (x) => x.AdminCheckerJobAsync(chatId), Cron.Daily, queue: "admin-checker"
+                        );
                         break;
                     default:
                         Log.Verbose("Currently no action for type {ChatType}", chatSetting.ChatType);
@@ -123,14 +132,29 @@ public class JobsService
 
     public void RegisterJobClearLog()
     {
-        _recurringJobManager.AddOrUpdate<StorageService>("log-cleaner",
-            (service) => service.ClearLog(), Cron.Daily);
+        _recurringJobManager.AddOrUpdate<StorageService>
+        (
+            "log-cleaner",
+            (service) => service.ClearLog(), Cron.Daily
+        );
     }
 
     public void RegisterJobDeleteOldStep()
     {
-        _recurringJobManager.AddOrUpdate<StepHistoriesService>("delete-old-steps",
-            service => service.DeleteOldStepHistory(), Cron.Hourly);
+        _recurringJobManager.AddOrUpdate<StepHistoriesService>
+        (
+            "delete-old-steps",
+            service => service.DeleteOldStepHistory(), Cron.Hourly
+        );
+    }
+
+    public void RegisterJobDeleteOldRssHistory()
+    {
+        _recurringJobManager.AddOrUpdate<RssService>
+        (
+            "delete-old-rss-history",
+            service => service.DeleteOldHistory(), Cron.Hourly
+        );
     }
 
     [AutomaticRetry(Attempts = 2, LogEvents = true, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
@@ -156,19 +180,25 @@ public class JobsService
         long userId
     )
     {
-        var fields = Field.Parse<StepHistory>(history => new
-        {
-            history.Status,
-            history.UpdatedAt
-        });
+        var fields = Field.Parse<StepHistory>
+        (
+            history => new
+            {
+                history.Status,
+                history.UpdatedAt
+            }
+        );
 
-        var result = await _stepHistoriesService.UpdateStepHistoryStatus(new StepHistory
-        {
-            ChatId = chatId,
-            UserId = userId,
-            Status = StepHistoryStatus.ActionDone,
-            UpdatedAt = DateTime.Now
-        }, fields);
+        var result = await _stepHistoriesService.UpdateStepHistoryStatus
+        (
+            new StepHistory
+            {
+                ChatId = chatId,
+                UserId = userId,
+                Status = StepHistoryStatus.ActionDone,
+                UpdatedAt = DateTime.Now
+            }, fields
+        );
 
         return result;
     }

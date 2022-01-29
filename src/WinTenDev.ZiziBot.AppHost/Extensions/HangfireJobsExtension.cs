@@ -18,6 +18,7 @@ public static class HangfireJobsExtension
         appService.GetRequiredService<JobsService>().RegisterJobChatCleanUp().InBackground();
         appService.GetRequiredService<JobsService>().RegisterJobClearLog();
         appService.GetRequiredService<JobsService>().RegisterJobDeleteOldStep();
+        appService.GetRequiredService<JobsService>().RegisterJobDeleteOldRssHistory();
 
         return app;
     }
