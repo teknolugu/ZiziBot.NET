@@ -144,7 +144,7 @@ public class JobsService
         _recurringJobManager.AddOrUpdate<StepHistoriesService>
         (
             "delete-old-steps",
-            service => service.DeleteOldStepHistory(), Cron.Hourly
+            service => service.DeleteOldStepHistory(), Cron.Daily
         );
     }
 
@@ -153,7 +153,7 @@ public class JobsService
         _recurringJobManager.AddOrUpdate<RssService>
         (
             "delete-old-rss-history",
-            service => service.DeleteOldHistory(), Cron.Hourly
+            service => service.DeleteOldHistory(), Cron.Daily
         );
     }
 
