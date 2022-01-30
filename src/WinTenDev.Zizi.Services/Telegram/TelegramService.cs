@@ -508,13 +508,16 @@ public class TelegramService
 
     #region Message
 
-    public bool IsMessageTooOld(int offset = 5)
+    public bool IsUpdateTooOld(int offset = 5)
     {
         var messageDate = MessageDate;
         var prevDate = DateTime.UtcNow.AddMinutes(-offset);
         var isOld = prevDate > messageDate;
-        Log.Debug("MessageId {MessageId} Date: {V}. OffsetDate: {OffsetDate}. Too old? {IsOld}",
-            AnyMessage.MessageId, messageDate.ToDetailDateTimeString(), prevDate.ToDetailDateTimeString(), isOld);
+        Log.Debug
+        (
+            "UpdateId {UpdateId} with Date: {V}. OffsetDate: {OffsetDate}. Too old? {IsOld}",
+            Update.Id, messageDate.ToDetailDateTimeString(), prevDate.ToDetailDateTimeString(), isOld
+        );
 
         return isOld;
     }

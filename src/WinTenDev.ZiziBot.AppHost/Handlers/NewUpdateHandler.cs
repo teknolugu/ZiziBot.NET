@@ -68,7 +68,7 @@ public class NewUpdateHandler : IUpdateHandler
         _chatId = _telegramService.ChatId;
         _fromId = _telegramService.FromId;
 
-        _telegramService.IsMessageTooOld();
+        if (_telegramService.IsUpdateTooOld()) return;
 
         _chatSettings = await _telegramService.GetChatSetting();
 
