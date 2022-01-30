@@ -491,7 +491,8 @@ public class NewUpdateHandler : IUpdateHandler
             { "chat_id", _chatId },
             { "chat_title", chat.Title ?? fromFullName },
             { "chat_type", chatType },
-            { "is_admin", isBotAdmin }
+            { "is_admin", isBotAdmin },
+            { "updated_at", DateTime.Now }
         };
 
         var saveSettings = await _settingsService.SaveSettingsAsync(data);
