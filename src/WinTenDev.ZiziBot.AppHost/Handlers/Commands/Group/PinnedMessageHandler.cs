@@ -1,6 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 using Telegram.Bot.Framework.Abstractions;
+using Telegram.Bot.Types.ReplyMarkups;
 using WinTenDev.Zizi.Services.Telegram;
 using WinTenDev.Zizi.Utils.Telegram;
 
@@ -23,13 +24,17 @@ public class PinnedMessageHandler : IUpdateHandler
     {
         await _telegramService.AddUpdateContext(context);
 
-        var msg = _telegramService.Message;
+        var message = _telegramService.Message;
 
-        var pinnedMsg = msg.PinnedMessage;
+        var pinnedMsg = message.PinnedMessage;
+
+        var messageLink = pinnedMsg.GetMessageLink();
+        var keyboard = new InlineKeyboardMarkup(InlineKeyboardButton.WithUrl("➡ Ke Pesan", messageLink));
+
         var sendText = $"📌 Pesan di sematkan baru!" +
                        $"\nPengirim: {pinnedMsg.GetFromNameLink()}" +
-                       $"\nPengepin: {msg.GetFromNameLink()}";
+                       $"\nPengepin: {message.GetFromNameLink()}";
 
-        await _telegramService.SendTextMessageAsync(sendText);
+        await _telegramService.SendTextMessageAsync(sendText, keyboard, replyToMsgId: 0);
     }
 }
