@@ -1,10 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Serilog;
 using SqlKata.Execution;
 using WinTenDev.Zizi.Models.Types;
 using WinTenDev.Zizi.Utils;
+using WinTenDev.Zizi.Utils.Text;
 
 namespace WinTenDev.Zizi.Services.Internals;
 
@@ -62,6 +64,7 @@ public class GlobalBanService
         };
 
         Log.Information("Inserting new GBan: {@V}", globalBanData);
+
         var query = await _queryService
             .CreateMySqlFactory()
             .FromTable(GBanTable)
@@ -116,10 +119,13 @@ public class GlobalBanService
     {
         var cacheKey = GetCacheKey(userId);
 
-        var data = await _cacheService.GetOrSetAsync(cacheKey, async () => {
-            var data = await GetGlobalBanByIdCore(userId);
-            return data;
-        });
+        var data = await _cacheService.GetOrSetAsync
+        (
+            cacheKey, async () => {
+                var data = await GetGlobalBanByIdCore(userId);
+                return data;
+            }
+        );
 
         return data;
     }
@@ -146,10 +152,13 @@ public class GlobalBanService
     {
         var cacheKey = "global-bans";
 
-        var datas = await _cacheService.GetOrSetAsync(cacheKey, async () => {
-            var datas = await GetGlobalBanCore();
-            return datas;
-        });
+        var datas = await _cacheService.GetOrSetAsync
+        (
+            cacheKey, async () => {
+                var datas = await GetGlobalBanCore();
+                return datas;
+            }
+        );
 
         return datas;
     }
@@ -168,6 +177,54 @@ public class GlobalBanService
 
             await GetGlobalBanById(userId);
         }
+    }
+
+    public async Task<int> ImportFile(
+        string fileName,
+        GlobalBanData globalBan
+    )
+    {
+        var reader = fileName.ReadCsv<RoseGBanItem>();
+
+        var gbanMaps = reader.Select
+        (
+            item => new GlobalBanData()
+            {
+                UserId = item.UserId,
+                BannedBy = globalBan.BannedBy,
+                BannedFrom = globalBan.BannedFrom,
+                ReasonBan = globalBan.ReasonBan,
+                CreatedAt = DateTime.Now
+            }
+        ).ToList();
+
+        var deleteRows = await _queryService
+            .CreateMySqlFactory()
+            .FromTable(GBanTable)
+            .WhereIn("user_id", gbanMaps.Select(x => x.UserId))
+            .DeleteAsync();
+
+        var insertRows = await _queryService
+            .CreateMySqlFactory()
+            .FromTable(GBanTable)
+            .InsertAsync
+            (
+                columns: new[]
+                {
+                    "user_id", "from_id", "chat_id", "reason", "created_at"
+                },
+                valuesCollection: gbanMaps.Select
+                (
+                    item => new object[]
+                    {
+                        item.UserId, item.BannedBy, item.BannedFrom, item.ReasonBan, item.CreatedAt
+                    }
+                )
+            );
+
+        var diff = insertRows - deleteRows;
+
+        return diff;
     }
 
     #region GBan Admin
@@ -197,10 +254,13 @@ public class GlobalBanService
 
         if (get.Any())
         {
-            await querySql.InsertAsync(new Dictionary<string, object>()
-            {
-                { "", "" }
-            });
+            await querySql.InsertAsync
+            (
+                new Dictionary<string, object>()
+                {
+                    { "", "" }
+                }
+            );
         }
     }
 

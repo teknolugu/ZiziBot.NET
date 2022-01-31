@@ -1,4 +1,5 @@
 ﻿using System;
+using CsvHelper.Configuration.Attributes;
 using Newtonsoft.Json;
 using SqlKata;
 
@@ -6,7 +7,7 @@ namespace WinTenDev.Zizi.Models.Types;
 
 public class GBanAdminItem
 {
-    [Ignore]
+    [SqlKata.Ignore]
     [JsonProperty("id")]
     public long Id { get; set; }
 
@@ -59,11 +60,21 @@ public class GlobalBanData
 
     [Column("created_at")]
     [JsonProperty("created_at")]
-    public string CreatedAt { get; set; }
+    public DateTime CreatedAt { get; set; }
 }
 
 public class GlobalBanResult
 {
     public bool IsBanned { get; set; }
     public GlobalBanData Data { get; set; }
+}
+
+public class RoseGBanItem
+{
+    [Name("id")]
+    public long UserId { get; set; }
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
+    public string Username { get; set; }
+    public string Reason { get; set; }
 }
