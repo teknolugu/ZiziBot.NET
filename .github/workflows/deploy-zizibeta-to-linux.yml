@@ -1,0 +1,46 @@
+name: Deploy Zizi Beta to Linux
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 6.0.x
+    - name: Restore dependencies
+      run: dotnet restore
+    - name: Build
+      run: dotnet build --no-restore
+    - name: Test
+      run: dotnet test --no-build --verbosity normal
+    - name: Publish
+      run: dotnet publish src/WinTenDev.ZiziBot.AppHost -r linux-x64 -c Release --self-contained=false /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true -o zizi-beta
+      
+    - name: ssh-scp-ssh-pipelines
+      # You may pin to the exact commit or the version.
+      # uses: cross-the-world/ssh-scp-ssh-pipelines@78e864b4890087a58248ff39320406971ca88b89
+      uses: cross-the-world/ssh-scp-ssh-pipelines@v1
+      with:
+        # ssh remote host
+        host: ${{ secrets.VPS_HOST }}
+        # ssh remote user
+        user: ${{ secrets.VPS_USER }}
+        # ssh remote password
+        pass: ${{ secrets.VPS_PASS }}
+        # execute pre-commands before scp
+        first_ssh: ${{ secrets.CMD_STOP_ZIZIBETA }}
+        # scp from local to remote
+        scp: |
+          src/zizi-beta/* => ${{ secrets.VPS_REMOTE_DIR }}
+        # execute post-commands after scp
+        last_ssh: ${{ secrets.CMD_START_ZIZIBETA }}
