@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Serilog;
 using SqlKata;
@@ -16,7 +17,10 @@ public static class SqlKataUtil
     /// <param name="queryFactory"></param>
     /// <param name="tableName"></param>
     /// <returns></returns>
-    public static Query FromTable(this QueryFactory queryFactory, string tableName)
+    public static Query FromTable(
+        this QueryFactory queryFactory,
+        string tableName
+    )
     {
         Log.Debug("Opening table {TableName}", tableName);
         return queryFactory.FromQuery(new Query(tableName));
@@ -28,7 +32,10 @@ public static class SqlKataUtil
     /// <param name="queryFactory"></param>
     /// <param name="tableName"></param>
     /// <returns></returns>
-    public static async Task<int> TruncateTable(this QueryFactory queryFactory, string tableName)
+    public static async Task<int> TruncateTable(
+        this QueryFactory queryFactory,
+        string tableName
+    )
     {
         Log.Debug("Truncate table `{TableName}`", tableName);
 
@@ -45,11 +52,25 @@ public static class SqlKataUtil
     /// <param name="queryFactory"></param>
     /// <param name="sql"></param>
     /// <returns></returns>
-    public static async Task<int> RunSqlAsync(this QueryFactory queryFactory, string sql)
+    public static async Task<int> RunSqlAsync(
+        this QueryFactory queryFactory,
+        string sql
+    )
     {
-        Log.Debug("Executing SQL: \n{Sql}", sql);
+        Log.Debug("SqlKata: {Sql}", sql);
 
         var rowCount = await queryFactory.StatementAsync(sql);
         return rowCount;
+    }
+
+    public static async Task<IEnumerable<T>> RunSqlQueryAsync<T>(
+        this QueryFactory queryFactory,
+        string sql
+    )
+    {
+        Log.Debug("SqlKata: {Sql}", sql);
+
+        var query = await queryFactory.SelectAsync<T>(sql);
+        return query;
     }
 }
