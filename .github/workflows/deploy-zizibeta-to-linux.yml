@@ -40,3 +40,15 @@ jobs:
           build/zizi-beta/* => ${{ secrets.VPS_REMOTE_DIR }}
         # execute post-commands after scp
         last_ssh: ${{ secrets.CMD_START_ZIZIBETA }}
+
+    - name: Notify after deployment to Telegram
+      uses: appleboy/telegram-action@v0.1.1
+      with:
+        # telegram user
+        to: ${{ secrets.TG_LOG_CHAT_ID }}
+        # telegram token
+        token: ${{ secrets.TG_DEV_BOT_TOKEN }}
+        # telegram message
+        message: "Zizi Beta Deployment success"
+        # disables link previews for links in this message
+        disable_web_page_preview: true
