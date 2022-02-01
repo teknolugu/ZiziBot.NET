@@ -1159,4 +1159,29 @@ public class TelegramService
     }
 
     #endregion OnUpdate
+
+    #region PostUpdate
+
+    public async Task EnsureChatSettingsAsync()
+    {
+        var op = Operation.Begin("Ensure Chat Settings for ChatId: '{ChatId}'", ChatId);
+
+        var isBotAdmin = await CheckBotAdmin();
+
+        var data = new Dictionary<string, object>
+        {
+            { "chat_id", ChatId },
+            { "chat_title", ChatTitle },
+            { "chat_type", Chat.Type.Humanize() },
+            { "is_admin", isBotAdmin },
+            { "updated_at", DateTime.Now }
+        };
+
+        var saveSettings = await _settingsService.SaveSettingsAsync(data);
+
+        Log.Debug("Ensure Settings for ChatID: '{ChatId}' result {SaveSettings}", ChatId, saveSettings);
+        op.Complete();
+    }
+
+    #endregion PostUpdate
 }

@@ -136,7 +136,7 @@ public class NewUpdateHandler : IUpdateHandler
 
         var nonAwaitTasks = new List<Task>
         {
-            EnsureChatHealthAsync(),
+            _telegramService.EnsureChatSettingsAsync(),
             AfkCheck(),
             CheckMataZiziAsync()
         };
@@ -475,30 +475,6 @@ public class NewUpdateHandler : IUpdateHandler
         }
 
         sw.Stop();
-    }
-
-    private async Task EnsureChatHealthAsync()
-    {
-        var chat = _telegramService.Chat;
-        var chatType = chat.Type.Humanize();
-        var fromFullName = _telegramService.From.GetFullName();
-        var isBotAdmin = await _telegramService.CheckBotAdmin();
-
-        var op = Operation.Begin("Ensure Chat Settings for ChatId: '{ChatId}'", _chatId);
-
-        var data = new Dictionary<string, object>
-        {
-            { "chat_id", _chatId },
-            { "chat_title", chat.Title ?? fromFullName },
-            { "chat_type", chatType },
-            { "is_admin", isBotAdmin },
-            { "updated_at", DateTime.Now }
-        };
-
-        var saveSettings = await _settingsService.SaveSettingsAsync(data);
-        op.Complete("SaveSettings", saveSettings);
-
-        _logger.LogDebug("Ensure Settings for ChatID: '{ChatId}' result {SaveSettings}", _chatId, saveSettings);
     }
 
     #endregion Post Task
