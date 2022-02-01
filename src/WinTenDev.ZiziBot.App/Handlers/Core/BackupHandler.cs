@@ -18,24 +18,24 @@ namespace WinTenDev.ZiziBot.App.Handlers.Core
     public class BackupHandler : ZiziEventHandler
     {
         private readonly ILogger<BackupHandler> _logger;
-        private readonly DataBackupService _dataBackupService;
+        private readonly DatabaseService _databaseService;
         private readonly PrivilegeService _privilegeService;
 
         /// <summary>
         /// Constructor for BackupHandler
         /// </summary>
         /// <param name="logger"></param>
-        /// <param name="dataBackupService"></param>
+        /// <param name="databaseService"></param>
         /// <param name="privilegeService"></param>
         public BackupHandler
         (
             ILogger<BackupHandler> logger,
-            DataBackupService dataBackupService,
+            DatabaseService databaseService,
             PrivilegeService privilegeService
         )
         {
             _logger = logger;
-            _dataBackupService = dataBackupService;
+            _databaseService = databaseService;
             _privilegeService = privilegeService;
         }
 
@@ -59,7 +59,7 @@ namespace WinTenDev.ZiziBot.App.Handlers.Core
 
             await SendMessageTextAsync("Memulai mencadangkan Data..");
 
-            var dataBackupInfo = await _dataBackupService.BackupMySqlDatabase();
+            var dataBackupInfo = await _databaseService.BackupMySqlDatabase();
             var fileName = dataBackupInfo.FileName;
             var fullName = dataBackupInfo.FullName.GetDirectory();
             var fullNameZip = dataBackupInfo.FullNameZip;
