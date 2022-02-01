@@ -4,49 +4,54 @@ using WinTenDev.Zizi.Models.Enums;
 using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Services.Telegram;
 using WinTenDev.Zizi.Utils;
-using WinTenDev.Zizi.Utils.IO;
 
 namespace WinTenDev.ZiziBot.AppHost.Handlers.Commands.Core;
 
 public class BackupDbCommand : CommandBase
 {
     private readonly TelegramService _telegramService;
-    private readonly DataBackupService _dataBackupService;
+    private readonly DatabaseService _databaseService;
 
     public BackupDbCommand(
         TelegramService telegramService,
-        DataBackupService dataBackupService
+        DatabaseService databaseService
     )
     {
         _telegramService = telegramService;
-        _dataBackupService = dataBackupService;
+        _databaseService = databaseService;
     }
 
-    public override async Task HandleAsync(IUpdateContext context, UpdateDelegate next, string[] args)
+    public override async Task HandleAsync(
+        IUpdateContext context,
+        UpdateDelegate next,
+        string[] args
+    )
     {
         await _telegramService.AddUpdateContext(context);
 
         var isSudoer = _telegramService.IsFromSudo;
-        if (!isSudoer) return;
 
-        var message = _telegramService.MessageOrEdited;
-        var chatId = _telegramService.ChatId;
+        if (!isSudoer)
+        {
+            await _telegramService.DeleteSenderMessageAsync();
+            return;
+        }
 
-        await _telegramService.SendTextMessageAsync("🔄 Sedang mencadangkan..");
+        ExecuteBackupDb().InBackground();
+    }
 
-        var dataBackupInfo = await _dataBackupService.BackupMySqlDatabase();
-        var fileName = dataBackupInfo.FileName;
-        var fullName = dataBackupInfo.FullName.GetDirectory();
+    private async Task ExecuteBackupDb()
+    {
+        await _telegramService.SendTextMessageAsync("⬇ Sedang mencadangkan Database..", replyToMsgId: 0);
+
+        var dataBackupInfo = await _databaseService.BackupMySqlDatabase();
         var fullNameZip = dataBackupInfo.FullNameZip;
-        var fileSize = dataBackupInfo.FileSizeSqlZipRaw.SizeFormat();
-        var fileSizeRaw = dataBackupInfo.FileSizeSqlRaw.SizeFormat();
 
-        await _telegramService.EditMessageTextAsync("⬆ Sedang mengunggah..");
-        await _telegramService.DeleteAsync();
+        var sentMessage = await _telegramService.EditMessageTextAsync("⬆ Sedang mengunggah berkas..");
 
         var caption = $"File Size: {dataBackupInfo.FileSizeSql}";
 
-        await _telegramService.DeleteAsync(_telegramService.SentMessage.MessageId);
         await _telegramService.SendMediaAsync(fullNameZip, MediaType.LocalDocument, caption);
+        await _telegramService.DeleteAsync(sentMessage.MessageId);
     }
 }

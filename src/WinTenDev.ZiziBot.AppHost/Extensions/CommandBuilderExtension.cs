@@ -65,7 +65,7 @@ public static class CommandBuilderExtension
                                         .UseCommand<AdminCommand>("adminlist")
                                         .UseCommand<AfkCommand>("afk")
                                         .UseCommand<AllDebridCommand>("ad")
-                                        .UseCommand<BackupDbCommand>("backupdb")
+                                        .UseCommand<BackupDbCommand>("backup_db")
                                         .UseCommand<BanCommand>("ban")
                                         .UseCommand<BotCommand>("bot")
                                         .UseCommand<CatCommand>("cat")
