@@ -82,6 +82,10 @@ public class TelegramService
     public Message ReplyToMessage { get; set; }
     public Message SentMessage { get; set; }
     public Message CallbackMessage { get; set; }
+    public Message ChannelPost { get; set; }
+    public Message EditedChannelPost { get; set; }
+    public Message ChannelOrEditedPost { get; set; }
+
     public CallbackQuery CallbackQuery { get; set; }
     public IUpdateContext Context { get; private set; }
     public Update Update { get; private set; }
@@ -117,21 +121,24 @@ public class TelegramService
         Update = updateContext.Update;
         Client = updateContext.Bot.Client;
 
-        CallbackQuery = updateContext.Update.CallbackQuery;
-        MyChatMember = updateContext.Update.MyChatMember;
+        CallbackQuery = Update.CallbackQuery;
+        MyChatMember = Update.MyChatMember;
+        Message = Update.Message;
+        EditedMessage = Update.EditedMessage;
+        ChannelPost = Update.ChannelPost;
+        EditedChannelPost = Update.EditedChannelPost;
 
-        Message = updateContext.Update.Message;
-        EditedMessage = updateContext.Update.EditedMessage;
-        CallbackMessage = CallbackQuery?.Message;
         MessageOrEdited = Message ?? EditedMessage;
+        ChannelOrEditedPost = ChannelPost ?? EditedChannelPost;
+        CallbackMessage = CallbackQuery?.Message;
 
         ReplyToMessage = MessageOrEdited?.ReplyToMessage;
         AnyMessage = CallbackMessage ?? Message ?? EditedMessage;
 
         ReplyFromId = ReplyToMessage?.From?.Id ?? 0;
 
-        From = MyChatMember?.From ?? CallbackQuery?.From ?? MessageOrEdited?.From;
-        Chat = MyChatMember?.Chat ?? CallbackQuery?.Message?.Chat ?? MessageOrEdited?.Chat;
+        From = ChannelOrEditedPost?.From ?? MyChatMember?.From ?? CallbackQuery?.From ?? MessageOrEdited?.From;
+        Chat = ChannelOrEditedPost?.Chat ?? MyChatMember?.Chat ?? CallbackQuery?.Message?.Chat ?? MessageOrEdited?.Chat;
         SenderChat = MessageOrEdited?.SenderChat;
         MessageDate = MyChatMember?.Date ?? CallbackQuery?.Message?.Date ?? MessageOrEdited?.Date ?? DateTime.Now;
 
@@ -153,6 +160,7 @@ public class TelegramService
         AnyMessageText = AnyMessage?.Text;
         MessageOrEditedText = MessageOrEdited?.Text;
         MessageOrEditedCaption = MessageOrEdited?.Caption;
+
         MessageTextParts = MessageOrEditedText?.SplitText(" ")
             .Where(s => s.IsNotNullOrEmpty()).ToArray();
 
