@@ -1,4 +1,4 @@
-name: Deploy Zizi Beta to Linux
+name: Deploy to Linux
 
 on:
   push:
@@ -8,15 +8,18 @@ on:
 
 jobs:
   build:
-
+    name: Deploy Zizi Beta
+    timeout-minutes: 30
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - name: Prepare Build
+      uses: actions/checkout@v2
     - name: Setup .NET
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 6.0.x
+        
     - name: Restore dependencies
       run: dotnet restore
     - name: Publish
@@ -49,6 +52,9 @@ jobs:
         # telegram token
         token: ${{ secrets.TG_DEV_BOT_TOKEN }}
         # telegram message
-        message: "Zizi Beta Deployment success"
+        message: |
+          Zizi Beta Deployment success
+          Repo: ${{ github.repository }}
+          Changes: https://github.com/${{ github.repository }}/commit/${{github.sha}}
         # disables link previews for links in this message
         disable_web_page_preview: true
