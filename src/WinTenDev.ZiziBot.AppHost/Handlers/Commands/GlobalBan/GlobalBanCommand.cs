@@ -81,6 +81,7 @@ public class GlobalBanCommand : CommandBase
 
             userId = param1.ToInt64();
             reason = msg.Text;
+
             if (reason.IsNotNullOrEmpty())
                 reason = reason
                     .Replace(param0, "", StringComparison.CurrentCulture)
@@ -96,7 +97,7 @@ public class GlobalBanCommand : CommandBase
             UserId = userId,
             BannedBy = fromId,
             BannedFrom = chatId,
-            ReasonBan = reason.IsNullOrEmpty() ? "no-reason" : reason
+            ReasonBan = reason.IsNullOrEmpty() ? "General SpamBot" : reason
         };
 
         var isBan = await _globalBanService.IsExist(userId);
