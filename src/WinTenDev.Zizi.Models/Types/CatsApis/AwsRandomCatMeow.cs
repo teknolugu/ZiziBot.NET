@@ -1,9 +1,9 @@
 ﻿using System;
 using Newtonsoft.Json;
 
-namespace WinTenDev.Zizi.Models.Types;
+namespace WinTenDev.Zizi.Models.Types.CatsApis;
 
-public class CatMeow
+public class AwsRandomCatMeow
 {
     [JsonProperty("file")]
     public Uri File { get; set; }

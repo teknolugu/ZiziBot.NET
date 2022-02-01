@@ -1,14 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Flurl.Http;
-using Nito.AsyncEx;
-using Serilog;
 using Telegram.Bot.Framework.Abstractions;
-using Telegram.Bot.Types;
-using WinTenDev.Zizi.Models.Types;
+using WinTenDev.Zizi.Services.Externals;
 using WinTenDev.Zizi.Services.Telegram;
 using WinTenDev.Zizi.Utils;
 
@@ -17,11 +11,15 @@ namespace WinTenDev.ZiziBot.AppHost.Handlers.Commands.Additional;
 public class CatCommand : CommandBase
 {
     private readonly TelegramService _telegramService;
-    private const string CatSource = "https://aws.random.cat/meow";
+    private readonly AnimalsService _animalsService;
 
-    public CatCommand(TelegramService telegramService)
+    public CatCommand(
+        TelegramService telegramService,
+        AnimalsService animalsService
+    )
     {
         _telegramService = telegramService;
+        _animalsService = animalsService;
     }
 
     public override async Task HandleAsync(
@@ -59,39 +57,20 @@ public class CatCommand : CommandBase
 
         if (catNum > 10)
         {
-            await _telegramService.SendTextMessageAsync("Berdasarkan Bot API, Batas maksimal Kochenk yg dapat di minta adalah 10.");
+            await _telegramService.SendTextMessageAsync("Berdasarkan Bot API, batas maksimal Kochenk yg dapat di minta adalah 10.");
 
             return;
         }
 
-        PrepareKochenk(catNum).Ignore();
+        PrepareKochenk(catNum).InBackground();
     }
 
     private async Task PrepareKochenk(int catNum)
     {
-        var listAlbum = new List<IAlbumInputMedia>();
 
         await _telegramService.SendTextMessageAsync($"Sedang mempersiapkan {catNum} Kochenk");
 
-        for (var i = 1; i <= catNum; i++)
-        {
-            Log.Information("Loading cat {I} of {CatNum} from {CatSource}", i, catNum, CatSource);
-
-            var url = await CatSource.GetJsonAsync<CatMeow>();
-            var urlFile = url.File.AbsoluteUri;
-
-            Log.Debug("Adding kochenk {UrlFile}", urlFile);
-
-            var fileName = Path.GetFileName(urlFile);
-
-            listAlbum.Add(new InputMediaPhoto(new InputMedia(urlFile)
-            {
-                FileName = fileName
-            })
-            {
-                Caption = $"Kochenk {i}"
-            });
-        }
+        var listAlbum = await _animalsService.GetRandomCatsAwsCat(catNum);
 
         var sentMessage = await _telegramService.EditMessageTextAsync($"Sedang mengirim {catNum} Kochenk");
         var sendMediaGroup = await _telegramService.SendMediaGroupAsync(listAlbum);
