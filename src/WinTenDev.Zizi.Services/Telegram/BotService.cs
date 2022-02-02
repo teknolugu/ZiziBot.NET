@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using WinTenDev.Zizi.Services.Internals;
+using WinTenDev.Zizi.Utils;
 
 namespace WinTenDev.Zizi.Services.Telegram;
 
@@ -26,10 +27,14 @@ public class BotService
 
     public async Task<User> GetMeAsync()
     {
-        var getMe = await _cacheService.GetOrSetAsync("get-me", async () => {
-            var getMe = await _botClient.GetMeAsync();
-            return getMe;
-        });
+        var getMe = await _cacheService.GetOrSetAsync
+        (
+            cacheKey: "get-me",
+            action: async () => {
+                var getMe = await _botClient.GetMeAsync();
+                return getMe;
+            }
+        );
 
         return getMe;
     }
@@ -39,6 +44,15 @@ public class BotService
         var me = await GetMeAsync();
         var isBeta = me.Username?.Contains("beta", StringComparison.OrdinalIgnoreCase) ?? false;
         _logger.LogInformation("Is Bot {Me} IsBeta: {IsBeta}", me, isBeta);
+
+        return isBeta;
+    }
+
+    public async Task<bool> IsProd()
+    {
+        var me = await GetMeAsync();
+        var isBeta = !me.Username?.ContainsListStr("beta", "dev") ?? false;
+        _logger.LogInformation("Is Bot {Me} IsProd: {IsBeta}", me, isBeta);
 
         return isBeta;
     }
