@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Reflection;
 using FluentMigrator.Builders;
+using FluentMigrator.Builders.Create.Table;
 using FluentMigrator.Infrastructure;
 using FluentMigrator.Runner;
 using FluentMigrator.Runner.Logging;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Serilog;
 using WinTenDev.Zizi.Models.Configs;
@@ -21,27 +23,28 @@ public static class FluentMigrationExtension
 
         var connStr = connectionStrings.MySql;
 
-        services.AddFluentMigratorCore()
-            .ConfigureRunner(rb => rb
-                .AddMySql5()
-                .WithGlobalConnectionString(connStr)
-                .ScanIn(Assembly.GetExecutingAssembly()).For.All()
-
-            // .ScanIn(typeof(CreateTableAfk).Assembly).For.Migrations()
-            // .ScanIn(typeof(CreateTableChatSettings).Assembly).For.Migrations()
-            // .ScanIn(typeof(CreateTableGlobalBan).Assembly).For.Migrations()
-            // .ScanIn(typeof(CreateTableHitActivity).Assembly).For.Migrations()
-            // .ScanIn(typeof(CreateTableRssHistory).Assembly).For.Migrations()
-            // .ScanIn(typeof(CreateTableRssSettings).Assembly).For.Migrations()
-            // .ScanIn(typeof(CreateTableSafeMember).Assembly).For.Migrations()
-            // .ScanIn(typeof(CreateTableSpells).Assembly).For.Migrations()
-            // .ScanIn(typeof(CreateTableTags).Assembly).For.Migrations()
-            // .ScanIn(typeof(CreateTableWordsLearning).Assembly).For.Migrations()
+        services
+            .AddFluentMigratorCore()
+            .ConfigureRunner
+            (
+                rb => rb
+                    .AddMySql5()
+                    .WithGlobalConnectionString(connStr)
+                    .ScanIn(Assembly.GetExecutingAssembly())
+                    .For.All()
             )
-            .AddLogging(lb => lb.AddSerilog())
-            .Configure<LogFileFluentMigratorLoggerOptions>(options => {
-                options.ShowSql = true;
-            });
+            .AddLogging
+            (
+                lb => lb
+                    .AddSerilog()
+                    .AddDebug()
+            )
+            .Configure<LogFileFluentMigratorLoggerOptions>
+            (
+                options => {
+                    options.ShowSql = true;
+                }
+            );
 
         return services;
     }
@@ -62,26 +65,64 @@ public static class FluentMigrationExtension
         return app;
     }
 
-    public static TNext AsMySqlText<TNext>(this IColumnTypeSyntax<TNext> createTableColumnAsTypeSyntax)
+    public static ICreateTableColumnOptionOrWithColumnSyntax WithIdColumn(
+        this ICreateTableWithColumnSyntax tableWithColumnSyntax
+    )
+    {
+        return tableWithColumnSyntax
+            .WithColumn("id")
+            .AsInt64()
+            .NotNullable()
+            .PrimaryKey()
+            .Identity();
+    }
+
+    public static ICreateTableColumnOptionOrWithColumnSyntax WithTimeStamp(
+        this ICreateTableWithColumnSyntax tableWithColumnSyntax
+    )
+    {
+        return tableWithColumnSyntax
+            .WithColumn("created_at").AsDateTime().NotNullable();
+    }
+
+    public static ICreateTableColumnOptionOrWithColumnSyntax WithTimeStamps(
+        this ICreateTableWithColumnSyntax tableWithColumnSyntax
+    )
+    {
+        return tableWithColumnSyntax
+            .WithColumn("created_at").AsDateTime().NotNullable()
+            .WithColumn("updated_at").AsDateTime().NotNullable();
+    }
+
+    public static TNext AsMySqlText<TNext>(
+        this IColumnTypeSyntax<TNext> createTableColumnAsTypeSyntax
+    )
         where TNext : IFluentSyntax
     {
         return createTableColumnAsTypeSyntax.AsCustom("TEXT");
     }
 
-    public static TNext AsMySqlMediumText<TNext>(this IColumnTypeSyntax<TNext> createTableColumnAsTypeSyntax)
+    public static TNext AsMySqlMediumText<TNext>(
+        this IColumnTypeSyntax<TNext> createTableColumnAsTypeSyntax
+    )
         where TNext : IFluentSyntax
     {
         return createTableColumnAsTypeSyntax.AsCustom("MEDIUMTEXT");
     }
 
-    public static TNext AsMySqlVarchar<TNext>(this IColumnTypeSyntax<TNext> columnTypeSyntax, Int16 max)
+    public static TNext AsMySqlVarchar<TNext>(
+        this IColumnTypeSyntax<TNext> columnTypeSyntax,
+        Int16 max
+    )
         where TNext : IFluentSyntax
     {
         var varcharType = $"VARCHAR({max}) COLLATE utf8mb4_bin";
         return columnTypeSyntax.AsCustom(varcharType);
     }
 
-    public static TNext AsMySqlTimestamp<TNext>(this IColumnTypeSyntax<TNext> createTableColumnAsTypeSyntax)
+    public static TNext AsMySqlTimestamp<TNext>(
+        this IColumnTypeSyntax<TNext> createTableColumnAsTypeSyntax
+    )
         where TNext : IFluentSyntax
     {
         return createTableColumnAsTypeSyntax.AsCustom("TIMESTAMP");
