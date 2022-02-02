@@ -1,31 +1,41 @@
-﻿using System.Threading.Tasks;
+﻿using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 using Telegram.Bot.Framework.Abstractions;
 using Telegram.Bot.Types.ReplyMarkups;
 using WinTenDev.Zizi.Models.Configs;
 using WinTenDev.Zizi.Services.Telegram;
+using WinTenDev.Zizi.Utils;
 using WinTenDev.Zizi.Utils.Telegram;
 
 namespace WinTenDev.ZiziBot.AppHost.Handlers.Commands.Core;
 
 public class AboutCommand : CommandBase
 {
+    private readonly ButtonConfig _buttonConfig;
     private readonly BotService _botService;
     private readonly TelegramService _telegramService;
     private readonly EnginesConfig _enginesConfig;
 
     public AboutCommand(
         IOptionsSnapshot<EnginesConfig> enginesConfig,
+        IOptionsSnapshot<ButtonConfig> buttonConfig,
         BotService botService,
         TelegramService telegramService
     )
     {
+        _buttonConfig = buttonConfig.Value;
+        _enginesConfig = enginesConfig.Value;
         _botService = botService;
         _telegramService = telegramService;
-        _enginesConfig = enginesConfig.Value;
     }
 
-    public override async Task HandleAsync(IUpdateContext context, UpdateDelegate next, string[] args)
+    public override async Task HandleAsync(
+        IUpdateContext context,
+        UpdateDelegate next,
+        string[] args
+    )
     {
         await _telegramService.AddUpdateContext(context);
 
@@ -33,46 +43,40 @@ public class AboutCommand : CommandBase
         var botVersion = _enginesConfig.Version;
         var company = _enginesConfig.Company;
 
-        var sendText = $"<b>{company} {me.GetFullName()}</b>" +
-                       $"\nby @WinTenDev" +
-                       $"\nVersion: {botVersion}" +
-                       "\n\nℹ️ Bot Telegram resmi berbasis <b>WinTen API.</b> untuk manajemen dan peralatan grup. " +
-                       "Ditulis menggunakan .NET (C#). " +
-                       "Untuk detail fitur pada perintah /start.\n";
+        var aboutButton = _buttonConfig.Items.Find(x => x.Key == "about");
 
-        if (await _botService.IsBeta())
+        var description = aboutButton?.Data.Descriptions.JoinStr("\n\n");
+        var warning = aboutButton?.Data.Warnings.JoinStr("\n\n");
+        var note = aboutButton?.Data.Notes.JoinStr("\n\n");
+
+        var buttonMarkup = InlineKeyboardMarkup.Empty();
+
+        if (aboutButton?.Data.Buttons != null)
         {
-            sendText += "\n<b>Saya masih Beta, mungkin terdapat bug dan tidak stabil. " +
-                        "Tidak dapat di tambahkan ke grup Anda.</b>\n";
+            buttonMarkup = new InlineKeyboardMarkup
+            (
+                aboutButton
+                    .Data
+                    .Buttons
+                    .Select
+                    (
+                        x => x
+                            .Select(y => InlineKeyboardButton.WithUrl(y.Text, y.Url))
+                    )
+            );
         }
 
-        sendText += "\nUntuk Bot lebih cepat dan tetap cepat dan terus peningkatan dan keandalan, " +
-                    "silakan <b>Donasi</b> untuk biaya Server dan beri saya Kopi.\n\n" +
-                    "Terima kasih kepada <b>Akmal Projext</b> yang telah memberikan kesempatan ZiziBot pada kehidupan sebelumnya.";
+        var sb = new StringBuilder()
+            .Append("<b>").Append(company).Append(' ').Append(me.GetFullName()).AppendLine("</b>")
+            .AppendLine("by @WinTenDev")
+            .Append("<b>Version: </b>").AppendLine(botVersion);
 
-        var inlineKeyboard = new InlineKeyboardMarkup(new[]
-        {
-            new[]
-            {
-                InlineKeyboardButton.WithUrl("👥 WinTen Group", "https://t.me/WinTenGroup"),
-                InlineKeyboardButton.WithUrl("❤️ WinTen Dev", "https://t.me/WinTenDev")
-            },
-            new[]
-            {
-                InlineKeyboardButton.WithUrl("👥 Redmi 5A (ID)", "https://t.me/Redmi5AID"),
-                InlineKeyboardButton.WithUrl("👥 Telegram Bot API", "https://t.me/TgBotID")
-            },
-            new[]
-            {
-                InlineKeyboardButton.WithUrl("💽 Source Code (.NET)", "https://github.com/WinTenDev/ZiziBot.NET"),
-                InlineKeyboardButton.WithUrl("🏗 Akmal Projext", "https://t.me/AkmalProjext")
-            },
-            new[]
-            {
-                InlineKeyboardButton.WithUrl("💰 Saweria", "https://saweria.co/azhe403")
-            }
-        });
+        if (description.IsNotNullOrEmpty()) sb.AppendLine().AppendLine(description);
+        if (warning.IsNotNullOrEmpty()) sb.AppendLine().AppendLine(warning);
+        if (!await _botService.IsProd()) sb.AppendLine().AppendLine(note);
 
-        await _telegramService.SendTextMessageAsync(sendText, inlineKeyboard, 0);
+        var sendText = sb.ToTrimmedString();
+
+        await _telegramService.SendTextMessageAsync(sendText, buttonMarkup, 0);
     }
 }

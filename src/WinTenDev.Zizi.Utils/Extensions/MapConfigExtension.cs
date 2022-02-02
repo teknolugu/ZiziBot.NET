@@ -52,16 +52,20 @@ public static class MapConfigExtension
         var config = serviceProvider.GetRequiredService<IConfiguration>();
         var env = serviceProvider.GetRequiredService<IHostEnvironment>();
 
-        services.AddSingleton(new EnvironmentConfig()
-        {
-            HostEnvironment = env,
-            IsDevelopment = env.IsDevelopment(),
-            IsStaging = env.IsProduction(),
-            IsProduction = env.IsProduction()
-        });
+        services.AddSingleton
+        (
+            new EnvironmentConfig()
+            {
+                HostEnvironment = env,
+                IsDevelopment = env.IsDevelopment(),
+                IsStaging = env.IsProduction(),
+                IsProduction = env.IsProduction()
+            }
+        );
 
         services.Configure<AllDebridConfig>(config.GetSection(nameof(AllDebridConfig)));
         services.Configure<BotConfig>(config.GetSection(nameof(BotConfig)));
+        services.Configure<ButtonConfig>(config.GetSection(nameof(ButtonConfig)));
         services.Configure<CacheConfig>(config.GetSection(nameof(CacheConfig)));
         services.Configure<CommonConfig>(config.GetSection(nameof(CommonConfig)));
         services.Configure<ConnectionStrings>(config.GetSection(nameof(ConnectionStrings)));

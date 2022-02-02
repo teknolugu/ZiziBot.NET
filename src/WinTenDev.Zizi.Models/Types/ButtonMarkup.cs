@@ -9,4 +9,10 @@ public class ButtonMarkup
 
     [JsonProperty("data")]
     public string Data { get; set; }
+
+    [JsonProperty("url")]
+    public string Url { get; set; }
+
+    [JsonProperty("description")]
+    public string Description { get; set; }
 }
