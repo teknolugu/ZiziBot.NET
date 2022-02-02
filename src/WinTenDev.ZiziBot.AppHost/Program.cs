@@ -24,6 +24,7 @@ public static class Program
         catch (Exception ex)
         {
             Console.WriteLine(@"Error Start {0}", ex.Demystify());
+
             if (ex.StackTrace.Contains("Hangfire"))
             {
                 Log.Warning("Seem error about Hangfire!");
@@ -42,21 +43,50 @@ public static class Program
     private static IHostBuilder CreateHostBuilder(string[] args)
     {
         var hostBuilder = Host.CreateDefaultBuilder(args)
-            .UseSerilog((hostBuilderContext, serviceProvider, loggerConfiguration) => {
-                loggerConfiguration.AddSerilogBootstrapper(serviceProvider);
-            })
-            .ConfigureAppConfiguration((context, builder) => {
-                builder.AddJsonFile("appsettings.json", true, true);
-            })
-            .ConfigureServices((context, services) => {
-                services.MappingAppSettings();
-            })
-            .ConfigureWebHostDefaults(webBuilder => {
-                webBuilder.UseStartup<Startup>();
-            })
-            .ConfigureLogging((context, builder) => {
-                builder.AddSerilog();
-            });
+            .UseSerilog
+            (
+                (
+                    hostBuilderContext,
+                    serviceProvider,
+                    loggerConfiguration
+                ) => {
+                    loggerConfiguration.AddSerilogBootstrapper(serviceProvider);
+                }
+            )
+            .ConfigureAppConfiguration
+            (
+                (
+                    context,
+                    builder
+                ) => {
+                    builder.AddJsonFile("appsettings.json", true, true);
+                    builder.AddAppSettingsJson();
+                }
+            )
+            .ConfigureServices
+            (
+                (
+                    context,
+                    services
+                ) => {
+                    services.MappingAppSettings();
+                }
+            )
+            .ConfigureWebHostDefaults
+            (
+                webBuilder => {
+                    webBuilder.UseStartup<Startup>();
+                }
+            )
+            .ConfigureLogging
+            (
+                (
+                    context,
+                    builder
+                ) => {
+                    builder.AddSerilog();
+                }
+            );
 
         // if (Directory.Exists("wwwroot")) hostBuilder.UseContentRoot("wwwroot");
 
@@ -67,13 +97,19 @@ public static class Program
     private static IWebHostBuilder CreateWebHostBuilder(string[] args)
     {
         return WebHost.CreateDefaultBuilder(args)
-            .ConfigureAppConfiguration((webHostBuilder, configBuilder) => {
-                configBuilder
-                    .AddJsonFile("appsettings.json", true, true)
-                    // .AddJsonFile($"appsettings.{hostBuilder.HostingEnvironment.EnvironmentName}.json", true, true)
-                    // .AddJsonFile("Storage/Config/security-base.json", true, true)
-                    .AddJsonEnvVar("QUICKSTART_SETTINGS", true);
-            }).UseStartup<Startup>()
+            .ConfigureAppConfiguration
+            (
+                (
+                    webHostBuilder,
+                    configBuilder
+                ) => {
+                    configBuilder
+                        .AddJsonFile("appsettings.json", true, true)
+                        // .AddJsonFile($"appsettings.{hostBuilder.HostingEnvironment.EnvironmentName}.json", true, true)
+                        // .AddJsonFile("Storage/Config/security-base.json", true, true)
+                        .AddJsonEnvVar("QUICKSTART_SETTINGS", true);
+                }
+            ).UseStartup<Startup>()
             .UseSerilog();
     }
 }

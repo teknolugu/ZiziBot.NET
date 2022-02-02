@@ -1,11 +1,14 @@
 using System;
+using System.Linq;
 using BotFramework.Config;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using MoreLinq;
 using Serilog;
 using WinTenDev.Zizi.Models.Configs;
+using WinTenDev.Zizi.Utils.IO;
 
 namespace WinTenDev.Zizi.Utils.Extensions;
 
@@ -20,6 +23,7 @@ public static class MapConfigExtension
         var config = serviceProvider.GetRequiredService<IConfiguration>();
 
         var appSettings = config.Get<AppConfig>();
+
         appSettings.EnvironmentConfig = new EnvironmentConfig()
         {
             HostEnvironment = env,
@@ -38,6 +42,26 @@ public static class MapConfigExtension
         services.AddSingleton(appSettings.DataDogConfig);
 
         return services;
+    }
+
+    public static IConfigurationBuilder AddAppSettingsJson(this IConfigurationBuilder builder)
+    {
+        var configDir = "Storage/AppSettings/Current/".EnsureDirectory();
+        var listConfigAll = configDir.EnumerateFiles();
+
+        // If json file name ends with 'x.json',
+        // it not will be added because marked as disabled
+        var listEnabledConfig = listConfigAll
+            .Where(s => !s.EndsWith("x.json"));
+
+        listEnabledConfig.ForEach
+        (
+            (
+                filePath
+            ) => builder.AddJsonFile(filePath, true, true)
+        );
+
+        return builder;
     }
 
     /// <summary>
