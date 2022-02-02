@@ -43,11 +43,11 @@ public class AboutCommand : CommandBase
         var botVersion = _enginesConfig.Version;
         var company = _enginesConfig.Company;
 
-        var aboutButton = _buttonConfig.Items.Find(x => x.Key == "about");
+        var aboutButton = _buttonConfig.Items?.Find(x => x.Key == "about");
 
-        var description = aboutButton?.Data.Descriptions.JoinStr("\n\n");
-        var warning = aboutButton?.Data.Warnings.JoinStr("\n\n");
-        var note = aboutButton?.Data.Notes.JoinStr("\n\n");
+        var description = aboutButton?.Data.Descriptions?.JoinStr("\n\n");
+        var warning = aboutButton?.Data.Warnings?.JoinStr("\n\n");
+        var note = aboutButton?.Data.Notes?.JoinStr("\n\n");
 
         var buttonMarkup = InlineKeyboardMarkup.Empty();
 
