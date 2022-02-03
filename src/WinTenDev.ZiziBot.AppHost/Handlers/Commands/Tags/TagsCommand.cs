@@ -27,16 +27,23 @@ public class TagsCommand : CommandBase
         _settingsService = settingsService;
     }
 
-    public override async Task HandleAsync(IUpdateContext context, UpdateDelegate next, string[] args)
+    public override async Task HandleAsync(
+        IUpdateContext context,
+        UpdateDelegate next,
+        string[] args
+    )
     {
         await _telegramService.AddUpdateContext(context);
         var chatId = _telegramService.ChatId;
-        var op = Operation.Begin("/tags command on ChatId {ChatId}", chatId);
-        var msg = _telegramService.Message;
+        var op = Operation.Begin("On ChatId {ChatId}, /tags command", chatId);
 
-        await _telegramService.DeleteAsync(msg.MessageId);
-        var sentMessage = await _telegramService.SendTextMessageAsync("🔄 Loading tags..", replyToMsgId: 0);
-        var tagsData = await _tagsService.GetTagsByGroupAsync(chatId);
+        var sentMessageTask = _telegramService.SendTextMessageAsync("🔄 Sedang mengambil Tags..", replyToMsgId: 0);
+        var tagsDataTask = _tagsService.GetTagsByGroupAsync(chatId);
+
+        await Task.WhenAll(sentMessageTask, tagsDataTask, _telegramService.DeleteSenderMessageAsync());
+
+        var tagsData = await tagsDataTask;
+        var sentMessage = await sentMessageTask;
 
         if (!tagsData.Any())
         {
@@ -49,6 +56,7 @@ public class TagsCommand : CommandBase
 
         Log.Debug("Building Tags message for ChatId: '{ChatId}'", chatId);
         var tagsStr = new StringBuilder();
+
         foreach (var tag in tagsData)
         {
             tagsStr.Append('#').Append(tag.Tag).Append(' ');
