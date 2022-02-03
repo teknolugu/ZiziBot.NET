@@ -70,11 +70,28 @@ public class CacheService
     {
         var allKeys = new List<string>();
         var knownPrefixes = _cacheConfig.KnownPrefixes;
-        knownPrefixes.ForEach((cachePrefix, _) => {
-            var cacheValues = _cachingProvider.GetByPrefix<dynamic>(cachePrefix);
 
-            allKeys.AddRange(cacheValues.Select((dictionary, _) => dictionary.Key));
-        });
+        knownPrefixes.ForEach
+        (
+            (
+                cachePrefix,
+                _
+            ) => {
+                var cacheValues = _cachingProvider
+                    .GetByPrefix<dynamic>(cachePrefix);
+
+                allKeys.AddRange
+                (
+                    cacheValues.Select
+                    (
+                        (
+                            dictionary,
+                            _
+                        ) => dictionary.Key
+                    )
+                );
+            }
+        );
 
         return allKeys;
     }
@@ -84,15 +101,28 @@ public class CacheService
     /// </summary>
     /// <param name="cacheKey"></param>
     /// <param name="action"></param>
+    /// <param name="evictBefore">If this true, cache will be evicted before GetOrSet</param>
+    /// <param name="evictAfter">If this true, cache will be evicted after GetOrSet</param>
     /// <typeparam></typeparam>
     /// <typeparam name="T"></typeparam>
     /// <returns></returns>
     public async Task<T> GetOrSetAsync<T>(
         string cacheKey,
-        Func<Task<T>> action
+        Func<Task<T>> action,
+        bool evictBefore = false,
+        bool evictAfter = false
     )
     {
-        var cache = await _cacheStack.GetOrSetAsync<T>(cacheKey, async (_) => await action(), _cacheSettings);
+        if (evictBefore) await EvictAsync(cacheKey);
+
+        var cache = await _cacheStack.GetOrSetAsync<T>
+        (
+            cacheKey: cacheKey,
+            getter: async (_) => await action(),
+            settings: _cacheSettings
+        );
+
+        if (evictAfter) await EvictAsync(cacheKey);
 
         return cache;
     }
@@ -103,7 +133,13 @@ public class CacheService
     )
     {
         var data = await action();
-        var cache = await _cacheStack.SetAsync(cacheKey, data, TimeSpan.FromMinutes(_expireAfter));
+
+        var cache = await _cacheStack.SetAsync
+        (
+            cacheKey,
+            value: data,
+            timeToLive: TimeSpan.FromMinutes(_expireAfter)
+        );
 
         return cache.Value;
     }
@@ -113,13 +149,19 @@ public class CacheService
         T data
     )
     {
-        var cache = await _cacheStack.SetAsync(cacheKey, data, TimeSpan.FromMinutes(_expireAfter));
+        var cache = await _cacheStack.SetAsync
+        (
+            cacheKey: cacheKey,
+            value: data,
+            timeToLive: TimeSpan.FromMinutes(_expireAfter)
+        );
 
         return cache.Value;
     }
 
     public async Task EvictAsync(string cacheKey)
     {
+        _logger.LogDebug("Evicting cache with key: {CacheKey}", cacheKey);
         await _cacheStack.EvictAsync(cacheKey);
     }
 }
