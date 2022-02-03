@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Hangfire;
+using Humanizer;
 using Serilog;
 using SerilogTimings;
 using Telegram.Bot.Framework.Abstractions;
@@ -68,26 +69,35 @@ public class NewChatMembersHandler : IUpdateHandler
         if (newMembers == null) return;
 
         var isBootAdded = await _telegramService.IsAnyMe(newMembers);
+
         if (isBootAdded)
         {
             var getMe = await _telegramService.GetMeAsync();
+
             var greetMe = $"Hai, perkenalkan saya {getMe.FirstName}" +
                           $"\n\nSaya adalah bot pendebug dan grup manajemen yang dilengkapi dengan alat keamanan. " +
                           $"Agar saya berfungsi penuh, jadikan saya admin dengan level standard. " +
                           $"\n\nUntuk melihat daftar perintah bisa ketikkan /help";
 
             await _telegramService.SendTextMessageAsync(greetMe, replyToMsgId: 0);
-            await _settingsService.SaveSettingsAsync(new Dictionary<string, object>()
-            {
-                { "chat_id", chatId },
-                { "chat_title", chatTitle }
-            });
+
+            await _settingsService.SaveSettingsAsync
+            (
+                new Dictionary<string, object>()
+                {
+                    { "chat_id", chatId },
+                    { "chat_title", chatTitle }
+                }
+            );
 
             if (newMembers.Length == 1) return;
         }
 
-        var parsedNewMember = await _newChatMembersService.CheckNewChatMembers(chatId, newMembers, answer =>
-            _telegramService.CallbackAnswerAsync(answer));
+        var parsedNewMember = await _newChatMembersService.CheckNewChatMembers
+        (
+            chatId, newMembers, answer =>
+                _telegramService.CallbackAnswerAsync(answer)
+        );
 
         var allNewMember = parsedNewMember.AllNewChatMembersStr.JoinStr(", ");
         var allNoUsername = parsedNewMember.NewNoUsernameChatMembersStr.JoinStr(", ");
@@ -112,18 +122,22 @@ public class NewChatMembersHandler : IUpdateHandler
                              "\nKamu adalah anggota ke-{MemberCount}";
         }
 
-        var sendText = welcomeMessage.ResolveVariable(new List<(string placeholder, string value)>()
-        {
-            ("AllNewMember", allNewMember),
-            ("AllNoUsername", allNoUsername),
-            ("AllNewBot", allNewBot),
-            ("ChatTitle", chatTitle),
-            ("Greet", greet),
-            ("NewMemberCount", newMemberCount.ToString()),
-            ("MemberCount", memberCount.ToString())
-        });
+        var sendText = welcomeMessage.ResolveVariable
+        (
+            new List<(string placeholder, string value)>()
+            {
+                ("AllNewMember", allNewMember),
+                ("AllNoUsername", allNoUsername),
+                ("AllNewBot", allNewBot),
+                ("ChatTitle", chatTitle),
+                ("Greet", greet),
+                ("NewMemberCount", newMemberCount.ToString()),
+                ("MemberCount", memberCount.ToString())
+            }
+        );
 
-        InlineKeyboardMarkup keyboard = null;
+        var keyboard = InlineKeyboardMarkup.Empty();
+
         if (!welcomeButton.IsNullOrEmpty())
         {
             keyboard = welcomeButton.ToReplyMarkup(2);
@@ -139,36 +153,45 @@ public class NewChatMembersHandler : IUpdateHandler
             keyboard = withVerify.ToReplyMarkup(2);
         }
 
-        var prevMsgId = chatSetting.LastWelcomeMessageId.ToInt();
-
         Message sentMessage;
 
         Log.Debug("New Member handler before send. Time: {Elapsed}", stopwatch.Elapsed);
+
         if (chatSetting.WelcomeMediaType != MediaType.Unknown)
         {
             var welcomeMedia = chatSetting.WelcomeMedia;
             var mediaType = chatSetting.WelcomeMediaType;
-            sentMessage = await _telegramService.SendMediaAsync(fileId: welcomeMedia,
+
+            sentMessage = await _telegramService.SendMediaAsync
+            (
+                fileId: welcomeMedia,
                 mediaType: mediaType,
                 caption: sendText,
                 replyMarkup: keyboard,
-                replyToMsgId: 0);
+                replyToMsgId: 0
+            );
         }
         else
         {
             sentMessage = await _telegramService.SendTextMessageAsync(sendText, keyboard, 0);
         }
 
-        await _telegramService.DeleteAsync(prevMsgId);
+        var prevMsgId = chatSetting.LastWelcomeMessageId.ToInt();
 
-        await _settingsService.SaveSettingsAsync(new Dictionary<string, object>()
-        {
-            { "chat_id", _telegramService.ChatId },
-            { "chat_title", _telegramService.ChatTitle },
-            { "chat_type", _telegramService.Chat.Type },
-            { "members_count", memberCount },
-            { "last_welcome_message_id", sentMessage.MessageId },
-        });
+        if (prevMsgId > 0)
+            await _telegramService.DeleteAsync(prevMsgId);
+
+        await _settingsService.SaveSettingsAsync
+        (
+            new Dictionary<string, object>()
+            {
+                { "chat_id", _telegramService.ChatId },
+                { "chat_title", _telegramService.ChatTitle },
+                { "chat_type", _telegramService.Chat.Type.Humanize() },
+                { "members_count", memberCount },
+                { "last_welcome_message_id", sentMessage.MessageId },
+            }
+        );
 
         op.Complete();
     }
