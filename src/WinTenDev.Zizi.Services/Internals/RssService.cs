@@ -39,6 +39,7 @@ public class RssService
             .GetAsync<RssHistory>();
 
         var isExist = data.Any();
+
         Log.Debug
         (
             "Check RSS History exist on ChatId {ChatId}? {IsExist}",
@@ -100,7 +101,7 @@ public class RssService
             .Where("chat_id", chatId)
             .GetAsync<RssSetting>();
 
-        Log.Debug("RSSData: {@V}", data);
+        Log.Verbose("RSSData: {@V}", data);
 
         return data;
     }
@@ -112,7 +113,7 @@ public class RssService
             .FromTable(RSSSettingTable)
             .GetAsync<RssSetting>();
 
-        Log.Debug("RSSData: {@Data}", data);
+        Log.Verbose("RSSData: {@Data}", data);
 
         return data;
     }
