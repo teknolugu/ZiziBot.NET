@@ -147,7 +147,7 @@ public class TelegramService
         FromId = From?.Id ?? 0;
         ChatId = Chat?.Id ?? 0;
         ReducedChatId = ChatId.ReduceChatId();
-        ChatTitle = Chat?.Title ?? From?.FirstName;
+        ChatTitle = Chat?.Title;
         FromNameLink = From.GetNameLink();
 
         IsNoUsername = CheckUsername();
