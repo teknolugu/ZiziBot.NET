@@ -24,6 +24,8 @@ public static class MemberUtil
 
     public static string GetNameLink(this User user)
     {
+        if (user == null) return string.Empty;
+
         var fullName = user.GetFullName();
 
         return $"<a href='tg://user?id={user.Id}'>{fullName}</a>";
