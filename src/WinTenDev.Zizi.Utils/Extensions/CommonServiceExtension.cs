@@ -19,6 +19,8 @@ public static class CommonServiceExtension
         services.AddServicesFrom("WinTenDev.Zizi.Services.Google", ServiceLifetime.Scoped);
         services.AddServicesFrom("WinTenDev.Zizi.Services.Telegram", ServiceLifetime.Scoped);
 
+        services.AddServicesFrom("WinTenDev.Zizi.Services.NMemory", ServiceLifetime.Singleton);
+
         return services;
     }
 }
