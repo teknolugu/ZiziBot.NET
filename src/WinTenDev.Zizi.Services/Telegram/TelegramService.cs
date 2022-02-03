@@ -35,6 +35,7 @@ public class TelegramService
     private readonly ChatService _chatService;
     private readonly CommonConfig _commonConfig;
     private readonly BotService _botService;
+    private readonly FloodCheckService _floodCheckService;
     private readonly SettingsService _settingsService;
     private readonly PrivilegeService _privilegeService;
     private readonly UserProfilePhotoService _userProfilePhotoService;
@@ -98,6 +99,7 @@ public class TelegramService
         ChatService chatService,
         CommonConfig commonConfig,
         BotService botService,
+        FloodCheckService floodCheckService,
         SettingsService settingsService,
         PrivilegeService privilegeService,
         UserProfilePhotoService userProfilePhotoService,
@@ -108,6 +110,7 @@ public class TelegramService
         _chatService = chatService;
         _commonConfig = commonConfig;
         _botService = botService;
+        _floodCheckService = floodCheckService;
         _settingsService = settingsService;
         _privilegeService = privilegeService;
         _userProfilePhotoService = userProfilePhotoService;

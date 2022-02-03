@@ -70,6 +70,9 @@ public class NewUpdateHandler : IUpdateHandler
 
         if (_telegramService.IsUpdateTooOld()) return;
 
+        var floodCheck = await _telegramService.FloodCheck();
+        if (floodCheck.IsFlood) return;
+
         _chatSettings = await _telegramService.GetChatSetting();
 
         _logger.LogTrace("NewUpdate: {@V}", _telegramService.Update);
@@ -103,24 +106,28 @@ public class NewUpdateHandler : IUpdateHandler
         }
 
         var hasSpam = await AntiSpamCheck();
+
         if (hasSpam.IsAnyBanned)
         {
             return false;
         }
 
         var hasUsername = await CheckHasUsernameAsync();
+
         if (!hasUsername)
         {
             return false;
         }
 
         var hasPhotoProfile = await CheckHasPhotoProfileAsync();
+
         if (!hasPhotoProfile)
         {
             return false;
         }
 
         var shouldDelete = await ScanMessageAsync();
+
         if (shouldDelete)
         {
             return false;
