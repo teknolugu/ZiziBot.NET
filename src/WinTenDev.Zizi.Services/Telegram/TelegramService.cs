@@ -153,7 +153,6 @@ public class TelegramService
         IsNoUsername = CheckUsername();
         HasUsername = !CheckUsername();
         IsFromSudo = CheckFromSudoer();
-        IsChatRestricted = CheckRestriction();
         IsPrivateChat = CheckIsPrivateChat();
         IsGroupChat = CheckIsGroupChat();
 
@@ -181,9 +180,26 @@ public class TelegramService
         return isRestricted;
     }
 
-    public bool CheckRestriction()
+    public async Task<bool> CheckChatRestriction()
     {
-        return _chatService.CheckChatRestriction(ChatId);
+        if (IsPrivateChat) return false;
+
+        var isShouldLeave = _chatService.CheckChatRestriction(ChatId);
+
+        if (!isShouldLeave) return false;
+
+        Log.Warning("I should leave right now!");
+        var me = await _botService.GetMeAsync();
+
+        var msgOut = "Untuk mendapatkan pengalaman lingkungan yang lebih stabil, " +
+                     "silakan gunakan @MissZiziBot untuk Grup Anda." +
+                     $"\n<b>{me.GetFullName()}</b> masih tahap pengembangan jadi akses nya dibatasi." +
+                     "\n\nTerima kasih sudah menggunakan layanan ZiziBot!";
+
+        await SendTextMessageAsync(msgOut);
+        await LeaveChat(ChatId);
+
+        return true;
     }
 
     public async Task<string> GetMentionAdminsStr()

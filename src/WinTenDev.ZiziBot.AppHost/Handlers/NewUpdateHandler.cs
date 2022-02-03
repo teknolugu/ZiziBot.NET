@@ -95,7 +95,8 @@ public class NewUpdateHandler : IUpdateHandler
     {
         var op = Operation.Begin("Run PreTask for ChatId: {ChatId}", _telegramService.ChatId);
 
-        var hasRestricted = await CheckChatHasRestrictedAsync();
+        var hasRestricted = await _telegramService.CheckChatRestriction();
+
         if (hasRestricted)
         {
             return false;
@@ -147,42 +148,6 @@ public class NewUpdateHandler : IUpdateHandler
     }
 
     #region Pre Task
-
-    private async Task<bool> CheckChatHasRestrictedAsync()
-    {
-        var op = Operation.Begin("Check Chat Restriction on ChatId:'{ChatId}'", _chatId);
-        try
-        {
-            if (_telegramService.IsPrivateChat)
-            {
-                op.Complete();
-                return false;
-            }
-
-            _logger.LogInformation("Starting ensure Chat Restriction");
-
-            var globalRestrict = _telegramService.IsRestricted();
-            var isRestricted = _telegramService.IsChatRestricted;
-
-            if (!isRestricted || !globalRestrict) return false;
-
-            _logger.LogWarning("I should leave right now!");
-            var msgOut = "Sepertinya saya salah alamat, saya pamit dulu..";
-
-            await _telegramService.SendTextMessageAsync(msgOut);
-            await _telegramService.LeaveChat(_chatId);
-
-            op.Complete();
-            return true;
-        }
-        catch
-        {
-            _logger.LogError("Error when Check Chat Restriction");
-
-            op.Complete();
-            return false;
-        }
-    }
 
     private async Task<AntiSpamResult> AntiSpamCheck()
     {
