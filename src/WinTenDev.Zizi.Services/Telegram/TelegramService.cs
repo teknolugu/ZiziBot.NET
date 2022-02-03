@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hangfire;
 using Humanizer;
+using Microsoft.Extensions.Options;
 using Serilog;
 using SerilogTimings;
 using Telegram.Bot;
@@ -249,16 +250,19 @@ public class TelegramService
 
         return chatAdmin;
     }
+
     public async Task<string> GetChatAdminList()
     {
         var creatorStr = string.Empty;
         var sbAdmin = new StringBuilder();
 
         var number = 1;
+
         foreach (var admin in await GetChatAdmin())
         {
             var user = admin.User;
             var nameLink = user.GetNameLink();
+
             if (admin.Status == ChatMemberStatus.Creator)
             {
                 creatorStr = nameLink;
@@ -415,6 +419,7 @@ public class TelegramService
         var webhookInfo = await Client.GetWebhookInfoAsync();
 
         var pendingCount = webhookInfo.PendingUpdateCount;
+
         if (pendingCount != pendingLimit)
         {
             await SendEventCoreAsync($"Pending Count larger than {pendingLimit}", repToMsgId: 0);
@@ -434,49 +439,52 @@ public class TelegramService
         var answerReplyMarkup = callbackAnswer.CallbackAnswerInlineMarkup;
         var muteTimeSpan = callbackAnswer.MuteMemberTimeSpan;
 
-        await Parallel.ForEachAsync(answerModes, async (
-            answerMode,
-            cancel
-        ) => {
-            switch (answerMode)
-            {
-                case CallbackAnswerMode.AnswerCallback:
-                    await AnswerCallbackQueryAsync(answerCallback, showAlert: true);
-                    break;
+        await Parallel.ForEachAsync
+        (
+            answerModes, async (
+                answerMode,
+                cancel
+            ) => {
+                switch (answerMode)
+                {
+                    case CallbackAnswerMode.AnswerCallback:
+                        await AnswerCallbackQueryAsync(answerCallback, showAlert: true);
+                        break;
 
-                case CallbackAnswerMode.SendMessage:
-                    callbackResult.UpdatedMessage = await SendTextMessageAsync(answerCallback, answerReplyMarkup);
-                    break;
+                    case CallbackAnswerMode.SendMessage:
+                        callbackResult.UpdatedMessage = await SendTextMessageAsync(answerCallback, answerReplyMarkup);
+                        break;
 
-                case CallbackAnswerMode.EditMessage:
-                    var messageMarkup = callbackAnswer.CallbackAnswerInlineMarkup;
-                    callbackResult.UpdatedMessage = await EditMessageTextAsync(answerCallback, messageMarkup);
-                    break;
+                    case CallbackAnswerMode.EditMessage:
+                        var messageMarkup = callbackAnswer.CallbackAnswerInlineMarkup;
+                        callbackResult.UpdatedMessage = await EditMessageTextAsync(answerCallback, messageMarkup);
+                        break;
 
-                case CallbackAnswerMode.BanMember:
-                    break;
+                    case CallbackAnswerMode.BanMember:
+                        break;
 
-                case CallbackAnswerMode.MuteMember:
-                    await RestrictMemberAsync(FromId, until: muteTimeSpan.ToDateTime());
-                    break;
+                    case CallbackAnswerMode.MuteMember:
+                        await RestrictMemberAsync(FromId, until: muteTimeSpan.ToDateTime());
+                        break;
 
-                case CallbackAnswerMode.DeleteMessage:
-                    var messageId = callbackAnswer.CallbackDeleteMessageId;
-                    await DeleteAsync(messageId);
-                    break;
+                    case CallbackAnswerMode.DeleteMessage:
+                        var messageId = callbackAnswer.CallbackDeleteMessageId;
+                        await DeleteAsync(messageId);
+                        break;
 
-                case CallbackAnswerMode.KickMember:
-                    break;
+                    case CallbackAnswerMode.KickMember:
+                        break;
 
-                case CallbackAnswerMode.ScheduleKickMember:
-                    await ScheduleKickJob(StepHistoryName.HumanVerification);
-                    break;
+                    case CallbackAnswerMode.ScheduleKickMember:
+                        await ScheduleKickJob(StepHistoryName.HumanVerification);
+                        break;
 
-                default:
-                    Log.Debug("No Callback Answer mode for this section. {@V}", answerMode);
-                    break;
+                    default:
+                        Log.Debug("No Callback Answer mode for this section. {@V}", answerMode);
+                        break;
+                }
             }
-        });
+        );
         return callbackResult;
     }
 
@@ -537,6 +545,7 @@ public class TelegramService
         var messageDate = MessageDate;
         var prevDate = DateTime.UtcNow.AddMinutes(-offset);
         var isOld = prevDate > messageDate;
+
         Log.Debug
         (
             "UpdateId {UpdateId} with Date: {V}. OffsetDate: {OffsetDate}. Too old? {IsOld}",
@@ -597,12 +606,16 @@ public class TelegramService
         try
         {
             Log.Information("Sending message to {ChatTarget}", chatTarget);
-            SentMessage = await Client.SendTextMessageAsync(chatId: chatTarget,
+
+            SentMessage = await Client.SendTextMessageAsync
+            (
+                chatId: chatTarget,
                 text: sendText,
                 parseMode: ParseMode.Html,
                 replyMarkup: replyMarkup,
                 replyToMessageId: replyToMsgId,
-                disableWebPagePreview: disableWebPreview);
+                disableWebPagePreview: disableWebPreview
+            );
 
             return SentMessage;
         }
@@ -615,16 +628,23 @@ public class TelegramService
                 return SentMessage;
             }
 
-            Log.Warning("Failed when trying send Message to {ChatTarget}. {Message}",
-                chatTarget, exception1.Message);
+            Log.Warning
+            (
+                "Failed when trying send Message to {ChatTarget}. {Message}",
+                chatTarget, exception1.Message
+            );
 
             try
             {
                 Log.Information("Try Sending message to {ChatTarget} without reply to Msg Id", chatTarget);
-                SentMessage = await Client.SendTextMessageAsync(chatId: chatTarget,
+
+                SentMessage = await Client.SendTextMessageAsync
+                (
+                    chatId: chatTarget,
                     text: sendText,
                     parseMode: ParseMode.Html,
-                    replyMarkup: replyMarkup);
+                    replyMarkup: replyMarkup
+                );
 
                 return SentMessage;
             }
@@ -658,29 +678,43 @@ public class TelegramService
         switch (mediaType)
         {
             case MediaType.Document:
-                SentMessage = await Client.SendDocumentAsync(chatId: ChatId, document: fileId, caption: caption,
-                    parseMode: ParseMode.Html, replyMarkup: replyMarkup, replyToMessageId: replyToMsgId);
+                SentMessage = await Client.SendDocumentAsync
+                (
+                    chatId: ChatId, document: fileId, caption: caption,
+                    parseMode: ParseMode.Html, replyMarkup: replyMarkup, replyToMessageId: replyToMsgId
+                );
                 break;
 
             case MediaType.LocalDocument:
                 var fileName = Path.GetFileName(fileId);
+
                 await using (var fs = File.OpenRead(fileId))
                 {
                     var inputOnlineFile = new InputOnlineFile(fs, fileName);
-                    SentMessage = await Client.SendDocumentAsync(chatId: ChatId, document: inputOnlineFile, caption: caption,
-                        parseMode: ParseMode.Html, replyMarkup: replyMarkup, replyToMessageId: replyToMsgId);
+
+                    SentMessage = await Client.SendDocumentAsync
+                    (
+                        chatId: ChatId, document: inputOnlineFile, caption: caption,
+                        parseMode: ParseMode.Html, replyMarkup: replyMarkup, replyToMessageId: replyToMsgId
+                    );
                 }
 
                 break;
 
             case MediaType.Photo:
-                SentMessage = await Client.SendPhotoAsync(ChatId, fileId, caption: caption, ParseMode.Html,
-                    replyMarkup: replyMarkup, replyToMessageId: replyToMsgId);
+                SentMessage = await Client.SendPhotoAsync
+                (
+                    ChatId, fileId, caption: caption, ParseMode.Html,
+                    replyMarkup: replyMarkup, replyToMessageId: replyToMsgId
+                );
                 break;
 
             case MediaType.Video:
-                SentMessage = await Client.SendVideoAsync(ChatId, video: fileId, caption: caption,
-                    parseMode: ParseMode.Html, replyMarkup: replyMarkup, replyToMessageId: replyToMsgId);
+                SentMessage = await Client.SendVideoAsync
+                (
+                    ChatId, video: fileId, caption: caption,
+                    parseMode: ParseMode.Html, replyMarkup: replyMarkup, replyToMessageId: replyToMsgId
+                );
                 break;
 
             default:
@@ -728,14 +762,18 @@ public class TelegramService
         var targetMessageId = SentMessage.MessageId;
 
         Log.Information("Updating message {SentMessageId} on {ChatId}", targetMessageId, ChatId);
+
         try
         {
-            SentMessage = await Client.EditMessageTextAsync(ChatId,
+            SentMessage = await Client.EditMessageTextAsync
+            (
+                ChatId,
                 targetMessageId,
                 sendText,
                 ParseMode.Html,
                 replyMarkup: replyMarkup,
-                disableWebPagePreview: disableWebPreview);
+                disableWebPagePreview: disableWebPreview
+            );
 
             return SentMessage;
         }
@@ -743,8 +781,11 @@ public class TelegramService
         {
             if (ex.IsErrorAsWarning())
             {
-                Log.Warning("Failed when trying edit Message on {ChatTarget}. {Message}",
-                    ChatId, ex.Message);
+                Log.Warning
+                (
+                    "Failed when trying edit Message on {ChatTarget}. {Message}",
+                    ChatId, ex.Message
+                );
 
                 return SentMessage;
             }
@@ -764,12 +805,16 @@ public class TelegramService
         try
         {
             Log.Information("Editing {CallBackMessageId}", CallBackMessageId);
-            await Client.EditMessageTextAsync(ChatId,
+
+            await Client.EditMessageTextAsync
+            (
+                ChatId,
                 CallBackMessageId,
                 sendText,
                 ParseMode.Html,
                 replyMarkup: replyMarkup,
-                disableWebPagePreview: disableWebPreview);
+                disableWebPagePreview: disableWebPreview
+            );
         }
         catch (Exception e)
         {
@@ -851,7 +896,7 @@ public class TelegramService
     {
         try
         {
-            var callbackQueryId = Context.Update.CallbackQuery.Id;
+            var callbackQueryId = CallbackQuery.Id;
             await Client.AnswerCallbackQueryAsync(callbackQueryId, text, showAlert);
         }
         catch (Exception e)
@@ -883,6 +928,7 @@ public class TelegramService
         bool isKicked;
 
         Log.Information("Kick {UserId} from {ChatId}", userId, ChatId);
+
         try
         {
             await Client.BanChatMemberAsync(ChatId, userId, DateTime.Now);
@@ -903,6 +949,7 @@ public class TelegramService
     {
         var idTarget = user.Id;
         Log.Information("Unban {IdTarget} from {ChatId}", idTarget, ChatId);
+
         try
         {
             await Client.UnbanChatMemberAsync(ChatId, idTarget);
@@ -917,6 +964,7 @@ public class TelegramService
     public async Task UnBanMemberAsync(long userId = -1)
     {
         Log.Information("Unban {UserId} from {ChatId}", userId, ChatId);
+
         try
         {
             await Client.UnbanChatMemberAsync(ChatId, userId);
@@ -931,17 +979,21 @@ public class TelegramService
     public async Task<RequestResult> PromoteChatMemberAsync(long userId)
     {
         var requestResult = new RequestResult();
+
         try
         {
-            await Client.PromoteChatMemberAsync(Message.Chat.Id,
-                userId,
-                false,
-                false,
-                false,
-                true,
-                true,
-                true,
-                true);
+            await Client.PromoteChatMemberAsync
+            (
+                chatId: Message.Chat.Id,
+                userId: userId,
+                isAnonymous: false,
+                canManageChat: false,
+                canPostMessages: false,
+                canEditMessages: true,
+                canDeleteMessages: true,
+                canManageVoiceChats: true,
+                canRestrictMembers: true
+            );
 
             requestResult.IsSuccess = true;
         }
@@ -959,17 +1011,21 @@ public class TelegramService
     public async Task<RequestResult> DemoteChatMemberAsync(long userId)
     {
         var requestResult = new RequestResult();
+
         try
         {
-            await Client.PromoteChatMemberAsync(Message.Chat.Id,
-                userId,
-                false,
-                false,
-                false,
-                false,
-                false,
-                false,
-                false);
+            await Client.PromoteChatMemberAsync
+            (
+                chatId: Message.Chat.Id,
+                userId: userId,
+                isAnonymous: false,
+                canManageChat: false,
+                canPostMessages: false,
+                canEditMessages: false,
+                canDeleteMessages: false,
+                canManageVoiceChats: false,
+                canRestrictMembers: false
+            );
 
             requestResult.IsSuccess = true;
         }
@@ -1002,8 +1058,11 @@ public class TelegramService
             var untilDate = until;
             if (until == default) untilDate = DateTime.UtcNow.AddDays(366);
 
-            Log.Information("Restricting UserId: '{UserId}'@'{ChatId}', UnMute: '{UnMute}' until {UntilDate}",
-                userId, ChatId, unMute, untilDate);
+            Log.Information
+            (
+                "Restricting UserId: '{UserId}'@'{ChatId}', UnMute: '{UnMute}' until {UntilDate}",
+                userId, ChatId, unMute, untilDate
+            );
 
             var permission = new ChatPermissions
             {
@@ -1080,6 +1139,12 @@ public class TelegramService
     {
         var op = Operation.Begin("Check Username for UserId: '{UserId}' on ChatId: '{ChatId}'", FromId, ChatId);
 
+        if (ChannelOrEditedPost != null)
+        {
+            op.Complete();
+            return true;
+        }
+
         if (HasUsername)
         {
             Log.Information("UserID '{FromId}' has set Username", FromId);
@@ -1095,6 +1160,7 @@ public class TelegramService
         }
 
         var chatSettings = await GetChatSetting();
+
         if (!chatSettings.EnableWarnUsername)
         {
             Log.Information("Warn Username is disabled on ChatID '{ChatId}'", ChatId);
@@ -1113,6 +1179,12 @@ public class TelegramService
     {
         var op = Operation.Begin("Check Chat Photo on ChatId {ChatId} for UserId: {UserId}", ChatId, FromId);
 
+        if (ChannelOrEditedPost != null)
+        {
+            op.Complete();
+            return true;
+        }
+
         if (await CheckPermission())
         {
             op.Complete();
@@ -1120,6 +1192,7 @@ public class TelegramService
         }
 
         var hasProfilePhoto = await _userProfilePhotoService.CheckUserProfilePhoto(ChatId, FromId);
+
         if (hasProfilePhoto)
         {
             op.Complete();
@@ -1141,20 +1214,26 @@ public class TelegramService
                        $"Jika sudah atur {featureName}, silakan tekan tombol dibawah ini untuk verifikasi, " +
                        $"atau dalam <b>{humanSpan}</b>, Anda akan di tendang!";
 
-        var verifyButton = new InlineKeyboardMarkup(new[]
-        {
-            InlineKeyboardButton.WithCallbackData("Verifikasi", "verify")
-        });
+        var verifyButton = new InlineKeyboardMarkup
+        (
+            new[]
+            {
+                InlineKeyboardButton.WithCallbackData("Verifikasi", "verify")
+            }
+        );
 
         await RestrictMemberAsync(FromId, until: KickTimeOffset.ToDateTime());
         await SendTextMessageAsync(sendWarn, verifyButton, disableWebPreview: true, replyToMsgId: 0);
 
-        var stepHistory = await _stepHistoriesService.GetStepHistoryCore(new StepHistory()
-        {
-            ChatId = ChatId,
-            UserId = FromId,
-            Name = name
-        });
+        var stepHistory = await _stepHistoriesService.GetStepHistoryCore
+        (
+            new StepHistory()
+            {
+                ChatId = ChatId,
+                UserId = FromId,
+                Name = name
+            }
+        );
 
         if (stepHistory != null)
         {
@@ -1165,23 +1244,69 @@ public class TelegramService
     public async Task ScheduleKickJob(StepHistoryName name)
     {
         Log.Information("Scheduling Job with name: {JobName}", name);
-        var jobId = _backgroundJob.Schedule<JobsService>(job =>
-            job.MemberKickJob(ChatId, FromId), KickTimeOffset);
 
-        await _stepHistoriesService.SaveStepHistory(new StepHistory
-        {
-            Name = name,
-            ChatId = ChatId,
-            UserId = FromId,
-            FirstName = From.FirstName,
-            LastName = From.LastName,
-            Reason = $"User don't have {name.Humanize()}",
-            Status = StepHistoryStatus.NeedVerify,
-            HangfireJobId = jobId,
-            LastWarnMessageId = SentMessage?.MessageId ?? -1,
-            CreatedAt = DateTime.Now,
-            UpdatedAt = DateTime.Now
-        });
+        var jobId = _backgroundJob.Schedule<JobsService>
+        (
+            job =>
+                job.MemberKickJob(ChatId, FromId), KickTimeOffset
+        );
+
+        await _stepHistoriesService.SaveStepHistory
+        (
+            new StepHistory
+            {
+                Name = name,
+                ChatId = ChatId,
+                UserId = FromId,
+                FirstName = From.FirstName,
+                LastName = From.LastName,
+                Reason = $"User don't have {name.Humanize()}",
+                Status = StepHistoryStatus.NeedVerify,
+                HangfireJobId = jobId,
+                LastWarnMessageId = SentMessage?.MessageId ?? -1,
+                CreatedAt = DateTime.Now,
+                UpdatedAt = DateTime.Now
+            }
+        );
+    }
+
+    public async Task<FloodCheckResult> FloodCheck()
+    {
+        if (ChannelOrEditedPost != null) return new FloodCheckResult();
+
+        var floodCheckResult = _floodCheckService.FloodCheck
+        (
+            new HitActivity()
+            {
+                Guid = Guid.NewGuid().ToString(),
+                MessageDate = MessageDate,
+                UpdateType = Update.Type,
+                ChatId = ChatId,
+                ChatTitle = ChatTitle,
+                ChatUsername = Chat.Username,
+                ChatType = Chat.Type,
+                FromId = FromId,
+                FromUsername = From.Username,
+                FromLangCode = From.LanguageCode,
+                FromFirstName = From.FirstName,
+                FromLastName = From.LastName,
+                Timestamp = DateTime.Now
+            }
+        );
+
+        if (!floodCheckResult.IsFlood) return floodCheckResult;
+        if (!IsGroupChat || await CheckFromAdmin()) return new FloodCheckResult();
+
+        var span = TimeSpan.FromHours(floodCheckResult.FloodRate * 1.33).ToDateTime();
+        await RestrictMemberAsync(FromId, until: span);
+
+        var nameLink = From.GetNameLink();
+
+        var text = $"Hai {nameLink}, seperti nya Anda melakukan Flooding!" +
+                   $"\nAnda di mute hingga {span.ToDetailDateTimeString()} di Obrolan ini";
+        await SendTextMessageAsync(text, replyToMsgId: 0);
+
+        return floodCheckResult;
     }
 
     #endregion OnUpdate
