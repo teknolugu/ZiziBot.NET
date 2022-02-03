@@ -57,12 +57,6 @@ public class NewUpdateHandler : IUpdateHandler
         CancellationToken cancellationToken
     )
     {
-        if (When.SkipCheck(context))
-        {
-            _logger.LogDebug("Update handler disabled for some Update");
-            return;
-        }
-
         await _telegramService.AddUpdateContext(context);
 
         _chatId = _telegramService.ChatId;
