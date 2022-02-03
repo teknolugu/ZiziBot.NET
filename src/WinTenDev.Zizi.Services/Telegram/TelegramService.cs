@@ -1036,6 +1036,8 @@ public class TelegramService
             "777000"
         };
 
+        if (From == null) return false;
+
         var match = ignoredIds.FirstOrDefault(id => id == FromId.ToString());
         if (!match.IsNotNullOrEmpty()) return From.Username == null;
 
