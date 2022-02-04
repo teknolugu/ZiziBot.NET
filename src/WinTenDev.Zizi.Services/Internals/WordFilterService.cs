@@ -57,6 +57,7 @@ public class WordFilterService
     public async Task<IEnumerable<WordFilter>> GetWordsListCore()
     {
         Log.Debug("Getting Words from Database");
+
         var wordFilters = await _queryService
             .CreateMySqlFactory()
             .FromTable(TableName)
@@ -67,23 +68,28 @@ public class WordFilterService
 
     public async Task<IEnumerable<WordFilter>> GetWordsList()
     {
-        var data = await _cacheService.GetOrSetAsync(CacheKey, async () => {
-            var data = await GetWordsListCore();
+        var data = await _cacheService.GetOrSetAsync
+        (
+            cacheKey: CacheKey,
+            action: async () => {
+                var data = await GetWordsListCore();
 
-            return data;
-        });
+                return data;
+            }
+        );
 
         return data;
     }
 
-    public async Task<int> DeleteKata(WordFilter wordFilter)
+    public async Task<int> DeleteKata(WordFilter word)
     {
         var query = _queryService
             .CreateMySqlFactory()
-            .FromTable(TableName).Where("word", wordFilter.Word);
+            .FromTable(TableName)
+            .Where("word", word.Word);
 
-        if (wordFilter.ChatId != 0)
-            query.Where("chat_id", wordFilter.ChatId);
+        if (word.ChatId != 0)
+            query.Where("chat_id", word.ChatId);
 
         var delete = await query.DeleteAsync();
 
@@ -113,7 +119,11 @@ public class WordFilterService
 
         var listWords = await GetWordsList();
 
-        var partedWord = words.Split(new[] { '\n', '\r', ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries)
+        var partedWord = words.Split
+            (
+                new[] { '\n', '\r', ' ', '\t' },
+                StringSplitOptions.RemoveEmptyEntries
+            )
             .Distinct()
             .ToList();
 
@@ -123,15 +133,22 @@ public class WordFilterService
             "telegram"
         };
 
-        skipWords.ForEach((
-            s,
-            i
-        ) => {
-            partedWord.RemoveAll(word => word.Length <= 2 ||
-                                         word.CleanExceptAlphaNumeric().ToLowerCase() == s);
-        });
+        skipWords.ForEach
+        (
+            (
+                word1
+            ) => {
+                partedWord.RemoveAll
+                (
+                    word2 =>
+                        word2.Length <= 2 ||
+                        word2.CleanExceptAlphaNumeric().ToLowerCase() == word1
+                );
+            }
+        );
 
         Log.Debug("Message Word Scan Lists: {V}", partedWord);
+
         foreach (var word in partedWord)
         {
             var forCompare = word;
@@ -142,27 +159,28 @@ public class WordFilterService
                 var isGlobal = wordFilter.IsGlobal;
 
                 var forFilter = wordFilter.Word.ToLowerCase();
-                if (forFilter.EndsWith("*", StringComparison.CurrentCulture))
+
+                if (forFilter.EndsWith("*", StringComparison.CurrentCultureIgnoreCase))
                 {
-                    var distinctChar = forCompare.DistinctChar();
                     forFilter = forFilter.CleanExceptAlphaNumeric();
                     isShould = forCompare.Contains(forFilter);
-                    Log.Verbose("'{ForCompare}' LIKE '{ForFilter}' ? {IsShould}. Global: {IsGlobal}",
-                        forCompare, forFilter, isShould, isGlobal);
 
-                    if (!isShould)
-                    {
-                        isShould = distinctChar.Contains(forFilter);
-                        Log.Verbose(messageTemplate: "'{DistinctChar}' LIKE '{ForFilter}' ? {IsShould}. Global: {IsGlobal}",
-                            distinctChar, forFilter, isShould, isGlobal);
-                    }
+                    Log.Verbose
+                    (
+                        "Message compare '{ForCompare}' LIKE '{ForFilter}' ? {IsShould}. Global: {IsGlobal}",
+                        forCompare, forFilter, isShould, isGlobal
+                    );
                 }
                 else
                 {
                     forFilter = wordFilter.Word.ToLowerCase().CleanExceptAlphaNumeric();
                     if (forCompare == forFilter) isShould = true;
-                    Log.Verbose("'{ForCompare}' == '{ForFilter}' ? {IsShould}, Global: {IsGlobal}",
-                        forCompare, forFilter, isShould, isGlobal);
+
+                    Log.Verbose
+                    (
+                        "Message compare '{ForCompare}' == '{ForFilter}' ? {IsShould}, Global: {IsGlobal}",
+                        forCompare, forFilter, isShould, isGlobal
+                    );
                 }
 
                 if (!isShould) continue;
