@@ -32,6 +32,7 @@ namespace WinTenDev.Zizi.Services.Telegram;
 public class TelegramService
 {
     private readonly IBackgroundJobClient _backgroundJob;
+    private readonly EventLogConfig _eventLogConfig;
     private readonly ChatService _chatService;
     private readonly CommonConfig _commonConfig;
     private readonly BotService _botService;
@@ -96,6 +97,7 @@ public class TelegramService
 
     public TelegramService(
         IBackgroundJobClient backgroundJob,
+        IOptionsSnapshot<EventLogConfig> eventLogConfig,
         ChatService chatService,
         CommonConfig commonConfig,
         BotService botService,
@@ -107,6 +109,7 @@ public class TelegramService
     )
     {
         _backgroundJob = backgroundJob;
+        _eventLogConfig = eventLogConfig.Value;
         _chatService = chatService;
         _commonConfig = commonConfig;
         _botService = botService;
@@ -501,8 +504,9 @@ public class TelegramService
     )
     {
         Log.Information("Sending Event to Global and Local..");
-        var globalLogTarget = BotSettings.BotChannelLogs;
         var currentSetting = await GetChatSetting();
+
+        var globalLogTarget = _eventLogConfig.ChannelId;
         var chatLogTarget = currentSetting.EventLogChatId;
 
         var listLogTarget = new List<long>();
@@ -513,7 +517,13 @@ public class TelegramService
 
         foreach (var chatId in listLogTarget)
         {
-            await SendEventCoreAsync(text, chatId, true, repToMsgId: repToMsgId);
+            await SendEventCoreAsync
+            (
+                additionalText: text,
+                customChatId: chatId,
+                disableWebPreview: true,
+                repToMsgId: repToMsgId
+            );
         }
     }
 
@@ -525,18 +535,36 @@ public class TelegramService
     )
     {
         var message = MessageOrEdited;
-        var chatTitle = Chat.Title ?? From.FirstName;
-        var fromNameLink = message.From.GetNameLink();
+        var fromNameLink = From.GetNameLink();
         var msgLink = message.GetMessageLink();
 
         var sendLog = "🐾 <b>EventLog Preview</b>" +
-                      $"\nGroup: <code>{ChatId}</code> - {chatTitle}" +
+                      $"\nGroup: <code>{ChatId}</code> - {ChatTitle}" +
                       $"\nFrom: <code>{FromId}</code> - {fromNameLink}" +
                       $"\n<a href='{msgLink}'>Go to Message</a>" +
                       $"\nNote: {additionalText}" +
                       $"\n\n#{message.Type} => #ID{ReducedChatId}";
 
-        await SendTextMessageAsync(sendLog, customChatId: customChatId, disableWebPreview: disableWebPreview, replyToMsgId: repToMsgId);
+        await SendTextMessageAsync
+        (
+            sendText: sendLog,
+            customChatId: customChatId,
+            disableWebPreview: disableWebPreview,
+            replyToMsgId: repToMsgId
+        );
+    }
+
+    public async Task SendEventLogRawAsync(string sendLog)
+    {
+        var chatId = _eventLogConfig.ChannelId;
+
+        await SendTextMessageAsync
+        (
+            sendText: sendLog,
+            customChatId: chatId,
+            disableWebPreview: true,
+            replyToMsgId: 0
+        );
     }
 
     #endregion EventLog
