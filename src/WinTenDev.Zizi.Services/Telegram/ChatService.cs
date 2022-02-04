@@ -45,12 +45,24 @@ public class ChatService
         _settingsService = settingsService;
     }
 
+    public bool IsEnableRestriction()
+    {
+        var isRestricted = _restrictionConfig.EnableRestriction;
+        Log.Debug("Global Restriction IsEnabled: {IsRestricted}", isRestricted);
+
+        return isRestricted;
+    }
+
     public bool CheckChatRestriction(long chatId)
     {
         try
         {
             var isRestricted = false;
+
+            if (!IsEnableRestriction()) return false;
+
             var restrictArea = _restrictionConfig.RestrictionArea;
+
             if (restrictArea != null)
             {
                 var match = restrictArea.FirstOrDefault(x => x == chatId.ToString());
@@ -98,11 +110,15 @@ public class ChatService
     public async Task<Chat> GetChatAsync(long chatId)
     {
         var cacheKey = "chat_" + chatId.ReduceChatId();
-        var data = await _cacheService.GetOrSetAsync(cacheKey, async () => {
-            var chat = await _botClient.GetChatAsync(chatId);
 
-            return chat;
-        });
+        var data = await _cacheService.GetOrSetAsync
+        (
+            cacheKey, async () => {
+                var chat = await _botClient.GetChatAsync(chatId);
+
+                return chat;
+            }
+        );
 
         return data;
     }
@@ -112,11 +128,14 @@ public class ChatService
         var reducedChatId = chatId.ReduceChatId();
         var cacheKey = $"member-count_{reducedChatId}";
 
-        var getMemberCount = await _cacheService.GetOrSetAsync(cacheKey, async () => {
-            var memberCount = await _botClient.GetChatMemberCountAsync(chatId);
+        var getMemberCount = await _cacheService.GetOrSetAsync
+        (
+            cacheKey, async () => {
+                var memberCount = await _botClient.GetChatMemberCountAsync(chatId);
 
-            return memberCount;
-        });
+                return memberCount;
+            }
+        );
 
         return getMemberCount;
     }
@@ -127,11 +146,15 @@ public class ChatService
     )
     {
         var cacheKey = "chat-member_" + chatId.ReduceChatId() + $"_{userId}";
-        var data = await _cacheService.GetOrSetAsync(cacheKey, async () => {
-            var chat = await _botClient.GetChatMemberAsync(chatId, userId);
 
-            return chat;
-        });
+        var data = await _cacheService.GetOrSetAsync
+        (
+            cacheKey, async () => {
+                var chat = await _botClient.GetChatMemberAsync(chatId, userId);
+
+                return chat;
+            }
+        );
 
         return data;
     }
@@ -174,28 +197,35 @@ public class ChatService
 
         var allSettings = await _settingsService.GetAllSettings();
 
-        Parallel.ForEach(allSettings, (
-            chatSetting,
-            state,
-            args
-        ) => {
-            var chatId = chatSetting.ChatId.ToInt64();
-            var reducedChatId = chatId.ReduceChatId();
+        Parallel.ForEach
+        (
+            allSettings, (
+                chatSetting,
+                state,
+                args
+            ) => {
+                var chatId = chatSetting.ChatId.ToInt64();
+                var reducedChatId = chatId.ReduceChatId();
 
-            var adminCheckerId = AdminCheckerPrefix + "-" + reducedChatId;
+                var adminCheckerId = AdminCheckerPrefix + "-" + reducedChatId;
 
-            if (chatSetting.ChatType != ChatTypeEx.Private)
-            {
-                Log.Debug("Creating Chat Jobs for ChatID '{ChatId}'", chatId);
-                HangfireUtil.RegisterJob(adminCheckerId, (PrivilegeService service) =>
-                    service.AdminCheckerJobAsync(chatId), Cron.Daily, queue: "admin-checker", fireAfterRegister: false);
+                if (chatSetting.ChatType != ChatTypeEx.Private)
+                {
+                    Log.Debug("Creating Chat Jobs for ChatID '{ChatId}'", chatId);
+
+                    HangfireUtil.RegisterJob
+                    (
+                        adminCheckerId, (PrivilegeService service) =>
+                            service.AdminCheckerJobAsync(chatId), Cron.Daily, queue: "admin-checker", fireAfterRegister: false
+                    );
+                }
+                else
+                {
+                    var dateNow = DateTime.UtcNow;
+                    var diffDays = (dateNow - chatSetting.UpdatedAt).TotalDays;
+                    Log.Debug("Last activity days in '{ChatId}' is {DiffDays:N2} days", chatId, diffDays);
+                }
             }
-            else
-            {
-                var dateNow = DateTime.UtcNow;
-                var diffDays = (dateNow - chatSetting.UpdatedAt).TotalDays;
-                Log.Debug("Last activity days in '{ChatId}' is {DiffDays:N2} days", chatId, diffDays);
-            }
-        });
+        );
     }
 }
