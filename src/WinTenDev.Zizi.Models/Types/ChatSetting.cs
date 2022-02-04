@@ -50,15 +50,15 @@ public class ChatSetting
 
     [Column("last_tags_message_id")]
     [JsonProperty("last_tags_message_id")]
-    public string LastTagsMessageId { get; set; }
+    public long LastTagsMessageId { get; set; }
 
     [Column("last_warn_username_message_id")]
     [JsonProperty("last_warn_username_message_id")]
-    public string LastWarnUsernameMessageId { get; set; }
+    public long LastWarnUsernameMessageId { get; set; }
 
     [Column("last_welcome_message_id")]
     [JsonProperty("last_welcome_message_id")]
-    public string LastWelcomeMessageId { get; set; }
+    public long LastWelcomeMessageId { get; set; }
 
     [Column("enable_afk_stat")]
     [JsonProperty("enable_afk_stat")]
