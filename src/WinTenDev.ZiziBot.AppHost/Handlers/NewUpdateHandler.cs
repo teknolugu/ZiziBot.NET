@@ -64,8 +64,8 @@ public class NewUpdateHandler : IUpdateHandler
 
         if (_telegramService.IsUpdateTooOld()) return;
 
-        var floodCheck = await _telegramService.FloodCheck();
-        if (floodCheck.IsFlood) return;
+        // var floodCheck = await _telegramService.FloodCheck();
+        // if (floodCheck.IsFlood) return;
 
         _chatSettings = await _telegramService.GetChatSetting();
 
