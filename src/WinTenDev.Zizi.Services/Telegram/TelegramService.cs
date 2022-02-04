@@ -198,12 +198,12 @@ public class TelegramService
         Log.Warning("I should leave right now!");
         var me = await _botService.GetMeAsync();
 
-        var msgOut = "Untuk mendapatkan pengalaman lingkungan yang lebih stabil, " +
-                     "silakan gunakan @MissZiziBot untuk Grup Anda." +
-                     $"\n<b>{me.GetFullName()}</b> masih tahap pengembangan jadi akses nya dibatasi." +
-                     "\n\nTerima kasih sudah menggunakan layanan ZiziBot!";
+        var sendText = "Untuk mendapatkan pengalaman lingkungan yang lebih stabil, " +
+                       "silakan gunakan @MissZiziBot untuk Grup Anda." +
+                       $"\n<b>{me.GetFullName()}</b> masih tahap pengembangan jadi akses nya dibatasi." +
+                       "\n\nTerima kasih sudah menggunakan layanan ZiziBot!";
 
-        await SendTextMessageAsync(msgOut);
+        await SendTextMessageAsync(sendText, replyToMsgId: 0);
         await LeaveChat(ChatId);
 
         return true;
