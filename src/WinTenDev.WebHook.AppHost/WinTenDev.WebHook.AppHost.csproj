@@ -18,7 +18,7 @@
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="Newtonsoft.Json" Version="13.0.1"/>
-        <PackageReference Include="Roslynator.Analyzers" Version="4.0.0">
+        <PackageReference Include="Roslynator.Analyzers" Version="4.0.2">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
@@ -29,7 +29,7 @@
         <PackageReference Include="Serilog.Sinks.Console" Version="4.0.1"/>
         <PackageReference Include="Serilog.Sinks.File" Version="5.0.0"/>
         <PackageReference Include="SerilogAnalyzer" Version="0.15.0"/>
-        <PackageReference Include="SonarAnalyzer.CSharp" Version="8.34.0.42011">
+        <PackageReference Include="SonarAnalyzer.CSharp" Version="8.35.0.42613">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
@@ -38,10 +38,5 @@
     <ItemGroup>
         <ProjectReference Include="..\WinTenDev.Zizi.Utils\WinTenDev.Zizi.Utils.csproj"/>
     </ItemGroup>
-
-    <ItemGroup>
-        <Compile Remove="Utils\Json\LongToDateTimeOffsetConverter.cs"/>
-    </ItemGroup>
-
 
 </Project>

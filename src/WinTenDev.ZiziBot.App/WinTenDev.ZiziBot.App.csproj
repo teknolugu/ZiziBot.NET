@@ -18,7 +18,7 @@
         </PackageReference>
         <PackageReference Include="morelinq" Version="3.3.2"/>
         <PackageReference Include="Nito.AsyncEx" Version="5.1.2"/>
-        <PackageReference Include="Roslynator.Analyzers" Version="4.0.0">
+        <PackageReference Include="Roslynator.Analyzers" Version="4.0.2">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
@@ -28,7 +28,7 @@
         <PackageReference Include="Serilog.Settings.Configuration" Version="3.3.0"/>
         <PackageReference Include="Serilog.Sinks.Grafana.Loki" Version="7.1.0"/>
         <PackageReference Include="SerilogTimings" Version="2.3.0"/>
-        <PackageReference Include="SonarAnalyzer.CSharp" Version="8.34.0.42011">
+        <PackageReference Include="SonarAnalyzer.CSharp" Version="8.35.0.42613">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>

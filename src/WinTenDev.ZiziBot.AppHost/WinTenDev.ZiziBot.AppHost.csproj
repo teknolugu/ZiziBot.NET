@@ -51,7 +51,7 @@
         <PackageReference Include="MySqlConnector.Logging.Serilog" Version="2.0.0"/>
         <PackageReference Include="Newtonsoft.Json" Version="13.0.1"/>
         <PackageReference Include="Nito.AsyncEx" Version="5.1.2"/>
-        <PackageReference Include="Roslynator.Analyzers" Version="4.0.0">
+        <PackageReference Include="Roslynator.Analyzers" Version="4.0.2">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
@@ -69,7 +69,7 @@
         <PackageReference Include="Serilog.Sinks.File" Version="5.0.0"/>
         <PackageReference Include="Serilog.Sinks.Loggly" Version="5.4.0"/>
         <PackageReference Include="SerilogAnalyzer" Version="0.15.0"/>
-        <PackageReference Include="SonarAnalyzer.CSharp" Version="8.34.0.42011">
+        <PackageReference Include="SonarAnalyzer.CSharp" Version="8.35.0.42613">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
@@ -78,7 +78,7 @@
         <PackageReference Include="System.Data.SQLite.Core" Version="1.0.115.5"/>
         <PackageReference Include="SystemInfoLibrary-devel" Version="1.5.0.25"/>
         <PackageReference Include="Telegram.Bot" Version="17.0.0"/>
-        <PackageReference Include="WTelegramClient" Version="2.0.0"/>
+        <PackageReference Include="WTelegramClient" Version="2.0.1"/>
     </ItemGroup>
     <ItemGroup>
         <None Update="Storage\Buttons\**">
