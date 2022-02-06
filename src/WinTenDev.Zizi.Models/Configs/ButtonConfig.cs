@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using Telegram.Bot.Types.ReplyMarkups;
+using WinTenDev.Zizi.Models.Enums;
 using WinTenDev.Zizi.Models.Types;
 
 namespace WinTenDev.Zizi.Models.Configs;
@@ -16,8 +18,18 @@ public class ButtonItem
 
 public class ButtonData
 {
-    public List<string>? Descriptions { get; set; }
-    public List<string>? Warnings { get; set; }
-    public List<string>? Notes { get; set; }
+    public List<ButtonCaption>? Captions { get; set; }
     public List<List<ButtonMarkup>>? Buttons { get; set; }
+}
+
+public class ButtonCaption
+{
+    public BotEnvironmentLevel MinimumLevel { get; set; }
+    public IEnumerable<string> Sections { get; set; }
+}
+
+public class ButtonParsed
+{
+    public string Caption { get; set; }
+    public InlineKeyboardMarkup Markup { get; set; }
 }
