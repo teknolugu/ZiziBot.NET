@@ -127,11 +127,13 @@ public static class CsvUtil
     /// </summary>
     /// <param name="filePath">The file path.</param>
     /// <param name="hasHeader">If true, has header.</param>
+    /// <param name="headerValidated"></param>
     /// <param name="delimiter">The delimiter.</param>
     /// <returns>A list of TS.</returns>
     public static IEnumerable<T> ReadCsv<T>(
         this string filePath,
         bool hasHeader = true,
+        HeaderValidated headerValidated = null,
         string delimiter = ","
     )
     {
@@ -147,6 +149,7 @@ public static class CsvUtil
             Delimiter = delimiter,
             MissingFieldFound = null,
             BadDataFound = null,
+            HeaderValidated = headerValidated,
             PrepareHeaderForMatch = (header) => header.Header.ToLower()
         };
 
