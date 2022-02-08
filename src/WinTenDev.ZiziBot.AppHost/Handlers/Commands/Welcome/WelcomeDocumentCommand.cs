@@ -13,22 +13,27 @@ public class WelcomeDocumentCommand : CommandBase
     private readonly TelegramService _telegramService;
     private readonly SettingsService _settingsService;
 
-    public WelcomeDocumentCommand(TelegramService telegramService, SettingsService settingsService)
+    public WelcomeDocumentCommand(
+        TelegramService telegramService,
+        SettingsService settingsService
+    )
     {
         _telegramService = telegramService;
         _settingsService = settingsService;
     }
 
-    public override async Task HandleAsync(IUpdateContext context, UpdateDelegate next, string[] args)
+    public override async Task HandleAsync(
+        IUpdateContext context,
+        UpdateDelegate next,
+        string[] args
+    )
     {
         await _telegramService.AddUpdateContext(context);
 
         var msg = _telegramService.Message;
         var chatId = _telegramService.ChatId;
 
-        if (_telegramService.IsPrivateChat) return;
-
-        if (!await _telegramService.CheckFromAdmin()) return;
+        if (!await _telegramService.CheckFromAdminOrAnonymous()) return;
 
         if (msg.ReplyToMessage == null)
         {
@@ -50,8 +55,11 @@ public class WelcomeDocumentCommand : CommandBase
             await _settingsService.UpdateCell(chatId, "welcome_media_type", mediaType);
             Log.Information("Save media success..");
 
-            await _telegramService.EditMessageTextAsync("Welcome Media berhasil di simpan." +
-                                                        "\nKetik /welcome untuk melihat perubahan");
+            await _telegramService.EditMessageTextAsync
+            (
+                "Welcome Media berhasil di simpan." +
+                "\nKetik /welcome untuk melihat perubahan"
+            );
         }
         else
         {

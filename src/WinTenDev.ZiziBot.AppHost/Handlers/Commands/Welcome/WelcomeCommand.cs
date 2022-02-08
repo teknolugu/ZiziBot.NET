@@ -15,37 +15,44 @@ public class WelcomeCommand : CommandBase
     private readonly SettingsService _settingsService;
     private readonly TelegramService _telegramService;
 
-    public WelcomeCommand(TelegramService telegramService, SettingsService settingsService)
+    public WelcomeCommand(
+        TelegramService telegramService,
+        SettingsService settingsService
+    )
     {
         _settingsService = settingsService;
         _telegramService = telegramService;
     }
 
-    public override async Task HandleAsync(IUpdateContext context, UpdateDelegate next, string[] args)
+    public override async Task HandleAsync(
+        IUpdateContext context,
+        UpdateDelegate next,
+        string[] args
+    )
     {
-        var msg = context.Update.Message;
+        await _telegramService.AddUpdateContext(context);
+
         var chatId = _telegramService.ChatId;
+        var chatTitle = _telegramService.ChatTitle;
 
         Log.Information("Args: {V}", string.Join(" ", args));
-        var sendText = "Perintah /welcome hanya untuk grup saja";
 
-        if (_telegramService.IsPrivateChat) return;
+        if (!await _telegramService.CheckFromAdminOrAnonymous()) return;
 
-        if (!await _telegramService.CheckFromAdmin()) return;
-
-        var chatTitle = msg.Chat.Title;
         var settings = await _settingsService.GetSettingsByGroup(chatId);
         var welcomeMessage = settings.WelcomeMessage;
         var welcomeButton = settings.WelcomeButton;
         var welcomeMedia = settings.WelcomeMedia;
         var welcomeMediaType = settings.WelcomeMediaType;
 
-        sendText = $"⚙ Konfigurasi Welcome di <b>{chatTitle}</b>\n\n";
+        var sendText = $"⚙ Konfigurasi Welcome di <b>{chatTitle}</b>\n\n";
+
         if (welcomeMessage.IsNullOrEmpty())
         {
             var defaultWelcome = "Hai {allNewMember}" +
                                  "\nSelamat datang di kontrakan {chatTitle}" +
                                  "\nKamu adalah anggota ke-{memberCount}";
+
             sendText += "Tidak ada konfigurasi pesan welcome, pesan default akan di terapkan" +
                         $"\n\n<code>{defaultWelcome}</code>" +
                         $"\n\nUntuk bantuan silakan ketik /help" +
@@ -56,7 +63,8 @@ public class WelcomeCommand : CommandBase
             sendText += $"<code>{welcomeMessage}</code>";
         }
 
-        InlineKeyboardMarkup keyboard = null;
+        var keyboard = InlineKeyboardMarkup.Empty();
+
         if (!welcomeButton.IsNullOrEmpty())
         {
             keyboard = welcomeButton.ToReplyMarkup(2);

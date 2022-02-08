@@ -15,22 +15,25 @@ public class WelcomeButtonCommand : CommandBase
 
     public WelcomeButtonCommand(
         TelegramService telegramService,
-        SettingsService settingsService)
+        SettingsService settingsService
+    )
     {
         _telegramService = telegramService;
         _settingsService = settingsService;
     }
 
-    public override async Task HandleAsync(IUpdateContext context, UpdateDelegate next, string[] args)
+    public override async Task HandleAsync(
+        IUpdateContext context,
+        UpdateDelegate next,
+        string[] args
+    )
     {
         await _telegramService.AddUpdateContext(context);
 
         var msg = _telegramService.Message;
         var chatId = _telegramService.ChatId;
 
-        if (_telegramService.IsPrivateChat) return;
-
-        if (!await _telegramService.CheckFromAdmin()) return;
+        if (!await _telegramService.CheckFromAdminOrAnonymous()) return;
 
         var columnTarget = $"welcome_button";
         var data = msg.Text.GetTextWithoutCmd();
@@ -50,8 +53,11 @@ public class WelcomeButtonCommand : CommandBase
 
         await _settingsService.UpdateCell(chatId, columnTarget, data);
 
-        await _telegramService.EditMessageTextAsync($"Welcome Button berhasil di simpan!" +
-                                                    $"\nKetik /welcome untuk melihat perubahan");
+        await _telegramService.EditMessageTextAsync
+        (
+            $"Welcome Button berhasil di simpan!" +
+            $"\nKetik /welcome untuk melihat perubahan"
+        );
 
         Log.Information("Success save welcome Button on {ChatId}.", chatId);
     }
