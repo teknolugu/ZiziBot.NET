@@ -379,13 +379,19 @@ public class TelegramService
         return isGroupChat;
     }
 
+    public async Task<bool> CheckFromAdminOrAnonymous()
+    {
+        if (CheckFromAnonymous()) return true;
+
+        return await CheckFromAdmin();
+    }
+
     public async Task<bool> CheckUserPermission()
     {
         if (IsPrivateChat) return true;
         if (CheckFromAnonymous()) return true;
-        if (await CheckFromAdmin()) return true;
 
-        return false;
+        return await CheckFromAdmin();
     }
 
     #endregion Privilege
