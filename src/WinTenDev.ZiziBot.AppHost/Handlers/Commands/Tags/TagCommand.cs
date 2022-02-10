@@ -25,7 +25,11 @@ public class TagCommand : CommandBase
         _tagsService = tagsService;
     }
 
-    public override async Task HandleAsync(IUpdateContext context, UpdateDelegate next, string[] args)
+    public override async Task HandleAsync(
+        IUpdateContext context,
+        UpdateDelegate next,
+        string[] args
+    )
     {
         await _telegramService.AddUpdateContext(context);
 
@@ -39,9 +43,7 @@ public class TagCommand : CommandBase
 
         if (
             !_telegramService.IsFromSudo &&
-            !_telegramService.IsPrivateChat &&
-            !await _telegramService.CheckFromAdmin() &&
-            !_telegramService.CheckFromAnonymous()
+            !await _telegramService.CheckUserPermission()
         )
         {
             await _telegramService.SendTextMessageAsync(sendText);
@@ -100,10 +102,14 @@ public class TagCommand : CommandBase
 
         var isExist = await _tagsService.IsExist(msg.Chat.Id, slugTag);
         Log.Information("Tag isExist: {IsExist}", isExist);
+
         if (isExist)
         {
-            await _telegramService.EditMessageTextAsync("✅ Tag sudah ada. " +
-                                                        "Silakan ganti Tag jika ingin isi konten berbeda");
+            await _telegramService.EditMessageTextAsync
+            (
+                "✅ Tag sudah ada. " +
+                "Silakan ganti Tag jika ingin isi konten berbeda"
+            );
             return;
         }
 
@@ -128,9 +134,12 @@ public class TagCommand : CommandBase
         await _telegramService.EditMessageTextAsync("📝 Menyimpan tag data..");
         await _tagsService.SaveTagAsync(data);
 
-        await _telegramService.EditMessageTextAsync("✅ Tag berhasil di simpan.." +
-                                                    $"\nTag: <code>#{slugTag}</code>" +
-                                                    $"\n\nKetik /tags untuk melihat semua Tag.");
+        await _telegramService.EditMessageTextAsync
+        (
+            "✅ Tag berhasil di simpan.." +
+            $"\nTag: <code>#{slugTag}</code>" +
+            $"\n\nKetik /tags untuk melihat semua Tag."
+        );
 
         await _tagsService.UpdateCacheAsync(chatId);
     }

@@ -12,13 +12,20 @@ public class UntagCommand : CommandBase
     private readonly TagsService _tagsService;
     private readonly TelegramService _telegramService;
 
-    public UntagCommand(TagsService tagsService, TelegramService telegramService)
+    public UntagCommand(
+        TagsService tagsService,
+        TelegramService telegramService
+    )
     {
         _tagsService = tagsService;
         _telegramService = telegramService;
     }
 
-    public override async Task HandleAsync(IUpdateContext context, UpdateDelegate next, string[] args)
+    public override async Task HandleAsync(
+        IUpdateContext context,
+        UpdateDelegate next,
+        string[] args
+    )
     {
         await _telegramService.AddUpdateContext(context);
 
@@ -28,14 +35,17 @@ public class UntagCommand : CommandBase
         var sendText = "Hanya Admin Grup yang dapat menghapus Tag.";
 
         if (
-            !await _telegramService.CheckFromAdmin() &&
             !_telegramService.IsFromSudo &&
-            !_telegramService.IsPrivateChat &&
-            !_telegramService.CheckFromAnonymous()
+            await _telegramService.CheckFromAdminOrAnonymous()
         )
         {
             await _telegramService.SendTextMessageAsync(sendText);
-            Log.Debug("UserId {UserId} don't have privilege for remove tag on ChatId {ChatId}!", fromId, chatId);
+
+            Log.Debug
+            (
+                "UserId {UserId} don't have privilege for remove tag on ChatId {ChatId}!",
+                fromId, chatId
+            );
             return;
         }
 
@@ -47,10 +57,12 @@ public class UntagCommand : CommandBase
 
         await _telegramService.SendTextMessageAsync("Memeriksa..");
         var isExist = await _tagsService.IsExist(chatId, tagVal);
+
         if (isExist)
         {
             Log.Information("Sedang menghapus tag {TagVal}", tagVal);
             var unTag = await _tagsService.DeleteTag(chatId, tagVal);
+
             if (unTag)
             {
                 sendText = $"Hapus tag {tagVal} berhasil";
