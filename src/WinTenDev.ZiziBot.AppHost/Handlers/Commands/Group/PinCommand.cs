@@ -15,7 +15,11 @@ public class PinCommand : CommandBase
         _telegramService = telegramService;
     }
 
-    public override async Task HandleAsync(IUpdateContext context, UpdateDelegate next, string[] args)
+    public override async Task HandleAsync(
+        IUpdateContext context,
+        UpdateDelegate next,
+        string[] args
+    )
     {
         await _telegramService.AddUpdateContext(context);
 
@@ -24,19 +28,21 @@ public class PinCommand : CommandBase
 
         var sendText = "Balas pesan yang akan di pin";
 
-        var isAdmin = await _telegramService.CheckFromAdmin();
-        if (!isAdmin)
+        await _telegramService.DeleteSenderMessageAsync();
+
+        if (!await _telegramService.CheckFromAdminOrAnonymous())
         {
             Log.Warning("Pin message only for Admin on Current Chat");
-            await _telegramService.DeleteAsync(msg.MessageId);
             return;
         }
 
         if (msg.ReplyToMessage != null)
         {
-            await client.PinChatMessageAsync(
-            msg.Chat.Id,
-            msg.ReplyToMessage.MessageId);
+            await client.PinChatMessageAsync
+            (
+                msg.Chat.Id,
+                msg.ReplyToMessage.MessageId
+            );
             return;
         }
 

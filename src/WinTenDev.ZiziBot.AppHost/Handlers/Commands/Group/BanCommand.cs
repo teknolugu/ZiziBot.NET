@@ -19,9 +19,17 @@ public class BanCommand : CommandBase
         _telegramService = telegramService;
     }
 
-    public override async Task HandleAsync(IUpdateContext context, UpdateDelegate next, string[] args)
+    public override async Task HandleAsync(
+        IUpdateContext context,
+        UpdateDelegate next,
+        string[] args
+    )
     {
         await _telegramService.AddUpdateContext(context);
+
+        await _telegramService.DeleteSenderMessageAsync();
+
+        if (!await _telegramService.CheckFromAdminOrAnonymous()) return;
 
         var kickTargets = new List<User>();
 
@@ -43,13 +51,15 @@ public class BanCommand : CommandBase
             }
         }
 
-        await _telegramService.DeleteAsync(msg.MessageId);
+        var containFromId = kickTargets.Where
+        (
+            (
+                user,
+                i
+            ) => user.Id == fromId
+        ).Any();
 
-        var isAdmin = await _telegramService.CheckFromAdmin();
-
-        var containFromId = kickTargets.Where((user, i) => user.Id == fromId).Any();
-
-        if (!containFromId && !isAdmin)
+        if (!containFromId)
         {
             Log.Warning("No privilege for execute this command!");
             return;
