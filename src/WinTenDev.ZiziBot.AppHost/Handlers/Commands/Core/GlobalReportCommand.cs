@@ -16,7 +16,11 @@ public class GlobalReportCommand : CommandBase
         _telegramService = telegramService;
     }
 
-    public override async Task HandleAsync(IUpdateContext context, UpdateDelegate next, string[] args)
+    public override async Task HandleAsync(
+        IUpdateContext context,
+        UpdateDelegate next,
+        string[] args
+    )
     {
         await _telegramService.AddUpdateContext(context);
 
@@ -51,8 +55,8 @@ public class GlobalReportCommand : CommandBase
 
             var mentionAdmin = await _telegramService.GetMentionAdminsStr();
 
-            var isAdmin = await _telegramService.CheckFromAdmin();
-            if (!isAdmin) msgBuild.AppendLine(mentionAdmin);
+            if (!await _telegramService.CheckFromAdminOrAnonymous())
+                msgBuild.AppendLine(mentionAdmin);
 
             var sendText = msgBuild.ToTrimmedString();
             await _telegramService.ForwardMessageAsync(repMsg.MessageId);
