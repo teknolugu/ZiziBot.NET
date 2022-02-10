@@ -21,7 +21,11 @@ public class ResetSettingsCommand : CommandBase
         _settingsService = settingsService;
     }
 
-    public override async Task HandleAsync(IUpdateContext context, UpdateDelegate next, string[] args)
+    public override async Task HandleAsync(
+        IUpdateContext context,
+        UpdateDelegate next,
+        string[] args
+    )
     {
         await _telegramService.AddUpdateContext(context);
 
@@ -29,8 +33,9 @@ public class ResetSettingsCommand : CommandBase
         var chat = _telegramService.Message.Chat;
         var chatId = _telegramService.ChatId;
 
-        var adminOrPrivate = await _telegramService.IsAdminOrPrivateChat();
-        if (!adminOrPrivate)
+        await _telegramService.DeleteSenderMessageAsync();
+
+        if (!await _telegramService.CheckUserPermission())
         {
             Log.Warning("Settings command only for Admin group or Private chat");
             return;
