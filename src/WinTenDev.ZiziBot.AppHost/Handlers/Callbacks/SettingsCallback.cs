@@ -16,7 +16,10 @@ public class SettingsCallback
     private readonly SettingsService _settingsService;
     private readonly CallbackQuery _callbackQuery;
 
-    public SettingsCallback(TelegramService telegramService, SettingsService settingsService)
+    public SettingsCallback(
+        TelegramService telegramService,
+        SettingsService settingsService
+    )
     {
         _telegramService = telegramService;
         _settingsService = settingsService;
@@ -32,8 +35,7 @@ public class SettingsCallback
         var fromId = _callbackQuery.From.Id;
         var msgId = _callbackQuery.Message.MessageId;
 
-        var isAdmin = await _telegramService.CheckFromAdmin();
-        if (!isAdmin)
+        if (!await _telegramService.CheckFromAdminOrAnonymous())
         {
             Log.Information("He is not admin.");
             return false;
@@ -52,8 +54,12 @@ public class SettingsCallback
 
         var columnTarget = "enable" + keyParamStr;
         var newValue = currentVal == 0 ? 1 : 0;
-        Log.Information("Column: {ColumnTarget}, Value: {CurrentVal}, NewValue: {NewValue}",
-        columnTarget, currentVal, newValue);
+
+        Log.Information
+        (
+            "Column: {ColumnTarget}, Value: {CurrentVal}, NewValue: {NewValue}",
+            columnTarget, currentVal, newValue
+        );
 
         var data = new Dictionary<string, object>()
         {
