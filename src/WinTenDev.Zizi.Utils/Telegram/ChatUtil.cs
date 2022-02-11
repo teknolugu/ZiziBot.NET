@@ -88,4 +88,35 @@ public static class ChatUtil
         Log.Debug("ChatNameLink: {Link}", chatNameLink);
         return chatNameLink;
     }
+
+    public static string ToAdminListStr(this ChatMember[] chatMembers)
+    {
+        var creatorStr = string.Empty;
+        var sbAdmin = new StringBuilder();
+
+        var number = 1;
+
+        foreach (var admin in chatMembers)
+        {
+            var user = admin.User;
+            var nameLink = user.GetNameLink();
+
+            if (admin.Status == ChatMemberStatus.Creator)
+            {
+                creatorStr = nameLink;
+            }
+            else
+            {
+                sbAdmin.Append(number++).Append(". ").AppendLine(nameLink);
+            }
+        }
+
+        var adminList = $"👤 <b>Creator</b>" +
+                        $"\n└ {creatorStr}" +
+                        $"\n" +
+                        $"\n👥️ <b>Administrators</b>" +
+                        $"\n{sbAdmin.ToTrimmedString()}";
+
+        return adminList;
+    }
 }
