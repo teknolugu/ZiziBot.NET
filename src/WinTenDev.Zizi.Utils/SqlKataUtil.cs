@@ -73,4 +73,31 @@ public static class SqlKataUtil
         var query = await queryFactory.SelectAsync<T>(sql);
         return query;
     }
+
+    public static async Task<int> DeleteDuplicateAsync(
+        this QueryFactory queryFactory,
+        string tableName,
+        string key,
+        params string[] shouldUniques
+    )
+    {
+        var uniqueStr = shouldUniques.JoinStr(",");
+
+        var sql = $@"DELETE
+                        FROM {tableName}
+                        WHERE {key} IN (SELECT MAX({key})
+                        FROM {tableName}
+                        GROUP BY {uniqueStr}
+                        HAVING COUNT(*) > 1);";
+
+        var query = await queryFactory.RunSqlAsync(sql);
+
+        Log.Debug
+        (
+            "Delete duplicate table {TableName} finish. Affected: {Item} item(s)",
+            tableName, query
+        );
+
+        return query;
+    }
 }

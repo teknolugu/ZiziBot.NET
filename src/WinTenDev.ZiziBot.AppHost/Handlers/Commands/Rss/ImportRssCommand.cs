@@ -33,11 +33,11 @@ public class ImportRssCommand : CommandBase
 
         var msg = _telegramService.Message;
         var msgId = msg.MessageId;
-        var chatId = msg.Chat.Id;
+        var chatId = _telegramService.ChatId;
+        var fromId = _telegramService.FromId;
         var dateDate = DateTime.UtcNow.ToString("yyyy-MM-dd");
 
-        var checkUserPermission = await _telegramService.CheckUserPermission();
-        if (!checkUserPermission)
+        if (!await _telegramService.CheckUserPermission())
         {
             var send = "Maaf, hanya Admin yang dapat mengimport daftar RSS";
             await _telegramService.SendTextMessageAsync(send);
@@ -45,27 +45,39 @@ public class ImportRssCommand : CommandBase
         }
 
         await _telegramService.AppendTextAsync("Sedang mempersiapkan");
-        var filePath = $"{chatId}/rss-feed_{dateDate}_{msgId}.txt";
+        var filePath = $"{chatId}/rss-feed_{dateDate}_{msgId}";
         filePath = await _telegramService.DownloadFileAsync(filePath);
 
         await _telegramService.AppendTextAsync("Sedang membuka berkas");
         var rssLists = await File.ReadAllLinesAsync(filePath);
+
         foreach (var rssList in rssLists)
         {
             Log.Information("Importing {RssList}", rssList);
+
             var data = new Dictionary<string, object>()
             {
                 { "url_feed", rssList },
-                { "chat_id", _telegramService.Message.Chat.Id },
-                { "from_id", _telegramService.Message.From.Id }
+                { "chat_id", chatId },
+                { "from_id", fromId }
             };
 
             await _rssService.SaveRssSettingAsync(data);
         }
 
         await _telegramService.AppendTextAsync($"Memeriksa RSS duplikat");
-        await _rssService.DeleteDuplicateAsync();
+        var dedupe = await _rssService.DeleteDuplicateAsync();
 
-        await _telegramService.AppendTextAsync($"{rssLists.Length} RSS berhasil di import");
+        var importCount = rssLists.Length;
+
+        if (dedupe != importCount)
+        {
+            var diff = importCount - dedupe;
+            await _telegramService.AppendTextAsync($"{diff} RSS berhasil di import");
+        }
+        else
+        {
+            await _telegramService.AppendTextAsync($"RSS telah di import");
+        }
     }
 }

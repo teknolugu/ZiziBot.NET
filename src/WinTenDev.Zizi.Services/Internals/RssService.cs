@@ -179,8 +179,11 @@ public class RssService
         Log.Information("About {RowItems} RSS History deleted", rowsItems);
     }
 
-    public async Task DeleteDuplicateAsync()
+    public async Task<int> DeleteDuplicateAsync()
     {
-        await Task.CompletedTask;
+        var query = await _queryService.CreateMySqlFactory()
+            .DeleteDuplicateAsync(RSSSettingTable, "id", "chat_id", "url_feed");
+
+        return query;
     }
 }
