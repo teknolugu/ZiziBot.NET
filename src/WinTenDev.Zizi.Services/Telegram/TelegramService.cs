@@ -411,7 +411,7 @@ public class TelegramService
 
         if (pendingCount != pendingLimit)
         {
-            await SendEventCoreAsync($"Pending Count larger than {pendingLimit}", repToMsgId: 0);
+            await SendEventLogCoreAsync($"Pending Count larger than {pendingLimit}", repToMsgId: 0);
         }
         else
         {
@@ -481,36 +481,53 @@ public class TelegramService
 
     #region EventLog
 
-    public async Task SendEventAsync(
-        string text = "N/A",
-        int repToMsgId = -1
-    )
+    private async Task<List<long>> GetEventLogTargets()
     {
-        Log.Information("Sending Event to Global and Local..");
         var currentSetting = await GetChatSetting();
 
         var globalLogTarget = _eventLogConfig.ChannelId;
         var chatLogTarget = currentSetting.EventLogChatId;
 
-        var listLogTarget = new List<long>();
-
-        if (globalLogTarget != -1) listLogTarget.Add(globalLogTarget);
-        if (chatLogTarget != 0) listLogTarget.Add(chatLogTarget);
-        Log.Debug("Channel Targets: {ListLogTarget}", listLogTarget);
-
-        foreach (var chatId in listLogTarget)
+        var eventLogTargets = new List<long>()
         {
-            await SendEventCoreAsync
+            globalLogTarget,
+            chatLogTarget
+        };
+
+        Log.Debug("Channel Targets: {ListLogTarget}", eventLogTargets);
+
+        return eventLogTargets;
+    }
+
+    public async Task SendEventLogAsync(
+        string text = "N/A",
+        bool withForward = false
+    )
+    {
+        Log.Information("Preparing send EventLog");
+
+        var eventLogTargets = await GetEventLogTargets();
+
+        foreach (var chatId in eventLogTargets)
+        {
+            Message forwardMessage = new();
+
+            if (withForward)
+            {
+                forwardMessage = await ForwardMessageAsync(toChatId: chatId);
+            }
+
+            await SendEventLogCoreAsync
             (
                 additionalText: text,
                 customChatId: chatId,
                 disableWebPreview: true,
-                repToMsgId: repToMsgId
+                repToMsgId: forwardMessage.MessageId
             );
         }
     }
 
-    public async Task SendEventCoreAsync(
+    public async Task SendEventLogCoreAsync(
         string additionalText = "N/A",
         long customChatId = 0,
         bool disableWebPreview = false,
@@ -519,14 +536,15 @@ public class TelegramService
     {
         var message = MessageOrEdited;
         var fromNameLink = From.GetNameLink();
-        var msgLink = message.GetMessageLink();
+        var chatNameLink = Chat.GetChatNameLink();
+        var messageLink = message.GetMessageLink();
 
         var sendLog = "🐾 <b>EventLog Preview</b>" +
-                      $"\nGroup: <code>{ChatId}</code> - {ChatTitle}" +
-                      $"\nFrom: <code>{FromId}</code> - {fromNameLink}" +
-                      $"\n<a href='{msgLink}'>Go to Message</a>" +
+                      $"\n<b>Chat:</b> <code>{ReducedChatId}</code> - {chatNameLink}" +
+                      $"\n<b>User:</b> <code>{FromId}</code> - {fromNameLink}" +
+                      $"\n<a href='{messageLink}'>Go to Message</a>" +
                       $"\nNote: {additionalText}" +
-                      $"\n\n#{message.Type} => #ID{ReducedChatId}";
+                      $"\n#{MessageOrEdited.Type} #U{FromId} #C{ReducedChatId}";
 
         await SendTextMessageAsync
         (
