@@ -15,17 +15,19 @@ public class OutCommand : CommandBase
         _telegramService = telegramService;
     }
 
-    public override async Task HandleAsync(IUpdateContext context, UpdateDelegate next, string[] args)
+    public override async Task HandleAsync(
+        IUpdateContext context,
+        UpdateDelegate next,
+        string[] args
+    )
     {
         await _telegramService.AddUpdateContext(context);
 
-        var msg = context.Update.Message;
         var partsMsg = _telegramService.MessageTextParts;
 
-        if (!_telegramService.IsFromSudo)
-        {
-            return;
-        }
+        await _telegramService.DeleteSenderMessageAsync();
+
+        if (!_telegramService.IsFromSudo) return;
 
         var sendText = "Maaf, saya harus keluar";
 

@@ -1,8 +1,8 @@
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Telegram.Bot.Framework.Abstractions;
 using WinTenDev.Zizi.Services.Telegram;
-using WinTenDev.Zizi.Utils;
 
 namespace WinTenDev.ZiziBot.AppHost.Handlers.Commands.Core;
 
@@ -20,14 +20,20 @@ public class BotCommand : CommandBase
         _applicationLifetime = applicationLifetime;
     }
 
-    public override async Task HandleAsync(IUpdateContext context, UpdateDelegate next, string[] args)
+    public override async Task HandleAsync(
+        IUpdateContext context,
+        UpdateDelegate next,
+        string[] args
+    )
     {
         await _telegramService.AddUpdateContext(context);
 
-        var isSudoer = _telegramService.IsFromSudo;
-        if (!isSudoer) return;
+        await _telegramService.DeleteSenderMessageAsync();
 
-        var param1 = _telegramService.MessageTextParts.ValueOfIndex(1);
+        if (!_telegramService.IsFromSudo) return;
+
+        var param1 = _telegramService.MessageTextParts.ElementAtOrDefault(1);
+
         switch (param1)
         {
             case "shutdown":

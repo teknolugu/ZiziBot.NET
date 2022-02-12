@@ -29,13 +29,9 @@ public class BackupDbCommand : CommandBase
     {
         await _telegramService.AddUpdateContext(context);
 
-        var isSudoer = _telegramService.IsFromSudo;
+        await _telegramService.DeleteSenderMessageAsync();
 
-        if (!isSudoer)
-        {
-            await _telegramService.DeleteSenderMessageAsync();
-            return;
-        }
+        if (!_telegramService.IsFromSudo) return;
 
         ExecuteBackupDb().InBackground();
     }
