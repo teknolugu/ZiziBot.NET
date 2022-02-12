@@ -1,6 +1,8 @@
 ﻿using System.Linq;
+using System.Text;
 using Serilog;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 
 namespace WinTenDev.Zizi.Utils.Telegram;
 
