@@ -11,14 +11,17 @@ namespace WinTenDev.ZiziBot.AppHost.Handlers.Commands.Group;
 
 public class AfkCommand : CommandBase
 {
+    private readonly SettingsService _settingsService;
     private readonly AfkService _afkService;
     private readonly TelegramService _telegramService;
 
     public AfkCommand(
+        SettingsService settingsService,
         TelegramService telegramService,
         AfkService afkService
     )
     {
+        _settingsService = settingsService;
         _afkService = afkService;
         _telegramService = telegramService;
     }
@@ -40,6 +43,14 @@ public class AfkCommand : CommandBase
             _telegramService.CheckSenderChannel())
         {
             await _telegramService.SendTextMessageAsync("Mode AFK dimatikan untuk Pengguna Anonymous");
+            return;
+        }
+
+        var settings = await _settingsService.GetSettingsByGroup(chatId);
+
+        if (!settings.EnableAfkStatus)
+        {
+            await _telegramService.DeleteSenderMessageAsync();
             return;
         }
 

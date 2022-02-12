@@ -23,7 +23,7 @@ public class CreateTableChatSettings : Migration
             .WithColumn("event_log_chat_id").AsInt64().WithDefaultValue(0)
             .WithColumn("is_admin").AsBoolean().WithDefaultValue(0)
             .WithColumn("enable_bot").AsBoolean().WithDefaultValue(1)
-            .WithColumn("enable_afk_stats").AsBoolean().WithDefaultValue(1)
+            .WithColumn("enable_afk_status").AsBoolean().WithDefaultValue(1)
             .WithColumn("enable_anti_malfiles").AsBoolean().WithDefaultValue(1)
             .WithColumn("enable_badword_filter").AsBoolean().WithDefaultValue(1)
             .WithColumn("enable_fed_cas_ban").AsBoolean().WithDefaultValue(1)

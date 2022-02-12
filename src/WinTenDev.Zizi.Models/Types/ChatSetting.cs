@@ -60,9 +60,9 @@ public class ChatSetting
     [JsonProperty("last_welcome_message_id")]
     public long LastWelcomeMessageId { get; set; }
 
-    [Column("enable_afk_stat")]
-    [JsonProperty("enable_afk_stat")]
-    public bool EnableAfkStat { get; set; } = true;
+    [Column("enable_afk_status")]
+    [JsonProperty("enable_afk_status")]
+    public bool EnableAfkStatus { get; set; } = true;
 
     [Column("enable_global_ban")]
     [JsonProperty("enable_global_ban")]

@@ -135,6 +135,7 @@ public class SettingsService
         var selectColumns = new[]
         {
             "id",
+            "enable_afk_status",
             "enable_anti_malfiles",
             "enable_fed_cas_ban",
             "enable_fed_es2_ban",

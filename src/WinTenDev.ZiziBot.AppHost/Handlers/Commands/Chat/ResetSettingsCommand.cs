@@ -49,7 +49,7 @@ public class ResetSettingsCommand : CommandBase
         {
             ["chat_id"] = chat.Id,
             ["chat_title"] = chat.Title,
-            ["enable_afk_stats"] = 1,
+            ["enable_afk_status"] = 1,
             ["enable_anti_malfiles"] = 1,
             ["enable_fed_cas_ban"] = 1,
             ["enable_fed_es2_ban"] = 1,
