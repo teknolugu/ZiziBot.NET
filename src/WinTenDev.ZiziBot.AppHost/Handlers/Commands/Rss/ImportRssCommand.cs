@@ -12,14 +12,17 @@ namespace WinTenDev.ZiziBot.AppHost.Handlers.Commands.Rss;
 public class ImportRssCommand : CommandBase
 {
     private readonly RssService _rssService;
+    private readonly RssFeedService _rssFeedService;
     private readonly TelegramService _telegramService;
 
     public ImportRssCommand(
         TelegramService telegramService,
-        RssService rssService
+        RssService rssService,
+        RssFeedService rssFeedService
     )
     {
         _rssService = rssService;
+        _rssFeedService = rssFeedService;
         _telegramService = telegramService;
     }
 
@@ -67,6 +70,9 @@ public class ImportRssCommand : CommandBase
 
         await _telegramService.AppendTextAsync($"Memeriksa RSS duplikat");
         var dedupe = await _rssService.DeleteDuplicateAsync();
+
+        await _telegramService.AppendTextAsync("Memastikan RSS Scheduler berjalan");
+        _rssFeedService.ReRegisterRssFeedByChatId(chatId);
 
         var importCount = rssLists.Length;
 
