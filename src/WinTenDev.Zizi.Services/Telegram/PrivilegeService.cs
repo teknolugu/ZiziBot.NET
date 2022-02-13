@@ -92,12 +92,10 @@ public class PrivilegeService
     /// <returns></returns>
     public async Task<ChatMember[]> GetChatAdministratorsAsync(long chatId)
     {
-        var cacheKey = "chat-admin_" + chatId.ReduceChatId();
-
         var administrators = await _cacheService.GetOrSetAsync
         (
-            cacheKey,
-            async () =>
+            cacheKey: "chat-admin_" + chatId.ReduceChatId(),
+            action: async () =>
                 await _botClient.GetChatAdministratorsAsync(chatId)
         );
 
@@ -108,8 +106,8 @@ public class PrivilegeService
     {
         var adminParticipants = await _cacheService.GetOrSetAsync
         (
-            "admin-tg-api",
-            async () => {
+            cacheKey: "admin-tg-api_" + chatId.ReduceChatId(),
+            action: async () => {
                 var adminParticipants = await _wTelegramApiService.GetChatAdministratorsCore(chatId);
 
                 return adminParticipants;
