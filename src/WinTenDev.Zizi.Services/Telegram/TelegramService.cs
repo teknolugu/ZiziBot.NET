@@ -302,7 +302,7 @@ public class TelegramService
 
     #region Privilege
 
-    public bool CheckFromSudoer()
+    private bool CheckFromSudoer()
     {
         return _privilegeService.IsFromSudo(FromId);
     }
@@ -502,9 +502,13 @@ public class TelegramService
             chatLogTarget
         };
 
-        Log.Debug("Channel Targets: {ListLogTarget}", eventLogTargets);
+        var filteredTargets = eventLogTargets
+            .Where(x => x < 0)
+            .ToList();
 
-        return eventLogTargets;
+        Log.Debug("List Channel Targets: {ListLogTarget}", filteredTargets);
+
+        return filteredTargets;
     }
 
     public async Task SendEventLogAsync(
@@ -920,13 +924,17 @@ public class TelegramService
         }
     }
 
-    public async Task ForwardMessageAsync(int messageId = -1)
+    public async Task<Message> ForwardMessageAsync(
+        int messageId = -1,
+        long toChatId = -1
+    )
     {
-        var fromChatId = Message.Chat.Id;
-        var msgId = Message.MessageId;
-        if (messageId != -1) msgId = messageId;
-        var chatId = _commonConfig.ChannelLogs;
-        await Client.ForwardMessageAsync(chatId, fromChatId, msgId);
+        if (toChatId == -1) toChatId = _eventLogConfig.ChannelId;
+        if (messageId == -1) messageId = MessageOrEdited.MessageId;
+
+        var forwardMessage = await Client.ForwardMessageAsync(toChatId, ChatId, messageId);
+
+        return forwardMessage;
     }
 
     public async Task AnswerCallbackQueryAsync(
