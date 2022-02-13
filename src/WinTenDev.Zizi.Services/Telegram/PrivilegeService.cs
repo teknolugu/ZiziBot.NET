@@ -12,6 +12,7 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using WinTenDev.Zizi.Models.Configs;
+using WinTenDev.Zizi.Models.Telegram;
 using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Utils;
 using WinTenDev.Zizi.Utils.Telegram;
@@ -30,6 +31,7 @@ public class PrivilegeService
     private readonly ChatService _chatService;
     private readonly SettingsService _settingsService;
     private readonly TelegramBotClient _botClient;
+    private readonly WTelegramApiService _wTelegramApiService;
     private readonly RestrictionConfig _restrictionConfig;
 
     /// <summary>
@@ -49,7 +51,8 @@ public class PrivilegeService
         BotService botService,
         ChatService chatService,
         SettingsService settingsService,
-        TelegramBotClient botClient
+        TelegramBotClient botClient,
+        WTelegramApiService wTelegramApiService
     )
     {
         _logger = logger;
@@ -58,6 +61,7 @@ public class PrivilegeService
         _chatService = chatService;
         _settingsService = settingsService;
         _botClient = botClient;
+        _wTelegramApiService = wTelegramApiService;
         _restrictionConfig = restrictionConfig.Value;
     }
 
@@ -70,6 +74,7 @@ public class PrivilegeService
     {
         bool isSudo = false;
         var sudoers = _restrictionConfig.Sudoers;
+
         if (sudoers != null)
         {
             isSudo = sudoers.Contains(userId.ToString());
@@ -88,10 +93,30 @@ public class PrivilegeService
     public async Task<ChatMember[]> GetChatAdministratorsAsync(long chatId)
     {
         var cacheKey = "chat-admin_" + chatId.ReduceChatId();
-        var administrators = await _cacheService.GetOrSetAsync(cacheKey, async () =>
-            await _botClient.GetChatAdministratorsAsync(chatId));
+
+        var administrators = await _cacheService.GetOrSetAsync
+        (
+            cacheKey,
+            async () =>
+                await _botClient.GetChatAdministratorsAsync(chatId)
+        );
 
         return administrators;
+    }
+
+    public async Task<ChannelParticipants> GetChatAdministratorsTgApiAsync(long chatId)
+    {
+        var adminParticipants = await _cacheService.GetOrSetAsync
+        (
+            "admin-tg-api",
+            async () => {
+                var adminParticipants = await _wTelegramApiService.GetChatAdministratorsCore(chatId);
+
+                return adminParticipants;
+            }
+        );
+
+        return adminParticipants;
     }
 
     /// <summary>
@@ -160,17 +185,21 @@ public class PrivilegeService
             }
 
             Log.Debug("Doing leave chat from {ChatId}", chatId);
+
             var msgLeave = "Sepertinya saya bukan admin di grup ini, saya akan meninggalkan grup. Sampai jumpa!" +
                            "\n\nTerima kasih sudah menggunakan @MissZiziBot, silakan undang saya kembali jika diperlukan.";
 
-            var inlineKeyboard = new InlineKeyboardMarkup(new[]
-            {
+            var inlineKeyboard = new InlineKeyboardMarkup
+            (
                 new[]
                 {
-                    InlineKeyboardButton.WithUrl("👥 Dukungan Grup", "https://t.me/WinTenDev")
-                    // InlineKeyboardButton.WithUrl("↖️ Tambahkan ke Grup", urlAddTo)
+                    new[]
+                    {
+                        InlineKeyboardButton.WithUrl("👥 Dukungan Grup", "https://t.me/WinTenDev")
+                        // InlineKeyboardButton.WithUrl("↖️ Tambahkan ke Grup", urlAddTo)
+                    }
                 }
-            });
+            );
 
             await _botClient.SendTextMessageAsync(chatId, msgLeave, ParseMode.Html, replyMarkup: inlineKeyboard);
             await _botClient.LeaveChatAsync(chatId);
@@ -186,6 +215,7 @@ public class PrivilegeService
             var setting = await _settingsService.GetSettingsByGroupCore(chatId);
 
             var exMessage = requestException.Message.ToLower();
+
             if (exMessage.IsContains("forbidden"))
             {
                 var dateNow = DateTime.UtcNow;

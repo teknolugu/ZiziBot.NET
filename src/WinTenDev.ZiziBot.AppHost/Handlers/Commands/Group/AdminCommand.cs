@@ -27,7 +27,7 @@ public class AdminCommand : CommandBase
             return;
         }
 
-        await _telegramService.SendTextMessageAsync("🍽 Loading..");
+        await _telegramService.SendTextMessageAsync("🔄 Sedang mengambil data..");
 
         var sendText = await _telegramService.GetChatAdminList();
 

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Hangfire;
@@ -259,10 +258,19 @@ public class TelegramService
 
     public async Task<string> GetChatAdminList()
     {
-        var adminList = await GetChatAdmin();
-        var adminListStr = adminList.ToAdminListStr();
+        if (Chat.Username != null)
+        {
+            var channelParticipants = await _privilegeService.GetChatAdministratorsTgApiAsync(ChatId);
+            var adminListStr = channelParticipants.ToAdminListStr();
 
-        return adminListStr;
+            return adminListStr;
+        }
+        else
+        {
+            var adminList = await GetChatAdmin();
+            var adminListStr = adminList.ToAdminListStr();
+            return adminListStr;
+        }
     }
 
     [Obsolete("Please use separated method IsAdminAsync() and property IsPrivateChat instead of this method")]

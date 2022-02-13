@@ -44,6 +44,19 @@ public static class MemberUtil
         return (firstName + " " + lastName).Trim();
     }
 
+    public static string GetFullName(this TL.User user)
+    {
+        var firstName = user.first_name;
+        var lastName = user.last_name;
+
+        return (firstName + " " + lastName).Trim();
+    }
+
+    public static string GetNameLink(this TL.User user)
+    {
+        return $"<a href='tg://user?id={user.id}'>{user.GetFullName()}</a>";
+    }
+
     public static string GetFromNameLink(this Message message)
     {
         var fromId = message.From.Id;

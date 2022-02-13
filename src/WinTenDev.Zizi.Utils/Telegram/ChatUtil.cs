@@ -3,6 +3,7 @@ using System.Text;
 using Serilog;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using WinTenDev.Zizi.Models.Telegram;
 
 namespace WinTenDev.Zizi.Utils.Telegram;
 
@@ -85,7 +86,22 @@ public static class ChatUtil
     {
         if (chatUsername.IsNullOrEmpty()) return chatTitle;
 
-        var chatNameLink = $"<a href=\"{chatUsername.GetChatLink()}\">{chatTitle}</a>";
+        var chatLink = chatUsername.GetChatLink();
+        var chatNameLink = $"<a href=\"{chatLink}\">{chatTitle}</a>";
+
+        Log.Debug("ChatNameLink: {Link}", chatNameLink);
+        return chatNameLink;
+    }
+
+    public static string GetChatNameLink(
+        this Chat chat
+    )
+    {
+        var chatUsername = chat.Username;
+        var chatTitle = chat.Title;
+        var chatLink = chatUsername.GetChatLink();
+
+        var chatNameLink = $"<a href=\"{chatLink}\">{chatTitle}</a>";
 
         Log.Debug("ChatNameLink: {Link}", chatNameLink);
         return chatNameLink;
@@ -120,5 +136,37 @@ public static class ChatUtil
                         $"\n{sbAdmin.ToTrimmedString()}";
 
         return adminList;
+    }
+
+    public static string ToAdminListStr(this ChannelParticipants channelParticipants)
+    {
+        var creator = channelParticipants.ParticipantCreator.users
+            .Select(x => x.Value)
+            .Select(x => x.GetNameLink())
+            .JoinStr("\n");
+
+        var adminList = channelParticipants.ParticipantAdmin.users
+            .Select(x => x.Value)
+            .OrderBy(orderBy => orderBy.GetFullName().RemoveWhitespace())
+            .Select
+            (
+                (
+                    user,
+                    index
+                ) => {
+                    var botStr = user.bot_info_version == 0 ? string.Empty : "🤖";
+                    var nameLink = user.GetNameLink();
+
+                    return $"{index + 1}. {nameLink} {botStr}";
+                }
+            )
+            .JoinStr("\n");
+
+        var adminAll = "👤 <b>Creator</b>" +
+                       $"\n└ {creator}" +
+                       "\n\n👥 <b>Administrators</b>" +
+                       $"\n{adminList}";
+
+        return adminAll;
     }
 }
