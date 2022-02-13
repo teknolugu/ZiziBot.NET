@@ -90,6 +90,7 @@ public static class StringUtil
             str, @"[\x00'""\b\n\r\t\cZ\\%_]",
             delegate(Match match) {
                 var v = match.Value;
+
                 switch (v)
                 {
                     case "\x00":// ASCII NUL (0x00) character
@@ -284,6 +285,7 @@ public static class StringUtil
     public static string GenerateUniqueId(int lengthId = 11)
     {
         var builder = new StringBuilder();
+
         Enumerable
             .Range(65, 26)
             .Select(e => ((char) e).ToString())
@@ -304,9 +306,22 @@ public static class StringUtil
         return sb.ToString().Trim();
     }
 
+    public static string RemoveWhitespace(this string input)
+    {
+        if (input == null) return string.Empty;
+
+        return new string
+        (
+            input.ToCharArray()
+                .Where(c => !char.IsWhiteSpace(c))
+                .ToArray()
+        );
+    }
+
     public static int WordsCount(this string line)
     {
         var wordCount = 0;
+
         for (var i = 0; i < line.Length; i++)
             if (line[i] == ' ' || i == line.Length - 1)
                 wordCount++;
@@ -320,6 +335,7 @@ public static class StringUtil
     {
         if (s == null)
             throw new ArgumentNullException(nameof(s));
+
         if (partLength <= 0)
             throw new ArgumentException("Part length has to be positive.", nameof(partLength));
 
@@ -333,6 +349,7 @@ public static class StringUtil
         var upperStrCount = text.Count(c => char.IsUpper(c));
         var lowerStrCount = text.Count(c => char.IsLower(c));
         var alphaNumStrCount = text.CleanExceptAlphaNumeric().Length;
+
         var alphaNumNoSpaceStrCount = text.CleanExceptAlphaNumeric()
             .Replace(" ", "").Length;
 
