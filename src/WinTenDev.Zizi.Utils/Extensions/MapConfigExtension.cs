@@ -103,6 +103,7 @@ public static class MapConfigExtension
         services.Configure<HangfireConfig>(config.GetSection(nameof(HangfireConfig)));
         services.Configure<SentryConfig>(config.GetSection(nameof(SentryConfig)));
         services.Configure<TdLibConfig>(config.GetSection(nameof(TdLibConfig)));
+        services.Configure<TgBotConfig>(config.GetSection(nameof(TgBotConfig)));
         services.Configure<SpamWatchConfig>(config.GetSection(nameof(SpamWatchConfig)));
         services.Configure<UptoboxConfig>(config.GetSection(nameof(UptoboxConfig)));
         services.Configure<RestrictionConfig>(config.GetSection(nameof(RestrictionConfig)));

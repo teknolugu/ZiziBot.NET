@@ -24,7 +24,7 @@ public class Startup
 
     public void ConfigureServices(IServiceCollection services)
     {
-        services.AddZiziBot();
+        services.AddTelegramBot();
         services.MappingAppSettings();
         services.AddMappingConfiguration();
 
@@ -61,7 +61,7 @@ public class Startup
         IWebHostEnvironment env
     )
     {
-        app.AboutApp();
+        app.PrintAboutApp();
 
         app.UseFluentMigration();
         app.ConfigureNewtonsoftJson();
@@ -76,9 +76,7 @@ public class Startup
         app.UseSentryTracing();
         app.UseExceptionless();
 
-        // app.UseLocalTunnel("zizibot-dev");
-
-        app.RunZiziBot();
+        app.RunTelegramBot();
 
         app.UseHangfireDashboardAndServer();
 
