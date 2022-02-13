@@ -267,7 +267,7 @@ public class NewUpdateHandler : IUpdateHandler
 
             var message = _telegramService.MessageOrEdited;
 
-            if (!_chatSettings.EnableAfkStat)
+            if (!_chatSettings.EnableAfkStatus)
             {
                 _logger.LogInformation("Afk Stat is disabled in this Group!");
                 return;
@@ -283,6 +283,7 @@ public class NewUpdateHandler : IUpdateHandler
                 var repFromId = repMsg.From.Id;
 
                 var isAfkReply = await _afkService.GetAfkById(repFromId);
+
                 if (isAfkReply == null)
                 {
                     _logger.LogDebug("No AFK data for '{FromId}' because never recorded as AFK", repFromId);
@@ -297,6 +298,7 @@ public class NewUpdateHandler : IUpdateHandler
             }
 
             var fromAfk = await _afkService.GetAfkById(_fromId);
+
             if (fromAfk == null)
             {
                 _logger.LogDebug("No AFK data for '{FromId}' because never recorded as AFK", _fromId);
