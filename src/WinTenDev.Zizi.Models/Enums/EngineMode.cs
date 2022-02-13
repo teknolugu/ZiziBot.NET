@@ -8,7 +8,7 @@ public enum EngineMode
     /// <summary>
     /// Bot will running as Polling in Development, and running as WebHook in Production
     /// </summary>
-    FollowHost,
+    Environment,
 
     /// <summary>
     /// Bot will running as Polling
