@@ -206,6 +206,7 @@ public class NewUpdateHandler : IUpdateHandler
             if (message == null) return false;
 
             var messageId = message.MessageId;
+
             if (!_chatSettings.EnableWordFilterGroupWide)
             {
                 _logger.LogDebug("Word Filter on {ChatId} is disabled!", _chatId);
@@ -213,6 +214,7 @@ public class NewUpdateHandler : IUpdateHandler
             }
 
             var text = _telegramService.MessageOrEditedText ?? _telegramService.MessageOrEditedCaption;
+
             if (text.IsNullOrEmpty())
             {
                 _logger.LogInformation("No Text at MessageId {MessageId} for scan..", messageId);
@@ -239,7 +241,7 @@ public class NewUpdateHandler : IUpdateHandler
             {
                 _logger.LogDebug("Result: {V}", result.ToJson(true));
                 var note = "Pesan di Obrolan di hapus karena terdeteksi filter Kata.\n" + result.Notes;
-                await _telegramService.SendEventAsync(note);
+                await _telegramService.SendEventLogAsync(note, withForward: true);
 
                 await _telegramService.DeleteAsync(messageId);
             }
