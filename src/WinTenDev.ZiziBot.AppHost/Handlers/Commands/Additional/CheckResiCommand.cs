@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Serilog;
@@ -13,49 +14,70 @@ public class CheckResiCommand : CommandBase
 {
     private readonly TelegramService _telegramService;
     private readonly CekResiService _cekResiService;
+    private readonly FeatureService _featureService;
 
     public CheckResiCommand(
         CekResiService cekResiService,
+        FeatureService featureService,
         TelegramService telegramService
     )
     {
         _cekResiService = cekResiService;
+        _featureService = featureService;
         _telegramService = telegramService;
     }
 
-    public override async Task HandleAsync(IUpdateContext context, UpdateDelegate next, string[] args)
+    public override async Task HandleAsync(
+        IUpdateContext context,
+        UpdateDelegate next,
+        string[] args
+    )
     {
         await _telegramService.AddUpdateContext(context);
 
-        var resi = _telegramService.MessageTextParts.ValueOfIndex(1);
+        var featureConfig = await _telegramService.GetFeatureConfig();
 
-        await _telegramService.SendTextMessageAsync("🔄 Memeriksa nomor Resi");
+        if (!featureConfig.NextHandler) return;
 
-        if (resi.IsNullOrEmpty())
+        if (!_telegramService.IsFromSudo)
         {
-            await _telegramService.EditMessageTextAsync("⚠️ Silakan sertakan nomor resi yang mau di cek.");
+            await _telegramService.SendTextMessageAsync("Sabar ya ngab, fitur sedang di perbaiki");
             return;
         }
 
-#pragma warning disable 4014
-        Task.Run(async () =>
-#pragma warning restore 4014
+        var resi = _telegramService.MessageTextParts.ElementAtOrDefault(1);
+
+        if (resi.IsNullOrEmpty())
         {
-            Log.Debug("Running check in background");
-            await CheckResi(resi);
-        });
+            await _telegramService.SendTextMessageAsync("⚠ Silakan sertakan nomor resi yang mau di cek.");
+            return;
+        }
+
+        await _telegramService.SendTextMessageAsync("🔍 Sedang mencari nomor Resi");
+
+        BinderByteCekResi(resi).InBackground();
     }
 
-    private async Task CheckResi(string resi)
+    private async Task BinderByteCekResi(string resi)
+    {
+        var result = await _cekResiService.BinderByteCekResiBatchesAsync(resi);
+
+        await _telegramService.EditMessageTextAsync(result);
+    }
+
+    private async Task ParsePigooraCheckResi(string resi)
     {
         await _telegramService.EditMessageTextAsync("🔍 Sedang memeriksa nomor Resi");
-        var runCekResi = await _cekResiService.GetResi(resi);
+        var runCekResi = await _cekResiService.CekResi(resi);
         Log.Debug("Check Results: {0}", runCekResi.ToJson(true));
 
         if (runCekResi.Result == null)
         {
-            await _telegramService.EditMessageTextAsync($"Sepertinya resi tidak ditemukan, silakan periksa kembali. " +
-                                                        $"\nNo Resi: <code>{resi}</code>");
+            await _telegramService.EditMessageTextAsync
+            (
+                $"Sepertinya resi tidak ditemukan, silakan periksa kembali. " +
+                $"\nNo Resi: <code>{resi}</code>"
+            );
             return;
         }
 
@@ -64,6 +86,7 @@ public class CheckResiCommand : CommandBase
         var manifests = result.Manifest;
 
         var manifestStr = new StringBuilder();
+
         foreach (var manifest in manifests)
         {
             manifestStr.AppendLine($"⏰ {manifest.ManifestDate:dd MMM yyyy} {manifest.ManifestTime:HH:mm zzz}");

@@ -1,12 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 
 namespace WinTenDev.Zizi.Models.Types.Pigoora;
 
-public partial class CekResi
+public partial class PigooraCekResi
 {
     [JsonProperty("app")]
     public string App { get; set; }
@@ -148,27 +146,4 @@ public class Summary
 
     [JsonProperty("status")]
     public string Status { get; set; }
-}
-
-public partial class CekResi
-{
-    public static CekResi FromJson(string json) => JsonConvert.DeserializeObject<CekResi>(json, Converter.Settings);
-}
-
-public static class Serialize
-{
-    public static string ToJson(this CekResi self) => JsonConvert.SerializeObject(self, Converter.Settings);
-}
-
-internal static class Converter
-{
-    public static readonly JsonSerializerSettings Settings = new JsonSerializerSettings
-    {
-        MetadataPropertyHandling = MetadataPropertyHandling.Ignore,
-        DateParseHandling = DateParseHandling.None,
-        Converters =
-        {
-            new IsoDateTimeConverter { DateTimeStyles = DateTimeStyles.AssumeUniversal }
-        }
-    };
 }
