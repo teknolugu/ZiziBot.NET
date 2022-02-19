@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
+using Nito.AsyncEx.Synchronous;
 using Serilog;
 using Telegram.Bot;
 using Telegram.Bot.Framework;
@@ -12,6 +13,7 @@ using Telegram.Bot.Framework.Extensions;
 using WinTenDev.Zizi.Models.Bots.Options;
 using WinTenDev.Zizi.Models.Configs;
 using WinTenDev.Zizi.Models.Enums;
+using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Utils;
 
 namespace WinTenDev.ZiziBot.AppHost.Extensions;
