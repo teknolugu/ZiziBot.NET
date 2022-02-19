@@ -30,6 +30,10 @@ public class ButtonCaption
 
 public class ButtonParsed
 {
+    public bool IsEnabled { get; set; }
+    public bool NextHandler { get; set; }
+    public List<string> AllowsAt { get; set; }
+    public List<string> ExceptsAt { get; set; }
     public string Caption { get; set; }
     public InlineKeyboardMarkup Markup { get; set; }
 }

@@ -33,8 +33,8 @@ public class TelegramService
     private readonly IBackgroundJobClient _backgroundJob;
     private readonly EventLogConfig _eventLogConfig;
     private readonly ChatService _chatService;
-    private readonly CommonConfig _commonConfig;
     private readonly BotService _botService;
+    private readonly FeatureService _featureService;
     private readonly FloodCheckService _floodCheckService;
     private readonly SettingsService _settingsService;
     private readonly PrivilegeService _privilegeService;
@@ -98,8 +98,8 @@ public class TelegramService
         IBackgroundJobClient backgroundJob,
         IOptionsSnapshot<EventLogConfig> eventLogConfig,
         ChatService chatService,
-        CommonConfig commonConfig,
         BotService botService,
+        FeatureService featureService,
         FloodCheckService floodCheckService,
         SettingsService settingsService,
         PrivilegeService privilegeService,
@@ -110,8 +110,8 @@ public class TelegramService
         _backgroundJob = backgroundJob;
         _eventLogConfig = eventLogConfig.Value;
         _chatService = chatService;
-        _commonConfig = commonConfig;
         _botService = botService;
+        _featureService = featureService;
         _floodCheckService = floodCheckService;
         _settingsService = settingsService;
         _privilegeService = privilegeService;
@@ -177,14 +177,6 @@ public class TelegramService
     }
 
     #region Chat
-
-    public bool IsRestricted()
-    {
-        var isRestricted = _commonConfig.IsRestricted;
-        Log.Debug("Global Restriction: {IsRestricted}", isRestricted);
-
-        return isRestricted;
-    }
 
     public async Task<bool> CheckChatRestriction()
     {
@@ -382,6 +374,26 @@ public class TelegramService
     #endregion Privilege
 
     #region Bot
+
+    public async Task<ButtonParsed> GetFeatureConfig()
+    {
+        var command = GetCommand();
+        var featureConfig = await _featureService.GetFeatureConfig(command);
+
+        var hasAllowed = featureConfig.AllowsAt.Any(s => s.Contains(ChatId.ToString()));
+
+        featureConfig.NextHandler = hasAllowed;
+
+        if (!featureConfig.NextHandler)
+        {
+            await SendTextMessageAsync(featureConfig.Caption, featureConfig.Markup);
+            return featureConfig;
+        }
+
+        featureConfig.NextHandler = true;
+
+        return featureConfig;
+    }
 
     public async Task<bool> IsAnyMe(IEnumerable<User> users)
     {
