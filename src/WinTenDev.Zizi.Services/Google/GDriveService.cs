@@ -27,7 +27,7 @@ public class GDriveService
         var credPath = Path.Combine("Storage", "Common", "gdrive-auth-token-store").SanitizeSlash()
             .EnsureDirectory();
         var credential = GoogleWebAuthorizationBroker.AuthorizeAsync(
-        GoogleClientSecrets.Load(stream).Secrets,
+        GoogleClientSecrets.FromStream(stream).Secrets,
         Scopes,
         "user",
         CancellationToken.None,
