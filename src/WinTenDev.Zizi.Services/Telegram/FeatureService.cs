@@ -73,6 +73,7 @@ public class FeatureService
             );
         }
 
+        buttonParsed.IsEnabled = config.IsEnabled;
         buttonParsed.AllowsAt = config.AllowsAt;
         buttonParsed.ExceptsAt = config.ExceptsAt;
         buttonParsed.Caption = mergedCaption;
