@@ -12,6 +12,7 @@ using Serilog;
 using WinTenDev.Zizi.Models.Configs;
 using WinTenDev.Zizi.Models.Types.BinderByte;
 using WinTenDev.Zizi.Models.Types.Pigoora;
+using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Utils;
 
 namespace WinTenDev.Zizi.Services.Externals;
@@ -20,16 +21,19 @@ public class CekResiService
 {
     private readonly BinderByteConfig _binderByteConfig;
     private readonly CacheStack _cacheStack;
+    private readonly QueryService _queryService;
     private const string PigooraCekResiUrl = "https://api.cekresi.pigoora.com/cekResi";
     private const string CommonUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:85.0) Gecko/20100101 Firefox/85.0";
 
     public CekResiService(
         IOptionsSnapshot<BinderByteConfig> binderByteConfig,
-        CacheStack cacheStack
+        CacheStack cacheStack,
+        QueryService queryService
     )
     {
         _binderByteConfig = binderByteConfig.Value;
         _cacheStack = cacheStack;
+        _queryService = queryService;
     }
 
     private static List<string> GetCouriers()
@@ -74,9 +78,25 @@ public class CekResiService
 
     #region BinderByte CekResi
 
-    public bool IsBinderByteCekResiStored(string awb)
+    public BinderByteCekResi BinderByteGetStoredResi(string awb)
     {
-        return true;
+        var collection = _queryService
+            .GetJsonCollection<BinderByteCekResi>()
+            .AsQueryable()
+            .FirstOrDefault(resi => resi.Data?.Summary?.Awb == awb);
+
+        return collection;
+    }
+
+    public async Task<bool> BinderByteCekResiStoreJson(BinderByteCekResi data)
+    {
+        var resi = data.Data?.Summary?.Awb;
+
+        var insert = await _queryService
+            .GetJsonCollection<BinderByteCekResi>()
+            .ReplaceOneAsync(resi, data, true);
+
+        return insert;
     }
 
     public async Task<string> BinderByteCekResiBatchesAsync(string awb)
@@ -103,7 +123,7 @@ public class CekResiService
     {
         var sb = new StringBuilder();
 
-        var result = await BinderByteCekResiRawAsync(courier, awb);
+        var result = BinderByteGetStoredResi(awb) ?? await BinderByteCekResiRawAsync(courier, awb);
 
         if (result.Status != 200)
         {
@@ -176,6 +196,13 @@ public class CekResiService
         (
             $"cek-resi-{courier}-{awb}", async (_) => {
                 var response = await BinderByteCekResiRawCoreAsync(courier, awb);
+
+                var status = response.Data?.Summary?.Status;
+
+                if (status?.Contains("Delivered", StringComparison.CurrentCultureIgnoreCase) ?? false)
+                {
+                    await BinderByteCekResiStoreJson(response);
+                }
 
                 return response;
             },
