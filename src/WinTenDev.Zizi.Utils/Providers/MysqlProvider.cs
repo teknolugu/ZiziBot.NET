@@ -22,6 +22,7 @@ public static class MysqlProvider
     public static QueryFactory GetMysqlInstances()
     {
         var connection = new MySqlConnection(_connStr);
+
         var factory = new QueryFactory(connection, new MySqlCompiler())
         {
             Logger = result => {
@@ -33,10 +34,14 @@ public static class MysqlProvider
     }
 
     [Obsolete("This method will be replaced with QueryFactory from DI")]
-    public static Query ExecForMysql(this Query query, bool printSql = true)
+    public static Query ExecForMysql(
+        this Query query,
+        bool printSql = true
+    )
     {
         var connection = new MySqlConnection(_connStr);
         var factory = new QueryFactory(connection, new MySqlCompiler());
+
         if (printSql)
         {
             factory.Logger = sql => {
@@ -48,11 +53,15 @@ public static class MysqlProvider
     }
 
     [Obsolete("This method will be replaced with QueryFactory from DI")]
-    public static async Task<int> ExecForMysqlNonQueryAsync(this string sql, object param = null,
-        bool printSql = false)
+    public static async Task<int> ExecForMysqlNonQueryAsync(
+        this string sql,
+        object param = null,
+        bool printSql = false
+    )
     {
         var connection = new MySqlConnection(_connStr);
         var factory = new QueryFactory(connection, new MySqlCompiler());
+
         if (printSql)
         {
             factory.Logger = sqlResult => {
@@ -64,10 +73,15 @@ public static class MysqlProvider
     }
 
     [Obsolete("This method will be replaced with QueryFactory from DI", true)]
-    public static int ExecForMysqlNonQuery(this string sql, object param = null, bool printSql = false)
+    public static int ExecForMysqlNonQuery(
+        this string sql,
+        object param = null,
+        bool printSql = false
+    )
     {
         var connection = new MySqlConnection(_connStr);
         var factory = new QueryFactory(connection, new MySqlCompiler());
+
         if (printSql)
         {
             factory.Logger = sqlResult => {
@@ -78,11 +92,15 @@ public static class MysqlProvider
         return factory.Statement(sql, param);
     }
 
-    public static async Task<IEnumerable<dynamic>> ExecForMysqlQueryAsync(this string sql, object param = null,
-        bool printSql = false)
+    public static async Task<IEnumerable<dynamic>> ExecForMysqlQueryAsync(
+        this string sql,
+        object param = null,
+        bool printSql = false
+    )
     {
         var connection = new MySqlConnection(_connStr);
         var factory = new QueryFactory(connection, new MySqlCompiler());
+
         if (printSql)
         {
             factory.Logger = sqlResult => {
@@ -93,11 +111,15 @@ public static class MysqlProvider
         return await factory.SelectAsync(sql, param);
     }
 
-    public static IEnumerable<dynamic> ExecForMysqlQuery(this string sql, object param = null,
-        bool printSql = false)
+    public static IEnumerable<dynamic> ExecForMysqlQuery(
+        this string sql,
+        object param = null,
+        bool printSql = false
+    )
     {
         var connection = new MySqlConnection(_connStr);
         var factory = new QueryFactory(connection, new MySqlCompiler());
+
         if (printSql)
         {
             factory.Logger = sqlResult => {
@@ -109,8 +131,11 @@ public static class MysqlProvider
     }
 
     [Obsolete("This method will be replaced with QueryFactory from DI")]
-    public static async Task<int> MysqlDeleteDuplicateRowAsync(this string tableName, string columnKey,
-        bool printSql = false)
+    public static async Task<int> MysqlDeleteDuplicateRowAsync(
+        this string tableName,
+        string columnKey,
+        bool printSql = false
+    )
     {
         Log.Information("Deleting duplicate rows on {TableName}", tableName);
 

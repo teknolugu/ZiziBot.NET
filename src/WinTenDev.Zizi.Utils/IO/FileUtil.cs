@@ -25,19 +25,25 @@ public static class FileUtil
         }
     }
 
-    public static string ReplaceExt(this string fileName, string toExt)
+    public static string ReplaceExt(
+        this string fileName,
+        string toExt
+    )
     {
         return Path.ChangeExtension(fileName, toExt);
     }
 
-    public static async Task WriteTextAsync(this string content, string filePath)
+    public static async Task WriteTextAsync(
+        this string content,
+        string filePath
+    )
     {
         var cachePath = "Storage/Caches";
 
         filePath = $"{cachePath}/{filePath}";
         Log.Information("Writing content to {FilePath}", filePath);
 
-        Path.GetDirectoryName(filePath).SanitizeSlash().EnsureDirectory();
+        filePath.SanitizeSlash().EnsureDirectory();
 
         await File.WriteAllTextAsync(filePath, content);
 
@@ -94,10 +100,13 @@ public static class FileUtil
         bool recursive = false
     )
     {
-        var files = Directory.EnumerateFiles(path, searchPattern, new EnumerationOptions
-        {
-            RecurseSubdirectories = recursive
-        });
+        var files = Directory.EnumerateFiles
+        (
+            path, searchPattern, new EnumerationOptions
+            {
+                RecurseSubdirectories = recursive
+            }
+        );
 
         return files;
     }

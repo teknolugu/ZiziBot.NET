@@ -19,7 +19,10 @@ public static class AdminUtil
         return keyCache;
     }
 
-    public static async Task UpdateCacheAdminAsync(this ITelegramBotClient client, long chatId)
+    public static async Task UpdateCacheAdminAsync(
+        this ITelegramBotClient client,
+        long chatId
+    )
     {
         var keyCache = GetCacheKey(chatId);
 
@@ -30,11 +33,15 @@ public static class AdminUtil
     }
 
     [Obsolete("This method will be moved to TelegramService")]
-    public static async Task<ChatMember[]> GetChatAdmin(this ITelegramBotClient botClient, long chatId)
+    public static async Task<ChatMember[]> GetChatAdmin(
+        this ITelegramBotClient botClient,
+        long chatId
+    )
     {
         var keyCache = GetCacheKey(chatId);
 
         var cacheExist = MonkeyCacheUtil.IsCacheExist(keyCache);
+
         if (!cacheExist)
         {
             await botClient.UpdateCacheAdminAsync(chatId);
@@ -45,7 +52,11 @@ public static class AdminUtil
         return chatMembers;
     }
 
-    public static async Task<bool> IsAdminChat(this ITelegramBotClient botClient, long chatId, long userId)
+    public static async Task<bool> IsAdminChat(
+        this ITelegramBotClient botClient,
+        long chatId,
+        long userId
+    )
     {
         var sw = Stopwatch.StartNew();
 

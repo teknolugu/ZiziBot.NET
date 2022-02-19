@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Serilog;
 using Telegram.Bot.Types.ReplyMarkups;
+using WinTenDev.Zizi.Models.Types;
 using WinTenDev.Zizi.Utils.Text;
 
 namespace WinTenDev.Zizi.Utils.Telegram;
@@ -16,9 +17,11 @@ public static class KeyboardUtil
     {
         var dict = new Dictionary<string, string>();
         var splitWelcomeButton = buttonStr.Split(',').ToList();
+
         foreach (var button in splitWelcomeButton)
         {
             Log.Information("Button: {Button}", button);
+
             if (button.Contains("|"))
             {
                 var buttonLink = button.Split('|').ToList();
@@ -43,12 +46,15 @@ public static class KeyboardUtil
             buttons[i] = buttonList
                 .Skip(i * columns)
                 .Take(columns)
-                .Select(direction => {
-                    if (direction.Value.CheckUrlValid())
-                        return InlineKeyboardButton.WithUrl(direction.Key, direction.Value);
-                    else
-                        return InlineKeyboardButton.WithCallbackData(direction.Key, direction.Value);
-                })
+                .Select
+                (
+                    direction => {
+                        if (direction.Value.CheckUrlValid())
+                            return InlineKeyboardButton.WithUrl(direction.Key, direction.Value);
+                        else
+                            return InlineKeyboardButton.WithCallbackData(direction.Key, direction.Value);
+                    }
+                )
                 .ToArray();
         }
 
@@ -69,6 +75,7 @@ public static class KeyboardUtil
     )
     {
         string json;
+
         if (File.Exists(jsonPath))
         {
             Log.Information("Loading Json from path: {JsonPath}", jsonPath);
@@ -88,6 +95,7 @@ public static class KeyboardUtil
         {
             var btnText = row["text"].ToString();
             var data = row["data"].ToString();
+
             if (data.CheckUrlValid())
             {
                 Log.Verbose("Appending button URL. Text: '{BtnText}', Url: '{Data}'", btnText, data);
@@ -101,5 +109,25 @@ public static class KeyboardUtil
         }
 
         return new InlineKeyboardMarkup(btnList.ChunkBy(chunk));
+    }
+
+    public static InlineKeyboardMarkup ToButtonMarkup(this List<List<ButtonMarkup>> rawButtonMarkups)
+    {
+        var buttonMarkup = InlineKeyboardMarkup.Empty();
+
+        if (rawButtonMarkups != null)
+        {
+            buttonMarkup = new InlineKeyboardMarkup
+            (
+                rawButtonMarkups
+                    .Select
+                    (
+                        x => x
+                            .Select(y => InlineKeyboardButton.WithUrl(y.Text, y.Url))
+                    )
+            );
+        }
+
+        return buttonMarkup;
     }
 }

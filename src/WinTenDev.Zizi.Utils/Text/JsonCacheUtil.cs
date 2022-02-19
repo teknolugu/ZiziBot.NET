@@ -46,9 +46,12 @@ public static class JsonCacheUtil
 
     public static async Task<IDocumentCollection<T>> GetCollectionAsync<T>(this DataStore dataStore) where T : class
     {
-        return await Task.Run(() => {
-            var collection = dataStore.GetCollection<T>();
-            return collection;
-        });
+        return await Task.Run
+        (
+            () => {
+                var collection = dataStore.GetCollection<T>();
+                return collection;
+            }
+        );
     }
 }

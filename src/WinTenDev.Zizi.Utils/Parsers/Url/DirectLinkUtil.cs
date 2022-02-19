@@ -20,6 +20,7 @@ public static class DirectLinkUtil
         var document = await context.OpenAsync(url);
 
         Log.Debug("Finding download button..");
+
         var dl = document.QuerySelectorAll<IHtmlAnchorElement>("a")
             .FirstOrDefault(x => x.Id == "dlbutton");
 

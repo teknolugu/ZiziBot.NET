@@ -23,6 +23,7 @@ public static class LiteDbProvider
     public static void InitializeLiteDb(string dbName = "Local_LiteDB.db")
     {
         var fileName = GetDbName();
+
         var connBuild = new ConnectionString()
         {
             Filename = fileName,

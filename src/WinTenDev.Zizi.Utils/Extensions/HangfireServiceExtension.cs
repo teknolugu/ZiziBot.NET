@@ -33,42 +33,45 @@ public static class HangfireServiceExtension
         //     options.Queues = hangfireConfig.Queues;
         // });
 
-        services.AddHangfire(config => {
-            switch (hangfireConfig.DataStore)
-            {
-                case HangfireDataStore.MySql:
-                    config.UseStorage(HangfireUtil.GetMysqlStorage(connStrings.MySql));
-                    break;
+        services.AddHangfire
+        (
+            config => {
+                switch (hangfireConfig.DataStore)
+                {
+                    case HangfireDataStore.MySql:
+                        config.UseStorage(HangfireUtil.GetMysqlStorage(connStrings.MySql));
+                        break;
 
-                case HangfireDataStore.Sqlite:
-                    config.UseStorage(HangfireUtil.GetSqliteStorage(hangfireConfig.Sqlite));
-                    break;
+                    case HangfireDataStore.Sqlite:
+                        config.UseStorage(HangfireUtil.GetSqliteStorage(hangfireConfig.Sqlite));
+                        break;
 
-                case HangfireDataStore.Litedb:
-                    config.UseStorage(HangfireUtil.GetLiteDbStorage(hangfireConfig.LiteDb));
-                    break;
+                    case HangfireDataStore.Litedb:
+                        config.UseStorage(HangfireUtil.GetLiteDbStorage(hangfireConfig.LiteDb));
+                        break;
 
-                case HangfireDataStore.Redis:
-                    config.UseStorage(HangfireUtil.GetRedisStorage(hangfireConfig.Redis));
-                    break;
+                    case HangfireDataStore.Redis:
+                        config.UseStorage(HangfireUtil.GetRedisStorage(hangfireConfig.Redis));
+                        break;
 
-                case HangfireDataStore.Memory:
-                    config.UseMemoryStorage();
-                    break;
+                    case HangfireDataStore.Memory:
+                        config.UseMemoryStorage();
+                        break;
 
-                default:
-                    Log.Warning("Unknown Hangfire DataStore");
-                    break;
+                    default:
+                        Log.Warning("Unknown Hangfire DataStore");
+                        break;
+                }
+
+                config.UseDarkDashboard()
+                    .SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
+                    .UseHeartbeatPage(TimeSpan.FromSeconds(15))
+                    .UseSimpleAssemblyNameTypeSerializer()
+                    .UseRecommendedSerializerSettings()
+                    .UseColouredConsoleLogProvider()
+                    .UseSerilogLogProvider();
             }
-
-            config.UseDarkDashboard()
-                .SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
-                .UseHeartbeatPage(TimeSpan.FromSeconds(15))
-                .UseSimpleAssemblyNameTypeSerializer()
-                .UseRecommendedSerializerSettings()
-                .UseColouredConsoleLogProvider()
-                .UseSerilogLogProvider();
-        });
+        );
 
         Log.Debug("Hangfire Service added..");
 
@@ -103,7 +106,6 @@ public static class HangfireServiceExtension
         var hangfireConfig = serviceProvider.GetRequiredService<IOptionsSnapshot<HangfireConfig>>().Value;
         var env = serviceProvider.GetRequiredService<IHostEnvironment>();
 
-
         var baseUrl = hangfireConfig.BaseUrl;
         var username = hangfireConfig.Username;
         var password = hangfireConfig.Password;
@@ -114,6 +116,7 @@ public static class HangfireServiceExtension
         app.ResetHangfireStorageIfRequired();
 
         var dashboardOptions = new DashboardOptions();
+
         if (!env.IsDevelopment())
         {
             dashboardOptions.Authorization = new[]
@@ -133,10 +136,13 @@ public static class HangfireServiceExtension
             Queues = hangfireConfig.Queues
         };
 
-        app.UseHangfireServer(serverOptions, new[]
-        {
-            new ProcessMonitor(TimeSpan.FromSeconds(3))
-        });
+        app.UseHangfireServer
+        (
+            serverOptions, new[]
+            {
+                new ProcessMonitor(TimeSpan.FromSeconds(3))
+            }
+        );
 
         Log.Information("Hangfire is Running..");
         return app;

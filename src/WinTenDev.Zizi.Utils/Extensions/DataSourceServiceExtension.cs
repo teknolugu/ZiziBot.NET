@@ -29,24 +29,28 @@ public static class DataSourceServiceExtension
     {
         MySqlConnectorLogManager.Provider = new SerilogLoggerProvider();
 
-        services.AddScoped(provider => {
-            var connectionStrings = provider.GetRequiredService<IOptionsSnapshot<ConnectionStrings>>().Value;
-            var connectionStringsMySql = connectionStrings.MySql;
+        services.AddScoped
+        (
+            provider => {
+                var connectionStrings = provider.GetRequiredService<IOptionsSnapshot<ConnectionStrings>>().Value;
+                var connectionStringsMySql = connectionStrings.MySql;
 
-            if (connectionStringsMySql.IsNullOrEmpty())
-                throw new ConnectionStringNullOrEmptyException("MySQL");
+                if (connectionStringsMySql.IsNullOrEmpty())
+                    throw new ConnectionStringNullOrEmptyException("MySQL");
 
-            var compiler = new MySqlCompiler();
-            var connection = new MySqlConnection(connectionStringsMySql);
-            var factory = new QueryFactory(connection, compiler)
-            {
-                Logger = sql => {
-                    Log.Debug("MySql Exec: {Sql}", sql);
-                }
-            };
+                var compiler = new MySqlCompiler();
+                var connection = new MySqlConnection(connectionStringsMySql);
 
-            return factory;
-        });
+                var factory = new QueryFactory(connection, compiler)
+                {
+                    Logger = sql => {
+                        Log.Debug("MySql Exec: {Sql}", sql);
+                    }
+                };
+
+                return factory;
+            }
+        );
 
         return services;
     }
@@ -58,14 +62,17 @@ public static class DataSourceServiceExtension
     /// <returns></returns>
     public static IServiceCollection AddLiteDb(this IServiceCollection services)
     {
-        services.AddScoped(_ => {
-            var dbPath = "Storage/Data/Local_LiteDB.db";
-            Log.Debug("Loading LiteDB: {DbPath}", dbPath);
-            var dbName = dbPath.EnsureDirectory();
-            var connectionString = $"Filename={dbName};Connection=shared;";
+        services.AddScoped
+        (
+            _ => {
+                var dbPath = "Storage/Data/Local_LiteDB.db";
+                Log.Debug("Loading LiteDB: {DbPath}", dbPath);
+                var dbName = dbPath.EnsureDirectory();
+                var connectionString = $"Filename={dbName};Connection=shared;";
 
-            return new LiteDatabaseAsync(connectionString);
-        });
+                return new LiteDatabaseAsync(connectionString);
+            }
+        );
 
         return services;
     }
@@ -77,15 +84,18 @@ public static class DataSourceServiceExtension
     /// <returns></returns>
     public static IServiceCollection AddClickHouse(this IServiceCollection services)
     {
-        return services.AddScoped(provider => {
-            var connectionStrings = provider.GetRequiredService<IOptionsSnapshot<ConnectionStrings>>().Value;
-            var connectionStringsClickHouseConn = connectionStrings.ClickHouseConn;
+        return services.AddScoped
+        (
+            provider => {
+                var connectionStrings = provider.GetRequiredService<IOptionsSnapshot<ConnectionStrings>>().Value;
+                var connectionStringsClickHouseConn = connectionStrings.ClickHouseConn;
 
-            if (connectionStringsClickHouseConn.IsNullOrEmpty())
-                throw new ConnectionStringNullOrEmptyException("ClickHouse");
+                if (connectionStringsClickHouseConn.IsNullOrEmpty())
+                    throw new ConnectionStringNullOrEmptyException("ClickHouse");
 
-            return new ClickHouseConnection(connectionStringsClickHouseConn);
-        });
+                return new ClickHouseConnection(connectionStringsClickHouseConn);
+            }
+        );
     }
 
     public static IServiceCollection AddRepoDb(this IServiceCollection services)

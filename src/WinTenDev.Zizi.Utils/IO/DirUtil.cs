@@ -22,6 +22,7 @@ public static class DirUtil
         if (Directory.Exists(path)) return dirPath;
 
         Log.Debug("Creating directory {Path}..", path);
+
         if (path != null)
             Directory.CreateDirectory(path);
 
@@ -68,6 +69,7 @@ public static class DirUtil
     )
     {
         Log.Information("Deleting files in {Path}", path);
+
         var files = Directory.GetFiles(path)
             .Where(file => file.Contains(filter, StringComparison.CurrentCulture));
 

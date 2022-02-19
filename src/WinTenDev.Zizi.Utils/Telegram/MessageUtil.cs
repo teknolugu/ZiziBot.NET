@@ -42,6 +42,7 @@ public static class MessageUtil
     {
         var partsMsg = message.Split(' ');
         var text = message;
+
         if (withoutCmd && message.StartsWith("/", StringComparison.CurrentCulture))
         {
             text = message.TrimStart(partsMsg[0].ToCharArray());

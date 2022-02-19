@@ -35,22 +35,31 @@ public static class GoogleDrive
         using var stream = new FileStream(googleCred, FileMode.Open, FileAccess.Read);
 
         Log.Debug("Authorizing client..");
+
         var credPath = Path.Combine("Storage", "Common", "gdrive-auth-token-store").SanitizeSlash()
             .EnsureDirectory();
-        var credential = GoogleWebAuthorizationBroker.AuthorizeAsync(GoogleClientSecrets.Load(stream).Secrets,
+
+        var credential = GoogleWebAuthorizationBroker.AuthorizeAsync
+        (
+            GoogleClientSecrets.Load(stream).Secrets,
             Scopes,
             "user",
             CancellationToken.None,
-            new FileDataStore(credPath, true)).Result;
+            new FileDataStore(credPath, true)
+        ).Result;
 
         Log.Debug("Credential saved to {0}", credPath);
 
         Log.Debug("Initializing Drive service");
-        var service = new DriveService(new BaseClientService.Initializer()
-        {
-            HttpClientInitializer = credential,
-            ApplicationName = AppName
-        });
+
+        var service = new DriveService
+        (
+            new BaseClientService.Initializer()
+            {
+                HttpClientInitializer = credential,
+                ApplicationName = AppName
+            }
+        );
 
         Log.Information("Creating GoogleDrive client finish.");
         Service = service;
@@ -86,14 +95,18 @@ public static class GoogleDrive
         {
             Log.Information("File {0} is not exist, file skipped.", filePath);
             var notExist = "Sesuatu telah terjadi. File tidak tersedia.";
-            answer(new CallbackAnswer()
-            {
-                CallbackAnswerText = notExist,
-                CallbackAnswerModes = new List<CallbackAnswerMode>()
+
+            answer
+            (
+                new CallbackAnswer()
                 {
-                    CallbackAnswerMode.EditMessage
+                    CallbackAnswerText = notExist,
+                    CallbackAnswerModes = new List<CallbackAnswerMode>()
+                    {
+                        CallbackAnswerMode.EditMessage
+                    }
                 }
-            }).Wait();
+            ).Wait();
 
             return;
         }
@@ -107,6 +120,7 @@ public static class GoogleDrive
         swUpdater.Start();
 
         Log.Debug("Building body");
+
         var bodyFile = new File()
         {
             Name = Path.GetFileName(filePath),
@@ -129,23 +143,28 @@ public static class GoogleDrive
 
         var updateCommon = "Uploading file to Drive" +
                            $"\nFile: {fileName}";
+
         request.ProgressChanged += async delegate(IUploadProgress progress) {
             if (swUpdater.Elapsed.Seconds < 5) return;
 
             swUpdater.Reset();
             var sendProgress = progress.BytesSent.ToDouble().SizeFormat();
+
             var uploadProgress = $"{updateCommon}" +
                                  $"\nSent: {sendProgress}" +
                                  $"\nSize: {fileSize}";
 
-            await answer(new CallbackAnswer()
-            {
-                CallbackAnswerText = uploadProgress,
-                CallbackAnswerModes = new List<CallbackAnswerMode>()
+            await answer
+            (
+                new CallbackAnswer()
                 {
-                    CallbackAnswerMode.EditMessage
+                    CallbackAnswerText = uploadProgress,
+                    CallbackAnswerModes = new List<CallbackAnswerMode>()
+                    {
+                        CallbackAnswerMode.EditMessage
+                    }
                 }
-            });
+            );
 
             Log.Debug("Progress {0}", sendProgress);
             swUpdater.Start();
@@ -157,14 +176,17 @@ public static class GoogleDrive
                                $"\nSize: {fileSize}" +
                                $"\n\nCC: Fulan";
 
-            await answer(new CallbackAnswer()
-            {
-                CallbackAnswerText = uploadResult,
-                CallbackAnswerModes = new List<CallbackAnswerMode>()
+            await answer
+            (
+                new CallbackAnswer()
                 {
-                    CallbackAnswerMode.EditMessage
+                    CallbackAnswerText = uploadResult,
+                    CallbackAnswerModes = new List<CallbackAnswerMode>()
+                    {
+                        CallbackAnswerMode.EditMessage
+                    }
                 }
-            });
+            );
 
             Log.Debug("Response: {0}", file.Id);
 

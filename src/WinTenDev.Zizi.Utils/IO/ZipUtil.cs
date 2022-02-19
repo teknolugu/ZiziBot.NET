@@ -9,9 +9,13 @@ namespace WinTenDev.Zizi.Utils.IO;
 
 public static class ZipUtil
 {
-    public static string CreateZip(this string fileName, string saveTo)
+    public static string CreateZip(
+        this string fileName,
+        string saveTo
+    )
     {
         Log.Information("Creating .zip from file {0}", fileName);
+
         using var zip = new ZipFile
         {
             CompressionLevel = CompressionLevel.BestCompression
@@ -21,6 +25,7 @@ public static class ZipUtil
         {
             var files = Directory.GetFiles(fileName, "*.*", SearchOption.AllDirectories)
                 .Where(x => !x.Contains(".stikerpacks"));
+
             // zip.AddFiles(files, String.Empty);
             foreach (var file in files)
             {
@@ -40,7 +45,10 @@ public static class ZipUtil
         return saveTo;
     }
 
-    public static string CreateZip(this IEnumerable<string> listPath, string saveTo)
+    public static string CreateZip(
+        this IEnumerable<string> listPath,
+        string saveTo
+    )
     {
         using var zip = new ZipFile
         {
@@ -58,9 +66,13 @@ public static class ZipUtil
         return saveTo;
     }
 
-    public static string CreateZip(this string filePath, bool replaceExt = true)
+    public static string CreateZip(
+        this string filePath,
+        bool replaceExt = true
+    )
     {
         var newFilePath = filePath + ".zip";
+
         if (replaceExt)
         {
             newFilePath = filePath.ReplaceExt(".zip");

@@ -19,18 +19,25 @@ public static class EasyCachingServiceExtension
     /// <returns></returns>
     public static IServiceCollection AddEasyCachingSqlite(this IServiceCollection services)
     {
-        services.AddEasyCaching(options => {
-            options.UseSQLite(sqLiteOptions => {
-                sqLiteOptions.EnableLogging = true;
-                sqLiteOptions.DBConfig = new SQLiteDBOptions()
-                {
-                    CacheMode = SqliteCacheMode.Shared,
-                    FilePath = "Storage/EasyCaching/".EnsureDirectory(),
-                    FileName = "LocalCache.db",
-                    OpenMode = SqliteOpenMode.ReadWriteCreate
-                };
-            });
-        });
+        services.AddEasyCaching
+        (
+            options => {
+                options.UseSQLite
+                (
+                    sqLiteOptions => {
+                        sqLiteOptions.EnableLogging = true;
+
+                        sqLiteOptions.DBConfig = new SQLiteDBOptions()
+                        {
+                            CacheMode = SqliteCacheMode.Shared,
+                            FilePath = "Storage/EasyCaching/".EnsureDirectory(),
+                            FileName = "LocalCache.db",
+                            OpenMode = SqliteOpenMode.ReadWriteCreate
+                        };
+                    }
+                );
+            }
+        );
 
         return services;
     }
@@ -42,15 +49,22 @@ public static class EasyCachingServiceExtension
     /// <returns></returns>
     public static IServiceCollection AddEasyCachingDisk(this IServiceCollection services)
     {
-        services.AddEasyCaching(options => {
-            options.UseDisk(diskOptions => {
-                diskOptions.EnableLogging = true;
-                diskOptions.DBConfig = new DiskDbOptions()
-                {
-                    BasePath = "Storage/EasyCaching/Disk/".EnsureDirectory()
-                };
-            });
-        });
+        services.AddEasyCaching
+        (
+            options => {
+                options.UseDisk
+                (
+                    diskOptions => {
+                        diskOptions.EnableLogging = true;
+
+                        diskOptions.DBConfig = new DiskDbOptions()
+                        {
+                            BasePath = "Storage/EasyCaching/Disk/".EnsureDirectory()
+                        };
+                    }
+                );
+            }
+        );
 
         return services;
     }

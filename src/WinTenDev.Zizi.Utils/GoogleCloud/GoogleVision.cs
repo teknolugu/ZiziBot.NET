@@ -22,6 +22,7 @@ public static class GoogleVision
     {
         var credPath = BotSettings.GoogleCloudCredentialsPath.SanitizeSlash();
         Log.Information("Instantiates a client, cred {CredPath}", credPath);
+
         var clientBuilder = new ImageAnnotatorClientBuilder
         {
             CredentialsPath = credPath
@@ -40,6 +41,7 @@ public static class GoogleVision
     public static string ScanText(string filePath)
     {
         Log.Information("GoogleVision detect text {FilePath}", filePath);
+
         if (Client == null)
         {
             Client = MakeClient();
@@ -52,6 +54,7 @@ public static class GoogleVision
         var response = Client.DetectText(image);
 
         Log.Information("ResponseCount: {Count}", response.Count);
+
         if (response.Count != 0)
         {
             return response[0].Description.HtmlEncode();
@@ -84,6 +87,7 @@ public static class GoogleVision
         var protoBuff = ByteString.CopyFrom(fileBytes);
 
         Log.Debug("Creating request");
+
         var request = new AnnotateVideoRequest()
         {
             InputContent = protoBuff,

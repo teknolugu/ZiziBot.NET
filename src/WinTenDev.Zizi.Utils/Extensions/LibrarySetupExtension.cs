@@ -32,9 +32,12 @@ public static class LibrarySetupExtension
     {
         DefaultTypeMap.MatchNamesWithUnderscores = true;
 
-        FluentMapper.Initialize(configuration => {
-            configuration.AddMap(new ChatSettingMap());
-        });
+        FluentMapper.Initialize
+        (
+            configuration => {
+                configuration.AddMap(new ChatSettingMap());
+            }
+        );
 
         return app;
     }

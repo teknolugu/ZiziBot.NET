@@ -11,27 +11,36 @@ public static class TunnelingServiceExtension
 {
     public static IServiceCollection AddLocalTunnelClient(this IServiceCollection services)
     {
-        services.AddScoped(service => {
-            var clientTunnel = new LocaltunnelClient();
-            return clientTunnel;
-        });
+        services.AddScoped
+        (
+            service => {
+                var clientTunnel = new LocaltunnelClient();
+                return clientTunnel;
+            }
+        );
         return services;
     }
 
-    public static IApplicationBuilder UseLocalTunnel(this IApplicationBuilder app, string subdomain)
+    public static IApplicationBuilder UseLocalTunnel(
+        this IApplicationBuilder app,
+        string subdomain
+    )
     {
         var services = app.GetServiceProvider();
         var tunnelClient = services.GetRequiredService<LocaltunnelClient>();
 
-        var tunnel = tunnelClient.OpenAsync(handle => {
-            var options = new ProxiedHttpTunnelOptions()
-            {
-                Host = "localhost",
-                Port = 5100,
-                ReceiveBufferSize = 10
-            };
-            return new ProxiedHttpTunnelConnection(handle, options);
-        }, subdomain: subdomain, CancellationToken.None).Result;
+        var tunnel = tunnelClient.OpenAsync
+        (
+            handle => {
+                var options = new ProxiedHttpTunnelOptions()
+                {
+                    Host = "localhost",
+                    Port = 5100,
+                    ReceiveBufferSize = 10
+                };
+                return new ProxiedHttpTunnelConnection(handle, options);
+            }, subdomain: subdomain, CancellationToken.None
+        ).Result;
 
         tunnel.StartAsync();
 

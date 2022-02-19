@@ -23,18 +23,24 @@ public static class CacheTowerServiceExtension
             cacheTowerPath.RemoveFiles();
         }
 
-        services.AddSingleton(_ => {
-            var stack = new CacheStack(new ICacheLayer[]
-            {
-                new MemoryCacheLayer(),
-                new JsonFileCacheLayer(cacheTowerPath)
-            }, new ICacheExtension[]
-            {
-                new AutoCleanupExtension(TimeSpan.FromMinutes(config.ExpireAfter))
-            });
+        services.AddSingleton
+        (
+            _ => {
+                var stack = new CacheStack
+                (
+                    new ICacheLayer[]
+                    {
+                        new MemoryCacheLayer(),
+                        new JsonFileCacheLayer(cacheTowerPath)
+                    }, new ICacheExtension[]
+                    {
+                        new AutoCleanupExtension(TimeSpan.FromMinutes(config.ExpireAfter))
+                    }
+                );
 
-            return stack;
-        });
+                return stack;
+            }
+        );
 
         return services;
     }

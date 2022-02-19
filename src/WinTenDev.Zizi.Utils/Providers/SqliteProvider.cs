@@ -36,7 +36,10 @@ public static class SqliteProvider
     }
 
     [Obsolete("SQLite no longer used anymore")]
-    public static Query ExecForSqLite(this Query query, bool printSql = false)
+    public static Query ExecForSqLite(
+        this Query query,
+        bool printSql = false
+    )
     {
         var connection = InitSqLite();
 
@@ -48,7 +51,11 @@ public static class SqliteProvider
     }
 
     [Obsolete("SQLite no longer used anymore")]
-    public static async Task<int> ExecForSqLite(this string sql, bool printSql = false, object param = null)
+    public static async Task<int> ExecForSqLite(
+        this string sql,
+        bool printSql = false,
+        object param = null
+    )
     {
         var connection = InitSqLite();
 
@@ -59,7 +66,11 @@ public static class SqliteProvider
         return await factory.StatementAsync(sql, param);
     }
 
-    public static async Task<IEnumerable<dynamic>> ExecForSqLiteQuery(this string sql, bool printSql = false, object param = null)
+    public static async Task<IEnumerable<dynamic>> ExecForSqLiteQuery(
+        this string sql,
+        bool printSql = false,
+        object param = null
+    )
     {
         var connection = InitSqLite();
 
@@ -70,9 +81,13 @@ public static class SqliteProvider
         return await factory.SelectAsync(sql, param);
     }
 
-    public static async Task<int> DeleteDuplicateRow(this string tableName, string columnKey)
+    public static async Task<int> DeleteDuplicateRow(
+        this string tableName,
+        string columnKey
+    )
     {
         Log.Information("Deleting duplicate row(s)");
+
         var sql = $"DELETE FROM {tableName} " +
                   "WHERE rowid NOT IN( " +
                   "SELECT min(rowid) " +
