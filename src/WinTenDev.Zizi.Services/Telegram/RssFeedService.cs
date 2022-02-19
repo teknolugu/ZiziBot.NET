@@ -14,7 +14,6 @@ using WinTenDev.Zizi.Models.Types;
 using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Utils;
 using WinTenDev.Zizi.Utils.Telegram;
-using WinTenDev.Zizi.Utils.Text;
 
 namespace WinTenDev.Zizi.Services.Telegram;
 
@@ -22,12 +21,12 @@ public class RssFeedService
 {
     private readonly RssService _rssService;
     private readonly IRecurringJobManager _recurringJobManager;
-    private readonly TelegramBotClient _botClient;
+    private readonly ITelegramBotClient _botClient;
     private readonly JobsService _jobsService;
 
     public RssFeedService(
         IRecurringJobManager recurringJobManager,
-        TelegramBotClient botClient,
+        ITelegramBotClient botClient,
         JobsService jobsService,
         RssService rssService
     )

@@ -24,7 +24,7 @@ namespace WinTenDev.Zizi.Services.Telegram;
 public class StorageService : IStorageService
 {
     private readonly CommonConfig _commonConfig;
-    private readonly TelegramBotClient _botClient;
+    private readonly ITelegramBotClient _botClient;
     private readonly QueryService _queryService;
 
     /// <summary>
@@ -35,7 +35,7 @@ public class StorageService : IStorageService
     /// <param name="queryService"></param>
     public StorageService(
         IOptionsSnapshot<CommonConfig> optionsCommonConfig,
-        TelegramBotClient botClient,
+        ITelegramBotClient botClient,
         QueryService queryService
     )
     {

@@ -26,7 +26,7 @@ public class JobsService
     private readonly IRecurringJobManager _recurringJobManager;
     private readonly StepHistoriesService _stepHistoriesService;
     private readonly ChatService _chatService;
-    private readonly TelegramBotClient _botClient;
+    private readonly ITelegramBotClient _botClient;
     private readonly SettingsService _settingsService;
 
     public JobsService(
@@ -34,7 +34,7 @@ public class JobsService
         IRecurringJobManager recurringJobManager,
         StepHistoriesService stepHistoriesService,
         ChatService chatService,
-        TelegramBotClient botClient,
+        ITelegramBotClient botClient,
         SettingsService settingsService
     )
     {

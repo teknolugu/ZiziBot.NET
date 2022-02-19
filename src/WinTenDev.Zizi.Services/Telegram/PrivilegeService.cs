@@ -30,7 +30,7 @@ public class PrivilegeService
     private readonly BotService _botService;
     private readonly ChatService _chatService;
     private readonly SettingsService _settingsService;
-    private readonly TelegramBotClient _botClient;
+    private readonly ITelegramBotClient _botClient;
     private readonly WTelegramApiService _wTelegramApiService;
     private readonly RestrictionConfig _restrictionConfig;
 
@@ -51,7 +51,7 @@ public class PrivilegeService
         BotService botService,
         ChatService chatService,
         SettingsService settingsService,
-        TelegramBotClient botClient,
+        ITelegramBotClient botClient,
         WTelegramApiService wTelegramApiService
     )
     {

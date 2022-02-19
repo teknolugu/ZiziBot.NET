@@ -18,14 +18,14 @@ public class BotService
 {
     private readonly ILogger<BotService> _logger;
     private readonly ButtonConfig _buttonConfig;
-    private readonly TelegramBotClient _botClient;
+    private readonly ITelegramBotClient _botClient;
     private readonly CacheService _cacheService;
 
     public BotService(
         ILogger<BotService> logger,
         IOptionsSnapshot<ButtonConfig> buttonConfig,
-        TelegramBotClient botClient,
-        CacheService cacheService
+        CacheService cacheService,
+        ITelegramBotClient botClient
     )
     {
         _logger = logger;

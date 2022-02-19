@@ -20,7 +20,7 @@ public class ChatService
     private const string AdminCheckerPrefix = "admin-checker";
     private const int PrivateSettingLimit = 365;
 
-    private readonly TelegramBotClient _botClient;
+    private readonly ITelegramBotClient _botClient;
     private readonly SettingsService _settingsService;
     private readonly CacheService _cacheService;
     private readonly RestrictionConfig _restrictionConfig;
@@ -35,7 +35,7 @@ public class ChatService
     public ChatService(
         CacheService cacheService,
         IOptionsSnapshot<RestrictionConfig> restrictionConfig,
-        TelegramBotClient botClient,
+        ITelegramBotClient botClient,
         SettingsService settingsService
     )
     {

@@ -30,7 +30,7 @@ internal static class AppStartupExtensions
             .Configure<BotOptions<BotClient>>(configSection)
             .Configure<CustomBotOptions<BotClient>>(configSection);
 
-        services.AddTransient(_ => new TelegramBotClient(tgBotConfig.ApiToken));
+        services.AddScoped<ITelegramBotClient>(_ => new TelegramBotClient(tgBotConfig.ApiToken));
 
         return services;
     }

@@ -12,13 +12,13 @@ public class UserProfilePhotoService
     private readonly ILogger<UserProfilePhotoService> _logger;
     private readonly CacheService _cacheService;
     private readonly SettingsService _settingsService;
-    private readonly TelegramBotClient _botClient;
+    private readonly ITelegramBotClient _botClient;
 
     public UserProfilePhotoService(
         ILogger<UserProfilePhotoService> logger,
         CacheService cacheService,
         SettingsService settingsService,
-        TelegramBotClient botClient
+        ITelegramBotClient botClient
     )
     {
         _logger = logger;
