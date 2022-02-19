@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -233,6 +234,16 @@ public static class StringUtil
     )
     {
         return str.Contains(filter);
+    }
+
+    public static bool NotContains(
+        this string str,
+        [NotNull] string value
+    )
+    {
+        if (value.IsNullOrEmpty()) return false;
+
+        return !str.Contains(value);
     }
 
     public static bool ContainsListStr(
