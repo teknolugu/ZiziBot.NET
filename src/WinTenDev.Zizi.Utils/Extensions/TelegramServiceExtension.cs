@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Nito.AsyncEx.Synchronous;
 using WinTenDev.Zizi.Models.Configs;
+using WinTenDev.Zizi.Utils.IO;
 using WTelegram;
 
 namespace WinTenDev.Zizi.Utils.Extensions;
@@ -20,6 +21,7 @@ public static class TelegramServiceExtension
                 var logger = provider.GetRequiredService<ILoggerFactory>().CreateLogger("WTelegram");
 
                 var apiId = tdLibConfig.ApiId;
+                var sessionFile = $"Storage/Common/WTelegram_session_{apiId}.dat".EnsureDirectory();
 
                 string Config(string what)
                 {
@@ -33,7 +35,7 @@ public static class TelegramServiceExtension
                             logger.LogInformation("Input Verification Code: ");
                             return Console.ReadLine();
                         }
-                        case "session_pathname": return $"Storage/Common/WTelegram_session_{apiId}.dat";
+                        case "session_pathname": return sessionFile;
                         case "first_name": return tdLibConfig.FirstName;// if sign-up is required
                         case "last_name": return tdLibConfig.LastName;// if sign-up is required
                         // case "password": return "secret!";     // if user has enabled 2FA
