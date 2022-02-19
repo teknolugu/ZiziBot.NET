@@ -74,19 +74,7 @@ public static class MapConfigExtension
         Log.Information("Mapping configuration..");
         var serviceProvider = services.BuildServiceProvider();
         var config = serviceProvider.GetRequiredService<IConfiguration>();
-        var env = serviceProvider.GetRequiredService<IHostEnvironment>();
-
-        services.AddSingleton
-        (
-            new EnvironmentConfig()
-            {
-                HostEnvironment = env,
-                IsDevelopment = env.IsDevelopment(),
-                IsStaging = env.IsProduction(),
-                IsProduction = env.IsProduction()
-            }
-        );
-
+        
         services.Configure<AllDebridConfig>(config.GetSection(nameof(AllDebridConfig)));
         services.Configure<BinderByteConfig>(config.GetSection(nameof(BinderByteConfig)));
         services.Configure<BotConfig>(config.GetSection(nameof(BotConfig)));

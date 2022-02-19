@@ -6,6 +6,7 @@ using BotFramework.Config;
 using Exceptionless;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Serilog;
 using Serilog.Configuration;
@@ -116,7 +117,7 @@ public static class SerilogServiceExtension
     {
         SelfLog.Enable(msg => Debug.WriteLine(msg));
 
-        var envConfig = serviceProvider.GetRequiredService<EnvironmentConfig>();
+        var hostEnvironment = serviceProvider.GetRequiredService<IHostEnvironment>();
         var botConfig = serviceProvider.GetRequiredService<IOptions<BotConfig>>().Value;
         var datadogConfig = serviceProvider.GetRequiredService<IOptions<DataDogConfig>>().Value;
         var eventLogConfig = serviceProvider.GetRequiredService<IOptions<EventLogConfig>>().Value;
@@ -144,7 +145,7 @@ public static class SerilogServiceExtension
                     a.Console(theme: SystemConsoleTheme.Colored, outputTemplate: OutputTemplate)
             );
 
-        if (envConfig.IsProduction)
+        if (hostEnvironment.IsProduction())
         {
             configuration.MinimumLevel.Information();
         }
