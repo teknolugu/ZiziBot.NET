@@ -3,7 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Serilog;
 using SqlKata.Execution;
-using WinTenDev.Zizi.Models.Types;
+using WinTenDev.Zizi.Models.Tables;
 using WinTenDev.Zizi.Utils;
 
 namespace WinTenDev.Zizi.Services.Internals;

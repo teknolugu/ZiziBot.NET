@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Serilog;
 using Telegram.Bot.Types;
 using WinTenDev.Zizi.Models.Enums;
-using WinTenDev.Zizi.Models.Types;
+using WinTenDev.Zizi.Models.Tables;
 using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Services.Telegram;
 

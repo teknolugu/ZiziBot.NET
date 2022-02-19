@@ -2,7 +2,7 @@ using System;
 using RepoDb.Attributes;
 using WinTenDev.Zizi.Models.Enums;
 
-namespace WinTenDev.Zizi.Models.Types;
+namespace WinTenDev.Zizi.Models.Tables;
 
 [Map("step_histories")]
 public class StepHistory

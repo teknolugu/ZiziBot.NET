@@ -6,7 +6,7 @@ using SerilogTimings;
 using Telegram.Bot.Framework.Abstractions;
 using Telegram.Bot.Types.ReplyMarkups;
 using WinTenDev.Zizi.Models.Enums;
-using WinTenDev.Zizi.Models.Types;
+using WinTenDev.Zizi.Models.Tables;
 using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Services.Telegram;
 using WinTenDev.Zizi.Utils;

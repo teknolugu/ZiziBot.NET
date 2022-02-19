@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using NMemory.Linq;
 using NMemory.Tables;
 using SerilogTimings;
+using WinTenDev.Zizi.Models.Tables;
 using WinTenDev.Zizi.Models.Types;
 using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Services.NMemory;

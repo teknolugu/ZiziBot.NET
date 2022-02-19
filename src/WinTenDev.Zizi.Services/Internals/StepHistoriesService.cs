@@ -7,7 +7,7 @@ using Humanizer;
 using Microsoft.Extensions.Logging;
 using RepoDb;
 using WinTenDev.Zizi.Models.Enums;
-using WinTenDev.Zizi.Models.Types;
+using WinTenDev.Zizi.Models.Tables;
 using WinTenDev.Zizi.Utils;
 
 namespace WinTenDev.Zizi.Services.Internals;

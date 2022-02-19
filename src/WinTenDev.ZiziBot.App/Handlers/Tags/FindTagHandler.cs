@@ -4,7 +4,7 @@ using BotFramework.Attributes;
 using BotFramework.Utils;
 using Microsoft.Extensions.Logging;
 using MoreLinq;
-using WinTenDev.Zizi.Models.Types;
+using WinTenDev.Zizi.Models.Tables;
 using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.ZiziBot.App.Handlers.Core;
 

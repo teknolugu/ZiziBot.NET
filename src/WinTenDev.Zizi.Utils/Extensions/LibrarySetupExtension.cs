@@ -3,7 +3,7 @@ using Dapper.FluentMap;
 using Microsoft.AspNetCore.Builder;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
-using WinTenDev.Zizi.Models.Types;
+using WinTenDev.Zizi.Models.Tables;
 
 namespace WinTenDev.Zizi.Utils.Extensions;
 

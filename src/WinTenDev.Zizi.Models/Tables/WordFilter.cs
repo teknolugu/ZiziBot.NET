@@ -2,7 +2,7 @@ using System;
 using System.Text.Json.Serialization;
 using SqlKata;
 
-namespace WinTenDev.Zizi.Models.Types;
+namespace WinTenDev.Zizi.Models.Tables;
 
 public class WordFilter
 {

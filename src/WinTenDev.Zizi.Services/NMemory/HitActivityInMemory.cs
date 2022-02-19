@@ -1,6 +1,6 @@
 ﻿using NMemory;
 using NMemory.Tables;
-using WinTenDev.Zizi.Models.Types;
+using WinTenDev.Zizi.Models.Tables;
 
 namespace WinTenDev.Zizi.Services.NMemory;
 

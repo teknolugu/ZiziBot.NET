@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Serilog;
 using SqlKata.Execution;
+using WinTenDev.Zizi.Models.Tables;
 using WinTenDev.Zizi.Models.Types;
 using WinTenDev.Zizi.Utils;
 using WinTenDev.Zizi.Utils.Text;
@@ -46,14 +47,14 @@ public class GlobalBanService
     /// <summary>
     /// Saves the ban async.
     /// </summary>
-    /// <param name="globalBanData">The global ban data.</param>
+    /// <param name="globalBanItem">The global ban data.</param>
     /// <returns>A Task.</returns>
-    public async Task<bool> SaveBanAsync(GlobalBanData globalBanData)
+    public async Task<bool> SaveBanAsync(GlobalBanItem globalBanItem)
     {
-        var userId = globalBanData.UserId;
-        var fromId = globalBanData.BannedBy;
-        var chatId = globalBanData.BannedFrom;
-        var reason = globalBanData.ReasonBan;
+        var userId = globalBanItem.UserId;
+        var fromId = globalBanItem.BannedBy;
+        var chatId = globalBanItem.BannedFrom;
+        var reason = globalBanItem.ReasonBan;
 
         var data = new Dictionary<string, object>()
         {
@@ -63,7 +64,7 @@ public class GlobalBanService
             { "reason", reason }
         };
 
-        Log.Information("Inserting new GBan: {@V}", globalBanData);
+        Log.Information("Inserting new GBan: {@V}", globalBanItem);
 
         var query = await _queryService
             .CreateMySqlFactory()
@@ -94,7 +95,7 @@ public class GlobalBanService
     /// </summary>
     /// <param name="userId">The user id.</param>
     /// <returns>Banned user by userId</returns>
-    public async Task<GlobalBanData> GetGlobalBanByIdCore(long userId)
+    public async Task<GlobalBanItem> GetGlobalBanByIdCore(long userId)
     {
         var where = new Dictionary<string, object>()
         {
@@ -105,7 +106,7 @@ public class GlobalBanService
             .CreateMySqlFactory()
             .FromTable(GBanTable)
             .Where(where)
-            .FirstOrDefaultAsync<GlobalBanData>();
+            .FirstOrDefaultAsync<GlobalBanItem>();
 
         return query;
     }
@@ -115,7 +116,7 @@ public class GlobalBanService
     /// </summary>
     /// <param name="userId">The user id.</param>
     /// <returns>A Task.</returns>
-    public async Task<GlobalBanData> GetGlobalBanById(long userId)
+    public async Task<GlobalBanItem> GetGlobalBanById(long userId)
     {
         var cacheKey = GetCacheKey(userId);
 
@@ -134,12 +135,12 @@ public class GlobalBanService
     /// Gets the global ban from db.
     /// </summary>
     /// <returns>A IEnumerable GlobalBanData</returns>
-    public async Task<IEnumerable<GlobalBanData>> GetGlobalBanCore()
+    public async Task<IEnumerable<GlobalBanItem>> GetGlobalBanCore()
     {
         var query = await _queryService
             .CreateMySqlFactory()
             .FromTable(GBanTable)
-            .GetAsync<GlobalBanData>();
+            .GetAsync<GlobalBanItem>();
 
         return query;
     }
@@ -148,7 +149,7 @@ public class GlobalBanService
     /// Gets the global bans.
     /// </summary>
     /// <returns>Get all Global Bans user</returns>
-    public async Task<IEnumerable<GlobalBanData>> GetGlobalBans()
+    public async Task<IEnumerable<GlobalBanItem>> GetGlobalBans()
     {
         var cacheKey = "global-bans";
 
@@ -181,14 +182,14 @@ public class GlobalBanService
 
     public async Task<int> ImportFile(
         string fileName,
-        GlobalBanData globalBan
+        GlobalBanItem globalBan
     )
     {
-        var reader = fileName.ReadCsv<RoseGBanItem>();
+        var reader = fileName.ReadCsv<CommonGlobalBanItem>();
 
         var gbanMaps = reader.Select
         (
-            item => new GlobalBanData()
+            item => new GlobalBanItem()
             {
                 UserId = item.UserId,
                 BannedBy = globalBan.BannedBy,
@@ -235,7 +236,7 @@ public class GlobalBanService
             .CreateMySqlFactory()
             .FromTable(GBanAdminTable)
             .Where("user_id", userId)
-            .GetAsync<GBanAdminItem>();
+            .GetAsync<GlobalBanAdminItem>();
 
         var isRegistered = querySql.Any();
         Log.Debug("UserId {UserId} is registered on ES2? {IsRegistered}", userId, isRegistered);
@@ -243,12 +244,12 @@ public class GlobalBanService
         return isRegistered;
     }
 
-    public async Task RegisterAdminAsync(GBanAdminItem gBanAdminItem)
+    public async Task RegisterAdminAsync(GlobalBanAdminItem globalBanAdminItem)
     {
         var querySql = _queryService
             .CreateMySqlFactory()
             .FromTable(GBanAdminTable)
-            .Where("user_id", gBanAdminItem.UserId);
+            .Where("user_id", globalBanAdminItem.UserId);
 
         var get = await querySql.GetAsync();
 
@@ -264,7 +265,7 @@ public class GlobalBanService
         }
     }
 
-    public async Task SaveAdminBan(GBanAdminItem adminItem)
+    public async Task SaveAdminBan(GlobalBanAdminItem adminItem)
     {
         var insert = await _queryService
             .CreateMySqlFactory()

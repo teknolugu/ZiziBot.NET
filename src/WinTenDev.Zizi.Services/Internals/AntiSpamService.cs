@@ -8,6 +8,7 @@ using Serilog;
 using SerilogTimings;
 using SpamWatch.Types;
 using WinTenDev.Zizi.Models.Configs;
+using WinTenDev.Zizi.Models.Tables;
 using WinTenDev.Zizi.Models.Types;
 using WinTenDev.Zizi.Models.Validators;
 using WinTenDev.Zizi.Services.Telegram;

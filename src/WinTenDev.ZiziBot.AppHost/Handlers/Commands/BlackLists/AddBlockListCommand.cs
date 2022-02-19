@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using Telegram.Bot.Framework.Abstractions;
-using WinTenDev.Zizi.Models.Types;
+using WinTenDev.Zizi.Models.Tables;
 using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Services.Telegram;
 using WinTenDev.Zizi.Utils;
@@ -22,7 +22,11 @@ public class AddBlockListCommand : CommandBase
         _blockListService = blockListService;
     }
 
-    public override async Task HandleAsync(IUpdateContext context, UpdateDelegate next, string[] args)
+    public override async Task HandleAsync(
+        IUpdateContext context,
+        UpdateDelegate next,
+        string[] args
+    )
     {
         await _telegramService.AddUpdateContext(context);
 
@@ -45,12 +49,15 @@ public class AddBlockListCommand : CommandBase
 
         await _telegramService.EditMessageTextAsync(result);
 
-        await _blockListService.SaveBlockList(new BlockList()
-        {
-            ChatId = _telegramService.ChatId,
-            FromId = _telegramService.FromId,
-            UrlSource = url,
-            CreatedAt = DateTime.Now
-        });
+        await _blockListService.SaveBlockList
+        (
+            new BlockList()
+            {
+                ChatId = _telegramService.ChatId,
+                FromId = _telegramService.FromId,
+                UrlSource = url,
+                CreatedAt = DateTime.Now
+            }
+        );
     }
 }

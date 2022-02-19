@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using Telegram.Bot.Framework.Abstractions;
 using Telegram.Bot.Types.Enums;
-using WinTenDev.Zizi.Models.Types;
+using WinTenDev.Zizi.Models.Tables;
 using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Services.Telegram;
 
@@ -57,7 +57,7 @@ public class ImportGBanCommand : CommandBase
         var import = await _globalBanService.ImportFile
         (
             fileName,
-            new GlobalBanData()
+            new GlobalBanItem()
             {
                 ReasonBan = reasonBan,
                 BannedBy = fromId,

@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 using SqlKata;
 using WinTenDev.Zizi.Models.Enums;
 
-namespace WinTenDev.Zizi.Models.Types;
+namespace WinTenDev.Zizi.Models.Tables;
 
 public class CloudTag
 {

@@ -5,7 +5,7 @@ using BotFramework;
 using BotFramework.Attributes;
 using BotFramework.Setup;
 using Telegram.Bot.Types;
-using WinTenDev.Zizi.Models.Types;
+using WinTenDev.Zizi.Models.Tables;
 using WinTenDev.Zizi.Models.Validators;
 using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Utils;

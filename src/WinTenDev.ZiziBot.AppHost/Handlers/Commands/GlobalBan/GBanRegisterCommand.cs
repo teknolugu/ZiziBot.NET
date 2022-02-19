@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Telegram.Bot.Framework.Abstractions;
-using WinTenDev.Zizi.Models.Types;
+using WinTenDev.Zizi.Models.Tables;
 using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Services.Telegram;
 
@@ -67,7 +67,7 @@ public class GBanRegisterCommand : CommandBase
             userId = message.ReplyToMessage.From.Id;
         }
 
-        var adminItem = new GBanAdminItem()
+        var adminItem = new GlobalBanAdminItem()
         {
             Username = message.From.Username,
             UserId = userId,

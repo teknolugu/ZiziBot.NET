@@ -9,6 +9,7 @@ using Serilog;
 using SqlKata;
 using SqlKata.Execution;
 using WinTenDev.Zizi.Models.Configs;
+using WinTenDev.Zizi.Models.Tables;
 using WinTenDev.Zizi.Models.Types;
 using WinTenDev.Zizi.Utils.Providers;
 using WinTenDev.Zizi.Utils.Text;

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Serilog;
 using SqlKata;
 using SqlKata.Execution;
-using WinTenDev.Zizi.Models.Types;
+using WinTenDev.Zizi.Models.Tables;
 using WinTenDev.Zizi.Utils.Providers;
 using WinTenDev.Zizi.Utils.Text;
 
@@ -71,17 +71,17 @@ public static class SyncUtil
         Log.Information("Getting FBam data..");
         var cloudQuery = (await new Query("global_bans")
                 .ExecForMysql()
-                .GetAsync<GlobalBanData>())
+                .GetAsync<GlobalBanItem>())
             .ToList();
 
-        var mappedQuery = cloudQuery.ToJson(followProperty: true).MapObject<List<GlobalBanData>>();
+        var mappedQuery = cloudQuery.ToJson(followProperty: true).MapObject<List<GlobalBanItem>>();
         var rowCount = cloudQuery.Count;
         Log.Information("GBan User: {0} rows", rowCount);
 
         var jsonGBan = "gban-users".OpenJson();
 
         Log.Debug("Opening GBan collection");
-        var gBanCollection = await jsonGBan.GetCollectionAsync<GlobalBanData>();
+        var gBanCollection = await jsonGBan.GetCollectionAsync<GlobalBanItem>();
 
         Log.Debug("Deleting old data");
         await gBanCollection.DeleteManyAsync(x => true);

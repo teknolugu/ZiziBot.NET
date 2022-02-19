@@ -8,7 +8,7 @@ using Humanizer;
 using Microsoft.Extensions.Logging;
 using SerilogTimings;
 using Telegram.Bot.Framework.Abstractions;
-using Telegram.Bot.Types.Enums;
+using WinTenDev.Zizi.Models.Tables;
 using WinTenDev.Zizi.Models.Types;
 using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Services.Telegram;

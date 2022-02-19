@@ -1,7 +1,7 @@
 using System.Threading.Tasks;
 using SqlKata;
 using SqlKata.Execution;
-using WinTenDev.Zizi.Models.Types;
+using WinTenDev.Zizi.Models.Tables;
 using WinTenDev.Zizi.Utils.Text;
 
 namespace WinTenDev.Zizi.Utils;

@@ -6,7 +6,7 @@ using Hangfire;
 using Humanizer;
 using Serilog;
 using SqlKata.Execution;
-using WinTenDev.Zizi.Models.Types;
+using WinTenDev.Zizi.Models.Tables;
 using WinTenDev.Zizi.Utils;
 using WinTenDev.Zizi.Utils.Telegram;
 

@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using MoreLinq;
 using Telegram.Bot;
 using Telegram.Bot.Types.ReplyMarkups;
+using WinTenDev.Zizi.Models.Tables;
 using WinTenDev.Zizi.Models.Types;
 using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Utils;

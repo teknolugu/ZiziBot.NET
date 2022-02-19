@@ -17,9 +17,25 @@ public class CallbackAnswer
     public int CallbackDeleteMessageId { get; set; }
     public long TargetUserId { get; set; }
     public TimeSpan MuteMemberTimeSpan { get; set; }
+
+    public CallbackAnswerAction CallbackAnswerAction { get; set; }
+    public List<CallbackAnswerAction> CallbackAnswerActions { get; set; }
+}
+
+public class CallbackAnswerAction
+{
+    public CallbackAnswerMode AnswerMode { get; set; }
+    public long UserId { get; set; }
+    public long ChatId { get; set; }
+    public long MessageId { get; set; }
+    public string MessageText { get; set; }
+    public InlineKeyboardMarkup CallbackAnswerInlineMarkup { get; set; }
+    public TimeSpan TimeSpan { get; set; }
 }
 
 public class CallbackResult
 {
     public Message UpdatedMessage { get; set; }
 }
+
+public delegate Func<CallbackAnswer, Task<CallbackResult>> CallbackAnswerFunc(CallbackAnswer callbackAnswer);

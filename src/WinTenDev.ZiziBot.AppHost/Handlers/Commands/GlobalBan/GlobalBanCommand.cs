@@ -3,7 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Serilog;
 using Telegram.Bot.Framework.Abstractions;
-using WinTenDev.Zizi.Models.Types;
+using WinTenDev.Zizi.Models.Tables;
 using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Services.Telegram;
 using WinTenDev.Zizi.Utils;
@@ -92,7 +92,7 @@ public class GlobalBanCommand : CommandBase
         Log.Information("Execute Global Ban");
         await _telegramService.SendTextMessageAsync($"Memeriksa pemblokiran UserId: {userId}");
 
-        var banData = new GlobalBanData()
+        var banData = new GlobalBanItem()
         {
             UserId = userId,
             BannedBy = fromId,

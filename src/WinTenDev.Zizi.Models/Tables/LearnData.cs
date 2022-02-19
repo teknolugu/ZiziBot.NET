@@ -1,4 +1,4 @@
-﻿namespace WinTenDev.Zizi.Models.Types;
+﻿namespace WinTenDev.Zizi.Models.Tables;
 
 public class LearnData
 {

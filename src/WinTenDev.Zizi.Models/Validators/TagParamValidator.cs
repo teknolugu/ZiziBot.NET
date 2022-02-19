@@ -1,5 +1,5 @@
 ﻿using FluentValidation;
-using WinTenDev.Zizi.Models.Types;
+using WinTenDev.Zizi.Models.Tables;
 
 namespace WinTenDev.Zizi.Models.Validators;
 

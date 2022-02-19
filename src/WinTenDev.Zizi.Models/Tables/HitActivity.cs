@@ -2,7 +2,7 @@
 using Newtonsoft.Json;
 using Telegram.Bot.Types.Enums;
 
-namespace WinTenDev.Zizi.Models.Types;
+namespace WinTenDev.Zizi.Models.Tables;
 
 public class HitActivity
 {

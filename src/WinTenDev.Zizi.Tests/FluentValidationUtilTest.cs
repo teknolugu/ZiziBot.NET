@@ -1,5 +1,5 @@
 ﻿using FluentAssertions;
-using WinTenDev.Zizi.Models.Types;
+using WinTenDev.Zizi.Models.Tables;
 using WinTenDev.Zizi.Models.Validators;
 using WinTenDev.Zizi.Utils;
 using Xunit;
