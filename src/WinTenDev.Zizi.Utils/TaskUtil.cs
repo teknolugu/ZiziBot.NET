@@ -1,4 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Humanizer;
 using Nito.AsyncEx;
@@ -23,5 +26,27 @@ public static class TaskUtil
     {
         Log.Debug("Running {Count} in background", "task".ToQuantity(tasks.Count));
         tasks.ForEach(task => task.InBackground());
+    }
+
+    public static Task ForEachAsync<T>(
+        this IEnumerable<T> source,
+        int degreeOfParallel,
+        Func<T, Task> body
+    )
+    {
+        return Task.WhenAll
+        (
+            from partition in Partitioner.Create(source).GetPartitions(degreeOfParallel)
+            select Task.Run
+            (
+                async delegate {
+                    using (partition)
+                    {
+                        while (partition.MoveNext())
+                            await body(partition.Current);
+                    }
+                }
+            )
+        );
     }
 }
