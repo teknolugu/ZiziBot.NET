@@ -88,6 +88,7 @@ public static class MapConfigExtension
         );
 
         services.Configure<AllDebridConfig>(config.GetSection(nameof(AllDebridConfig)));
+        services.Configure<BinderByteConfig>(config.GetSection(nameof(BinderByteConfig)));
         services.Configure<BotConfig>(config.GetSection(nameof(BotConfig)));
         services.Configure<ButtonConfig>(config.GetSection(nameof(ButtonConfig)));
         services.Configure<CacheConfig>(config.GetSection(nameof(CacheConfig)));
@@ -98,6 +99,7 @@ public static class MapConfigExtension
         services.Configure<EnginesConfig>(config.GetSection(nameof(EnginesConfig)));
         services.Configure<ExceptionlessConfig>(config.GetSection(nameof(ExceptionlessConfig)));
         services.Configure<EventLogConfig>(config.GetSection(nameof(EventLogConfig)));
+        services.Configure<FeatureConfig>(config.GetSection(nameof(FeatureConfig)));
         services.Configure<GoogleCloudConfig>(config.GetSection(nameof(GoogleCloudConfig)));
         services.Configure<GrafanaConfig>(config.GetSection(nameof(GrafanaConfig)));
         services.Configure<HangfireConfig>(config.GetSection(nameof(HangfireConfig)));
