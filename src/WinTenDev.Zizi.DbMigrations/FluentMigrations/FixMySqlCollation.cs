@@ -4,7 +4,7 @@ using MoreLinq;
 
 namespace WinTenDev.Zizi.DbMigrations.FluentMigrations;
 
-[Maintenance(MigrationStage.AfterAll)]
+// [Maintenance(MigrationStage.AfterAll)]
 [UsedImplicitly]
 public class FixMySqlCollation : Migration
 {

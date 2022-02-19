@@ -11,4 +11,12 @@ public static class InjectionUtil
         var serviceScope = app.ApplicationServices.CreateScope();
         return serviceScope.ServiceProvider;
     }
+
+    public static TService GetRequiredService<TService>(this IApplicationBuilder app)
+    {
+        var appService = app.GetServiceProvider()
+            .GetRequiredService<TService>();
+
+        return appService;
+    }
 }

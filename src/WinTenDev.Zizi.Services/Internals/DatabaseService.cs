@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -146,8 +145,13 @@ public class DatabaseService
         listFile.ForEach(filePath => filePath.DeleteFile());
     }
 
-    public async Task<IEnumerable<dynamic>> FixCollationTables()
+    public async Task FixTableCollation()
     {
+        var op = Operation.Begin("Fix MySql table Collation");
+
+        const string defaultCharSet = "utf8mb4";
+        const string defaultCollation = "utf8mb4_unicode_ci";
+
         var datas = await _queryService
             .CreateMySqlFactory()
             .FromTable("information_schema.tables")
@@ -163,8 +167,46 @@ public class DatabaseService
                 "update_time"
             ).WhereRaw("table_schema = database()")
             .OrderByDesc("table_name")
-            .GetAsync();
+            .GetAsync<TableInfo>();
 
-        return datas;
+        var needFixes = datas.Where
+            (
+                tableInfo =>
+                    tableInfo.TableCollation.NotContains("utf8mb4")
+            )
+            .ToList();
+
+        if (needFixes.Count == 0)
+        {
+            _logger.LogInformation("No table Collation not need required to fix");
+            op.Complete();
+
+            return;
+        }
+
+        await needFixes.ForEachAsync
+        (
+            degreeOfParallel: 4,
+            async tableInfo => {
+                var tableName = tableInfo.TableName;
+
+                var sql = $"ALTER TABLE {tableName} " +
+                          "CONVERT TO CHARACTER " +
+                          $"SET {defaultCharSet} " +
+                          $"COLLATE {defaultCollation};";
+
+                var query = await _queryService
+                    .CreateMySqlFactory()
+                    .StatementAsync(sql);
+
+                _logger.LogInformation
+                (
+                    "Fixing table {TableName} result: {Result}",
+                    tableName, query
+                );
+            }
+        );
+
+        op.Complete();
     }
 }

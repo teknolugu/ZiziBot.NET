@@ -66,6 +66,7 @@ public class Startup
         app.UseFluentMigration();
         app.ConfigureNewtonsoftJson();
         app.ConfigureDapper();
+        app.EnsureTableCollation();
 
         if (env.IsDevelopment()) app.UseDeveloperExceptionPage();
 

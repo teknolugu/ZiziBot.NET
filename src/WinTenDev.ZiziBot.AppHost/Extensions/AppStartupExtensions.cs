@@ -115,4 +115,11 @@ internal static class AppStartupExtensions
 
         return app;
     }
+
+    public static IApplicationBuilder EnsureTableCollation(this IApplicationBuilder app)
+    {
+        app.GetRequiredService<DatabaseService>().FixTableCollation().WaitAndUnwrapException();
+
+        return app;
+    }
 }
