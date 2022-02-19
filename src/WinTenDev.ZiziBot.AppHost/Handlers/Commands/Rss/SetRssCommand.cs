@@ -38,14 +38,16 @@ public class SetRssCommand : CommandBase
         var fromId = _telegramService.FromId;
 
         var checkUserPermission = await _telegramService.CheckUserPermission();
+
         if (!checkUserPermission)
         {
-            Log.Warning("Delete RSS only for admin or private chat!");
-            await _telegramService.DeleteAsync();
+            Log.Warning("Modify RSS only for admin or private chat!");
+            await _telegramService.DeleteSenderMessageAsync();
             return;
         }
 
         var url = _telegramService.Message.Text.GetTextWithoutCmd();
+
         if (url.IsNullOrEmpty())
         {
             await _telegramService.SendTextMessageAsync("Apa url Feednya?");
@@ -60,25 +62,30 @@ public class SetRssCommand : CommandBase
             return;
         }
 
-        await _telegramService.AppendTextAsync($"Sedang mengecek apakah berisi RSS");
+        await _telegramService.AppendTextAsync($"Memeriksa RSS Feed");
 
         var isValid = await url.IsValidUrlFeed();
+
         if (!isValid)
         {
-            await _telegramService.AppendTextAsync("Sedang mencari kemungkinan tautan RSS yang valid");
-            var foundUrl = await url.GetBaseUrl().FindUrlFeed();
-            Log.Information("Found URL Feed: {FoundUrl}", foundUrl);
+            var baseUrl = url.GetBaseUrl();
+
+            await _telegramService.AppendTextAsync("Mencari kemungkinan RSS Feed yang valid");
+            var foundUrl = await baseUrl.FindUrlFeed();
+
+            Log.Debug("Found URL Feed: {FoundUrl}", foundUrl);
 
             if (foundUrl != "")
             {
+                await _telegramService.AppendTextAsync("Menemukan: " + foundUrl);
                 url = foundUrl;
             }
             else
             {
-                var notfoundRss = $"Kami tidak dapat memvalidasi {url} adalah Link RSS yang valid, " +
-                                  $"dan mencoba mencari di {url.GetBaseUrl()} tetap tidak dapat menemukan.";
+                var notFoundRss = $"Kami tidak dapat memvalidasi {url} adalah Link RSS yang valid, " +
+                                  $"dan mencoba mencari di {baseUrl} tetap tidak dapat menemukan.";
 
-                await _telegramService.EditMessageTextAsync(notfoundRss);
+                await _telegramService.EditMessageTextAsync(notFoundRss);
                 return;
             }
         }
