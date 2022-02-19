@@ -3,13 +3,15 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Release'">
-        <MajorNumber>2021</MajorNumber>
-        <MinorNumber>11</MinorNumber>
+        <MajorNumber>$([System.DateTime]::Now.Year)</MajorNumber>
+        <MinorNumber>$([System.DateTime]::Now.Month)</MinorNumber>
         <BuildNumber>$([System.DateTime]::Now.Date.Subtract($([System.DateTime]::Parse("2000-01-01"))).TotalDays)</BuildNumber>
         <RevNumber>$([System.Math]::Floor($([MSBuild]::Divide($([System.DateTime]::Now.TimeOfDay.TotalSeconds),1.32))))</RevNumber>
         <VersionNumber>$(MajorNumber).$(MinorNumber).$(BuildNumber).$(RevNumber)</VersionNumber>
 
         <FileVersion>$(MajorNumber).$(MinorNumber).$(BuildNumber).$(RevNumber)</FileVersion>
         <Version>$(MajorNumber).$(MinorNumber).$(BuildNumber).$(RevNumber)</Version>
+
+        <Copyright>© $([System.DateTime]::UtcNow.Year) WinTenDev</Copyright>
     </PropertyGroup>
 </Project>
