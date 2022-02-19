@@ -380,14 +380,17 @@ public class TelegramService
         var command = GetCommand();
         var featureConfig = await _featureService.GetFeatureConfig(command);
 
-        var hasAllowed = featureConfig.AllowsAt.Any(s => s.Contains(ChatId.ToString()));
-
-        featureConfig.NextHandler = hasAllowed;
-
-        if (!featureConfig.NextHandler)
+        if (featureConfig.IsEnabled)
         {
-            await SendTextMessageAsync(featureConfig.Caption, featureConfig.Markup);
-            return featureConfig;
+            var hasAllowed = featureConfig.AllowsAt?.Any(s => s.Contains(ChatId.ToString())) ?? false;
+
+            featureConfig.NextHandler = hasAllowed;
+
+            if (!featureConfig.NextHandler)
+            {
+                await SendTextMessageAsync(featureConfig.Caption, featureConfig.Markup);
+                return featureConfig;
+            }
         }
 
         featureConfig.NextHandler = true;

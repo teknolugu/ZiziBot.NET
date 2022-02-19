@@ -7,7 +7,8 @@ namespace WinTenDev.Zizi.Models.Configs;
 public partial class FeatureConfig
 {
     public bool IsEnabled { get; set; }
-    public List<Item> Items { get; set; }
+    public string DefaultCaption { get; set; } = "This feature is disabled by administrator";
+    public List<Item>? Items { get; set; }
 }
 
 public partial class Item
