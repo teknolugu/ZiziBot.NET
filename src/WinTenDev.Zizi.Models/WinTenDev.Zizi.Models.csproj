@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-    <Import Project="./../../config/VersionBuild.target.props"/>
+    <Import Project="./../../config/VersionBuild.target.props" />
 
     <PropertyGroup>
         <TargetFramework>net6.0</TargetFramework>
@@ -8,23 +8,23 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="AleXr64.BotFramework" Version="0.6.0-g3acd012c7b" IncludePrerelease="true"/>
-        <PackageReference Include="CsvHelper" Version="27.2.1"/>
-        <PackageReference Include="Dapper" Version="2.0.123"/>
-        <PackageReference Include="Dapper.FluentMap" Version="2.0.0"/>
-        <PackageReference Include="DotNurse.Injector" Version="2.5.2"/>
-        <PackageReference Include="EasyCaching.Core" Version="1.5.0"/>
-        <PackageReference Include="Fedorus.Telegram.Bot.Framework" Version="1.0.3"/>
-        <PackageReference Include="FluentValidation" Version="10.3.6"/>
-        <PackageReference Include="Microsoft.AspNetCore.Hosting.Abstractions" Version="2.2.0"/>
+        <PackageReference Include="AleXr64.BotFramework" Version="0.6.0-g3acd012c7b" IncludePrerelease="true" />
+        <PackageReference Include="CsvHelper" Version="27.2.1" />
+        <PackageReference Include="Dapper" Version="2.0.123" />
+        <PackageReference Include="Dapper.FluentMap" Version="2.0.0" />
+        <PackageReference Include="DotNurse.Injector" Version="2.5.2" />
+        <PackageReference Include="EasyCaching.Core" Version="1.5.0" />
+        <PackageReference Include="Fedorus.Telegram.Bot.Framework" Version="1.0.3" />
+        <PackageReference Include="FluentValidation" Version="10.3.6" />
+        <PackageReference Include="Microsoft.AspNetCore.Hosting.Abstractions" Version="2.2.0" />
         <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="6.0.0">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="6.0.0"/>
-        <PackageReference Include="Microsoft.ML" Version="1.7.0"/>
-        <PackageReference Include="Newtonsoft.Json" Version="13.0.1"/>
-        <PackageReference Include="RepoDb" Version="1.12.9"/>
+        <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="6.0.0" />
+        <PackageReference Include="Microsoft.ML" Version="1.7.0" />
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+        <PackageReference Include="RepoDb" Version="1.12.10" />
         <PackageReference Include="Roslynator.Analyzers" Version="4.0.2">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -33,9 +33,9 @@
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="SqlKata" Version="2.3.7"/>
-        <PackageReference Include="Telegram.Bot" Version="17.0.0"/>
-        <PackageReference Include="Telegram.Bot.Extensions.Polling" Version="1.0.2"/>
-        <PackageReference Include="WTelegramClient" Version="2.0.1"/>
+        <PackageReference Include="SqlKata" Version="2.3.7" />
+        <PackageReference Include="Telegram.Bot" Version="17.0.0" />
+        <PackageReference Include="Telegram.Bot.Extensions.Polling" Version="1.0.2" />
+        <PackageReference Include="WTelegramClient" Version="2.1.1" />
     </ItemGroup>
 </Project>
