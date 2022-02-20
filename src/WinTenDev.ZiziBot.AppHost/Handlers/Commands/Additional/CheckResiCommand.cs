@@ -13,15 +13,18 @@ namespace WinTenDev.ZiziBot.AppHost.Handlers.Commands.Additional;
 public class CheckResiCommand : CommandBase
 {
     private readonly TelegramService _telegramService;
+    private readonly BinderByteService _binderByteService;
     private readonly CekResiService _cekResiService;
     private readonly FeatureService _featureService;
 
     public CheckResiCommand(
+        BinderByteService binderByteService,
         CekResiService cekResiService,
         FeatureService featureService,
         TelegramService telegramService
     )
     {
+        _binderByteService = binderByteService;
         _cekResiService = cekResiService;
         _featureService = featureService;
         _telegramService = telegramService;
@@ -49,7 +52,16 @@ public class CheckResiCommand : CommandBase
 
         if (resi.IsNullOrEmpty())
         {
-            await _telegramService.SendTextMessageAsync("⚠ Silakan sertakan nomor resi yang mau di cek.");
+            var supportedCouriers = await _binderByteService.GetSupportedCouriers();
+            var courierList = supportedCouriers.Select(courier => courier.Description).JoinStr(", ");
+
+            await _telegramService.SendTextMessageAsync
+            (
+                "⚠ Silakan sertakan nomor resi yang mau di cek." +
+                $"\n\n<b>Kurir yang di dukung</b>" +
+                $"\n{courierList}" +
+                $"\n\n<b>Contoh: </b> <code>/resi 123456789</code>"
+            );
             return;
         }
 
@@ -60,7 +72,7 @@ public class CheckResiCommand : CommandBase
 
     private async Task BinderByteCekResi(string resi)
     {
-        var result = await _cekResiService.BinderByteCekResiBatchesAsync(resi);
+        var result = await _binderByteService.CekResiBatchesAsync(resi);
 
         await _telegramService.EditMessageTextAsync(result);
     }
