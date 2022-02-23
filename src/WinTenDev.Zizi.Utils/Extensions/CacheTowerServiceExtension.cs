@@ -20,7 +20,7 @@ public static class CacheTowerServiceExtension
 
         if (config.InvalidateOnStart)
         {
-            cacheTowerPath.RemoveFiles();
+            cacheTowerPath.DeleteDirectory().EnsureDirectory();
         }
 
         services.AddSingleton
