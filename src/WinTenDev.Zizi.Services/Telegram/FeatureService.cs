@@ -48,7 +48,7 @@ public class FeatureService
 
         if (config == null)
         {
-            _logger.LogError("ButtonConfig Not Found: {Key}", key);
+            _logger.LogWarning("ButtonConfig Not Found: {Key}", key);
             return buttonParsed;
         }
 

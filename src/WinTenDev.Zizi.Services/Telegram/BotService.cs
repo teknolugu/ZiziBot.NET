@@ -119,7 +119,7 @@ public class BotService
 
         if (item == null)
         {
-            _logger.LogError("ButtonConfig Not Found: {Key}", key);
+            _logger.LogWarning("ButtonConfig Not Found: {Key}", key);
             return buttonParsed;
         }
 
