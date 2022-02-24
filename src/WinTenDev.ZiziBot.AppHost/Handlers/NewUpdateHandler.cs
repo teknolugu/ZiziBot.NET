@@ -120,6 +120,8 @@ public class NewUpdateHandler : IUpdateHandler
             return false;
         }
 
+        await _telegramService.FireAnalyzer();
+
         var shouldDelete = await ScanMessageAsync();
 
         if (shouldDelete)
