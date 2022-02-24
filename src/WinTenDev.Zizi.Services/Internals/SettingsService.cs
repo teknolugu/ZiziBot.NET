@@ -62,15 +62,18 @@ public class SettingsService
         Log.Information("Get settings chat {ChatId}", chatId);
         var cacheKey = GetCacheKey(chatId);
 
-        var settings = await _cacheService.GetOrSetAsync(cacheKey, async () => {
-            var data = await _queryService
-                .CreateMySqlFactory()
-                .FromTable(BaseTable)
-                .Where("chat_id", chatId)
-                .FirstOrDefaultAsync<ChatSetting>();
+        var settings = await _cacheService.GetOrSetAsync
+        (
+            cacheKey, async () => {
+                var data = await _queryService
+                    .CreateMySqlFactory()
+                    .FromTable(BaseTable)
+                    .Where("chat_id", chatId)
+                    .FirstOrDefaultAsync<ChatSetting>();
 
-            return data ?? new ChatSetting();
-        });
+                return data ?? new ChatSetting();
+            }
+        );
 
         return settings;
     }
@@ -106,6 +109,7 @@ public class SettingsService
     public async Task<int> DeleteSettings(long chatId)
     {
         Log.Debug("Starting delete ChatSetting for ChatID: '{ChatId}'", chatId);
+
         var deleteSetting = await _queryService
             .CreateMySqlFactory()
             .FromTable(BaseTable)
@@ -142,6 +146,7 @@ public class SettingsService
             "enable_fed_es2_ban",
             "enable_fed_spamwatch",
             // "enable_find_notes",
+            "enable_fire_check",
             "enable_find_tags",
             "enable_human_verification",
             "enable_check_profile_photo",
@@ -170,6 +175,7 @@ public class SettingsService
         var transposedTable = dataTable.TransposedTable();
 
         var listBtn = new List<CallBackButton>();
+
         foreach (DataRow row in transposedTable.Rows)
         {
             var textOrig = row["id"].ToString();
@@ -193,11 +199,15 @@ public class SettingsService
                 .Replace("_", " ");
 
             var tail = appendChatId ? $" {chatId}" : "";
-            listBtn.Add(new CallBackButton
-            {
-                Text = btnText.ToTitleCase(),
-                Data = $"setting {forCallbackData}" + tail
-            });
+
+            listBtn.Add
+            (
+                new CallBackButton
+                {
+                    Text = btnText.ToTitleCase(),
+                    Data = $"setting {forCallbackData}" + tail
+                }
+            );
         }
 
         Log.Verbose("ListBtn: {Btn}", listBtn.ToJson(true));
@@ -215,6 +225,7 @@ public class SettingsService
         var isExist = await IsSettingExist(chatId);
 
         int insert;
+
         if (!isExist)
         {
             Log.Information("Inserting new Chat Settings for {ChatId}", chatId);

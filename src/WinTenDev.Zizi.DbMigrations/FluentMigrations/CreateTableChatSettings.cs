@@ -8,7 +8,7 @@ namespace WinTenDev.Zizi.DbMigrations.FluentMigrations;
 [UsedImplicitly]
 public class CreateTableChatSettings : Migration
 {
-    private const string TableName = "group_settings";
+    public const string TableName = "group_settings";
 
     public override void Up()
     {
@@ -31,6 +31,7 @@ public class CreateTableChatSettings : Migration
             .WithColumn("enable_fed_spamwatch").AsBoolean().WithDefaultValue(1)
             .WithColumn("enable_find_notes").AsBoolean().WithDefaultValue(1)
             .WithColumn("enable_find_tags").AsBoolean().WithDefaultValue(1)
+            .WithColumn("enable_fire_check").AsBoolean().WithDefaultValue(0)
             .WithColumn("enable_human_verification").AsBoolean().WithDefaultValue(0)
             .WithColumn("enable_profile_photo_check").AsBoolean().WithDefaultValue(0)
             .WithColumn("enable_reply_notification").AsBoolean().WithDefaultValue(1)
