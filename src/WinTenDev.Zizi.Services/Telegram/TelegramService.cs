@@ -1305,6 +1305,35 @@ public class TelegramService
         }
     }
 
+    public async Task<StringAnalyzer> FireAnalyzer()
+    {
+        var settings = await GetChatSetting();
+        StringAnalyzer result = new();
+
+        if (!settings.EnableFireCheck)
+        {
+            Log.Information("Fire Check is disabled on ChatID '{ChatId}'", ChatId);
+            return result;
+        }
+
+        result = _chatService.FireAnalyzer(MessageOrEditedText);
+
+        if (!result.IsFired) return result;
+        var muteUntil = result.FireRatio * 1.33;
+        var untilDate = DateTime.Now.AddHours(muteUntil);
+
+        var sendText = result.ResultNote;
+
+        if (!await CheckUserPermission())
+        {
+            sendText += $"\nAnda di Mute sampai {untilDate} ";
+            await RestrictMemberAsync(FromId, until: untilDate);
+        }
+
+        await SendTextMessageAsync(sendText);
+        return result;
+    }
+
     public async Task ScheduleKickJob(StepHistoryName name)
     {
         Log.Information("Scheduling Job with name: {JobName}", name);

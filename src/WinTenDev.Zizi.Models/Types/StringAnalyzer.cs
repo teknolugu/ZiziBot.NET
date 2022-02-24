@@ -9,4 +9,6 @@ public class StringAnalyzer
     public int AlphaNumStrCount { get; set; }
     public int AlphaNumStrNoSpaceCount { get; set; }
     public double FireRatio { get; set; }
+    public string ResultNote { get; set; }
+    public bool IsFired { get; set; }
 }

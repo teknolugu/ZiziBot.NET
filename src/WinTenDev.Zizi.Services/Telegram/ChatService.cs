@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Hangfire;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Serilog;
 using Telegram.Bot;
@@ -9,6 +10,7 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using WinTenDev.Zizi.Models.Configs;
 using WinTenDev.Zizi.Models.Enums;
+using WinTenDev.Zizi.Models.Types;
 using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Utils;
 using WinTenDev.Zizi.Utils.Telegram;
@@ -20,25 +22,21 @@ public class ChatService
     private const string AdminCheckerPrefix = "admin-checker";
     private const int PrivateSettingLimit = 365;
 
+    private readonly ILogger<ChatService> _logger;
     private readonly ITelegramBotClient _botClient;
     private readonly SettingsService _settingsService;
     private readonly CacheService _cacheService;
     private readonly RestrictionConfig _restrictionConfig;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="ChatService"/> class
-    /// </summary>
-    /// <param name="cacheService"></param>
-    /// <param name="restrictionConfig">The</param>
-    /// <param name="botClient">The bot client</param>
-    /// <param name="settingsService">The settings service</param>
     public ChatService(
+        ILogger<ChatService> logger,
         CacheService cacheService,
         IOptionsSnapshot<RestrictionConfig> restrictionConfig,
         ITelegramBotClient botClient,
         SettingsService settingsService
     )
     {
+        _logger = logger;
         _botClient = botClient;
         _cacheService = cacheService;
         _restrictionConfig = restrictionConfig.Value;
@@ -102,11 +100,6 @@ public class ChatService
         }
     }
 
-    /// <summary>
-    /// Gets the chat using the specified chat id
-    /// </summary>
-    /// <param name="chatId">The chat id</param>
-    /// <returns>The data</returns>
     public async Task<Chat> GetChatAsync(long chatId)
     {
         var cacheKey = "chat_" + chatId.ReduceChatId();
@@ -159,9 +152,6 @@ public class ChatService
         return data;
     }
 
-    /// <summary>
-    /// The is private chat
-    /// </summary>
     public async Task<bool> IsPrivateChat(long chatId)
     {
         var chat = await GetChatAsync(chatId);
@@ -186,9 +176,40 @@ public class ChatService
         return checkRestricted;
     }
 
-    /// <summary>
-    /// Registers the chat health
-    /// </summary>
+    public StringAnalyzer FireAnalyzer(string text)
+    {
+        StringAnalyzer result = new();
+
+        if (text == null)
+        {
+            _logger.LogDebug("No Message Text/Caption detected");
+
+            return result;
+        }
+
+        result = text.AnalyzeString();
+        var fireRatio = result.FireRatio;
+        var wordCount = result.WordsCount;
+
+        if (wordCount < 3)
+        {
+            _logger.LogDebug("String analyzer stop, because Words count is less than 3");
+            return result;
+        }
+
+        var resultNote = fireRatio switch
+        {
+            >= 1 => "Tolong matikan CAPS LOCK sebelum mengetik pesan.",
+            >= 0.6 => "Tolong kurangi penggunaan huruf kapital yang berlebihan.",
+            _ => ""
+        };
+
+        result.ResultNote = resultNote;
+        result.IsFired = fireRatio >= 0.6;
+
+        return result;
+    }
+
     public async Task RegisterChatHealth()
     {
         Log.Information("Starting Check bot is Admin on all Group!");

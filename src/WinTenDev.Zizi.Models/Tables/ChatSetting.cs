@@ -92,6 +92,8 @@ public class ChatSetting
     [JsonProperty("enable_find_tags")]
     public bool EnableFindTags { get; set; } = true;
 
+    public bool EnableFireCheck { get; set; }
+
     [Column("enable_word_filter_group")]
     [JsonProperty("enable_word_filter_group")]
     public bool EnableWordFilterPerGroup { get; set; } = true;

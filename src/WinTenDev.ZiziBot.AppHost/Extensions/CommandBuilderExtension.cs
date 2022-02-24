@@ -80,6 +80,7 @@ public static class CommandBuilderExtension
                                         .UseCommand<DelRssCommand>("delrss")
                                         .UseCommand<DemoteCommand>("demote")
                                         .UseCommand<ExportRssCommand>("exportrss")
+                                        .UseCommand<FireCommand>("fire")
                                         .UseCommand<GBanRegisterCommand>("gbanreg")
                                         .UseCommand<GlobalBanCommand>("fban")
                                         .UseCommand<GlobalBanCommand>("gban")
