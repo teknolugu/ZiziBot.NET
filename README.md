@@ -44,8 +44,6 @@ Official repository WinTenDev Zizi Bot, written in .NET
 - Press Start in your IDE to start debugging or via CLI.
 - Your bot has ran local as Development using Poll mode.
 
-# Currently available on following bot
-
 # Currently, available on following bot
 
 - [Zizi Bot](https://t.me/MissZiziBot) (Stable)
