@@ -339,6 +339,7 @@ launchSettings.json
 
 
 **/.run/
+**/Storage/AppSettings/Current/
 **/Storage/Cache/
 **/Storage/Cache-Tower/
 **/Storage/Caches/
