@@ -8,4 +8,5 @@ public class EventLogConfig
     public string BotToken { get; set; }
     public long ChannelId { get; set; }
     public BotConfig BotConfig { get; set; }
+    public TgBotConfig TgBotConfig { get; set; }
 }

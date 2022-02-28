@@ -59,18 +59,31 @@ public static class SerilogServiceExtension
             .Enrich.FromLogContext()
             // .Enrich.WithThreadId()
             // .Enrich.WithPrettiedMemoryUsage()
-            .MinimumLevel.Override("Hangfire", LogEventLevel.Information)
-            .MinimumLevel.Override("MySqlConnector", LogEventLevel.Warning)
-            // .Filter.ByExcluding("{@m} not like '%pinged server%'")
-            .WriteTo.Async
-            (
-                a =>
-                    a.File(LogPath, rollingInterval: RollingInterval, flushToDiskInterval: FlushInterval, shared: true, outputTemplate: OutputTemplate)
+            .MinimumLevel.Override(
+                "Hangfire",
+                LogEventLevel.Information
             )
-            .WriteTo.Async
-            (
+            .MinimumLevel.Override(
+                "MySqlConnector",
+                LogEventLevel.Warning
+            )
+            // .Filter.ByExcluding("{@m} not like '%pinged server%'")
+            .WriteTo.Async(
                 a =>
-                    a.Console(theme: SystemConsoleTheme.Colored, outputTemplate: OutputTemplate)
+                    a.File(
+                        LogPath,
+                        rollingInterval: RollingInterval,
+                        flushToDiskInterval: FlushInterval,
+                        shared: true,
+                        outputTemplate: OutputTemplate
+                    )
+            )
+            .WriteTo.Async(
+                a =>
+                    a.Console(
+                        theme: SystemConsoleTheme.Colored,
+                        outputTemplate: OutputTemplate
+                    )
             );
         // .WriteTo.Async(logger => logger.Sentry(options =>
         // {
@@ -121,28 +134,42 @@ public static class SerilogServiceExtension
         var botConfig = serviceProvider.GetRequiredService<IOptions<BotConfig>>().Value;
         var datadogConfig = serviceProvider.GetRequiredService<IOptions<DataDogConfig>>().Value;
         var eventLogConfig = serviceProvider.GetRequiredService<IOptions<EventLogConfig>>().Value;
-        var exceptionlessConfig = serviceProvider.GetRequiredService<IOptions<ExceptionlessConfig>>().Value;
+        var exceptionLessConfig = serviceProvider.GetRequiredService<IOptions<ExceptionlessConfig>>().Value;
         var grafanaConfig = serviceProvider.GetRequiredService<IOptions<GrafanaConfig>>().Value;
+        var tgBotConfig = serviceProvider.GetRequiredService<IOptions<TgBotConfig>>().Value;
         var sentryConfig = serviceProvider.GetRequiredService<IOptions<SentryConfig>>().Value;
 
-        eventLogConfig.BotConfig = botConfig;
+        eventLogConfig.TgBotConfig = tgBotConfig;
 
         configuration
             .Enrich.FromLogContext()
             // .Enrich.WithThreadId()
             // .Enrich.WithPrettiedMemoryUsage()
-            .MinimumLevel.Override("Hangfire", LogEventLevel.Information)
-            .MinimumLevel.Override("MySqlConnector", LogEventLevel.Information)
-            // .Filter.ByExcluding("{@m} not like '%pinged server%'")
-            .WriteTo.Async
-            (
-                a =>
-                    a.File(LogPath, rollingInterval: RollingInterval, flushToDiskInterval: FlushInterval, shared: true, outputTemplate: OutputTemplate)
+            .MinimumLevel.Override(
+                "Hangfire",
+                LogEventLevel.Information
             )
-            .WriteTo.Async
-            (
+            .MinimumLevel.Override(
+                "MySqlConnector",
+                LogEventLevel.Information
+            )
+            // .Filter.ByExcluding("{@m} not like '%pinged server%'")
+            .WriteTo.Async(
                 a =>
-                    a.Console(theme: SystemConsoleTheme.Colored, outputTemplate: OutputTemplate)
+                    a.File(
+                        LogPath,
+                        rollingInterval: RollingInterval,
+                        flushToDiskInterval: FlushInterval,
+                        shared: true,
+                        outputTemplate: OutputTemplate
+                    )
+            )
+            .WriteTo.Async(
+                a =>
+                    a.Console(
+                        theme: SystemConsoleTheme.Colored,
+                        outputTemplate: OutputTemplate
+                    )
             );
 
         if (hostEnvironment.IsProduction())
@@ -158,7 +185,7 @@ public static class SerilogServiceExtension
         configuration.AddGrafana(grafanaConfig);
         configuration.AddSentry(sentryConfig);
         configuration.AddTelegramBot4EventLog(eventLogConfig);
-        configuration.AddExceptionless(exceptionlessConfig);
+        configuration.AddExceptionless(exceptionLessConfig);
 
         return configuration;
     }
@@ -177,8 +204,7 @@ public static class SerilogServiceExtension
         if (!config.IsEnabled) return logger;
         if (!config.LokiUrl.IsNotNullOrEmpty()) return logger;
 
-        logger.WriteTo.GrafanaLoki
-        (
+        logger.WriteTo.GrafanaLoki(
             uri: config.LokiUrl,
             queueLimit: 20,
             labels: new List<LokiLabel>()
@@ -212,10 +238,14 @@ public static class SerilogServiceExtension
         if (!config.IsEnabled) return logger;
         if (datadogKey == "YOUR_API_KEY" && !datadogKey.IsNotNullOrEmpty()) return logger;
 
-        var datadogConfiguration = new DatadogConfiguration(url: DataDogHost, port: 10516, useSSL: true, useTCP: true);
+        var datadogConfiguration = new DatadogConfiguration(
+            url: DataDogHost,
+            port: 10516,
+            useSSL: true,
+            useTCP: true
+        );
 
-        logger.WriteTo.DatadogLogs
-        (
+        logger.WriteTo.DatadogLogs(
             apiKey: datadogKey,
             service: "TelegramBot",
             source: config.Source,
@@ -233,15 +263,15 @@ public static class SerilogServiceExtension
     /// <param name="logger">The logger</param>
     /// <param name="config">The sentry logger</param>
     /// <returns>The logger</returns>
-    private static LoggerConfiguration AddSentry(
+    private static LoggerConfiguration AddSentry
+    (
         this LoggerConfiguration logger,
         SentryConfig config
     )
     {
         if (!config.IsEnabled) return logger;
 
-        logger.WriteTo.Sentry
-        (
+        logger.WriteTo.Sentry(
             options => {
                 // options.AutoSessionTracking = true;
                 // options.InitializeSdk = true;
@@ -265,15 +295,15 @@ public static class SerilogServiceExtension
         EventLogConfig config
     )
     {
-        if (!config.IsEnabled) return logger;
+        var tgBotConfig = config.TgBotConfig;
         var botToken = config.BotToken;
+        var channelId = config.ChannelId;
 
-        if (botToken.IsNullOrEmpty()) botToken = config.BotConfig.Token;
+        botToken ??= tgBotConfig.ApiToken;
 
-        logger.WriteTo.TelegramBot
-        (
+        logger.WriteTo.TelegramBot(
             token: botToken,
-            chatId: config.ChannelId.ToString(),
+            chatId: channelId.ToString(),
             restrictedToMinimumLevel: LogEventLevel.Error,
             parseMode: ParseMode.Markdown
         );
@@ -302,9 +332,9 @@ public static class SerilogServiceExtension
     /// <returns></returns>
     public static LoggerConfiguration WithThreadId(this LoggerEnrichmentConfiguration enrich)
     {
-        return enrich.WithDynamicProperty
-        (
-            "ThreadId", () => {
+        return enrich.WithDynamicProperty(
+            "ThreadId",
+            () => {
                 var threadId = Thread.CurrentThread.ManagedThreadId.ToString();
                 return $"ThreadId: {threadId} ";
             }
@@ -320,9 +350,9 @@ public static class SerilogServiceExtension
         this LoggerEnrichmentConfiguration configuration
     )
     {
-        return configuration.WithDynamicProperty
-        (
-            "MemoryUsage", () => {
+        return configuration.WithDynamicProperty(
+            "MemoryUsage",
+            () => {
                 var proc = Process.GetCurrentProcess();
                 var mem = proc.PrivateMemorySize64.SizeFormat();
 
