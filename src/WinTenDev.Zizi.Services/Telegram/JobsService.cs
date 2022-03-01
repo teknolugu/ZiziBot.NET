@@ -23,6 +23,7 @@ namespace WinTenDev.Zizi.Services.Telegram;
 public class JobsService
 {
     private readonly EventLogConfig _eventLogConfig;
+    private readonly RestrictionConfig _restrictionConfig;
     private readonly IRecurringJobManager _recurringJobManager;
     private readonly StepHistoriesService _stepHistoriesService;
     private readonly ChatService _chatService;
@@ -31,6 +32,7 @@ public class JobsService
 
     public JobsService(
         IOptionsSnapshot<EventLogConfig> eventLogConfig,
+        IOptions<RestrictionConfig> restrictionConfig,
         IRecurringJobManager recurringJobManager,
         StepHistoriesService stepHistoriesService,
         ChatService chatService,
@@ -39,6 +41,7 @@ public class JobsService
     )
     {
         _eventLogConfig = eventLogConfig.Value;
+        _restrictionConfig = restrictionConfig.Value;
         _recurringJobManager = recurringJobManager;
         _stepHistoriesService = stepHistoriesService;
         _chatService = chatService;
@@ -87,10 +90,15 @@ public class JobsService
         var chat = await _chatService.GetChatAsync(chatId);
 
         var sb = new StringBuilder()
-            .Append("<b>Action:</b> #KickChatMember").AppendLine()
-            .Append("<b>User:</b> ").AppendFormat("{0}\n", history.UserId.GetNameLink(history.FirstName, history.LastName))
-            .Append("<b>Chat:</b> ").AppendFormat("{0} \n", chat.Username.GetChatNameLink(chat.Title))
-            .Append("<b>Reason:</b> ").AppendJoin(",", needVerify.Select(x => $"#{x.Name}")).AppendLine()
+            .Append("<b>Action:</b> #KickChatMember")
+            .AppendLine()
+            .Append("<b>User:</b> ")
+            .AppendFormat("{0}\n", history.UserId.GetNameLink(history.FirstName, history.LastName))
+            .Append("<b>Chat:</b> ")
+            .AppendFormat("{0} \n", chat.GetChatNameLink())
+            .Append("<b>Reason:</b> ")
+            .AppendJoin(",", needVerify.Select(x => $"#{x.Name}"))
+            .AppendLine()
             .AppendFormat(
                 "#U{0} #C{1}",
                 userId,
@@ -186,6 +194,41 @@ public class JobsService
             "clear-message-history",
             service => service.DeleteOldMessageHistoryAsync(),
             Cron.Minutely
+        );
+    }
+
+    public void RegisterJobAdminCleanUp()
+    {
+        var adminCleanUp = _restrictionConfig.AdminCleanUp;
+        var filteredCleanUp = adminCleanUp
+            .Where(targetId => !targetId.Contains('_'))
+            .ToList();
+
+        if (!filteredCleanUp.Any())
+        {
+            Log.Information("No Admin CleanUp for register");
+            return;
+        }
+
+        Log.Information("Starting register Admin CleanUp");
+
+        filteredCleanUp.ForEach(
+            targetId => {
+                var chatId = targetId.ToInt64();
+                var jobId = chatId.GetChatKey("admin-cleanup");
+
+                Log.Debug(
+                    "Register Admin Clean Up for ChatId: {ChatId} with JobId: {JobId}",
+                    chatId,
+                    jobId
+                );
+
+                _recurringJobManager.AddOrUpdate<PrivilegeService>(
+                    recurringJobId: jobId,
+                    methodCall: services => services.AdminCleanupAsync(chatId),
+                    cronExpression: Cron.Daily
+                );
+            }
         );
     }
 

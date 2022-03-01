@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
+using WinTenDev.Zizi.Models.Enums;
 using WinTenDev.Zizi.Services.Telegram;
 using WinTenDev.Zizi.Utils;
 
@@ -12,14 +13,25 @@ public static class HangfireJobsExtension
         HangfireUtil.DeleteAllJobs();
 
         var serviceProvider = app.GetServiceProvider();
+        var jobService = serviceProvider.GetRequiredService<JobsService>();
 
         serviceProvider.GetRequiredService<RssFeedService>().RegisterJobAllRssScheduler().InBackground();
 
-        serviceProvider.GetRequiredService<JobsService>().RegisterJobChatCleanUp().InBackground();
-        serviceProvider.GetRequiredService<JobsService>().RegisterJobClearLog();
-        serviceProvider.GetRequiredService<JobsService>().RegisterJobDeleteOldStep();
-        serviceProvider.GetRequiredService<JobsService>().RegisterJobDeleteOldRssHistory();
-        serviceProvider.GetRequiredService<JobsService>().RegisterJobDeleteOldMessageHistory();
+        jobService.RegisterJobChatCleanUp().InBackground();
+        jobService.RegisterJobClearLog();
+        jobService.RegisterJobDeleteOldStep();
+        jobService.RegisterJobDeleteOldRssHistory();
+        jobService.RegisterJobDeleteOldMessageHistory();
+
+        var botService = app.GetRequiredService<BotService>();
+        var botEnvironment = botService.CurrentEnvironment()
+            .Result;
+
+        if (botEnvironment != BotEnvironmentLevel.Production)
+        {
+            serviceProvider.GetRequiredService<JobsService>()
+                .RegisterJobAdminCleanUp();
+        }
 
         return app;
     }

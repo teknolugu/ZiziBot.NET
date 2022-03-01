@@ -1,10 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Hangfire;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using MoreLinq;
 using Serilog;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
@@ -72,7 +75,7 @@ public class PrivilegeService
     /// <returns></returns>
     public bool IsFromSudo(long userId)
     {
-        bool isSudo = false;
+        var isSudo = false;
         var sudoers = _restrictionConfig.Sudoers;
 
         if (sudoers != null)
@@ -80,7 +83,11 @@ public class PrivilegeService
             isSudo = sudoers.Contains(userId.ToString());
         }
 
-        Log.Debug("Is UserId '{UserId}' Sudo? '{IsSudo}'", userId, isSudo);
+        Log.Debug(
+            "Is UserId '{UserId}' Sudo? '{IsSudo}'",
+            userId,
+            isSudo
+        );
 
         return isSudo;
     }
@@ -92,8 +99,7 @@ public class PrivilegeService
     /// <returns></returns>
     public async Task<ChatMember[]> GetChatAdministratorsAsync(long chatId)
     {
-        var administrators = await _cacheService.GetOrSetAsync
-        (
+        var administrators = await _cacheService.GetOrSetAsync(
             cacheKey: "chat-admin_" + chatId.ReduceChatId(),
             action: async () =>
                 await _botClient.GetChatAdministratorsAsync(chatId)
@@ -104,8 +110,7 @@ public class PrivilegeService
 
     public async Task<ChannelParticipants> GetChatAdministratorsTgApiAsync(long chatId)
     {
-        var adminParticipants = await _cacheService.GetOrSetAsync
-        (
+        var adminParticipants = await _cacheService.GetOrSetAsync(
             cacheKey: "admin-tg-api_" + chatId.ReduceChatId(),
             action: async () => {
                 var adminParticipants = await _wTelegramApiService.GetChatAdministratorsCore(chatId);
@@ -130,7 +135,11 @@ public class PrivilegeService
     {
         var listAdmins = await GetChatAdministratorsAsync(chatId);
         var isAdmin = listAdmins.Any(member => member.User.Id == userId);
-        _logger.LogDebug("Check UserId '{UserId}' IsAdmin? '{IsAdmin}'", userId, isAdmin);
+        _logger.LogDebug(
+            "Check UserId '{UserId}' IsAdmin? '{IsAdmin}'",
+            userId,
+            isAdmin
+        );
 
         return isAdmin;
     }
@@ -162,6 +171,63 @@ public class PrivilegeService
         var from777K = 7770000 == userId;
 
         return from777K;
+    }
+
+    [JobDisplayName("Admin CleanUp {0}")]
+    public async Task AdminCleanupAsync(long chatId)
+    {
+        var admins = await _botClient.GetChatAdministratorsAsync(chatId);
+        var demoted = new List<ChatMember>();
+
+        await admins.ForEachAsync(
+            6,
+            async chatMember => {
+                var userId = chatMember.User.Id;
+
+                Log.Debug(
+                    "Demoting UserId: {UserId} at ChatId: {ChatId}",
+                    userId,
+                    chatId
+                );
+
+                try
+                {
+                    await _botClient.PromoteChatMemberAsync(chatId, userId);
+
+                    demoted.Add(chatMember);
+                }
+                catch (Exception exception)
+                {
+                    Log.Warning(
+                        "Error when Demoting UserId: {UserId}. Exception: {Message}",
+                        userId,
+                        exception.Message
+                    );
+                }
+            }
+        );
+
+        var messageBuilder = new StringBuilder();
+        messageBuilder.Append("Jadwal ganti petugas, silakan promote kembali jika di perlukan").AppendLine().AppendLine();
+
+        if (!demoted.Any()) return;
+
+        demoted.ForEach(
+            (
+                chatMember,
+                index
+            ) => {
+                var number = index + 1;
+                var nameLink = chatMember.User.GetNameLink();
+                messageBuilder.Append(number).Append(". ").AppendLine(nameLink);
+            }
+        );
+
+        await _botClient.SendTextMessageAsync(
+            chatId: chatId,
+            text: messageBuilder.ToTrimmedString(),
+            parseMode: ParseMode.Html
+        );
     }
 
     [JobDisplayName("Admin Checker {0}")]
@@ -199,17 +265,30 @@ public class PrivilegeService
                 }
             );
 
-            await _botClient.SendTextMessageAsync(chatId, msgLeave, ParseMode.Html, replyMarkup: inlineKeyboard);
+            await _botClient.SendTextMessageAsync(
+                chatId,
+                msgLeave,
+                ParseMode.Html,
+                replyMarkup: inlineKeyboard
+            );
             await _botClient.LeaveChatAsync(chatId);
 
-            Log.Debug("Checking Admin in ChatID '{ChatId}' job complete in {Elapsed}", chatId, sw.Elapsed);
+            Log.Debug(
+                "Checking Admin in ChatID '{ChatId}' job complete in {Elapsed}",
+                chatId,
+                sw.Elapsed
+            );
             sw.Stop();
 
             await Task.Delay(5000);
         }
         catch (ApiRequestException requestException)
         {
-            Log.Error(requestException, "Error when Check Admin on ChatID: '{ChatId}'", chatId);
+            Log.Error(
+                requestException,
+                "Error when Check Admin on ChatID: '{ChatId}'",
+                chatId
+            );
             var setting = await _settingsService.GetSettingsByGroupCore(chatId);
 
             var exMessage = requestException.Message.ToLower();
@@ -218,7 +297,11 @@ public class PrivilegeService
             {
                 var dateNow = DateTime.UtcNow;
                 var diffDays = (dateNow - setting.UpdatedAt).TotalDays;
-                Log.Debug("Last activity days in '{ChatId}' is {DiffDays:N2} days", chatId, diffDays);
+                Log.Debug(
+                    "Last activity days in '{ChatId}' is {DiffDays:N2} days",
+                    chatId,
+                    diffDays
+                );
 
                 if (diffDays > AfterLeaveLimit)
                 {
@@ -229,7 +312,11 @@ public class PrivilegeService
         }
         catch (Exception e)
         {
-            Log.Error(e, "Error when Check Admin in ChatID: '{ChatId}'", chatId);
+            Log.Error(
+                e,
+                "Error when Check Admin in ChatID: '{ChatId}'",
+                chatId
+            );
         }
     }
 }

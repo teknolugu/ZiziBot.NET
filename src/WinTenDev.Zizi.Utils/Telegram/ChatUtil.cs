@@ -16,7 +16,11 @@ public static class ChatUtil
 
         chatIdStr = chatIdStr[4..];
 
-        Log.Verbose("Reduced ChatId from {ChatId} to {Reduced}", chatId, chatIdStr);
+        Log.Verbose(
+            "Reduced ChatId from {ChatId} to {Reduced}",
+            chatId,
+            chatIdStr
+        );
 
         return chatIdStr.ToInt64();
     }
@@ -28,7 +32,11 @@ public static class ChatUtil
 
         chatIdStr = "-100" + chatIdStr;
 
-        Log.Verbose("Fixing ChatId from {Reduced} to {ChatId}", chatId, chatIdStr);
+        Log.Verbose(
+            "Fixing ChatId from {Reduced} to {ChatId}",
+            chatId,
+            chatIdStr
+        );
 
         return chatIdStr.ToInt64();
     }
@@ -67,9 +75,7 @@ public static class ChatUtil
         return adminMention;
     }
 
-    public static string GetChatLink(
-        this string chatUsername
-    )
+    public static string GetChatLink(this string chatUsername)
     {
         if (chatUsername.IsNullOrEmpty()) return string.Empty;
 
@@ -93,15 +99,12 @@ public static class ChatUtil
         return chatNameLink;
     }
 
-    public static string GetChatNameLink(
-        this Chat chat
-    )
+    public static string GetChatNameLink(this Chat chat)
     {
         var chatUsername = chat.Username;
         var chatTitle = chat.Title;
-        var chatLink = chatUsername.GetChatLink();
 
-        var chatNameLink = $"<a href=\"{chatLink}\">{chatTitle}</a>";
+        var chatNameLink = chatUsername.GetChatNameLink(chatTitle);
 
         Log.Debug("ChatNameLink: {Link}", chatNameLink);
         return chatNameLink;
@@ -125,7 +128,9 @@ public static class ChatUtil
             }
             else
             {
-                sbAdmin.Append(number++).Append(". ").AppendLine(nameLink);
+                sbAdmin.Append(number++)
+                    .Append(". ")
+                    .AppendLine(nameLink);
             }
         }
 
@@ -147,7 +152,10 @@ public static class ChatUtil
 
         var adminList = channelParticipants.ParticipantAdmin.users
             .Select(x => x.Value)
-            .OrderBy(orderBy => orderBy.GetFullName().RemoveWhitespace())
+            .OrderBy(
+                orderBy => orderBy.GetFullName()
+                    .RemoveWhitespace()
+            )
             .Select
             (
                 (
