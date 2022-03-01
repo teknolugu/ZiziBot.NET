@@ -18,6 +18,7 @@ using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InputFiles;
 using Telegram.Bot.Types.ReplyMarkups;
 using WinTenDev.Zizi.Models.Configs;
+using WinTenDev.Zizi.Models.Dto;
 using WinTenDev.Zizi.Models.Enums;
 using WinTenDev.Zizi.Models.Tables;
 using WinTenDev.Zizi.Models.Types;
@@ -37,6 +38,7 @@ public class TelegramService
     private readonly BotService _botService;
     private readonly FeatureService _featureService;
     private readonly FloodCheckService _floodCheckService;
+    private readonly MessageHistoryService _messageHistoryService;
     private readonly SettingsService _settingsService;
     private readonly PrivilegeService _privilegeService;
     private readonly UserProfilePhotoService _userProfilePhotoService;
@@ -102,6 +104,7 @@ public class TelegramService
         BotService botService,
         FeatureService featureService,
         FloodCheckService floodCheckService,
+        MessageHistoryService messageHistoryService,
         SettingsService settingsService,
         PrivilegeService privilegeService,
         UserProfilePhotoService userProfilePhotoService,
@@ -114,6 +117,7 @@ public class TelegramService
         _botService = botService;
         _featureService = featureService;
         _floodCheckService = floodCheckService;
+        _messageHistoryService = messageHistoryService;
         _settingsService = settingsService;
         _privilegeService = privilegeService;
         _userProfilePhotoService = userProfilePhotoService;
@@ -168,7 +172,8 @@ public class TelegramService
         MessageOrEditedCaption = MessageOrEdited?.Caption;
 
         MessageTextParts = MessageOrEditedText?.SplitText(" ")
-            .Where(s => s.IsNotNullOrEmpty()).ToArray();
+            .Where(s => s.IsNotNullOrEmpty())
+            .ToArray();
 
         KickTimeOffset = TimeSpan.FromMinutes(1);
 
@@ -327,7 +332,11 @@ public class TelegramService
         const int anonId = 1087968824;
         var isAnonymous = FromId == anonId && ChatId == SenderChat.Id;
 
-        Log.Debug("Check is From Anonymous Admin on ChatId: {ChatId}? {IsAnonymous}", ChatId, isAnonymous);
+        Log.Debug(
+            "Check is From Anonymous Admin on ChatId: {ChatId}? {IsAnonymous}",
+            ChatId,
+            isAnonymous
+        );
 
         return isAnonymous;
     }
@@ -336,7 +345,11 @@ public class TelegramService
     {
         var isSenderChannel = SenderChat?.Type == ChatType.Channel;
 
-        Log.Debug("Check is From Sender Channel on ChatId: {ChatId}? {IsAnonymous}", ChatId, isSenderChannel);
+        Log.Debug(
+            "Check is From Sender Channel on ChatId: {ChatId}? {IsAnonymous}",
+            ChatId,
+            isSenderChannel
+        );
 
         return isSenderChannel;
     }
@@ -345,7 +358,11 @@ public class TelegramService
     {
         var isPrivate = Chat.Type == ChatType.Private;
 
-        Log.Debug("Chat ID '{ChatId}' IsPrivateChat => {IsPrivate}", ChatId, isPrivate);
+        Log.Debug(
+            "Chat ID '{ChatId}' IsPrivateChat => {IsPrivate}",
+            ChatId,
+            isPrivate
+        );
         return isPrivate;
     }
 
@@ -353,7 +370,11 @@ public class TelegramService
     {
         var isGroupChat = Chat.Type == ChatType.Group || Chat.Type == ChatType.Supergroup;
 
-        Log.Debug("Chat ID '{ChatId}' IsGroupChat? {IsGroupChat}", ChatId, isGroupChat);
+        Log.Debug(
+            "Chat ID '{ChatId}' IsGroupChat? {IsGroupChat}",
+            ChatId,
+            isGroupChat
+        );
         return isGroupChat;
     }
 
@@ -452,9 +473,9 @@ public class TelegramService
         var answerReplyMarkup = callbackAnswer.CallbackAnswerInlineMarkup;
         var muteTimeSpan = callbackAnswer.MuteMemberTimeSpan;
 
-        await Parallel.ForEachAsync
-        (
-            answerModes, async (
+        await Parallel.ForEachAsync(
+            answerModes,
+            async (
                 answerMode,
                 cancel
             ) => {
@@ -545,8 +566,7 @@ public class TelegramService
                 forwardMessage = await ForwardMessageAsync(toChatId: chatId);
             }
 
-            await SendEventLogCoreAsync
-            (
+            await SendEventLogCoreAsync(
                 additionalText: text,
                 customChatId: chatId,
                 disableWebPreview: true,
@@ -574,8 +594,7 @@ public class TelegramService
                       $"\nNote: {additionalText}" +
                       $"\n#{MessageOrEdited.Type} #U{FromId} #C{ReducedChatId}";
 
-        await SendTextMessageAsync
-        (
+        await SendTextMessageAsync(
             sendText: sendLog,
             customChatId: customChatId,
             disableWebPreview: disableWebPreview,
@@ -587,8 +606,7 @@ public class TelegramService
     {
         var chatId = _eventLogConfig.ChannelId;
 
-        await SendTextMessageAsync
-        (
+        await SendTextMessageAsync(
             sendText: sendLog,
             customChatId: chatId,
             disableWebPreview: true,
@@ -606,10 +624,12 @@ public class TelegramService
         var prevDate = DateTime.UtcNow.AddMinutes(-offset);
         var isOld = prevDate > messageDate;
 
-        Log.Debug
-        (
+        Log.Debug(
             "UpdateId {UpdateId} with Date: {V}. OffsetDate: {OffsetDate}. Too old? {IsOld}",
-            Update.Id, messageDate.ToDetailDateTimeString(), prevDate.ToDetailDateTimeString(), isOld
+            Update.Id,
+            messageDate.ToDetailDateTimeString(),
+            prevDate.ToDetailDateTimeString(),
+            isOld
         );
 
         return isOld;
@@ -646,7 +666,8 @@ public class TelegramService
     {
         TimeProc = MessageDate.GetDelay();
 
-        if (sendText.IsNotNullOrEmpty() && CallbackQuery == null)
+        if (sendText.IsNotNullOrEmpty() &&
+            CallbackQuery == null)
         {
             Log.Debug("Appending execution time..");
             sendText += $"\n\n⏱ <code>{TimeInit} s</code> | ⌛️ <code>{TimeProc} s</code>";
@@ -667,8 +688,7 @@ public class TelegramService
         {
             Log.Information("Sending message to {ChatTarget}", chatTarget);
 
-            SentMessage = await Client.SendTextMessageAsync
-            (
+            SentMessage = await Client.SendTextMessageAsync(
                 chatId: chatTarget,
                 text: sendText,
                 parseMode: ParseMode.Html,
@@ -683,23 +703,26 @@ public class TelegramService
         {
             if (!exception1.IsErrorAsWarning())
             {
-                Log.Error(exception1, "Send Message to {ChatTarget} Exception_1", chatTarget);
+                Log.Error(
+                    exception1,
+                    "Send Message to {ChatTarget} Exception_1",
+                    chatTarget
+                );
 
                 return SentMessage;
             }
 
-            Log.Warning
-            (
+            Log.Warning(
                 "Failed when trying send Message to {ChatTarget}. {Message}",
-                chatTarget, exception1.Message
+                chatTarget,
+                exception1.Message
             );
 
             try
             {
                 Log.Information("Try Sending message to {ChatTarget} without reply to Msg Id", chatTarget);
 
-                SentMessage = await Client.SendTextMessageAsync
-                (
+                SentMessage = await Client.SendTextMessageAsync(
                     chatId: chatTarget,
                     text: sendText,
                     parseMode: ParseMode.Html,
@@ -712,7 +735,11 @@ public class TelegramService
             {
                 if (!exception2.IsErrorAsWarning())
                 {
-                    Log.Error(exception2, "Send Message to {ChatTarget} Exception_2", chatTarget);
+                    Log.Error(
+                        exception2,
+                        "Send Message to {ChatTarget} Exception_2",
+                        chatTarget
+                    );
                 }
             }
         }
@@ -730,7 +757,12 @@ public class TelegramService
         int replyToMsgId = -1
     )
     {
-        Log.Information("Sending media: {MediaType}, fileId: {FileId} to {Id}", mediaType, fileId, Message.Chat.Id);
+        Log.Information(
+            "Sending media: {MediaType}, fileId: {FileId} to {Id}",
+            mediaType,
+            fileId,
+            Message.Chat.Id
+        );
 
         TimeProc = Message.Date.GetDelay();
         if (caption.IsNotNullOrEmpty()) caption += $"\n\n⏱ <code>{TimeInit} s</code> | ⌛️ <code>{TimeProc} s</code>";
@@ -738,10 +770,13 @@ public class TelegramService
         switch (mediaType)
         {
             case MediaType.Document:
-                SentMessage = await Client.SendDocumentAsync
-                (
-                    chatId: ChatId, document: fileId, caption: caption,
-                    parseMode: ParseMode.Html, replyMarkup: replyMarkup, replyToMessageId: replyToMsgId
+                SentMessage = await Client.SendDocumentAsync(
+                    chatId: ChatId,
+                    document: fileId,
+                    caption: caption,
+                    parseMode: ParseMode.Html,
+                    replyMarkup: replyMarkup,
+                    replyToMessageId: replyToMsgId
                 );
                 break;
 
@@ -752,28 +787,37 @@ public class TelegramService
                 {
                     var inputOnlineFile = new InputOnlineFile(fs, fileName);
 
-                    SentMessage = await Client.SendDocumentAsync
-                    (
-                        chatId: ChatId, document: inputOnlineFile, caption: caption,
-                        parseMode: ParseMode.Html, replyMarkup: replyMarkup, replyToMessageId: replyToMsgId
+                    SentMessage = await Client.SendDocumentAsync(
+                        chatId: ChatId,
+                        document: inputOnlineFile,
+                        caption: caption,
+                        parseMode: ParseMode.Html,
+                        replyMarkup: replyMarkup,
+                        replyToMessageId: replyToMsgId
                     );
                 }
 
                 break;
 
             case MediaType.Photo:
-                SentMessage = await Client.SendPhotoAsync
-                (
-                    ChatId, fileId, caption: caption, ParseMode.Html,
-                    replyMarkup: replyMarkup, replyToMessageId: replyToMsgId
+                SentMessage = await Client.SendPhotoAsync(
+                    ChatId,
+                    fileId,
+                    caption: caption,
+                    ParseMode.Html,
+                    replyMarkup: replyMarkup,
+                    replyToMessageId: replyToMsgId
                 );
                 break;
 
             case MediaType.Video:
-                SentMessage = await Client.SendVideoAsync
-                (
-                    ChatId, video: fileId, caption: caption,
-                    parseMode: ParseMode.Html, replyMarkup: replyMarkup, replyToMessageId: replyToMsgId
+                SentMessage = await Client.SendVideoAsync(
+                    ChatId,
+                    video: fileId,
+                    caption: caption,
+                    parseMode: ParseMode.Html,
+                    replyMarkup: replyMarkup,
+                    replyToMessageId: replyToMsgId
                 );
                 break;
 
@@ -794,15 +838,27 @@ public class TelegramService
         try
         {
             var itemCount = "item".ToQuantity(listAlbum.Count);
-            Log.Information("Sending Media Group to {ChatId} with {ItemCount}", ChatId, itemCount);
+            Log.Information(
+                "Sending Media Group to {ChatId} with {ItemCount}",
+                ChatId,
+                itemCount
+            );
             var message = await Client.SendMediaGroupAsync(ChatId, listAlbum);
-            Log.Debug("Send Media Group Result to '{ChatId}' => {Message}", ChatId, message.Length > 0);
+            Log.Debug(
+                "Send Media Group Result to '{ChatId}' => {Message}",
+                ChatId,
+                message.Length > 0
+            );
 
             requestResult.SentMessages = message;
         }
         catch (Exception exception)
         {
-            Log.Error(exception, "Error when Send Media Group to {ChatId}", ChatId);
+            Log.Error(
+                exception,
+                "Error when Send Media Group to {ChatId}",
+                ChatId
+            );
             requestResult.ErrorException = exception;
         }
 
@@ -821,12 +877,15 @@ public class TelegramService
 
         var targetMessageId = SentMessage.MessageId;
 
-        Log.Information("Updating message {SentMessageId} on {ChatId}", targetMessageId, ChatId);
+        Log.Information(
+            "Updating message {SentMessageId} on {ChatId}",
+            targetMessageId,
+            ChatId
+        );
 
         try
         {
-            SentMessage = await Client.EditMessageTextAsync
-            (
+            SentMessage = await Client.EditMessageTextAsync(
                 ChatId,
                 targetMessageId,
                 sendText,
@@ -841,10 +900,10 @@ public class TelegramService
         {
             if (ex.IsErrorAsWarning())
             {
-                Log.Warning
-                (
+                Log.Warning(
                     "Failed when trying edit Message on {ChatTarget}. {Message}",
-                    ChatId, ex.Message
+                    ChatId,
+                    ex.Message
                 );
 
                 return SentMessage;
@@ -866,8 +925,7 @@ public class TelegramService
         {
             Log.Information("Editing {CallBackMessageId}", CallBackMessageId);
 
-            await Client.EditMessageTextAsync
-            (
+            await Client.EditMessageTextAsync(
                 ChatId,
                 CallBackMessageId,
                 sendText,
@@ -924,18 +982,32 @@ public class TelegramService
         try
         {
             targetMessageId = messageId != -1 ? messageId : SentMessage.MessageId;
-            Log.Information("Delete MsgId: {MsgId} on ChatId: {ChatId}", targetMessageId, ChatId);
+            Log.Information(
+                "Delete MsgId: {MsgId} on ChatId: {ChatId}",
+                targetMessageId,
+                ChatId
+            );
             await Client.DeleteMessageAsync(ChatId, targetMessageId);
         }
         catch (Exception ex)
         {
             if (ex.IsErrorAsWarning())
             {
-                Log.Warning(ex, "Error Delete MessageId {MessageId} On ChatId {ChatId}", targetMessageId, ChatId);
+                Log.Warning(
+                    ex,
+                    "Error Delete MessageId {MessageId} On ChatId {ChatId}",
+                    targetMessageId,
+                    ChatId
+                );
             }
             else
             {
-                Log.Error(ex, "Error Delete MessageId {MessageId} On ChatId {ChatId}", targetMessageId, ChatId);
+                Log.Error(
+                    ex,
+                    "Error Delete MessageId {MessageId} On ChatId {ChatId}",
+                    targetMessageId,
+                    ChatId
+                );
             }
         }
     }
@@ -948,7 +1020,11 @@ public class TelegramService
         if (toChatId == -1) toChatId = _eventLogConfig.ChannelId;
         if (messageId == -1) messageId = MessageOrEdited.MessageId;
 
-        var forwardMessage = await Client.ForwardMessageAsync(toChatId, ChatId, messageId);
+        var forwardMessage = await Client.ForwardMessageAsync(
+            toChatId,
+            ChatId,
+            messageId
+        );
 
         return forwardMessage;
     }
@@ -961,7 +1037,11 @@ public class TelegramService
         try
         {
             var callbackQueryId = CallbackQuery.Id;
-            await Client.AnswerCallbackQueryAsync(callbackQueryId, text, showAlert);
+            await Client.AnswerCallbackQueryAsync(
+                callbackQueryId,
+                text,
+                showAlert
+            );
         }
         catch (Exception e)
         {
@@ -991,11 +1071,19 @@ public class TelegramService
     {
         bool isKicked;
 
-        Log.Information("Kick {UserId} from {ChatId}", userId, ChatId);
+        Log.Information(
+            "Kick {UserId} from {ChatId}",
+            userId,
+            ChatId
+        );
 
         try
         {
-            await Client.BanChatMemberAsync(ChatId, userId, DateTime.Now);
+            await Client.BanChatMemberAsync(
+                ChatId,
+                userId,
+                DateTime.Now
+            );
 
             if (unban) await UnBanMemberAsync(userId);
             isKicked = true;
@@ -1012,7 +1100,11 @@ public class TelegramService
     public async Task UnbanMemberAsync(User user = null)
     {
         var idTarget = user.Id;
-        Log.Information("Unban {IdTarget} from {ChatId}", idTarget, ChatId);
+        Log.Information(
+            "Unban {IdTarget} from {ChatId}",
+            idTarget,
+            ChatId
+        );
 
         try
         {
@@ -1027,7 +1119,11 @@ public class TelegramService
 
     public async Task UnBanMemberAsync(long userId = -1)
     {
-        Log.Information("Unban {UserId} from {ChatId}", userId, ChatId);
+        Log.Information(
+            "Unban {UserId} from {ChatId}",
+            userId,
+            ChatId
+        );
 
         try
         {
@@ -1046,8 +1142,7 @@ public class TelegramService
 
         try
         {
-            await Client.PromoteChatMemberAsync
-            (
+            await Client.PromoteChatMemberAsync(
                 chatId: Message.Chat.Id,
                 userId: userId,
                 isAnonymous: false,
@@ -1078,8 +1173,7 @@ public class TelegramService
 
         try
         {
-            await Client.PromoteChatMemberAsync
-            (
+            await Client.PromoteChatMemberAsync(
                 chatId: Message.Chat.Id,
                 userId: userId,
                 isAnonymous: false,
@@ -1122,10 +1216,12 @@ public class TelegramService
             var untilDate = until;
             if (until == default) untilDate = DateTime.UtcNow.AddDays(366);
 
-            Log.Information
-            (
+            Log.Information(
                 "Restricting UserId: '{UserId}'@'{ChatId}', UnMute: '{UnMute}' until {UntilDate}",
-                userId, ChatId, unMute, untilDate
+                userId,
+                ChatId,
+                unMute,
+                untilDate
             );
 
             var permission = new ChatPermissions
@@ -1144,15 +1240,29 @@ public class TelegramService
 
             if (unMute) untilDate = DateTime.UtcNow;
 
-            await Client.RestrictChatMemberAsync(ChatId, userId, permission, untilDate);
+            await Client.RestrictChatMemberAsync(
+                ChatId,
+                userId,
+                permission,
+                untilDate
+            );
 
             tgResult.IsSuccess = true;
 
-            Log.Debug("MemberID {UserId} muted until {UntilDate}", userId, untilDate);
+            Log.Debug(
+                "MemberID {UserId} muted until {UntilDate}",
+                userId,
+                untilDate
+            );
         }
         catch (Exception ex)
         {
-            Log.Error(ex.Demystify(), "Error restrict userId: {UserId} on {ChatId}", userId, ChatId);
+            Log.Error(
+                ex.Demystify(),
+                "Error restrict userId: {UserId} on {ChatId}",
+                userId,
+                ChatId
+            );
             var exceptionMsg = ex.Message;
             if (exceptionMsg.Contains("CHAT_ADMIN_REQUIRED")) Log.Debug("I'm must Admin on this Group!");
 
@@ -1201,7 +1311,11 @@ public class TelegramService
 
     public async Task<bool> RunCheckUserUsername()
     {
-        var op = Operation.Begin("Check Username for UserId: '{UserId}' on ChatId: '{ChatId}'", FromId, ChatId);
+        var op = Operation.Begin(
+            "Check Username for UserId: '{UserId}' on ChatId: '{ChatId}'",
+            FromId,
+            ChatId
+        );
 
         if (ChannelOrEditedPost != null)
         {
@@ -1241,7 +1355,11 @@ public class TelegramService
 
     public async Task<bool> RunCheckUserProfilePhoto()
     {
-        var op = Operation.Begin("Check Chat Photo on ChatId {ChatId} for UserId: {UserId}", ChatId, FromId);
+        var op = Operation.Begin(
+            "Check Chat Photo on ChatId {ChatId} for UserId: {UserId}",
+            ChatId,
+            FromId
+        );
 
         if (ChannelOrEditedPost != null)
         {
@@ -1287,7 +1405,12 @@ public class TelegramService
         );
 
         await RestrictMemberAsync(FromId, until: KickTimeOffset.ToDateTime());
-        await SendTextMessageAsync(sendWarn, verifyButton, disableWebPreview: true, replyToMsgId: 0);
+        await SendTextMessageAsync(
+            sendWarn,
+            verifyButton,
+            disableWebPreview: true,
+            replyToMsgId: 0
+        );
 
         var stepHistory = await _stepHistoriesService.GetStepHistoryCore
         (
@@ -1338,10 +1461,10 @@ public class TelegramService
     {
         Log.Information("Scheduling Job with name: {JobName}", name);
 
-        var jobId = _backgroundJob.Schedule<JobsService>
-        (
+        var jobId = _backgroundJob.Schedule<JobsService>(
             job =>
-                job.MemberKickJob(ChatId, FromId), KickTimeOffset
+                job.MemberKickJob(ChatId, FromId),
+            KickTimeOffset
         );
 
         await _stepHistoriesService.SaveStepHistory
@@ -1371,7 +1494,8 @@ public class TelegramService
         (
             new HitActivity()
             {
-                Guid = Guid.NewGuid().ToString(),
+                Guid = Guid.NewGuid()
+                    .ToString(),
                 MessageDate = MessageDate,
                 UpdateType = Update.Type,
                 ChatId = ChatId,
@@ -1388,9 +1512,11 @@ public class TelegramService
         );
 
         if (!floodCheckResult.IsFlood) return floodCheckResult;
-        if (!IsGroupChat || await CheckFromAdmin()) return new FloodCheckResult();
+        if (!IsGroupChat ||
+            await CheckFromAdmin()) return new FloodCheckResult();
 
-        var span = TimeSpan.FromHours(floodCheckResult.FloodRate * 1.33).ToDateTime();
+        var span = TimeSpan.FromHours(floodCheckResult.FloodRate * 1.33)
+            .ToDateTime();
         await RestrictMemberAsync(FromId, until: span);
 
         var nameLink = From.GetNameLink();
@@ -1423,8 +1549,41 @@ public class TelegramService
 
         var saveSettings = await _settingsService.SaveSettingsAsync(data);
 
-        Log.Debug("Ensure Settings for ChatID: '{ChatId}' result {SaveSettings}", ChatId, saveSettings);
+        Log.Debug(
+            "Ensure Settings for ChatID: '{ChatId}' result {SaveSettings}",
+            ChatId,
+            saveSettings
+        );
         op.Complete();
+    }
+
+    public async Task SaveToMessageHistoryAsync(
+        long messageId,
+        MessageFlag messageFlag,
+        DateTime deleteAt = default
+    )
+    {
+        if (deleteAt == default) deleteAt = DateTime.UtcNow.AddMinutes(1);
+
+        var saveHistory = await _messageHistoryService.SaveToMessageHistoryAsync(
+            new MessageHistoryInsertDto()
+            {
+                MessageFlag = messageFlag.Humanize(),
+                FromId = FromId,
+                ChatId = ChatId,
+                MessageId = messageId,
+                DeleteAt = deleteAt,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            }
+        );
+
+        Log.Information(
+            "Save To Message History for {MessageId} at ChatId: {ChatId} Result: {SaveHistory}",
+            messageId,
+            ChatId,
+            saveHistory
+        );
     }
 
     #endregion PostUpdate

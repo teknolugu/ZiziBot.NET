@@ -58,8 +58,10 @@ public static class ErrorUtil
     {
         var errorText = await ReadErrorTextAsync();
         var errorSplit = errorText.Split("\n\n");
-        var errorLines = errorText.Split(new[] { "\n", "\n\n", "\r", "\r\n", Environment.NewLine },
-            StringSplitOptions.RemoveEmptyEntries)
+        var errorLines = errorText.Split(
+                new[] { "\n", "\n\n", "\r", "\r\n", Environment.NewLine },
+                StringSplitOptions.RemoveEmptyEntries
+            )
             .Select(line => line.Trim())
             .ToArray();
 
@@ -82,20 +84,35 @@ public static class ErrorUtil
 
     public static bool IsErrorAsWarning(this string message)
     {
-        return message.ContainsListStr(new[]
-        {
-            "forbidden",
-            "too many request",
-            "replied message not found",
-            "message to edit not found",
-            "message to delete not found",
-            "identifier is not specified",
-            "bot is not a member"
-        }, StringComparison.CurrentCultureIgnoreCase);
+        return message.ContainsListStr(
+            new[]
+            {
+                "forbidden",
+                "too many request",
+                "replied message not found",
+                "message to edit not found",
+                "message to delete not found",
+                "identifier is not specified",
+                "bot is not a member"
+            },
+            StringComparison.CurrentCultureIgnoreCase
+        );
     }
 
     public static bool IsErrorAsWarning(this Exception ex)
     {
         return ex.Message.IsErrorAsWarning();
+    }
+
+    public static bool Contains(
+        this Exception exception,
+        string value,
+        StringComparison stringComparison = StringComparison.CurrentCultureIgnoreCase
+    )
+    {
+        return exception.Message.Contains(
+            value,
+            stringComparison
+        );
     }
 }

@@ -9,6 +9,7 @@ using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using WinTenDev.Zizi.Models.Configs;
+using WinTenDev.Zizi.Models.Dto;
 using WinTenDev.Zizi.Models.Enums;
 using WinTenDev.Zizi.Models.Types;
 using WinTenDev.Zizi.Services.Internals;
@@ -24,6 +25,7 @@ public class ChatService
 
     private readonly ILogger<ChatService> _logger;
     private readonly ITelegramBotClient _botClient;
+    private readonly MessageHistoryService _messageHistoryService;
     private readonly SettingsService _settingsService;
     private readonly CacheService _cacheService;
     private readonly RestrictionConfig _restrictionConfig;
@@ -33,11 +35,13 @@ public class ChatService
         CacheService cacheService,
         IOptionsSnapshot<RestrictionConfig> restrictionConfig,
         ITelegramBotClient botClient,
+        MessageHistoryService messageHistoryService,
         SettingsService settingsService
     )
     {
         _logger = logger;
         _botClient = botClient;
+        _messageHistoryService = messageHistoryService;
         _cacheService = cacheService;
         _restrictionConfig = restrictionConfig.Value;
         _settingsService = settingsService;
@@ -68,12 +72,20 @@ public class ChatService
                 if (match == null) isRestricted = true;
             }
 
-            Log.Information("Check Chat restriction result on ChatId: {ChatId}? IsRestricted: {IsRestricted}", chatId, isRestricted);
+            Log.Information(
+                "Check Chat restriction result on ChatId: {ChatId}? IsRestricted: {IsRestricted}",
+                chatId,
+                isRestricted
+            );
             return isRestricted;
         }
-        catch (Exception ex)
+        catch (Exception exception)
         {
-            Log.Error(ex, "Error when check Chat Restriction on {ChatId}", chatId);
+            Log.Error(
+                exception,
+                "Error when check Chat Restriction on {ChatId}",
+                chatId
+            );
             return false;
         }
     }
@@ -89,13 +101,21 @@ public class ChatService
             var find = ignoredIds.FirstOrDefault(l => l == userId);
             if (find != 0) ignored = true;
 
-            Log.Information("Check UserId {UserId} is ignored at Global Ignore ID? {Ignored}", userId, ignored);
+            Log.Information(
+                "Check UserId {UserId} is ignored at Global Ignore ID? {Ignored}",
+                userId,
+                ignored
+            );
 
             return ignored;
         }
-        catch (Exception ex)
+        catch (Exception exception)
         {
-            Log.Error(ex, "Error when check Ignore for UserId {UserId}", userId);
+            Log.Error(
+                exception,
+                "Error when check Ignore for UserId {UserId}",
+                userId
+            );
             return false;
         }
     }
@@ -104,9 +124,9 @@ public class ChatService
     {
         var cacheKey = "chat_" + chatId.ReduceChatId();
 
-        var data = await _cacheService.GetOrSetAsync
-        (
-            cacheKey, async () => {
+        var data = await _cacheService.GetOrSetAsync(
+            cacheKey,
+            async () => {
                 var chat = await _botClient.GetChatAsync(chatId);
 
                 return chat;
@@ -121,9 +141,9 @@ public class ChatService
         var reducedChatId = chatId.ReduceChatId();
         var cacheKey = $"member-count_{reducedChatId}";
 
-        var getMemberCount = await _cacheService.GetOrSetAsync
-        (
-            cacheKey, async () => {
+        var getMemberCount = await _cacheService.GetOrSetAsync(
+            cacheKey,
+            async () => {
                 var memberCount = await _botClient.GetChatMemberCountAsync(chatId);
 
                 return memberCount;
@@ -140,9 +160,9 @@ public class ChatService
     {
         var cacheKey = "chat-member_" + chatId.ReduceChatId() + $"_{userId}";
 
-        var data = await _cacheService.GetOrSetAsync
-        (
-            cacheKey, async () => {
+        var data = await _cacheService.GetOrSetAsync(
+            cacheKey,
+            async () => {
                 var chat = await _botClient.GetChatMemberAsync(chatId, userId);
 
                 return chat;
@@ -171,7 +191,11 @@ public class ChatService
         }
 
         var checkRestricted = !_restrictionConfig.RestrictionArea.Contains(chatId.ToString());
-        Log.Debug("Is ChatId {ChatId} restricted? {Check}", chatId, checkRestricted);
+        Log.Debug(
+            "Is ChatId {ChatId} restricted? {Check}",
+            chatId,
+            checkRestricted
+        );
 
         return checkRestricted;
     }
@@ -210,6 +234,86 @@ public class ChatService
         return result;
     }
 
+    [JobDisplayName("Delete Old Message History")]
+    public async Task DeleteOldMessageHistoryAsync()
+    {
+        var listMessageHistory = await _messageHistoryService.GetMessageHistoryAsync(null);
+        var filteredHistory = listMessageHistory.Where(
+            history =>
+                DateTime.UtcNow >= history.DeleteAt
+        ).ToList();
+
+        if (filteredHistory.Count == 0)
+        {
+            _logger.LogInformation("No Message History to delete");
+            return;
+        }
+
+        _logger.LogInformation(
+            "Start deleting old message history. Items: {Count}",
+            filteredHistory.Count
+        );
+
+        await filteredHistory.ForEachAsync(
+            5,
+            async history => {
+                var chatId = history.ChatId;
+                var messageId = history.MessageId.ToInt();
+
+                try
+                {
+                    _logger.LogDebug(
+                        "Deleting Message {MessageId} in Chat {ChatId}",
+                        messageId,
+                        chatId
+                    );
+
+                    await _botClient.DeleteMessageAsync(
+                        chatId,
+                        messageId
+                    );
+
+                    await _messageHistoryService.DeleteMessageHistoryAsync(
+                        new MessageHistoryFindDto()
+                        {
+                            MessageFlag = history.MessageFlag,
+                            MessageId = history.MessageId
+                        }
+                    );
+                }
+                catch (Exception exception)
+                {
+                    if (exception.Contains("message to delete not found"))
+                    {
+                        _logger.LogInformation(
+                            "MessageId {MessageId} at ChatId {ChatId} is not found, it's maybe has been deleted",
+                            messageId,
+                            chatId
+                        );
+                        await _messageHistoryService.DeleteMessageHistoryAsync(
+                            new MessageHistoryFindDto()
+                            {
+                                MessageFlag = history.MessageFlag,
+                                MessageId = history.MessageId
+                            }
+                        );
+                    }
+                    else
+                    {
+                        _logger.LogError(
+                            exception,
+                            "Error while deleting message history with messageId {MessageId} at chatId {ChatId}",
+                            messageId,
+                            chatId
+                        );
+                    }
+                }
+            }
+        );
+
+        _logger.LogInformation("Delete Message History done");
+    }
+
     public async Task RegisterChatHealth()
     {
         Log.Information("Starting Check bot is Admin on all Group!");
@@ -218,9 +322,9 @@ public class ChatService
 
         var allSettings = await _settingsService.GetAllSettings();
 
-        Parallel.ForEach
-        (
-            allSettings, (
+        Parallel.ForEach(
+            allSettings,
+            (
                 chatSetting,
                 state,
                 args
@@ -234,17 +338,24 @@ public class ChatService
                 {
                     Log.Debug("Creating Chat Jobs for ChatID '{ChatId}'", chatId);
 
-                    HangfireUtil.RegisterJob
-                    (
-                        adminCheckerId, (PrivilegeService service) =>
-                            service.AdminCheckerJobAsync(chatId), Cron.Daily, queue: "admin-checker", fireAfterRegister: false
+                    HangfireUtil.RegisterJob(
+                        adminCheckerId,
+                        (PrivilegeService service) =>
+                            service.AdminCheckerJobAsync(chatId),
+                        Cron.Daily,
+                        queue: "admin-checker",
+                        fireAfterRegister: false
                     );
                 }
                 else
                 {
                     var dateNow = DateTime.UtcNow;
                     var diffDays = (dateNow - chatSetting.UpdatedAt).TotalDays;
-                    Log.Debug("Last activity days in '{ChatId}' is {DiffDays:N2} days", chatId, diffDays);
+                    Log.Debug(
+                        "Last activity days in '{ChatId}' is {DiffDays:N2} days",
+                        chatId,
+                        diffDays
+                    );
                 }
             }
         );

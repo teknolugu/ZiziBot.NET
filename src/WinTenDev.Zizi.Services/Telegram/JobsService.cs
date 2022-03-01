@@ -47,7 +47,10 @@ public class JobsService
     }
 
     [JobDisplayName("Member Kick Job {1}@{0}")]
-    [AutomaticRetry(Attempts = 1, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
+    [AutomaticRetry(
+        Attempts = 1,
+        OnAttemptsExceeded = AttemptsExceededAction.Delete
+    )]
     public async Task MemberKickJob(
         long chatId,
         long userId
@@ -64,7 +67,11 @@ public class JobsService
 
         if (!needVerify.Any()) return;
 
-        Log.Information("Starting kick member for UserId {UserId} from {ChatId}", userId, chatId);
+        Log.Information(
+            "Starting kick member for UserId {UserId} from {ChatId}",
+            userId,
+            chatId
+        );
 
         var history = needVerify.FirstOrDefault();
 
@@ -84,17 +91,24 @@ public class JobsService
             .Append("<b>User:</b> ").AppendFormat("{0}\n", history.UserId.GetNameLink(history.FirstName, history.LastName))
             .Append("<b>Chat:</b> ").AppendFormat("{0} \n", chat.Username.GetChatNameLink(chat.Title))
             .Append("<b>Reason:</b> ").AppendJoin(",", needVerify.Select(x => $"#{x.Name}")).AppendLine()
-            .AppendFormat("#U{0} #C{1}", userId, chatId.ReduceChatId());
+            .AppendFormat(
+                "#U{0} #C{1}",
+                userId,
+                chatId.ReduceChatId()
+            );
 
-        await _botClient.SendTextMessageAsync
-        (
+        await _botClient.SendTextMessageAsync(
             text: sb.ToTrimmedString(),
             disableWebPagePreview: true,
             chatId: _eventLogConfig.ChannelId,
             parseMode: ParseMode.Html
         );
 
-        Log.Information("UserId {UserId} successfully kicked from {ChatId}", userId, chatId);
+        Log.Information(
+            "UserId {UserId} successfully kicked from {ChatId}",
+            userId,
+            chatId
+        );
     }
 
     public async Task RegisterJobChatCleanUp()
@@ -113,48 +127,65 @@ public class JobsService
                 {
                     case ChatTypeEx.Group:
                     case ChatTypeEx.SuperGroup:
-                        _recurringJobManager.AddOrUpdate<PrivilegeService>
-                        (
+                        _recurringJobManager.AddOrUpdate<PrivilegeService>(
                             chatId.GetChatKey("AC"),
-                            (x) => x.AdminCheckerJobAsync(chatId), Cron.Daily, queue: "admin-checker"
+                            (x) => x.AdminCheckerJobAsync(chatId),
+                            Cron.Daily,
+                            queue: "admin-checker"
                         );
                         break;
                     default:
-                        Log.Verbose("Currently no action for type {ChatType}", chatSetting.ChatType);
+                        Log.Verbose(
+                            "Currently no action for type {ChatType}",
+                            chatSetting.ChatType
+                        );
                         break;
                 }
             }
             catch (Exception ex)
             {
-                Log.Error(ex.Demystify(), "Error when checking ChatID: {ChatId}", chatId);
+                Log.Error(
+                    ex.Demystify(),
+                    "Error when checking ChatID: {ChatId}",
+                    chatId
+                );
             }
         }
     }
 
     public void RegisterJobClearLog()
     {
-        _recurringJobManager.AddOrUpdate<StorageService>
-        (
+        _recurringJobManager.AddOrUpdate<StorageService>(
             "log-cleaner",
-            (service) => service.ClearLog(), Cron.Daily
+            (service) => service.ClearLog(),
+            Cron.Daily
         );
     }
 
     public void RegisterJobDeleteOldStep()
     {
-        _recurringJobManager.AddOrUpdate<StepHistoriesService>
-        (
+        _recurringJobManager.AddOrUpdate<StepHistoriesService>(
             "delete-old-steps",
-            service => service.DeleteOldStepHistory(), Cron.Daily
+            service => service.DeleteOldStepHistory(),
+            Cron.Daily
         );
     }
 
     public void RegisterJobDeleteOldRssHistory()
     {
-        _recurringJobManager.AddOrUpdate<RssService>
-        (
+        _recurringJobManager.AddOrUpdate<RssService>(
             "delete-old-rss-history",
-            service => service.DeleteOldHistory(), Cron.Daily
+            service => service.DeleteOldHistory(),
+            Cron.Daily
+        );
+    }
+
+    public void RegisterJobDeleteOldMessageHistory()
+    {
+        _recurringJobManager.AddOrUpdate<ChatService>(
+            "clear-message-history",
+            service => service.DeleteOldMessageHistoryAsync(),
+            Cron.Minutely
         );
     }
 
@@ -173,7 +204,11 @@ public class JobsService
         return recurringJobs.FirstOrDefault(dto => dto.Id == jobId);
     }
 
-    [AutomaticRetry(Attempts = 2, LogEvents = true, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
+    [AutomaticRetry(
+        Attempts = 2,
+        LogEvents = true,
+        OnAttemptsExceeded = AttemptsExceededAction.Delete
+    )]
     public async Task SendEventLog(
         long chatId,
         string messageText
@@ -205,15 +240,15 @@ public class JobsService
             }
         );
 
-        var result = await _stepHistoriesService.UpdateStepHistoryStatus
-        (
+        var result = await _stepHistoriesService.UpdateStepHistoryStatus(
             new StepHistory
             {
                 ChatId = chatId,
                 UserId = userId,
                 Status = StepHistoryStatus.ActionDone,
                 UpdatedAt = DateTime.Now
-            }, fields
+            },
+            fields
         );
 
         return result;

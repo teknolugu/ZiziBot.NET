@@ -11,14 +11,15 @@ public static class HangfireJobsExtension
     {
         HangfireUtil.DeleteAllJobs();
 
-        var appService = app.GetServiceProvider();
+        var serviceProvider = app.GetServiceProvider();
 
-        appService.GetRequiredService<RssFeedService>().RegisterJobAllRssScheduler().InBackground();
+        serviceProvider.GetRequiredService<RssFeedService>().RegisterJobAllRssScheduler().InBackground();
 
-        appService.GetRequiredService<JobsService>().RegisterJobChatCleanUp().InBackground();
-        appService.GetRequiredService<JobsService>().RegisterJobClearLog();
-        appService.GetRequiredService<JobsService>().RegisterJobDeleteOldStep();
-        appService.GetRequiredService<JobsService>().RegisterJobDeleteOldRssHistory();
+        serviceProvider.GetRequiredService<JobsService>().RegisterJobChatCleanUp().InBackground();
+        serviceProvider.GetRequiredService<JobsService>().RegisterJobClearLog();
+        serviceProvider.GetRequiredService<JobsService>().RegisterJobDeleteOldStep();
+        serviceProvider.GetRequiredService<JobsService>().RegisterJobDeleteOldRssHistory();
+        serviceProvider.GetRequiredService<JobsService>().RegisterJobDeleteOldMessageHistory();
 
         return app;
     }
