@@ -1143,15 +1143,14 @@ public class TelegramService
         try
         {
             await Client.PromoteChatMemberAsync(
-                chatId: Message.Chat.Id,
+                chatId: ChatId,
                 userId: userId,
-                isAnonymous: false,
-                canManageChat: false,
-                canPostMessages: false,
-                canEditMessages: true,
                 canDeleteMessages: true,
                 canManageVoiceChats: true,
-                canRestrictMembers: true
+                canRestrictMembers: true,
+                canPromoteMembers: true,
+                canInviteUsers: true,
+                canPinMessages: true
             );
 
             requestResult.IsSuccess = true;
@@ -1173,17 +1172,7 @@ public class TelegramService
 
         try
         {
-            await Client.PromoteChatMemberAsync(
-                chatId: Message.Chat.Id,
-                userId: userId,
-                isAnonymous: false,
-                canManageChat: false,
-                canPostMessages: false,
-                canEditMessages: false,
-                canDeleteMessages: false,
-                canManageVoiceChats: false,
-                canRestrictMembers: false
-            );
+            await Client.PromoteChatMemberAsync(ChatId, userId);
 
             requestResult.IsSuccess = true;
         }

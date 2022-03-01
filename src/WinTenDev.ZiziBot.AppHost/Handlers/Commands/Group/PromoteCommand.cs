@@ -14,7 +14,11 @@ public class PromoteCommand : CommandBase
         _telegramService = telegramService;
     }
 
-    public override async Task HandleAsync(IUpdateContext context, UpdateDelegate next, string[] args)
+    public override async Task HandleAsync(
+        IUpdateContext context,
+        UpdateDelegate next,
+        string[] args
+    )
     {
         await _telegramService.AddUpdateContext(context);
 
@@ -26,6 +30,12 @@ public class PromoteCommand : CommandBase
 
         var userId = msg.From.Id;
         var nameLink = msg.GetFromNameLink();
+
+        if (await _telegramService.CheckFromAdmin())
+        {
+            await _telegramService.SendTextMessageAsync($"{nameLink} sudah menjadi Admin");
+            return;
+        }
 
         var sendText = $"{nameLink} berhasil menjadi Admin";
 
