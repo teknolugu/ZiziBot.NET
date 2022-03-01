@@ -200,6 +200,9 @@ public class JobsService
     public void RegisterJobAdminCleanUp()
     {
         var adminCleanUp = _restrictionConfig.AdminCleanUp;
+
+        if (adminCleanUp == null) return;
+
         var filteredCleanUp = adminCleanUp
             .Where(targetId => !targetId.Contains('_'))
             .ToList();
