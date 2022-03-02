@@ -1546,7 +1546,39 @@ public class TelegramService
         op.Complete();
     }
 
-    public async Task SaveToMessageHistoryAsync(
+    #endregion PostUpdate
+
+    #region Message History
+
+    public void SaveSenderMessageToHistory(
+        MessageFlag messageFlag,
+        DateTime deleteAt = default
+    )
+    {
+        var messageId = MessageOrEdited.MessageId;
+        SaveMessageToHistoryAsync(
+                messageId,
+                messageFlag,
+                deleteAt
+            )
+            .InBackground();
+    }
+
+    public void SaveSentMessageToHistory(
+        MessageFlag messageFlag,
+        DateTime deleteAt = default
+    )
+    {
+        var messageId = SentMessage.MessageId;
+        SaveMessageToHistoryAsync(
+                messageId,
+                messageFlag,
+                deleteAt
+            )
+            .InBackground();
+    }
+
+    public async Task SaveMessageToHistoryAsync(
         long messageId,
         MessageFlag messageFlag,
         DateTime deleteAt = default
@@ -1575,5 +1607,5 @@ public class TelegramService
         );
     }
 
-    #endregion PostUpdate
+    #endregion
 }

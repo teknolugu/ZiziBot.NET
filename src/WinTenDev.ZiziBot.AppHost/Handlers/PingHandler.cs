@@ -35,10 +35,7 @@ internal class PingHandler : IUpdateHandler
         var sendText = "ℹ️ Pong!!";
         var isSudoer = _telegramService.IsFromSudo;
 
-        await _telegramService.SaveToMessageHistoryAsync(
-            senderMessageId,
-            MessageFlag.Ping
-        );
+        _telegramService.SaveSenderMessageToHistory(MessageFlag.Ping);
 
         if (_telegramService.IsPrivateChat && isSudoer)
         {
@@ -55,15 +52,9 @@ internal class PingHandler : IUpdateHandler
             }
         }
 
-        var sentMessage = await _telegramService.SendTextMessageAsync(
-            sendText,
-            keyboard
-        );
+        await _telegramService.SendTextMessageAsync(sendText, keyboard);
 
-        await _telegramService.SaveToMessageHistoryAsync(
-            sentMessage.MessageId,
-            MessageFlag.Ping
-        );
+        _telegramService.SaveSentMessageToHistory(MessageFlag.Ping);
 
         op.Complete();
     }
