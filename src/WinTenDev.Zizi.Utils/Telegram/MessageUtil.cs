@@ -67,4 +67,18 @@ public static class MessageUtil
         Log.Debug("MessageLink: {MessageLink}", messageLink);
         return messageLink;
     }
+
+    public static string ParseWebHookInfo(this WebhookInfo webhookInfo)
+    {
+        var webhookInfoStr = "\n\n<i>Bot run in WebHook mode.</i>" +
+                             $"\nUrl WebHook: {webhookInfo.Url}" +
+                             $"\nUrl Custom Cert: {webhookInfo.HasCustomCertificate}" +
+                             $"\nAllowed Updates: {webhookInfo.AllowedUpdates}" +
+                             $"\nPending Count: {(webhookInfo.PendingUpdateCount - 1)}" +
+                             $"\nMax Connection: {webhookInfo.MaxConnections}" +
+                             $"\nLast Error: {webhookInfo.LastErrorDate:yyyy-MM-dd}" +
+                             $"\nError Message: {webhookInfo.LastErrorMessage}";
+
+        return webhookInfoStr;
+    }
 }

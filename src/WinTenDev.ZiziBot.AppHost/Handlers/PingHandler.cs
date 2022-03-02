@@ -7,6 +7,7 @@ using Telegram.Bot.Framework.Abstractions;
 using Telegram.Bot.Types.ReplyMarkups;
 using WinTenDev.Zizi.Models.Enums;
 using WinTenDev.Zizi.Services.Telegram;
+using WinTenDev.Zizi.Utils.Telegram;
 
 namespace WinTenDev.ZiziBot.AppHost.Handlers;
 
@@ -28,14 +29,8 @@ internal class PingHandler : IUpdateHandler
         var op = Operation.Begin("Ping Command handler");
 
         await _telegramService.AddUpdateContext(context);
-        var senderMessageId = _telegramService.MessageOrEdited.MessageId;
 
-        var keyboard = new InlineKeyboardMarkup(
-            InlineKeyboardButton.WithCallbackData(
-                "Ping",
-                "PONG"
-            )
-        );
+        var keyboard = new InlineKeyboardMarkup(InlineKeyboardButton.WithCallbackData("Ping", "PONG"));
 
         var sendText = "ℹ️ Pong!!";
         var isSudoer = _telegramService.IsFromSudo;
@@ -56,14 +51,7 @@ internal class PingHandler : IUpdateHandler
             }
             else
             {
-                sendText += "\n\n<i>Bot run in WebHook mode.</i>" +
-                            $"\nUrl WebHook: {getWebHookInfo.Url}" +
-                            $"\nUrl Custom Cert: {getWebHookInfo.HasCustomCertificate}" +
-                            $"\nAllowed Updates: {getWebHookInfo.AllowedUpdates}" +
-                            $"\nPending Count: {(getWebHookInfo.PendingUpdateCount - 1)}" +
-                            $"\nMax Connection: {getWebHookInfo.MaxConnections}" +
-                            $"\nLast Error: {getWebHookInfo.LastErrorDate:yyyy-MM-dd}" +
-                            $"\nError Message: {getWebHookInfo.LastErrorMessage}";
+                sendText += getWebHookInfo.ParseWebHookInfo();
             }
         }
 
