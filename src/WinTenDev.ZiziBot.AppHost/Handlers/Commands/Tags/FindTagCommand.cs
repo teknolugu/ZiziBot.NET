@@ -56,25 +56,29 @@ public class FindTagCommand : IUpdateHandler
             .Distinct()
             .ToList();
 
-        _logger.LogDebug("AllTags: {0}", parts);
+        _logger.LogDebug("AllTags: {Parts}", parts);
         var tags = await _tagsService.GetTagsByGroupAsync(chatId);
 
         var step = 1;
 
         foreach (var part in parts)
         {
-            _logger.LogInformation("Processing : {0} => ", part);
+            _logger.LogInformation("Processing : {Part} => ", part);
             var trimTag = part.TrimStart('#');
 
             var tagData = tags.FirstOrDefault(x => x.Tag == trimTag);
 
             if (tagData == null)
             {
-                _logger.LogDebug("Tag {0} is not found.", trimTag);
+                _logger.LogDebug("Tag {TrimTag} is not found", trimTag);
                 continue;
             }
 
-            _logger.LogTrace("Data of tag: {0} => {1}", trimTag, tagData);
+            _logger.LogTrace(
+                "Data of tag: {TrimTag} => {@TagData}",
+                trimTag,
+                tagData
+            );
 
             ProcessingTag(tagData).InBackground();
 
@@ -107,8 +111,7 @@ public class FindTagCommand : IUpdateHandler
 
         if (typeData != MediaType.Unknown)
         {
-            await _telegramService.SendMediaAsync
-            (
+            await _telegramService.SendMediaAsync(
                 fileId: idData,
                 mediaType: typeData,
                 caption: content,
@@ -117,10 +120,10 @@ public class FindTagCommand : IUpdateHandler
         }
         else
         {
-            await _telegramService.SendTextMessageAsync
-            (
+            await _telegramService.SendTextMessageAsync(
                 sendText: content,
-                replyMarkup: buttonMarkup
+                replyMarkup: buttonMarkup,
+                disableWebPreview: true
             );
         }
     }
