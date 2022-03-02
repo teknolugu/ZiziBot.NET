@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using MoreLinq;
 using Serilog;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -80,5 +81,81 @@ public static class MessageUtil
                              $"\nError Message: {webhookInfo.LastErrorMessage}";
 
         return webhookInfoStr;
+    }
+
+    public static string CloneText(this Message message)
+    {
+        if (message.ReplyToMessage != null) message = message.ReplyToMessage;
+
+        Log.Debug("Clone text from MessageId: {MessageId}", message.MessageId);
+
+        var entities = message.Entities ?? message.CaptionEntities;
+        var entitiesValue = message.EntityValues ?? message.CaptionEntityValues;
+        var messageText = message.Text ?? message.Caption;
+
+        if (messageText == null) return string.Empty;
+        if (entities == null) return messageText;
+
+        entities.ForEach(
+            (
+                entity,
+                index
+            ) => {
+                var oldValue = entitiesValue?.ElementAtOrDefault(index);
+
+                if (oldValue == null) return;
+
+                var newValue = oldValue;
+
+                switch (entity.Type)
+                {
+                    case MessageEntityType.TextLink:
+                        var url = entity.Url;
+                        newValue = oldValue.MkUrl(url);
+                        break;
+
+                    case MessageEntityType.Mention:
+                        break;
+                    case MessageEntityType.Hashtag:
+                        break;
+                    case MessageEntityType.BotCommand:
+                        break;
+                    case MessageEntityType.Url:
+                        break;
+                    case MessageEntityType.Email:
+                        break;
+                    case MessageEntityType.Bold:
+                        newValue = "<b>" + oldValue + "</b>";
+                        break;
+                    case MessageEntityType.Italic:
+                        newValue = "<i>" + oldValue + "</i>";
+                        break;
+                    case MessageEntityType.Code:
+                        newValue = "<code>" + oldValue + "</code>";
+                        break;
+                    case MessageEntityType.Pre:
+                        break;
+                    case MessageEntityType.TextMention:
+                        break;
+                    case MessageEntityType.PhoneNumber:
+                        break;
+                    case MessageEntityType.Cashtag:
+                        break;
+                    case MessageEntityType.Underline:
+                        newValue = "<u>" + oldValue + "</u>";
+                        break;
+                    case MessageEntityType.Strikethrough:
+                        newValue = "<s>" + oldValue + "</s>";
+                        break;
+                    default:
+                        Log.Warning("No action for entity type: {EntityType}", entity.Type);
+                        break;
+                }
+
+                messageText = messageText.Replace(oldValue, newValue);
+            }
+        );
+
+        return messageText;
     }
 }

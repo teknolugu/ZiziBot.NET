@@ -97,9 +97,6 @@ public class TagCommand : CommandBase
             await _tagsService.DeleteTag(chatId, slugTag.Trim());
         }
 
-        var content = repMsg.Text ?? repMsg.Caption ?? "";
-        Log.Information("Content: {0}", content);
-
         var isExist = await _tagsService.IsExist(msg.Chat.Id, slugTag);
         Log.Information("Tag isExist: {IsExist}", isExist);
 
@@ -107,11 +104,14 @@ public class TagCommand : CommandBase
         {
             await _telegramService.EditMessageTextAsync
             (
-                "✅ Tag sudah ada. " +
-                "Silakan ganti Tag jika ingin isi konten berbeda"
+                $"✅ Tag #{slugTag} sudah ada. " +
+                "Silakan ganti Tag jika ingin isi konten berbeda, atau gunakan /retag untuk memperbarui isi tag."
             );
             return;
         }
+
+        var content = repMsg.CloneText() ?? "";
+        Log.Debug("Content: {Content}", content);
 
         var data = new Dictionary<string, object>()
         {
