@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using JsonFlatFileDataStore;
 using Microsoft.Extensions.Options;
 using MySqlConnector;
@@ -6,6 +8,7 @@ using Serilog;
 using SqlKata.Compilers;
 using SqlKata.Execution;
 using WinTenDev.Zizi.Models.Configs;
+using WinTenDev.Zizi.Utils;
 using WinTenDev.Zizi.Utils.IO;
 
 namespace WinTenDev.Zizi.Services.Internals;
@@ -21,9 +24,7 @@ public class QueryService
     /// Instantiate Query Service
     /// </summary>
     /// <param name="connectionStrings"></param>
-    public QueryService(
-        IOptionsSnapshot<ConnectionStrings> connectionStrings
-    )
+    public QueryService(IOptionsSnapshot<ConnectionStrings> connectionStrings)
     {
         _connectionStrings = connectionStrings.Value;
     }
@@ -79,4 +80,33 @@ public class QueryService
 
         return collection;
     }
+
+    #region C R U D
+
+    public async Task<int> InsertAsync<TEntity>(TEntity entity)
+    {
+        var tableName = MapperUtil.ToTableName<TEntity>();
+        var values = entity.ToDictionary();
+
+        var insert = await CreateMySqlFactory()
+            .FromTable(tableName)
+            .InsertAsync(values);
+
+        return insert;
+    }
+
+    public async Task<IEnumerable<TEntity>> GetAsync<TEntity>(object where)
+    {
+        var tableName = MapperUtil.ToTableName<TEntity>();
+        var whereDictionary = where.ToDictionary();
+
+        var query = await CreateMySqlFactory()
+            .FromTable(tableName)
+            .Where(whereDictionary)
+            .GetAsync<TEntity>();
+
+        return query;
+    }
+
+    #endregion
 }

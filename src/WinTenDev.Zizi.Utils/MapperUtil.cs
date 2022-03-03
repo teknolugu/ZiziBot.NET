@@ -40,4 +40,11 @@ public static class MapperUtil
 
         return dictionary;
     }
+
+    public static string ToTableName<TEntity>()
+    {
+        var tableName = typeof(TEntity).Name.Pluralize().Underscore();
+
+        return tableName;
+    }
 }
