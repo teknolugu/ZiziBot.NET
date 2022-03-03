@@ -279,14 +279,15 @@ public class TelegramService
         return adminOrPrivateChat;
     }
 
-    public string GetCommand()
+    public string GetCommand(bool withoutSlash = false)
     {
         var cmd = string.Empty;
 
-        if (MessageOrEditedText.StartsWith("/"))
-        {
-            cmd = MessageTextParts.ElementAtOrDefault(0);
-        }
+        if (!MessageOrEditedText.StartsWith("/")) return cmd;
+
+        cmd = MessageTextParts.ElementAtOrDefault(0);
+
+        if (withoutSlash) cmd = cmd?.TrimStart('/');
 
         return cmd;
     }
