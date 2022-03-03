@@ -111,6 +111,7 @@ public static class CommandBuilderExtension
                                         .UseCommand<RssInfoCommand>("rssinfo")
                                         .UseCommand<RssPullCommand>("rsspull")
                                         .UseCommand<RulesCommand>("rules")
+                                        .UseCommand<SetRulesCommand>("setrules")
                                         .UseCommand<SetRssCommand>("addrss")
                                         .UseCommand<SetRssCommand>("setrss")
                                         .UseCommand<SettingsCommand>("settings")
