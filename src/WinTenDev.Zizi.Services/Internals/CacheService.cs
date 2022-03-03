@@ -4,12 +4,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using CacheTower;
 using EasyCaching.Core;
-using Humanizer;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MoreLinq;
 using WinTenDev.Zizi.Models.Configs;
-using WinTenDev.Zizi.Utils.IO;
 
 namespace WinTenDev.Zizi.Services.Internals;
 
@@ -71,8 +69,7 @@ public class CacheService
         var allKeys = new List<string>();
         var knownPrefixes = _cacheConfig.KnownPrefixes;
 
-        knownPrefixes.ForEach
-        (
+        knownPrefixes.ForEach(
             (
                 cachePrefix,
                 _
@@ -80,10 +77,8 @@ public class CacheService
                 var cacheValues = _cachingProvider
                     .GetByPrefix<dynamic>(cachePrefix);
 
-                allKeys.AddRange
-                (
-                    cacheValues.Select
-                    (
+                allKeys.AddRange(
+                    cacheValues.Select(
                         (
                             dictionary,
                             _
@@ -101,6 +96,7 @@ public class CacheService
     /// </summary>
     /// <param name="cacheKey"></param>
     /// <param name="action"></param>
+    /// <param name="disableCache">If this true, cache will be bypassed</param>
     /// <param name="evictBefore">If this true, cache will be evicted before GetOrSet</param>
     /// <param name="evictAfter">If this true, cache will be evicted after GetOrSet</param>
     /// <typeparam></typeparam>
@@ -109,14 +105,16 @@ public class CacheService
     public async Task<T> GetOrSetAsync<T>(
         string cacheKey,
         Func<Task<T>> action,
+        bool disableCache = false,
         bool evictBefore = false,
         bool evictAfter = false
     )
     {
+        if (disableCache) return await action();
+
         if (evictBefore) await EvictAsync(cacheKey);
 
-        var cache = await _cacheStack.GetOrSetAsync<T>
-        (
+        var cache = await _cacheStack.GetOrSetAsync<T>(
             cacheKey: cacheKey,
             getter: async (_) => await action(),
             settings: _cacheSettings
@@ -134,8 +132,7 @@ public class CacheService
     {
         var data = await action();
 
-        var cache = await _cacheStack.SetAsync
-        (
+        var cache = await _cacheStack.SetAsync(
             cacheKey,
             value: data,
             timeToLive: TimeSpan.FromMinutes(_expireAfter)
@@ -149,8 +146,7 @@ public class CacheService
         T data
     )
     {
-        var cache = await _cacheStack.SetAsync
-        (
+        var cache = await _cacheStack.SetAsync(
             cacheKey: cacheKey,
             value: data,
             timeToLive: TimeSpan.FromMinutes(_expireAfter)
