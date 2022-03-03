@@ -12,4 +12,5 @@ public class TgBotConfig
 
     public EngineMode EngineMode { get; set; }
     public bool EnableLocalTunnel { get; set; }
+    public string LocalTunnelSubdomain { get; set; }
 }

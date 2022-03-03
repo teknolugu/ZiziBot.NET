@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Linq;
+using Flurl;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -13,6 +15,7 @@ using Telegram.Bot.Framework.Extensions;
 using WinTenDev.Zizi.Models.Bots.Options;
 using WinTenDev.Zizi.Models.Configs;
 using WinTenDev.Zizi.Models.Enums;
+using WinTenDev.Zizi.Services.Externals;
 using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Utils;
 
@@ -39,8 +42,7 @@ internal static class AppStartupExtensions
 
     public static IApplicationBuilder PrintAboutApp(this IApplicationBuilder app)
     {
-        var engines = app.GetServiceProvider()
-            .GetRequiredService<IOptionsSnapshot<EnginesConfig>>().Value;
+        var engines = app.GetRequiredService<IOptionsSnapshot<EnginesConfig>>().Value;
 
         Log.Information("Name: {ProductName}", engines.ProductName);
         Log.Information("Version: {Version}", engines.Version);
@@ -103,15 +105,42 @@ internal static class AppStartupExtensions
     private static IApplicationBuilder UseTelegramBotWebHookMode(this IApplicationBuilder app)
     {
         var configureBot = CommandBuilderExtension.ConfigureBot();
+        var tgBotConfig = app.GetRequiredService<IOptions<TgBotConfig>>().Value;
+        var tunnelService = app.GetRequiredService<LocalTunnelService>();
 
-        // app.UseLocalTunnel("zizibot-dev-localwebhook");
+        var configuration = app.GetRequiredService<IConfiguration>();
+        var urlHost = configuration.GetValue<string>("Kestrel:Endpoints:Http:Url");
+        var parted = urlHost.Split(":");
+        var portHost = parted.ElementAtOrDefault(2);
 
         Log.Information("Starting Bot in WebHook mode..");
+
         // use Telegram bot webhook middleware in higher environments
         app.UseTelegramBotWebhook<BotClient>(configureBot);
 
-        // and make sure webhook is enabled
-        app.ApplicationServices.EnsureWebhookSet<BotClient>();
+        if (tgBotConfig.EnableLocalTunnel)
+        {
+            var tunnelSubdomain = tgBotConfig.LocalTunnelSubdomain;
+
+            var tunnel = tunnelService.CreateTunnel(tunnelSubdomain, portHost);
+            var tunnelUrl = tunnel.Information.Url;
+            var webhookPath = tgBotConfig.WebhookPath;
+            var webHookUrl = Url.Combine(tunnelUrl.ToString(), webhookPath);
+
+            Log.Information("Setting WebHook to {TunnelUrl}", webHookUrl);
+
+            var botClient = app.GetRequiredService<ITelegramBotClient>();
+            botClient.DeleteWebhookAsync().WaitAndUnwrapException();
+            botClient.SetWebhookAsync(webHookUrl).WaitAndUnwrapException();
+
+            var webhookInfo = botClient.GetWebhookInfoAsync().WaitAndUnwrapException();
+            Log.Information("Updated WebHook info {@WebhookInfo}", webhookInfo);
+        }
+        else
+        {
+            // and make sure webhook is enabled
+            app.ApplicationServices.EnsureWebhookSet<BotClient>();
+        }
 
         Log.Information("Bot is ready in WebHook mode..");
 
