@@ -18,7 +18,8 @@ public class CreateTableRules : Migration
             .WithIdColumn()
             .WithColumn("from_id").AsInt64()
             .WithColumn("chat_id").AsInt64()
-            .WithColumn("rule_text").AsString(4000)
+            .WithColumn("is_active").AsBoolean()
+            .WithColumn("rule_text").AsString(6000)
             .WithTimeStamps();
     }
 
