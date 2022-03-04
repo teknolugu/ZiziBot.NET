@@ -1,9 +1,12 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 using Telegram.Bot.Framework.Abstractions;
 using WinTenDev.Zizi.Models.Configs;
+using WinTenDev.Zizi.Models.Dto;
 using WinTenDev.Zizi.Services.Telegram;
+using WinTenDev.Zizi.Services.Telegram.Extensions;
 using WinTenDev.Zizi.Utils;
 using WinTenDev.Zizi.Utils.Telegram;
 
@@ -50,6 +53,14 @@ public class AboutCommand : CommandBase
 
         var sendText = stringBuilder.ToTrimmedString();
 
-        await _telegramService.SendTextMessageAsync(sendText, buttonParsed.Markup, 0);
+        await _telegramService.SendMessageTextAsync(
+            new MessageResponseDto()
+            {
+                MessageText = sendText,
+                ReplyMarkup = buttonParsed.Markup,
+                ReplyToMessageId = 0,
+                ScheduleDeleteAt = DateTime.UtcNow.AddMinutes(1)
+            }
+        );
     }
 }

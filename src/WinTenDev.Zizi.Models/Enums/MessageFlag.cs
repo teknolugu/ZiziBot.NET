@@ -4,5 +4,6 @@ public enum MessageFlag
 {
     General,
     Rules,
-    Ping
+    Ping,
+    About
 }
