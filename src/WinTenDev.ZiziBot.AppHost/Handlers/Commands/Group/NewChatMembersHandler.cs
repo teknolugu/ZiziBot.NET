@@ -9,7 +9,6 @@ using SerilogTimings;
 using Telegram.Bot.Framework.Abstractions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
-using WinTenDev.Zizi.Models.Enums;
 using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Services.Telegram;
 using WinTenDev.Zizi.Utils;
@@ -93,9 +92,10 @@ public class NewChatMembersHandler : IUpdateHandler
             if (newMembers.Length == 1) return;
         }
 
-        var parsedNewMember = await _newChatMembersService.CheckNewChatMembers
-        (
-            chatId, newMembers, answer =>
+        var parsedNewMember = await _newChatMembersService.CheckNewChatMembers(
+            chatId,
+            newMembers,
+            answer =>
                 _telegramService.CallbackAnswerAsync(answer)
         );
 
@@ -148,7 +148,11 @@ public class NewChatMembersHandler : IUpdateHandler
             Log.Debug("Adding verify button..");
 
             const string verifyButton = $"Saya adalah Manusia!|verify";
-            var withVerify = string.Join(",", welcomeButton, verifyButton);
+            var withVerify = string.Join(
+                ",",
+                welcomeButton,
+                verifyButton
+            );
 
             keyboard = withVerify.ToReplyMarkup(2);
         }
@@ -157,13 +161,12 @@ public class NewChatMembersHandler : IUpdateHandler
 
         Log.Debug("New Member handler before send. Time: {Elapsed}", stopwatch.Elapsed);
 
-        if (chatSetting.WelcomeMediaType != MediaType.Unknown)
+        if (chatSetting.WelcomeMediaType > 0)
         {
             var welcomeMedia = chatSetting.WelcomeMedia;
             var mediaType = chatSetting.WelcomeMediaType;
 
-            sentMessage = await _telegramService.SendMediaAsync
-            (
+            sentMessage = await _telegramService.SendMediaAsync(
                 fileId: welcomeMedia,
                 mediaType: mediaType,
                 caption: sendText,
@@ -173,7 +176,11 @@ public class NewChatMembersHandler : IUpdateHandler
         }
         else
         {
-            sentMessage = await _telegramService.SendTextMessageAsync(sendText, keyboard, 0);
+            sentMessage = await _telegramService.SendTextMessageAsync(
+                sendText,
+                keyboard,
+                0
+            );
         }
 
         var prevMsgId = chatSetting.LastWelcomeMessageId.ToInt();
