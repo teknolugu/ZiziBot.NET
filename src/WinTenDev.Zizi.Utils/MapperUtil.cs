@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Humanizer;
 using Slapper;
@@ -46,5 +47,24 @@ public static class MapperUtil
         var tableName = typeof(TEntity).Name.Pluralize().Underscore();
 
         return tableName;
+    }
+
+    public static TValue ToEnum<TValue>(
+        this string value,
+        TValue defaultValue
+    ) where TValue : struct
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            return defaultValue;
+        }
+
+        return Enum.TryParse<TValue>(
+            value,
+            true,
+            out var result
+        )
+            ? result
+            : defaultValue;
     }
 }

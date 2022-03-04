@@ -1,0 +1,33 @@
+﻿using System.Threading.Tasks;
+using Telegram.Bot.Types;
+using WinTenDev.Zizi.Models.Dto;
+using WinTenDev.Zizi.Models.Enums;
+using WinTenDev.Zizi.Utils;
+
+namespace WinTenDev.Zizi.Services.Telegram.Extensions;
+
+public static class TelegramServiceMessageExtension
+{
+    public static async Task<Message> SendMessageTextAsync(
+        this TelegramService telegramService,
+        MessageResponseDto messageResponseDto
+    )
+    {
+        var sendMessageText = await telegramService.SendTextMessageAsync(
+            sendText: messageResponseDto.MessageText,
+            replyMarkup: messageResponseDto.ReplyMarkup,
+            replyToMsgId: messageResponseDto.ReplyToMessageId.ToInt(),
+            disableWebPreview: messageResponseDto.DisableWebPreview
+        );
+
+        if (messageResponseDto.ScheduleDeleteAt == default) return sendMessageText;
+
+        var currentCommand = telegramService.GetCommand(withoutSlash: true);
+        var commandFlag = currentCommand.ToEnum(defaultValue: MessageFlag.General);
+
+        telegramService.SaveSenderMessageToHistory(commandFlag, messageResponseDto.ScheduleDeleteAt);
+        telegramService.SaveSentMessageToHistory(commandFlag, messageResponseDto.ScheduleDeleteAt);
+
+        return sendMessageText;
+    }
+}
