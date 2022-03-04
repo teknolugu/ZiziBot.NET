@@ -37,12 +37,13 @@ public class TelegramService
     private readonly ChatService _chatService;
     private readonly BotService _botService;
     private readonly FeatureService _featureService;
-    private readonly FloodCheckService _floodCheckService;
     private readonly MessageHistoryService _messageHistoryService;
     private readonly SettingsService _settingsService;
     private readonly PrivilegeService _privilegeService;
     private readonly UserProfilePhotoService _userProfilePhotoService;
     private readonly StepHistoriesService _stepHistoriesService;
+
+    internal FloodCheckService FloodCheckService { get; }
 
     public bool IsNoUsername { get; private set; }
     public bool HasUsername { get; private set; }
@@ -103,7 +104,7 @@ public class TelegramService
         ChatService chatService,
         BotService botService,
         FeatureService featureService,
-        FloodCheckService floodCheckService,
+        FloodCheckService floodCheckServiceService,
         MessageHistoryService messageHistoryService,
         SettingsService settingsService,
         PrivilegeService privilegeService,
@@ -116,12 +117,13 @@ public class TelegramService
         _chatService = chatService;
         _botService = botService;
         _featureService = featureService;
-        _floodCheckService = floodCheckService;
         _messageHistoryService = messageHistoryService;
         _settingsService = settingsService;
         _privilegeService = privilegeService;
         _userProfilePhotoService = userProfilePhotoService;
         _stepHistoriesService = stepHistoriesService;
+
+        FloodCheckService = floodCheckServiceService;
     }
 
     public Task AddUpdateContext(IUpdateContext updateContext)
@@ -1474,48 +1476,6 @@ public class TelegramService
                 UpdatedAt = DateTime.Now
             }
         );
-    }
-
-    public async Task<FloodCheckResult> FloodCheck()
-    {
-        if (ChannelOrEditedPost != null) return new FloodCheckResult();
-
-        var floodCheckResult = _floodCheckService.FloodCheck
-        (
-            new HitActivity()
-            {
-                Guid = Guid.NewGuid()
-                    .ToString(),
-                MessageDate = MessageDate,
-                UpdateType = Update.Type,
-                ChatId = ChatId,
-                ChatTitle = ChatTitle,
-                ChatUsername = Chat.Username,
-                ChatType = Chat.Type,
-                FromId = FromId,
-                FromUsername = From.Username,
-                FromLangCode = From.LanguageCode,
-                FromFirstName = From.FirstName,
-                FromLastName = From.LastName,
-                Timestamp = DateTime.Now
-            }
-        );
-
-        if (!floodCheckResult.IsFlood) return floodCheckResult;
-        if (!IsGroupChat ||
-            await CheckFromAdmin()) return new FloodCheckResult();
-
-        var span = TimeSpan.FromHours(floodCheckResult.FloodRate * 1.33)
-            .ToDateTime();
-        await RestrictMemberAsync(FromId, until: span);
-
-        var nameLink = From.GetNameLink();
-
-        var text = $"Hai {nameLink}, seperti nya Anda melakukan Flooding!" +
-                   $"\nAnda di mute hingga {span.ToDetailDateTimeString()} di Obrolan ini";
-        await SendTextMessageAsync(text, replyToMsgId: 0);
-
-        return floodCheckResult;
     }
 
     #endregion OnUpdate

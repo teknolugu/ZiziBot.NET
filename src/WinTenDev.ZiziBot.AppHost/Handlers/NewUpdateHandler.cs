@@ -12,6 +12,7 @@ using WinTenDev.Zizi.Models.Tables;
 using WinTenDev.Zizi.Models.Types;
 using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Services.Telegram;
+using WinTenDev.Zizi.Services.Telegram.Extensions;
 using WinTenDev.Zizi.Utils;
 using WinTenDev.Zizi.Utils.Telegram;
 using WinTenDev.Zizi.Utils.Text;
@@ -64,8 +65,8 @@ public class NewUpdateHandler : IUpdateHandler
 
         if (_telegramService.IsUpdateTooOld()) return;
 
-        // var floodCheck = await _telegramService.FloodCheck();
-        // if (floodCheck.IsFlood) return;
+        var floodCheck = await _telegramService.FloodCheckAsync();
+        if (floodCheck.IsFlood) return;
 
         _chatSettings = await _telegramService.GetChatSetting();
 
@@ -223,7 +224,8 @@ public class NewUpdateHandler : IUpdateHandler
                 return false;
             }
 
-            if (_telegramService.IsFromSudo && (
+            if (_telegramService.IsFromSudo &&
+                (
                     text.StartsWith("/dkata") ||
                     text.StartsWith("/delkata") ||
                     text.StartsWith("/kata")))
@@ -237,7 +239,11 @@ public class NewUpdateHandler : IUpdateHandler
 
             if (isMustDelete) _logger.LogInformation("Starting scan image if available..");
 
-            _logger.LogInformation("Message {MsgId} IsMustDelete: {IsMustDelete}", messageId, isMustDelete);
+            _logger.LogInformation(
+                "Message {MsgId} IsMustDelete: {IsMustDelete}",
+                messageId,
+                isMustDelete
+            );
 
             if (isMustDelete)
             {
@@ -250,9 +256,13 @@ public class NewUpdateHandler : IUpdateHandler
 
             return isMustDelete;
         }
-        catch (Exception ex)
+        catch (Exception exception)
         {
-            _logger.LogError(ex, "Error occured when run {V}", nameof(ScanMessageAsync).Humanize());
+            _logger.LogError(
+                exception,
+                "Error occured when run {V}",
+                nameof(ScanMessageAsync).Humanize()
+            );
             return false;
         }
     }

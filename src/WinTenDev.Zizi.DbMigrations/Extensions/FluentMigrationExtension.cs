@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Reflection;
+using FluentMigrator;
 using FluentMigrator.Builders;
+using FluentMigrator.Builders.Alter.Table;
 using FluentMigrator.Builders.Create.Table;
+using FluentMigrator.Builders.Execute;
 using FluentMigrator.Infrastructure;
 using FluentMigrator.Runner;
 using FluentMigrator.Runner.Logging;
@@ -65,9 +68,7 @@ public static class FluentMigrationExtension
         return app;
     }
 
-    public static ICreateTableColumnOptionOrWithColumnSyntax WithIdColumn(
-        this ICreateTableWithColumnSyntax tableWithColumnSyntax
-    )
+    public static ICreateTableColumnOptionOrWithColumnSyntax WithIdColumn(this ICreateTableWithColumnSyntax tableWithColumnSyntax)
     {
         return tableWithColumnSyntax
             .WithColumn("id")
@@ -77,34 +78,26 @@ public static class FluentMigrationExtension
             .Identity();
     }
 
-    public static ICreateTableColumnOptionOrWithColumnSyntax WithTimeStamp(
-        this ICreateTableWithColumnSyntax tableWithColumnSyntax
-    )
+    public static ICreateTableColumnOptionOrWithColumnSyntax WithTimeStamp(this ICreateTableWithColumnSyntax tableWithColumnSyntax)
     {
         return tableWithColumnSyntax
             .WithColumn("created_at").AsDateTime().NotNullable();
     }
 
-    public static ICreateTableColumnOptionOrWithColumnSyntax WithTimeStamps(
-        this ICreateTableWithColumnSyntax tableWithColumnSyntax
-    )
+    public static ICreateTableColumnOptionOrWithColumnSyntax WithTimeStamps(this ICreateTableWithColumnSyntax tableWithColumnSyntax)
     {
         return tableWithColumnSyntax
             .WithColumn("created_at").AsDateTime().NotNullable()
             .WithColumn("updated_at").AsDateTime().NotNullable();
     }
 
-    public static TNext AsMySqlText<TNext>(
-        this IColumnTypeSyntax<TNext> createTableColumnAsTypeSyntax
-    )
+    public static TNext AsMySqlText<TNext>(this IColumnTypeSyntax<TNext> createTableColumnAsTypeSyntax)
         where TNext : IFluentSyntax
     {
         return createTableColumnAsTypeSyntax.AsCustom("TEXT");
     }
 
-    public static TNext AsMySqlMediumText<TNext>(
-        this IColumnTypeSyntax<TNext> createTableColumnAsTypeSyntax
-    )
+    public static TNext AsMySqlMediumText<TNext>(this IColumnTypeSyntax<TNext> createTableColumnAsTypeSyntax)
         where TNext : IFluentSyntax
     {
         return createTableColumnAsTypeSyntax.AsCustom("MEDIUMTEXT");
@@ -120,11 +113,50 @@ public static class FluentMigrationExtension
         return columnTypeSyntax.AsCustom(varcharType);
     }
 
-    public static TNext AsMySqlTimestamp<TNext>(
-        this IColumnTypeSyntax<TNext> createTableColumnAsTypeSyntax
-    )
+    public static TNext AsMySqlTimestamp<TNext>(this IColumnTypeSyntax<TNext> createTableColumnAsTypeSyntax)
         where TNext : IFluentSyntax
     {
         return createTableColumnAsTypeSyntax.AsCustom("TIMESTAMP");
+    }
+
+    public static void DropViewIfExist(
+        this IExecuteExpressionRoot execute,
+        string tableName
+    )
+    {
+        execute.Sql($"DROP VIEW IF EXISTS {tableName}");
+    }
+
+    public static IFluentSyntax CreateTableIfNotExists(
+        this MigrationBase self,
+        string tableName,
+        Func<ICreateTableWithColumnOrSchemaOrDescriptionSyntax, IFluentSyntax> constructTableFunction,
+        string schemaName = "dbo"
+    )
+    {
+        if (!self.Schema.Schema(schemaName).Table(tableName).Exists())
+        {
+            return constructTableFunction(self.Create.Table(tableName));
+        }
+        else
+        {
+            return null;
+        }
+    }
+
+    public static IFluentSyntax CreateColIfNotExists(
+        this MigrationBase self,
+        string tableName,
+        string colName,
+        Func<IAlterTableColumnAsTypeSyntax, IFluentSyntax> constructColFunction,
+        string schemaName = "dbo"
+    )
+    {
+        if (!self.Schema.Schema(schemaName).Table(tableName).Column(colName).Exists())
+        {
+            return constructColFunction(self.Alter.Table(tableName).AddColumn(colName));
+        }
+
+        return null;
     }
 }

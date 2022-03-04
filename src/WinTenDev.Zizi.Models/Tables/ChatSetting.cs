@@ -93,6 +93,7 @@ public class ChatSetting
     public bool EnableFindTags { get; set; } = true;
 
     public bool EnableFireCheck { get; set; }
+    public bool EnableFloodCheck { get; set; }
 
     [Column("enable_word_filter_group")]
     [JsonProperty("enable_word_filter_group")]
@@ -124,6 +125,8 @@ public class ChatSetting
     [Column("updated_at")]
     [JsonProperty("updated_at")]
     public DateTime UpdatedAt { get; set; }
+
+    public int FloodOffset { get; set; }
 }
 
 public class ChatSettingMap : EntityMap<ChatSetting>

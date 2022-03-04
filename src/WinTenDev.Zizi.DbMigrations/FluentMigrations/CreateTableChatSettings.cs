@@ -20,6 +20,8 @@ public class CreateTableChatSettings : Migration
             .WithColumn("chat_title").AsString()
             .WithColumn("chat_type").AsString()
             .WithColumn("members_count").AsInt64().WithDefaultValue(-1)
+            .WithColumn("created_at").AsMySqlTimestamp().WithDefault(SystemMethods.CurrentDateTime)
+            .WithColumn("updated_at").AsMySqlTimestamp().WithDefault(SystemMethods.CurrentDateTime)
             .WithColumn("event_log_chat_id").AsInt64().WithDefaultValue(0)
             .WithColumn("is_admin").AsBoolean().WithDefaultValue(0)
             .WithColumn("enable_bot").AsBoolean().WithDefaultValue(1)
@@ -32,6 +34,7 @@ public class CreateTableChatSettings : Migration
             .WithColumn("enable_find_notes").AsBoolean().WithDefaultValue(1)
             .WithColumn("enable_find_tags").AsBoolean().WithDefaultValue(1)
             .WithColumn("enable_fire_check").AsBoolean().WithDefaultValue(0)
+            .WithColumn("enable_flood_check").AsBoolean().WithDefaultValue(0)
             .WithColumn("enable_human_verification").AsBoolean().WithDefaultValue(0)
             .WithColumn("enable_profile_photo_check").AsBoolean().WithDefaultValue(0)
             .WithColumn("enable_reply_notification").AsBoolean().WithDefaultValue(1)
@@ -44,6 +47,7 @@ public class CreateTableChatSettings : Migration
             .WithColumn("enable_word_filter_global").AsBoolean().WithDefaultValue(1)
             .WithColumn("enable_word_filter_group").AsBoolean().WithDefaultValue(1)
             .WithColumn("enable_zizi_mata").AsBoolean().WithDefaultValue(1)
+            .WithColumn("flood_offset").AsInt16().WithDefaultValue(7)
             .WithColumn("last_tags_message_id").AsInt64().WithDefaultValue(-1)
             .WithColumn("last_warn_username_message_id").AsInt64().WithDefaultValue(-1)
             .WithColumn("last_welcome_message_id").AsInt64().WithDefaultValue(-1)
@@ -54,8 +58,6 @@ public class CreateTableChatSettings : Migration
             .WithColumn("welcome_button").AsMySqlText().WithDefaultValue("")
             .WithColumn("welcome_media").AsString(150).WithDefaultValue("")
             .WithColumn("welcome_media_type").AsInt16().WithDefaultValue(-1)
-            .WithColumn("created_at").AsMySqlTimestamp().WithDefault(SystemMethods.CurrentDateTime)
-            .WithColumn("updated_at").AsMySqlTimestamp().WithDefault(SystemMethods.CurrentDateTime)
             .Indexed("chat_id");
     }
 

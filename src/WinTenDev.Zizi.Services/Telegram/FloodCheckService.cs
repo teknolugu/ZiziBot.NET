@@ -32,7 +32,7 @@ public class FloodCheckService
         _hitActivities = hitActivityInMemory.FloodActivities;
     }
 
-    public FloodCheckResult FloodCheck(HitActivity hitActivity)
+    public FloodCheckResult RunFloodCheck(HitActivity hitActivity)
     {
         var chatId = hitActivity.ChatId;
         var userId = hitActivity.FromId;
@@ -57,16 +57,19 @@ public class FloodCheckService
         long userId
     )
     {
-        const float floodOffset = 5;
+        const float floodOffset = 3;
         var lastActivities = GetLastActivity(chatId, userId);
         var itemCount = lastActivities.Count();
         var floodRate = itemCount / floodOffset;
         var isFlood = floodRate > 1;
 
-        _logger.LogDebug
-        (
+        _logger.LogDebug(
             "UserId {UserId} is Flood at ChatId {ChatId}? {IsFlood}. Rate: {Rate}. Item: {Item}",
-            userId, chatId, isFlood, floodRate, itemCount
+            userId,
+            chatId,
+            isFlood,
+            floodRate,
+            itemCount
         );
 
         var floodResult = new FloodCheckResult()
@@ -81,10 +84,10 @@ public class FloodCheckService
 
     public void SaveHitActivity(HitActivity hitActivity)
     {
-        var op = Operation.Begin
-        (
+        var op = Operation.Begin(
             "Saving Flood activity for UserId: {UserId} at ChatId: {ChatId}",
-            hitActivity.FromId, hitActivity.ChatId
+            hitActivity.FromId,
+            hitActivity.ChatId
         );
         _hitActivities.Insert(hitActivity);
 
@@ -110,13 +113,13 @@ public class FloodCheckService
                 x =>
                     x.ChatId == chatId &&
                     x.FromId == userId &&
-                    x.Timestamp >= DateTime.Now.AddSeconds(-10)
+                    x.Timestamp >= DateTime.Now.AddSeconds(-12)
             );
 
-        _logger.LogDebug
-        (
+        _logger.LogDebug(
             "Get Last Activities for {UserId} at ChatId {ChatId}",
-            userId, chatId
+            userId,
+            chatId
         );
 
         return getLastActivities;
@@ -142,10 +145,13 @@ public class FloodCheckService
 
         // var afterDel = GetAllHitActivities();
 
-        _logger.LogDebug
-        (
+        _logger.LogDebug(
             "Remove for {UserId} at ChatId {ChatId}. Result: {Result}. Prev: {BeforeDel}: After: {AfterDel}",
-            userId, chatId, remove, _hitActivities.Count, _hitActivities.Count
+            userId,
+            chatId,
+            remove,
+            _hitActivities.Count,
+            _hitActivities.Count
         );
     }
 }
