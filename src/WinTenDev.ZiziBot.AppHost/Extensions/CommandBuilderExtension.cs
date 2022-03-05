@@ -41,21 +41,21 @@ public static class CommandBuilderExtension
                 //    )
                 .UseWhen<PinnedMessageHandler>(When.NewPinnedMessage)
                 // .UseWhen<MediaReceivedHandler>(When.MediaReceived)
-                .UseWhen
-                (
-                    When.NewOrEditedMessage, msgBranch => msgBranch
-                        .UseWhen
-                        (
-                            When.CallTagReceived, tagBranch => tagBranch
+                .UseWhen(
+                    When.NewOrEditedMessage,
+                    msgBranch => msgBranch
+                        .UseWhen(
+                            When.CallTagReceived,
+                            tagBranch => tagBranch
                                 .Use<FindTagCommand>()
                         )
-                        .UseWhen
-                        (
-                            When.NewTextMessage, txtBranch => txtBranch
+                        .UseWhen(
+                            When.NewTextMessage,
+                            txtBranch => txtBranch
                                 .UseWhen<PingHandler>(When.PingReceived)
-                                .UseWhen
-                                (
-                                    When.NewCommand, cmdBranch => cmdBranch
+                                .UseWhen(
+                                    When.NewCommand,
+                                    cmdBranch => cmdBranch
                                         .UseCommand<AboutCommand>("about")
                                         .UseCommand<AddBlockListCommand>("addblist")
                                         .UseCommand<AddKataCommand>("kata")
@@ -116,6 +116,9 @@ public static class CommandBuilderExtension
                                         .UseCommand<SetRssCommand>("setrss")
                                         .UseCommand<SettingsCommand>("settings")
                                         .UseCommand<SetWelcomeCommand>("setwelcome")
+                                        .UseCommand<SetWelcomeCommand>("set_welcome_btn")
+                                        .UseCommand<SetWelcomeCommand>("set_welcome_doc")
+                                        .UseCommand<SetWelcomeCommand>("set_welcome_msg")
                                         .UseCommand<StartCommand>("start")
                                         .UseCommand<StatsCommand>("stats")
                                         .UseCommand<StickerPackCommand>("stickerpack")
