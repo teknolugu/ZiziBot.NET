@@ -86,10 +86,11 @@ public class DatabaseService
             sender,
             args
         ) => {
-            _logger.LogDebug
-            (
+            _logger.LogDebug(
                 "Processing backup Table: {TableName}. Table Rows: {Rows}. Current Index: {Index}",
-                args.CurrentTableName, args.TotalRowsInCurrentTable, args.CurrentRowIndexInCurrentTable
+                args.CurrentTableName,
+                args.TotalRowsInCurrentTable,
+                args.CurrentRowIndexInCurrentTable
             );
         };
 
@@ -97,8 +98,7 @@ public class DatabaseService
             sender,
             args
         ) => {
-            _logger.LogDebug
-            (
+            _logger.LogDebug(
                 "Backup Table complete. Elapsed: {TableName}",
                 args.TimeUsed
             );
@@ -107,11 +107,19 @@ public class DatabaseService
         _logger.LogDebug("Opening MySql Connection..");
         await connection.OpenAsync();
 
-        _logger.LogDebug("Exporting database {DbName} to file: {SqlFile}", dbName, fullName);
+        _logger.LogDebug(
+            "Exporting database {DbName} to file: {SqlFile}",
+            dbName,
+            fullName
+        );
         mb.ExportToFile(fullName);
 
         var zipFileName = fullName.CreateZip(false);
-        _logger.LogDebug("Database: {DbName} exported to file: {SqlZip}", dbName, zipFileName);
+        _logger.LogDebug(
+            "Database: {DbName} exported to file: {SqlZip}",
+            dbName,
+            zipFileName
+        );
 
         _logger.LogDebug("Closing MySql Connection..");
         await connection.CloseAsync();
@@ -153,11 +161,10 @@ public class DatabaseService
         const string defaultCharSet = "utf8mb4";
         const string defaultCollation = "utf8mb4_unicode_ci";
 
-        var datas = await _queryService
+        var tableInfos = await _queryService
             .CreateMySqlFactory()
             .FromTable("information_schema.tables")
-            .Select
-            (
+            .Select(
                 "table_schema",
                 "table_name",
                 "table_collation",
@@ -170,10 +177,10 @@ public class DatabaseService
             .OrderByDesc("table_name")
             .GetAsync<TableInfo>();
 
-        var needFixes = datas.Where
+        var needFixes = tableInfos.Where
             (
                 tableInfo =>
-                    tableInfo.TableCollation.NotContains("utf8mb4")
+                    tableInfo.TableCollation?.NotContains("utf8mb4") ?? false
             )
             .ToList();
 
@@ -185,8 +192,7 @@ public class DatabaseService
             return;
         }
 
-        await needFixes.ForEachAsync
-        (
+        await needFixes.ForEachAsync(
             degreeOfParallel: 4,
             async tableInfo => {
                 var tableName = tableInfo.TableName;
@@ -200,10 +206,10 @@ public class DatabaseService
                     .CreateMySqlFactory()
                     .StatementAsync(sql);
 
-                _logger.LogInformation
-                (
+                _logger.LogInformation(
                     "Fixing table {TableName} result: {Result}",
-                    tableName, query
+                    tableName,
+                    query
                 );
             }
         );
