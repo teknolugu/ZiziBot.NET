@@ -25,7 +25,41 @@ public static class TelegramServiceMessageExtension
         var currentCommand = telegramService.GetCommand(withoutSlash: true);
         var commandFlag = currentCommand.ToEnum(defaultValue: MessageFlag.General);
 
-        telegramService.SaveSenderMessageToHistory(commandFlag, messageResponseDto.ScheduleDeleteAt);
+        if (messageResponseDto.IncludeSenderForDelete)
+            telegramService.SaveSenderMessageToHistory(commandFlag, messageResponseDto.ScheduleDeleteAt);
+
+        telegramService.SaveSentMessageToHistory(commandFlag, messageResponseDto.ScheduleDeleteAt);
+
+        return sendMessageText;
+    }
+
+    public static async Task<Message> EditMessageTextAsync(
+        this TelegramService telegramService,
+        MessageResponseDto messageResponseDto
+    )
+    {
+        var sendMessageText = await telegramService.EditMessageTextAsync(
+            sendText: messageResponseDto.MessageText,
+            replyMarkup: messageResponseDto.ReplyMarkup,
+            disableWebPreview: messageResponseDto.DisableWebPreview
+        );
+
+        if (messageResponseDto.ScheduleDeleteAt == default) return sendMessageText;
+
+        var currentCommand = telegramService.GetCommand(withoutSlash: true);
+        var commandFlag = currentCommand.ToEnum(defaultValue: MessageFlag.General);
+
+        await telegramService.MessageHistoryService.DeleteMessageHistoryAsync(
+            new MessageHistoryFindDto()
+            {
+                ChatId = sendMessageText.Chat.Id,
+                MessageId = sendMessageText.MessageId
+            }
+        );
+
+        if (messageResponseDto.IncludeSenderForDelete)
+            telegramService.SaveSenderMessageToHistory(commandFlag, messageResponseDto.ScheduleDeleteAt);
+
         telegramService.SaveSentMessageToHistory(commandFlag, messageResponseDto.ScheduleDeleteAt);
 
         return sendMessageText;
