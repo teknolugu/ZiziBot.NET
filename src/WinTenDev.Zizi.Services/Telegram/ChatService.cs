@@ -294,7 +294,8 @@ public class ChatService
                             new MessageHistoryFindDto()
                             {
                                 MessageFlag = history.MessageFlag,
-                                MessageId = history.MessageId
+                                MessageId = history.MessageId,
+                                ChatId = chatId
                             }
                         );
                     }
