@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-    <Import Project="./../../config/VersionBuild.target.props"/>
+    <Import Project="./../../config/VersionBuild.target.props" />
 
     <PropertyGroup>
         <TargetFramework>net6.0</TargetFramework>
@@ -16,7 +16,7 @@
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="SonarAnalyzer.CSharp" Version="8.35.0.42613">
+        <PackageReference Include="SonarAnalyzer.CSharp" Version="8.36.1.44192">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>

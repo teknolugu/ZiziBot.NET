@@ -28,7 +28,7 @@
         <PackageReference Include="Serilog.Settings.Configuration" Version="3.3.0" />
         <PackageReference Include="Serilog.Sinks.Grafana.Loki" Version="7.1.0" />
         <PackageReference Include="SerilogTimings" Version="2.3.0" />
-        <PackageReference Include="SonarAnalyzer.CSharp" Version="8.35.0.42613">
+        <PackageReference Include="SonarAnalyzer.CSharp" Version="8.36.1.44192">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>

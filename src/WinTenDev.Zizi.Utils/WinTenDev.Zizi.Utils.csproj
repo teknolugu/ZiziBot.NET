@@ -12,7 +12,7 @@
         <PackageReference Include="AngleSharp.Js" Version="0.15.0" />
         <PackageReference Include="CacheTower" Version="0.11.6" />
         <PackageReference Include="CacheTower.Providers.FileSystem.Json" Version="0.11.6" />
-        <PackageReference Include="ClickHouse.Client" Version="4.2.1" />
+        <PackageReference Include="ClickHouse.Client" Version="4.2.2" />
         <PackageReference Include="CloudFlareUtilities" Version="1.3.0" />
         <PackageReference Include="CodeHollow.FeedReader" Version="1.2.4" />
         <PackageReference Include="CsvHelper" Version="27.2.1" />
@@ -59,7 +59,7 @@
         <PackageReference Include="MonkeyCache" Version="1.5.2" />
         <PackageReference Include="MonkeyCache.FileStore" Version="1.5.2" />
         <PackageReference Include="morelinq" Version="3.3.2" />
-        <PackageReference Include="MySqlConnector" Version="2.1.6" />
+        <PackageReference Include="MySqlConnector" Version="2.1.7" />
         <PackageReference Include="MySqlConnector.Logging.Serilog" Version="2.0.0" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
         <PackageReference Include="Nito.AsyncEx" Version="5.1.2" />
@@ -81,7 +81,7 @@
         <PackageReference Include="Serilog.Sinks.TelegramBot" Version="1.0.7" />
         <PackageReference Include="SerilogAnalyzer" Version="0.15.0" />
         <PackageReference Include="Slapper.AutoMapper" Version="2.0.5" />
-        <PackageReference Include="SonarAnalyzer.CSharp" Version="8.35.0.42613">
+        <PackageReference Include="SonarAnalyzer.CSharp" Version="8.36.1.44192">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
@@ -90,10 +90,11 @@
         <PackageReference Include="System.Data.SQLite.Core" Version="1.0.115.5" />
         <PackageReference Include="Telegram.Bot" Version="17.0.0" />
         <PackageReference Include="TgBotFramework" Version="0.5.2" />
-        <PackageReference Include="WTelegramClient" Version="2.1.1" />
+        <PackageReference Include="WordPressPCL" Version="1.9.0" />
+        <PackageReference Include="WTelegramClient" Version="2.1.2" />
         <PackageReference Include="YamlConvert" Version="2.1.1" />
         <PackageReference Include="YamlDotNet" Version="11.2.1" />
-        <PackageReference Include="YoutubeExplode" Version="6.0.8" />
+        <PackageReference Include="YoutubeExplode" Version="6.1.0" />
         <PackageReference Include="YouTubeSearch" Version="2.2.6" />
     </ItemGroup>
 

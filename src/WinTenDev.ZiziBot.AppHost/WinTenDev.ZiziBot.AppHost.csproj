@@ -60,7 +60,7 @@
         <PackageReference Include="Sentry.Serilog" Version="3.14.1" />
         <PackageReference Include="Serilog" Version="2.10.0" />
         <PackageReference Include="Serilog.AspNetCore" Version="5.0.0" />
-        <PackageReference Include="Serilog.Expressions" Version="3.2.1" />
+        <PackageReference Include="Serilog.Expressions" Version="3.3.0" />
         <PackageReference Include="Serilog.Extensions.Hosting" Version="4.2.0" />
         <PackageReference Include="Serilog.Settings.Configuration" Version="3.3.0" />
         <PackageReference Include="Serilog.Sinks.Async" Version="1.5.0" />
@@ -69,7 +69,7 @@
         <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
         <PackageReference Include="Serilog.Sinks.Loggly" Version="5.4.0" />
         <PackageReference Include="SerilogAnalyzer" Version="0.15.0" />
-        <PackageReference Include="SonarAnalyzer.CSharp" Version="8.35.0.42613">
+        <PackageReference Include="SonarAnalyzer.CSharp" Version="8.36.1.44192">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
@@ -78,7 +78,7 @@
         <PackageReference Include="System.Data.SQLite.Core" Version="1.0.115.5" />
         <PackageReference Include="SystemInfoLibrary-devel" Version="1.5.0.25" />
         <PackageReference Include="Telegram.Bot" Version="17.0.0" />
-        <PackageReference Include="WTelegramClient" Version="2.1.1" />
+        <PackageReference Include="WTelegramClient" Version="2.1.2" />
     </ItemGroup>
     <ItemGroup>
         <None Update="Storage\Buttons\**">
@@ -95,22 +95,30 @@
         </None>
     </ItemGroup>
     <ItemGroup>
-        <Compile Update="I18n\Lang.Designer.cs">
+        <Compile Update="I18n\MainLanguage.Designer.cs">
             <DesignTime>True</DesignTime>
             <AutoGen>True</AutoGen>
             <DependentUpon>Lang.resx</DependentUpon>
         </Compile>
     </ItemGroup>
     <ItemGroup>
-        <EmbeddedResource Update="I18n\Lang.en.resx">
+        <EmbeddedResource Update="I18n\MainLanguage.en.resx">
             <Generator>PublicResXFileCodeGenerator</Generator>
+            <DependentUpon>Lang.resx</DependentUpon>
         </EmbeddedResource>
-        <EmbeddedResource Update="I18n\Lang.id.resx">
+        <EmbeddedResource Update="I18n\MainLanguage.id.resx">
             <Generator>PublicResXFileCodeGenerator</Generator>
+            <DependentUpon>Lang.resx</DependentUpon>
         </EmbeddedResource>
-        <EmbeddedResource Update="I18n\Lang.resx">
+        <EmbeddedResource Update="I18n\MainLanguage.resx">
             <Generator>PublicResXFileCodeGenerator</Generator>
-            <LastGenOutput>Lang.Designer.cs</LastGenOutput>
+            <LastGenOutput>MainLanguage.Designer.cs</LastGenOutput>
+        </EmbeddedResource>
+        <EmbeddedResource Update="I18n\MainLanguage.jv.resx">
+          <DependentUpon>Lang.resx</DependentUpon>
+        </EmbeddedResource>
+        <EmbeddedResource Update="I18n\MainLanguage.su.resx">
+          <DependentUpon>Lang.resx</DependentUpon>
         </EmbeddedResource>
     </ItemGroup>
     <ItemGroup>
