@@ -36,11 +36,11 @@ public class WelcomeMessageCommand : CommandBase
         if (!await _telegramService.CheckFromAdminOrAnonymous()) return;
 
         var columnTarget = $"welcome_message";
-        var data = msg.Text.GetTextWithoutCmd();
+        var data = msg.CloneText().GetTextWithoutCmd();
 
         if (msg.ReplyToMessage != null)
         {
-            data = msg.ReplyToMessage.Text;
+            data = msg.ReplyToMessage.CloneText();
         }
 
         if (data.IsNullOrEmpty())
@@ -51,7 +51,11 @@ public class WelcomeMessageCommand : CommandBase
 
         await _telegramService.SendTextMessageAsync($"Sedang menyimpan Welcome Message..");
 
-        await _settingsService.UpdateCell(chatId, columnTarget, data);
+        await _settingsService.UpdateCell(
+            chatId,
+            columnTarget,
+            data
+        );
 
         await _telegramService.EditMessageTextAsync
         (
