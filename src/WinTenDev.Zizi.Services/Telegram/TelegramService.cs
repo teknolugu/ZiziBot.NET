@@ -43,6 +43,7 @@ public class TelegramService
     private readonly UserProfilePhotoService _userProfilePhotoService;
     private readonly StepHistoriesService _stepHistoriesService;
 
+    internal AfkService AfkService { get; }
     internal FloodCheckService FloodCheckService { get; }
 
     public bool IsNoUsername { get; private set; }
@@ -101,6 +102,7 @@ public class TelegramService
     public TelegramService(
         IBackgroundJobClient backgroundJob,
         IOptionsSnapshot<EventLogConfig> eventLogConfig,
+        AfkService afkService,
         ChatService chatService,
         BotService botService,
         FeatureService featureService,
@@ -123,6 +125,7 @@ public class TelegramService
         _userProfilePhotoService = userProfilePhotoService;
         _stepHistoriesService = stepHistoriesService;
 
+        AfkService = afkService;
         FloodCheckService = floodCheckServiceService;
     }
 

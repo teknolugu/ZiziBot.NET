@@ -142,7 +142,7 @@ public class NewUpdateHandler : IUpdateHandler
         var nonAwaitTasks = new List<Task>
         {
             _telegramService.EnsureChatSettingsAsync(),
-            AfkCheck(),
+            _telegramService.AfkCheckAsync(),
             CheckMataZiziAsync()
         };
 
@@ -289,7 +289,8 @@ public class NewUpdateHandler : IUpdateHandler
 
             if (_telegramService.MessageOrEdited == null) return;
 
-            if (message.Text != null && message.Text.StartsWith("/afk")) return;
+            if (message.Text != null &&
+                message.Text.StartsWith("/afk")) return;
 
             if (message.ReplyToMessage != null)
             {
@@ -298,16 +299,14 @@ public class NewUpdateHandler : IUpdateHandler
 
                 var isAfkReply = await _afkService.GetAfkById(repFromId);
 
-                if (isAfkReply == null)
-                {
-                    _logger.LogDebug("No AFK data for '{FromId}' because never recorded as AFK", repFromId);
-                    return;
-                }
-
-                if (isAfkReply.IsAfk)
+                if (isAfkReply?.IsAfk ?? false)
                 {
                     var repNameLink = repMsg.GetFromNameLink();
                     await _telegramService.SendTextMessageAsync($"{repNameLink} sedang afk");
+                }
+                else
+                {
+                    _logger.LogDebug("No AFK data for '{FromId}' because never recorded as AFK", repFromId);
                 }
             }
 
@@ -339,9 +338,13 @@ public class NewUpdateHandler : IUpdateHandler
                 await _afkService.UpdateAfkByIdCacheAsync(_fromId);
             }
         }
-        catch (Exception ex)
+        catch (Exception exception)
         {
-            _logger.LogError(ex, "AFK Check - Error occured on {ChatId}", _chatId);
+            _logger.LogError(
+                exception,
+                "AFK Check - Error occured on {ChatId}",
+                _chatId
+            );
         }
 
         _logger.LogDebug("AFK check completed. In {Elapsed}", sw.Elapsed);
