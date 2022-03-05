@@ -37,14 +37,14 @@ public class TelegramService
     private readonly ChatService _chatService;
     private readonly BotService _botService;
     private readonly FeatureService _featureService;
-    private readonly MessageHistoryService _messageHistoryService;
-    private readonly SettingsService _settingsService;
     private readonly PrivilegeService _privilegeService;
     private readonly UserProfilePhotoService _userProfilePhotoService;
     private readonly StepHistoriesService _stepHistoriesService;
 
     internal AfkService AfkService { get; }
     internal FloodCheckService FloodCheckService { get; }
+    internal MessageHistoryService MessageHistoryService { get; }
+    internal SettingsService SettingsService { get; }
 
     public bool IsNoUsername { get; private set; }
     public bool HasUsername { get; private set; }
@@ -119,14 +119,14 @@ public class TelegramService
         _chatService = chatService;
         _botService = botService;
         _featureService = featureService;
-        _messageHistoryService = messageHistoryService;
-        _settingsService = settingsService;
         _privilegeService = privilegeService;
         _userProfilePhotoService = userProfilePhotoService;
         _stepHistoriesService = stepHistoriesService;
 
         AfkService = afkService;
         FloodCheckService = floodCheckServiceService;
+        MessageHistoryService = messageHistoryService;
+        SettingsService = settingsService;
     }
 
     public Task AddUpdateContext(IUpdateContext updateContext)
@@ -163,7 +163,7 @@ public class TelegramService
         FromId = From?.Id ?? 0;
         ChatId = Chat?.Id ?? 0;
         ReducedChatId = ChatId.ReduceChatId();
-        ChatTitle = Chat?.Title;
+        ChatTitle = Chat?.Title ?? From.GetFullName();
         FromNameLink = From.GetNameLink();
 
         IsNoUsername = CheckUsername();
@@ -247,7 +247,7 @@ public class TelegramService
 
     public async Task<ChatSetting> GetChatSetting()
     {
-        var chatSetting = await _settingsService.GetSettingsByGroup(ChatId);
+        var chatSetting = await SettingsService.GetSettingsByGroup(ChatId);
 
         return chatSetting;
     }
@@ -1489,29 +1489,66 @@ public class TelegramService
     {
         var op = Operation.Begin("Ensure Chat Settings for ChatId: '{ChatId}'", ChatId);
 
-        var isBotAdmin = await CheckBotAdmin();
-
-        var data = new Dictionary<string, object>
+        try
         {
-            { "chat_id", ChatId },
-            { "chat_title", ChatTitle },
-            { "chat_type", Chat.Type.Humanize() },
-            { "is_admin", isBotAdmin },
-            { "updated_at", DateTime.Now }
-        };
+            var isBotAdmin = await CheckBotAdmin();
+            var memberCount = await GetMemberCount();
 
-        var saveSettings = await _settingsService.SaveSettingsAsync(data);
+            var saveSettings = -1;
+            Dictionary<string, object> chatSettingsValues;
+            var settings = await SettingsService.GetSettingsByGroupCore(ChatId);
 
-        Log.Debug(
-            "Ensure Settings for ChatID: '{ChatId}' result {SaveSettings}",
-            ChatId,
-            saveSettings
-        );
-        op.Complete();
+            if (settings == null)
+            {
+                var chatSettingsFresh = new ChatSettingsInsertDto()
+                {
+                    ChatId = ChatId,
+                    ChatTitle = ChatTitle,
+                    ChatType = Chat.Type.Humanize(),
+                    MembersCount = memberCount,
+                    IsAdmin = isBotAdmin,
+                    CreatedAt = DateTime.Now,
+                    UpdatedAt = DateTime.Now
+                };
+
+                chatSettingsValues = chatSettingsFresh.ToDictionary();
+            }
+            else
+            {
+                var chatSettingsEnsure = new ChatSettingsEnsureDto()
+                {
+                    ChatId = ChatId,
+                    ChatTitle = ChatTitle,
+                    ChatType = Chat.Type.Humanize(),
+                    MembersCount = memberCount,
+                    IsAdmin = isBotAdmin,
+                    UpdatedAt = DateTime.Now
+                };
+
+                chatSettingsValues = chatSettingsEnsure.ToDictionary();
+            }
+
+            saveSettings = await SettingsService.SaveSettingsAsync(chatSettingsValues);
+
+            Log.Debug(
+                "Ensure Settings for ChatID: '{ChatId}' result {SaveSettings}",
+                ChatId,
+                saveSettings
+            );
+
+            op.Complete();
+        }
+        catch (Exception exception)
+        {
+            Log.Error(
+                "Error when Ensure Chat Settings at '{ChatId}'. Error: {Exception}",
+                ChatId,
+                exception.Message
+            );
+        }
     }
 
     #endregion PostUpdate
-
     #region Message History
 
     public void SaveSenderMessageToHistory(
@@ -1550,7 +1587,7 @@ public class TelegramService
     {
         if (deleteAt == default) deleteAt = DateTime.UtcNow.AddMinutes(1);
 
-        var saveHistory = await _messageHistoryService.SaveToMessageHistoryAsync(
+        var saveHistory = await MessageHistoryService.SaveToMessageHistoryAsync(
             new MessageHistoryInsertDto()
             {
                 MessageFlag = messageFlag.Humanize(),
