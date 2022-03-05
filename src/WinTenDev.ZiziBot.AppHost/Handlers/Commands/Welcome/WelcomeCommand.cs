@@ -1,8 +1,6 @@
 ﻿using System.Threading.Tasks;
-using Serilog;
 using Telegram.Bot.Framework.Abstractions;
 using Telegram.Bot.Types.ReplyMarkups;
-using WinTenDev.Zizi.Models.Enums;
 using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Services.Telegram;
 using WinTenDev.Zizi.Utils;
@@ -35,8 +33,6 @@ public class WelcomeCommand : CommandBase
         var chatId = _telegramService.ChatId;
         var chatTitle = _telegramService.ChatTitle;
 
-        Log.Information("Args: {V}", string.Join(" ", args));
-
         if (!await _telegramService.CheckFromAdminOrAnonymous()) return;
 
         var settings = await _settingsService.GetSettingsByGroup(chatId);
@@ -54,13 +50,11 @@ public class WelcomeCommand : CommandBase
                                  "\nKamu adalah anggota ke-{memberCount}";
 
             sendText += "Tidak ada konfigurasi pesan welcome, pesan default akan di terapkan" +
-                        $"\n\n<code>{defaultWelcome}</code>" +
-                        $"\n\nUntuk bantuan silakan ketik /help" +
-                        $"\nBantuan pesan Welcome ke Bantuan > Grup > Welcome";
+                        $"\n\n<code>{defaultWelcome}</code>";
         }
         else
         {
-            sendText += $"<code>{welcomeMessage}</code>";
+            sendText += $"{welcomeMessage}";
         }
 
         var keyboard = InlineKeyboardMarkup.Empty();
@@ -73,13 +67,22 @@ public class WelcomeCommand : CommandBase
                         $"\n<code>{welcomeButton}</code>";
         }
 
-        if (welcomeMediaType != MediaType.Unknown)
+        if (welcomeMediaType > 0)
         {
-            await _telegramService.SendMediaAsync(welcomeMedia, welcomeMediaType, sendText, keyboard);
+            await _telegramService.SendMediaAsync(
+                fileId: welcomeMedia,
+                mediaType: welcomeMediaType,
+                caption: sendText,
+                replyMarkup: keyboard
+            );
         }
         else
         {
-            await _telegramService.SendTextMessageAsync(sendText, keyboard);
+            await _telegramService.SendTextMessageAsync(
+                sendText: sendText,
+                replyMarkup: keyboard,
+                replyToMsgId: 0
+            );
         }
     }
 }
