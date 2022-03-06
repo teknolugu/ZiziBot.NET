@@ -104,6 +104,7 @@ public static class CommandBuilderExtension
                                         .UseCommand<PredictCommand>("predict")
                                         .UseCommand<PromoteCommand>("promote")
                                         .UseCommand<QrCommand>("qr")
+                                        .UseCommand<RandomCommand>("ran")
                                         .UseCommand<ReportCommand>("report")
                                         .UseCommand<ResetSettingsCommand>("rsettings")
                                         .UseCommand<RssStartCommand>("startrss")
