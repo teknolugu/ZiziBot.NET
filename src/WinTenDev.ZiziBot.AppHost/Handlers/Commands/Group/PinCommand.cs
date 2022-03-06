@@ -23,10 +23,11 @@ public class PinCommand : CommandBase
     {
         await _telegramService.AddUpdateContext(context);
 
-        var msg = _telegramService.MessageOrEdited;
-        var client = context.Bot.Client;
+        var client = _telegramService.Client;
+        var message = _telegramService.MessageOrEdited;
+        var chatId = _telegramService.ChatId;
 
-        var sendText = "Balas pesan yang akan di pin";
+        const string sendText = "Balas pesan yang akan di pin";
 
         await _telegramService.DeleteSenderMessageAsync();
 
@@ -36,16 +37,16 @@ public class PinCommand : CommandBase
             return;
         }
 
-        if (msg.ReplyToMessage != null)
+        if (message.ReplyToMessage != null)
         {
-            await client.PinChatMessageAsync
-            (
-                msg.Chat.Id,
-                msg.ReplyToMessage.MessageId
-            );
+            var messageId = message.ReplyToMessage.MessageId;
+
+            await client.UnpinChatMessageAsync(chatId, messageId);
+            await client.PinChatMessageAsync(chatId, messageId);
+
             return;
         }
 
-        await _telegramService.SendTextMessageAsync(sendText, replyToMsgId: msg.MessageId);
+        await _telegramService.SendTextMessageAsync(sendText, replyToMsgId: message.MessageId);
     }
 }
