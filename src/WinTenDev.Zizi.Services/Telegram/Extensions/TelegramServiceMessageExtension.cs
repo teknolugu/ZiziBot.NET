@@ -1,7 +1,9 @@
 ﻿using System.Threading.Tasks;
+using MoreLinq;
 using Telegram.Bot.Types;
 using WinTenDev.Zizi.Models.Dto;
 using WinTenDev.Zizi.Models.Enums;
+using WinTenDev.Zizi.Models.Types;
 using WinTenDev.Zizi.Utils;
 
 namespace WinTenDev.Zizi.Services.Telegram.Extensions;
@@ -63,5 +65,43 @@ public static class TelegramServiceMessageExtension
         telegramService.SaveSentMessageToHistory(commandFlag, messageResponseDto.ScheduleDeleteAt);
 
         return sendMessageText;
+    }
+
+    public static async Task<RequestResult> SendMediaGroupAsync(
+        this TelegramService telegramService,
+        MessageResponseDto messageResponseDto
+    )
+    {
+        var requestResult = await telegramService.SendMediaGroupAsync(
+            listAlbum: messageResponseDto.ListAlbum
+        );
+
+        if (messageResponseDto.ScheduleDeleteAt == default) return requestResult;
+
+        var currentCommand = telegramService.GetCommand(withoutSlash: true);
+        var commandFlag = currentCommand.ToEnum(defaultValue: MessageFlag.General);
+
+        requestResult.SentMessages.ForEach(
+            message => {
+                var messageId = message.MessageId;
+
+                if (messageResponseDto.IncludeSenderForDelete)
+                {
+                    telegramService.SaveMessageToHistoryAsync(
+                        messageId: messageId,
+                        messageFlag: commandFlag,
+                        deleteAt: messageResponseDto.ScheduleDeleteAt
+                    ).InBackground();
+                }
+
+                telegramService.SaveMessageToHistoryAsync(
+                    messageId: messageId,
+                    messageFlag: commandFlag,
+                    deleteAt: messageResponseDto.ScheduleDeleteAt
+                ).InBackground();
+            }
+        );
+
+        return requestResult;
     }
 }
