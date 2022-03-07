@@ -79,6 +79,7 @@ public static class CommandBuilderExtension
                                         .UseCommand<DeleteKataCommand>("delkata")
                                         .UseCommand<DelRssCommand>("delrss")
                                         .UseCommand<DemoteCommand>("demote")
+                                        .UseCommand<EpicFreeGamesCommand>("egs_free")
                                         .UseCommand<ExportRssCommand>("exportrss")
                                         .UseCommand<FireCommand>("fire")
                                         .UseCommand<GBanRegisterCommand>("gbanreg")
