@@ -95,6 +95,56 @@ public static class TimeUtil
         return new DateTimeOffset(convertedTime, toUtcOffset);
     }
 
+    public static string ToStringFormat(
+        this TimeSpan ts,
+        string format
+    )
+    {
+        return (ts < TimeSpan.Zero ? "-" : "") + ts.ToString(format);
+    }
+
+    [CanBeNull]
+    public static TimeZoneInfo FindTimeZoneByOffsetBase(string offsetBase)
+    {
+        var timeZones = TimeZoneInfo.GetSystemTimeZones();
+
+        var filteredTimeZones = timeZones
+            .FirstOrDefault(
+                info => {
+                    var isMatch = info.DisplayName.ToString().Contains(offsetBase);
+
+                    return isMatch;
+                }
+            );
+
+        if (filteredTimeZones == null) throw new TimeZoneOffsetNotFoundException(offsetBase);
+
+        return filteredTimeZones;
+    }
+
+    public static DateTimeOffset ConvertUtcTimeToTimeOffset(
+        this DateTime dateTime,
+        string toTimeZone
+    )
+    {
+        var timeZones = TimeZoneInfo.GetSystemTimeZones();
+
+        var filteredTimeZones = timeZones
+            .FirstOrDefault(
+                info => {
+                    var isMatch = info.DisplayName.ToString().Contains(toTimeZone);
+
+                    return isMatch;
+                }
+            );
+
+        if (filteredTimeZones == null) throw new Exception("TimeZone not found");
+
+        var dateTimeOffset = dateTime.ConvertUtcTimeToTimeZone(filteredTimeZones?.Id);
+
+        return dateTimeOffset;
+    }
+
     public static string GetTimeGreet()
     {
         var greet = "dini hari";
@@ -107,7 +157,11 @@ public static class TimeUtil
         else if (hour <= 18) greet = "petang";
         else if (hour <= 24) greet = "malam";
 
-        Log.Debug("Current hour: {Hour}, greet: {Greet}", hour, greet);
+        Log.Debug(
+            "Current hour: {Hour}, greet: {Greet}",
+            hour,
+            greet
+        );
 
         return greet;
     }
@@ -269,9 +323,14 @@ public static class TimeUtil
         return span;
     }
 
-    public static DateTime ToDateTime(this TimeSpan span)
+    public static DateTime ToDateTime(
+        this TimeSpan span,
+        bool useUtc = false
+    )
     {
         var today = DateTime.Now;
+        if (useUtc) today = DateTime.UtcNow;
+
         var answer = today.Add(span);
 
         return answer;

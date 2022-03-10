@@ -127,6 +127,8 @@ public class ChatSetting
     public DateTime UpdatedAt { get; set; }
 
     public int FloodOffset { get; set; }
+    public string TimeZoneOffset { get; set; }
+    public string LanguageCode { get; set; }
 }
 
 public class ChatSettingMap : EntityMap<ChatSetting>

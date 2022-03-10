@@ -119,6 +119,7 @@ public static class CommandBuilderExtension
                                         .UseCommand<SetRssCommand>("addrss")
                                         .UseCommand<SetRssCommand>("setrss")
                                         .UseCommand<SettingsCommand>("settings")
+                                        .UseCommand<SetCommand>("set")
                                         .UseCommand<SetWelcomeCommand>("setwelcome")
                                         .UseCommand<SetWelcomeCommand>("set_welcome_btn")
                                         .UseCommand<SetWelcomeCommand>("set_welcome_doc")
