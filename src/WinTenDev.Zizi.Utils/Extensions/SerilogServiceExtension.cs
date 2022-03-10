@@ -144,7 +144,7 @@ public static class SerilogServiceExtension
         configuration
             .Enrich.FromLogContext()
             // .Enrich.WithThreadId()
-            // .Enrich.WithPrettiedMemoryUsage()
+            // .Enrich.WithMemoryUsage(true)
             .MinimumLevel.Override(
                 "Hangfire",
                 LogEventLevel.Information
@@ -236,7 +236,8 @@ public static class SerilogServiceExtension
         var datadogKey = config.ApiKey;
 
         if (!config.IsEnabled) return logger;
-        if (datadogKey == "YOUR_API_KEY" && !datadogKey.IsNotNullOrEmpty()) return logger;
+        if (datadogKey == "YOUR_API_KEY" &&
+            !datadogKey.IsNotNullOrEmpty()) return logger;
 
         var datadogConfiguration = new DatadogConfiguration(
             url: DataDogHost,
@@ -263,8 +264,7 @@ public static class SerilogServiceExtension
     /// <param name="logger">The logger</param>
     /// <param name="config">The sentry logger</param>
     /// <returns>The logger</returns>
-    private static LoggerConfiguration AddSentry
-    (
+    private static LoggerConfiguration AddSentry(
         this LoggerConfiguration logger,
         SentryConfig config
     )
@@ -305,7 +305,7 @@ public static class SerilogServiceExtension
             token: botToken,
             chatId: channelId.ToString(),
             restrictedToMinimumLevel: LogEventLevel.Error,
-            parseMode: ParseMode.Markdown
+            parseMode: ParseMode.HTML
         );
 
         return logger;
@@ -345,18 +345,22 @@ public static class SerilogServiceExtension
     /// Add MemoryUsage to Logging logger for Serilog
     /// </summary>
     /// <param name="configuration"></param>
+    /// <param name="prettySize"></param>
     /// <returns></returns>
-    public static LoggerConfiguration WithPrettiedMemoryUsage(
-        this LoggerEnrichmentConfiguration configuration
+    public static LoggerConfiguration WithMemoryUsage(
+        this LoggerEnrichmentConfiguration configuration,
+        bool prettySize = false
     )
     {
+        var proc = Process.GetCurrentProcess();
+        var memorySize = proc.PrivateMemorySize64;
+
         return configuration.WithDynamicProperty(
             "MemoryUsage",
             () => {
-                var proc = Process.GetCurrentProcess();
-                var mem = proc.PrivateMemorySize64.SizeFormat();
+                var mem = prettySize ? memorySize.SizeFormat() : memorySize.ToString();
 
-                return $"{mem} ";
+                return $" {mem} ";
             }
         );
     }
