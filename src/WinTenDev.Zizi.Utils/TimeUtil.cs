@@ -2,7 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using JetBrains.Annotations;
 using Serilog;
+using TimeSpanParserUtil;
+using WinTenDev.Zizi.Exceptions;
 
 namespace WinTenDev.Zizi.Utils;
 
@@ -277,5 +280,19 @@ public static class TimeUtil
     public static string ToDetailDateTimeString(this DateTime dateTime)
     {
         return dateTime.ToString("yyyy-MM-dd hh:mm:ss tt zz");
+    }
+
+    public static TimeSpan ToTimeSpan(this string timeStr)
+    {
+        try
+        {
+            var timeSpan = TimeSpanParser.Parse(timeStr);
+            return timeSpan;
+        }
+        catch (Exception)
+        {
+            throw new TimeSpanInvalidException("Invalid time span. Value: " + timeStr);
+            return TimeSpan.Zero;
+        }
     }
 }

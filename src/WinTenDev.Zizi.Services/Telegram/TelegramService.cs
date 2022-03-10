@@ -669,7 +669,9 @@ public class TelegramService
         IReplyMarkup replyMarkup = null,
         int replyToMsgId = -1,
         long customChatId = -1,
-        bool disableWebPreview = false
+        bool disableWebPreview = false,
+        DateTime scheduleDeleteAt = default,
+        bool includeSenderMessage = false
     )
     {
         TimeProc = MessageDate.GetDelay();
@@ -705,7 +707,7 @@ public class TelegramService
                 disableWebPagePreview: disableWebPreview
             );
 
-            return SentMessage;
+            // return SentMessage;
         }
         catch (Exception exception1)
         {
@@ -737,7 +739,7 @@ public class TelegramService
                     replyMarkup: replyMarkup
                 );
 
-                return SentMessage;
+                // return SentMessage;
             }
             catch (Exception exception2)
             {
@@ -752,7 +754,10 @@ public class TelegramService
             }
         }
 
-        Log.Information("Sent Message Text: {SentMessageId}", SentMessageId);
+        Log.Information("Sent Message Text: {SentMessageId}", SentMessage.MessageId);
+
+        if (scheduleDeleteAt != default)
+            SaveToMessageHistory(scheduleDeleteAt, includeSenderMessage);
 
         return SentMessage;
     }
@@ -1552,6 +1557,33 @@ public class TelegramService
 
     #endregion PostUpdate
     #region Message History
+
+    public void SaveToMessageHistory(
+        DateTime deleteAt = default,
+        bool includeSender = false
+    )
+    {
+        var command = GetCommand(false);
+        var messageFlag = command.ToEnum(MessageFlag.General);
+
+        var sentMessageId = SentMessage.MessageId;
+        SaveMessageToHistoryAsync(
+                sentMessageId,
+                messageFlag,
+                deleteAt
+            )
+            .InBackground();
+
+        if (!includeSender) return;
+
+        var senderMessageId = MessageOrEdited.MessageId;
+        SaveMessageToHistoryAsync(
+                senderMessageId,
+                messageFlag,
+                deleteAt
+            )
+            .InBackground();
+    }
 
     public void SaveSenderMessageToHistory(
         MessageFlag messageFlag,
