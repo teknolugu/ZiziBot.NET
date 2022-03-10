@@ -22,6 +22,9 @@ public class RssSetting
     [Column("url_feed")]
     public string UrlFeed { get; set; }
 
+    public bool IsEnabled { get; set; }
+    public bool IncludeAttachment { get; set; }
+
     [JsonProperty("created_at")]
     [Column("created_at")]
     public DateTime CreatedAt { get; set; }

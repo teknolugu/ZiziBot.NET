@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Serilog;
 using Telegram.Bot.Framework.Abstractions;
@@ -15,6 +16,7 @@ public class CallbackQueryHandler : IUpdateHandler
     private readonly ActionCallback _actionCallback;
     private readonly HelpCallback _helpCallback;
     private readonly PingCallback _pingCallback;
+    private readonly RssCtlCallback _rssCtlCallback;
     private readonly SettingsCallback _settingsCallback;
     private readonly VerifyCallback _verifyCallback;
 
@@ -23,6 +25,7 @@ public class CallbackQueryHandler : IUpdateHandler
         ActionCallback actionCallback,
         HelpCallback helpCallback,
         PingCallback pingCallback,
+        RssCtlCallback rssCtlCallback,
         SettingsCallback settingsCallback,
         VerifyCallback verifyCallback
     )
@@ -31,6 +34,7 @@ public class CallbackQueryHandler : IUpdateHandler
         _actionCallback = actionCallback;
         _helpCallback = helpCallback;
         _pingCallback = pingCallback;
+        _rssCtlCallback = rssCtlCallback;
         _settingsCallback = settingsCallback;
         _verifyCallback = verifyCallback;
     }
@@ -51,7 +55,7 @@ public class CallbackQueryHandler : IUpdateHandler
         var partsCallback = callbackQuery.Data.SplitText(" ");
         Log.Debug("Callbacks: {CB}", partsCallback);
 
-        switch (partsCallback[0])// Level 0
+        switch (partsCallback.ElementAtOrDefault(0))// Level 0
         {
             case "pong":
             case "PONG":
@@ -67,6 +71,10 @@ public class CallbackQueryHandler : IUpdateHandler
             case "help":
                 var helpResult = await _helpCallback.ExecuteAsync();
                 Log.Information("HelpResult: {V}", helpResult.ToJson(true));
+                break;
+
+            case "rssctl":
+                var result = await _rssCtlCallback.ExecuteAsync();
                 break;
 
             case "setting":

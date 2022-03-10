@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using SqlKata.Execution;
@@ -44,6 +45,19 @@ public class MessageHistoryService
             .CreateMySqlFactory()
             .FromTable(TableName)
             .InsertAsync(values);
+
+        return query;
+    }
+
+    public async Task<int> UpdateDeleteAtAsync(MessageHistoryFindDto findDto, DateTime dateTime)
+    {
+        var where = findDto.ToDictionary();
+
+        var query = await _queryService
+            .CreateMySqlFactory()
+            .FromTable(TableName)
+            .Where(where)
+            .UpdateAsync(new { delete_at = dateTime });
 
         return query;
     }

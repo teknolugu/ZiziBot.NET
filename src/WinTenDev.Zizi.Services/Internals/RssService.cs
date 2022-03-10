@@ -4,10 +4,14 @@ using System.Linq;
 using System.Threading.Tasks;
 using Hangfire;
 using Humanizer;
+using MoreLinq;
 using Serilog;
 using SqlKata.Execution;
+using Telegram.Bot.Types.ReplyMarkups;
+using WinTenDev.Zizi.Models.Dto;
 using WinTenDev.Zizi.Models.Tables;
 using WinTenDev.Zizi.Utils;
+using WinTenDev.Zizi.Utils.Parsers;
 using WinTenDev.Zizi.Utils.Telegram;
 
 namespace WinTenDev.Zizi.Services.Internals;
@@ -19,9 +23,7 @@ public class RssService
     private const string RSSHistoryTable = "rss_history";
     private const string RSSSettingTable = "rss_settings";
 
-    public RssService(
-        QueryService queryService
-    )
+    public RssService(QueryService queryService)
     {
         _queryService = queryService;
     }
@@ -40,10 +42,10 @@ public class RssService
 
         var isExist = data.Any();
 
-        Log.Debug
-        (
+        Log.Debug(
             "Check RSS History exist on ChatId {ChatId}? {IsExist}",
-            chatId, isExist
+            chatId,
+            isExist
         );
 
         return isExist;
@@ -83,6 +85,39 @@ public class RssService
         return insert.ToBool();
     }
 
+    public async Task<bool> UpdateRssSettingAsync(
+        RssSettingFindDto rssSettingFindDto,
+        RssSetting rssSetting
+    )
+    {
+        var where = rssSettingFindDto.ToDictionary(skipZeroNullOrEmpty: true);
+        var data = rssSetting.ToDictionary(skipZeroNullOrEmpty: true);
+
+        var insert = await _queryService
+            .CreateMySqlFactory()
+            .FromTable(RSSSettingTable)
+            .Where(where)
+            .UpdateAsync(data);
+
+        return insert.ToBool();
+    }
+
+    public async Task<bool> UpdateRssSettingAsync(
+        RssSettingFindDto rssSettingFindDto,
+        Dictionary<string, object> data
+    )
+    {
+        var where = rssSettingFindDto.ToDictionary(skipZeroNullOrEmpty: true);
+
+        var insert = await _queryService
+            .CreateMySqlFactory()
+            .FromTable(RSSSettingTable)
+            .Where(where)
+            .UpdateAsync(data);
+
+        return insert.ToBool();
+    }
+
     public async Task<int> SaveRssHistoryAsync(RssHistory rssHistory)
     {
         var insert = await _queryService
@@ -99,6 +134,7 @@ public class RssService
             .CreateMySqlFactory()
             .FromTable(RSSSettingTable)
             .Where("chat_id", chatId)
+            .OrderBy("url_feed")
             .GetAsync<RssSetting>();
 
         Log.Verbose("RSSData: {@V}", data);
@@ -147,7 +183,35 @@ public class RssService
             .Where("url_feed", urlFeed)
             .DeleteAsync();
 
-        Log.Information("Delete {UrlFeed} status: {V}", urlFeed, delete);
+        Log.Information(
+            "Delete {UrlFeed} status: {V}",
+            urlFeed,
+            delete
+        );
+
+        return delete.ToBool();
+    }
+
+    public async Task<bool> DeleteRssAsync(
+        long chatId,
+        string columnName,
+        object columnValue
+    )
+    {
+        var delete = await _queryService
+            .CreateMySqlFactory()
+            .FromTable(RSSSettingTable)
+            .Where("chat_id", chatId)
+            .Where(columnName, columnValue)
+            .DeleteAsync();
+
+        Log.Information(
+            "Delete RSS Settings for ChatId {ChatId}. {ColumnName} => {ColumnValue} status: {V}",
+            chatId,
+            columnName,
+            columnValue,
+            delete
+        );
 
         return delete.ToBool();
     }
@@ -160,7 +224,11 @@ public class RssService
             .Where("chat_id", chatId)
             .DeleteAsync();
 
-        Log.Information("Deleted RSS {ChatId} Settings {Delete} rows", chatId, delete);
+        Log.Information(
+            "Deleted RSS {ChatId} Settings {Delete} rows",
+            chatId,
+            delete
+        );
 
         return delete;
     }
@@ -168,10 +236,16 @@ public class RssService
     [JobDisplayName("Delete olds RSS History")]
     public async Task DeleteOldHistory()
     {
+        var dateTime = DateTime.UtcNow.AddMonths(-6).ToString("yyyy-MM-dd HH:mm:ss");
+
         var delete = await _queryService
             .CreateMySqlFactory()
-            .FromTable(RSSHistoryTable)
-            .WhereDate("created_at", "<", DateTime.Now.AddMonths(-6))
+            .FromTable(tableName: RSSHistoryTable)
+            .Where(
+                column: "created_at",
+                op: "<",
+                value: dateTime
+            )
             .DeleteAsync();
 
         var rowsItems = "row".ToQuantity(delete);
@@ -182,8 +256,86 @@ public class RssService
     public async Task<int> DeleteDuplicateAsync()
     {
         var query = await _queryService.CreateMySqlFactory()
-            .DeleteDuplicateAsync(RSSSettingTable, "id", "chat_id", "url_feed");
+            .DeleteDuplicateAsync(
+                RSSSettingTable,
+                "id",
+                "chat_id",
+                "url_feed"
+            );
 
         return query;
+    }
+
+    public async Task<InlineKeyboardMarkup> GetButtonMarkup(
+        long chatId,
+        int page = 0,
+        int take = 5
+    )
+    {
+        var buttonMarkup = InlineKeyboardMarkup.Empty();
+        var rssSettings = await GetRssSettingsAsync(chatId);
+        var filtered = rssSettings.Skip(page * take).Take(take);
+
+        var prev = page - take;
+        var next = page + take;
+
+        var buttons = new List<InlineKeyboardButton[]>();
+
+        if (filtered.Any())
+        {
+            buttons.Add(
+                new InlineKeyboardButton[]
+                {
+                    InlineKeyboardButton.WithCallbackData("🚫 Stop All", $"rssctl stop-all"),
+                    InlineKeyboardButton.WithCallbackData("✅ Start All", $"rssctl start-all"),
+                }
+            );
+
+            filtered.ForEach(
+                (
+                    rssSetting,
+                    index
+                ) => {
+                    var btnCtl = new List<InlineKeyboardButton>()
+                    {
+                        InlineKeyboardButton.WithCallbackData("❌ Delete", $"rssctl delete {rssSetting.Id}"),
+                    };
+
+                    if (rssSetting.IsEnabled)
+                        btnCtl.Add(InlineKeyboardButton.WithCallbackData("✅ Started", $"rssctl stop {rssSetting.Id}"));
+                    else
+                        btnCtl.Add(InlineKeyboardButton.WithCallbackData("🚫 Stopped", $"rssctl start {rssSetting.Id}"));
+
+                    if (rssSetting.UrlFeed.IsGithubReleaseUrl())
+                        if (rssSetting.IncludeAttachment)
+                            btnCtl.Add(InlineKeyboardButton.WithCallbackData("✅ Attachment", $"rssctl attachment-off {rssSetting.Id}"));
+                        else
+                            btnCtl.Add(InlineKeyboardButton.WithCallbackData("❌ Attachment", $"rssctl attachment-on {rssSetting.Id}"));
+
+                    buttons.AddRange(
+                        new InlineKeyboardButton[][]
+                        {
+                            new InlineKeyboardButton[]
+                            {
+                                InlineKeyboardButton.WithUrl($"{index + 1}. {rssSetting.UrlFeed}", rssSetting.UrlFeed),
+                            },
+                            btnCtl.ToArray()
+                        }
+                    );
+                }
+            );
+
+            buttons.Add(
+                new InlineKeyboardButton[]
+                {
+                    InlineKeyboardButton.WithCallbackData("Prev", $"rssctl navigate-page {page - 1}"),
+                    InlineKeyboardButton.WithCallbackData("Next", $"rssctl navigate-page {page + 1}"),
+                }
+            );
+
+            buttonMarkup = new InlineKeyboardMarkup(buttons);
+        }
+
+        return buttonMarkup;
     }
 }

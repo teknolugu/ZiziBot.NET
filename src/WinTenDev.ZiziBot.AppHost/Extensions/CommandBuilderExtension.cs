@@ -109,6 +109,7 @@ public static class CommandBuilderExtension
                                         .UseCommand<ReportCommand>("report")
                                         .UseCommand<ResetSettingsCommand>("rsettings")
                                         .UseCommand<RestrictCommand>("mute")
+                                        .UseCommand<RssCtlCommand>("rssctl")
                                         .UseCommand<RssStartCommand>("startrss")
                                         .UseCommand<RssStopCommand>("stoprss")
                                         .UseCommand<RssInfoCommand>("rssinfo")

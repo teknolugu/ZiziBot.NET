@@ -5,5 +5,8 @@ public enum MessageFlag
     General,
     Rules,
     Ping,
-    About
+    About,
+    FloodWarn,
+    RssCtl,
+    Tag
 }
