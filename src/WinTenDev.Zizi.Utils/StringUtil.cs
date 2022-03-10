@@ -64,12 +64,16 @@ public static class StringUtil
         IEnumerable<(string placeholder, string value)> placeHolders
     )
     {
-        return placeHolders.Aggregate
-        (
-            input, (
+        return placeHolders.Aggregate(
+            input,
+            (
                 current,
                 ph
-            ) => current.Replace($"{{{ph.placeholder}}}", ph.value, StringComparison.CurrentCultureIgnoreCase)
+            ) => current.Replace(
+                $"{{{ph.placeholder}}}",
+                ph.value,
+                StringComparison.CurrentCultureIgnoreCase
+            )
         );
     }
 
@@ -86,9 +90,9 @@ public static class StringUtil
     {
         if (str.IsNullOrEmpty()) return str;
 
-        var escaped = Regex.Replace
-        (
-            str, @"[\x00'""\b\n\r\t\cZ\\%_]",
+        var escaped = Regex.Replace(
+            str,
+            @"[\x00'""\b\n\r\t\cZ\\%_]",
             delegate(Match match) {
                 var v = match.Value;
 
@@ -129,8 +133,12 @@ public static class StringUtil
 
     public static bool CheckUrlValid(this string source)
     {
-        return Uri.TryCreate(source, UriKind.Absolute, out var uriResult)
-               && (uriResult.Scheme == Uri.UriSchemeHttps || uriResult.Scheme == Uri.UriSchemeHttp);
+        return Uri.TryCreate(
+                   source,
+                   UriKind.Absolute,
+                   out var uriResult
+               ) &&
+               (uriResult.Scheme == Uri.UriSchemeHttps || uriResult.Scheme == Uri.UriSchemeHttp);
     }
 
     public static string GetBaseUrl(this string url)
@@ -179,9 +187,9 @@ public static class StringUtil
     {
         return str.IsNullOrEmpty()
             ? str
-            : chars.Aggregate
-            (
-                str, (
+            : chars.Aggregate(
+                str,
+                (
                         current,
                         c
                     ) =>
@@ -191,7 +199,7 @@ public static class StringUtil
 
     public static string RemoveThisString(
         this string str,
-        string[] forRemoves
+        params string[] forRemoves
     )
     {
         foreach (var remove in forRemoves) str = str.Replace(remove, "").Trim();
@@ -209,7 +217,11 @@ public static class StringUtil
 
     public static string StripMargin(this string s)
     {
-        return Regex.Replace(s, @"[ \t]+\|", string.Empty);
+        return Regex.Replace(
+            s,
+            @"[ \t]+\|",
+            string.Empty
+        );
     }
 
     public static string StripLeadingWhitespace(this string s)
@@ -334,7 +346,8 @@ public static class StringUtil
         var wordCount = 0;
 
         for (var i = 0; i < line.Length; i++)
-            if (line[i] == ' ' || i == line.Length - 1)
+            if (line[i] == ' ' ||
+                i == line.Length - 1)
                 wordCount++;
         return wordCount;
     }
