@@ -628,6 +628,8 @@ public class TelegramService
 
     public bool IsUpdateTooOld(int offset = 5)
     {
+        if (CallbackQuery != null) return false;
+
         var messageDate = MessageDate;
         var prevDate = DateTime.UtcNow.AddMinutes(-offset);
         var isOld = prevDate > messageDate;
