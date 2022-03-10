@@ -100,6 +100,10 @@ public class NewUpdateHandler : IUpdateHandler
             return false;
         }
 
+        await _telegramService.FireAnalyzer();
+
+        var shouldDelete = await ScanMessageAsync();
+
         var hasSpam = await AntiSpamCheck();
 
         if (hasSpam.IsAnyBanned)
@@ -121,9 +125,6 @@ public class NewUpdateHandler : IUpdateHandler
             return false;
         }
 
-        await _telegramService.FireAnalyzer();
-
-        var shouldDelete = await ScanMessageAsync();
 
         if (shouldDelete)
         {
