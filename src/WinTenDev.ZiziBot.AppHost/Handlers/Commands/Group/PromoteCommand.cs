@@ -22,16 +22,16 @@ public class PromoteCommand : CommandBase
     {
         await _telegramService.AddUpdateContext(context);
 
-        var msg = context.Update.Message;
-        if (msg.ReplyToMessage != null)
+        var message = _telegramService.MessageOrEdited;
+        if (message.ReplyToMessage != null)
         {
-            msg = msg.ReplyToMessage;
+            message = message.ReplyToMessage;
         }
 
-        var userId = msg.From.Id;
-        var nameLink = msg.GetFromNameLink();
+        var userId = message.From.Id;
+        var nameLink = message.GetFromNameLink();
 
-        if (await _telegramService.CheckFromAdmin())
+        if (await _telegramService.CheckFromAdmin(userId))
         {
             await _telegramService.SendTextMessageAsync($"{nameLink} sudah menjadi Admin");
             return;

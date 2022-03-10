@@ -322,11 +322,13 @@ public class TelegramService
         return isBotAdmin;
     }
 
-    public async Task<bool> CheckFromAdmin()
+    public async Task<bool> CheckFromAdmin(long userId = -1)
     {
         Log.Debug("Starting check is From Admin");
 
         if (IsPrivateChat) return false;
+
+        if (userId > 0) FromId = userId;
 
         var isFromAdmin = await _privilegeService.IsAdminAsync(ChatId, FromId);
 
