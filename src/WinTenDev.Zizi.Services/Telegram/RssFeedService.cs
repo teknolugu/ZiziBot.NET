@@ -13,6 +13,7 @@ using Telegram.Bot.Types.Enums;
 using WinTenDev.Zizi.Models.Tables;
 using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Utils;
+using WinTenDev.Zizi.Utils.Parsers;
 using WinTenDev.Zizi.Utils.Telegram;
 
 namespace WinTenDev.Zizi.Services.Telegram;
@@ -42,15 +43,13 @@ public class RssFeedService
         var op = Operation.Begin("Registering RSS Job");
 
         Log.Information("Getting list Chat ID");
-        var listChatId = await _rssService.GetAllRssSettingsAsync();
+        var rssSettings = await _rssService.GetAllRssSettingsAsync();
+        var listChatId = rssSettings.Select(setting => setting.ChatId).Distinct();
 
-        foreach (var rssSetting in listChatId)
-        {
-            var chatId = rssSetting.ChatId;
-            var urlFeed = rssSetting.UrlFeed;
-
-            RegisterUrlFeed(chatId, urlFeed);
-        }
+        await listChatId.ForEachAsync(4,
+            async chatId => {
+                await RegisterRssFeedByChatId(chatId);
+            });
 
         op.Complete();
     }
@@ -64,16 +63,18 @@ public class RssFeedService
         var unique = StringUtil.GenerateUniqueId(3);
         var recurringId = $"RSS_{reducedChatId}_{unique}";
 
-        Log.Debug
-        (
+        Log.Debug(
             "Register RSS for ChatId: {ChatId} with JobId: {RecurringId}. URl: {UrlFeed} ",
-            chatId.ReduceChatId(), recurringId, urlFeed
+            chatId.ReduceChatId(),
+            recurringId,
+            urlFeed
         );
 
-        _recurringJobManager.AddOrUpdate<RssFeedService>
-        (
-            recurringId, service =>
-                service.ExecuteUrlAsync(chatId, urlFeed), Cron.Minutely
+        _recurringJobManager.AddOrUpdate<RssFeedService>(
+            recurringId,
+            service =>
+                service.ExecuteUrlAsync(chatId, urlFeed),
+            Cron.Minutely
         );
     }
 
@@ -84,13 +85,24 @@ public class RssFeedService
         string rssUrl
     )
     {
-        Log.Information("Reading feed from {ChatId}. Url: {RssUrl}", chatId, rssUrl);
+        Log.Information(
+            "Reading feed from {ChatId}. Url: {RssUrl}",
+            chatId,
+            rssUrl
+        );
+
+        var isWordpress = await rssUrl.IsWordpress();
+
         var rssFeeds = await FeedReader.ReadAsync(rssUrl);
 
         var rssTitle = rssFeeds.Title;
         var rssFeed = rssFeeds.Items.FirstOrDefault();
 
-        Log.Debug("Getting last history for {ChatId} url {RssUrl}", chatId, rssUrl);
+        Log.Debug(
+            "Getting last history for {ChatId} url {RssUrl}",
+            chatId,
+            rssUrl
+        );
 
         if (rssFeed == null) return;
 
@@ -107,15 +119,27 @@ public class RssFeedService
 
         if (isExist)
         {
-            Log.Information("Last article from feed '{RssUrl}' has sent to {ChatId}", rssUrl, chatId);
+            Log.Information(
+                "Last article from feed '{RssUrl}' has sent to {ChatId}",
+                rssUrl,
+                chatId
+            );
         }
         else
         {
-            Log.Information("Sending article from feed {RssUrl} to {ChatId}", rssUrl, chatId);
+            Log.Information(
+                "Sending article from feed {RssUrl} to {ChatId}",
+                rssUrl,
+                chatId
+            );
 
             try
             {
-                await _botClient.SendTextMessageAsync(chatId, sendText, ParseMode.Html);
+                await _botClient.SendTextMessageAsync(
+                    chatId,
+                    sendText,
+                    ParseMode.Html
+                );
 
                 Log.Debug("Writing to RSS History");
 
@@ -135,9 +159,18 @@ public class RssFeedService
             }
             catch (Exception ex)
             {
-                Log.Error(ex.Demystify(), "RSS Broadcaster Error at ChatId {ChatId}. Url: {Url}", chatId, rssUrl);
+                Log.Error(
+                    ex.Demystify(),
+                    "RSS Broadcaster Error at ChatId {ChatId}. Url: {Url}",
+                    chatId,
+                    rssUrl
+                );
 
-                if (ex.Message.ContainsListStr("blocked", "not found", "deactivated"))
+                if (ex.Message.ContainsListStr(
+                        "blocked",
+                        "not found",
+                        "deactivated"
+                    ))
                 {
                     UnregisterRssFeed(chatId, rssUrl);
                 }
@@ -164,7 +197,11 @@ public class RssFeedService
         filteredJobs.ForEach
         (
             job => {
-                Log.Debug("Remove RSS Cron With ID {JobId}. Args: {Args}", job.Id, job.Job.Args);
+                Log.Debug(
+                    "Remove RSS Cron With ID {JobId}. Args: {Args}",
+                    job.Id,
+                    job.Job.Args
+                );
                 _recurringJobManager.RemoveIfExists(job.Id);
             }
         );
@@ -197,7 +234,11 @@ public class RssFeedService
 
         if (selectJobs == null) return;
 
-        Log.Debug("Deleting Job: {Job}. Args: {Args} ", selectJobs.Id, selectJobs.Job.Args);
+        Log.Debug(
+            "Deleting Job: {Job}. Args: {Args} ",
+            selectJobs.Id,
+            selectJobs.Job.Args
+        );
         _recurringJobManager.RemoveIfExists(selectJobs.Id);
     }
 
@@ -206,7 +247,14 @@ public class RssFeedService
         var op = Operation.Begin("Registering RSS by ChatId: {ChatId}", chatId);
 
         var rssSettings = await _rssService.GetRssSettingsAsync(chatId);
-        rssSettings.ForEach
+        var filteredSettings = rssSettings.Where(
+            (
+                setting,
+                index
+            ) => setting.IsEnabled
+        );
+
+        filteredSettings.ForEach
         (
             setting => {
                 RegisterUrlFeed(chatId, setting.UrlFeed);
