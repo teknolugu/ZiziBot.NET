@@ -14,7 +14,8 @@ public static class MapperUtil
 
     public static Dictionary<string, object> ToDictionary(
         this object values,
-        bool enumToString = true
+        bool enumToString = true,
+        bool skipZeroNullOrEmpty = false
     )
     {
         var dictionary = new Dictionary<string, object>();
@@ -27,6 +28,10 @@ public static class MapperUtil
         foreach (var property in properties)
         {
             var value = property.GetValue(values, null) ?? string.Empty;
+
+            if ((value.ToString().IsNullOrEmpty() ||
+                value.ToString() == "0") &&
+                skipZeroNullOrEmpty) continue;
 
             if (property.PropertyType.IsEnum && enumToString)
             {
