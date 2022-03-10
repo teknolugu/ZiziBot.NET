@@ -8,7 +8,7 @@ namespace WinTenDev.Zizi.DbMigrations.FluentMigrations;
 [UsedImplicitly]
 public class CreateTableRssSettings : Migration
 {
-    private const string TableName = "rss_settings";
+    internal const string TableName = "rss_settings";
 
     public override void Up()
     {
