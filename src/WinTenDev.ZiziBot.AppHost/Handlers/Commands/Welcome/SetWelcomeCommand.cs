@@ -20,15 +20,9 @@ public class SetWelcomeCommand : CommandBase
         string[] args
     )
     {
-        await _telegramService.AddUpdateContext(context);
+        // await _telegramService.AddUpdateContext(context);
 
-        if (_telegramService.IsPrivateChat)
-        {
-            await _telegramService.SendTextMessageAsync("Atur pesan Welcome hanya untuk grup saja");
-            return;
-        }
 
-        if (!await _telegramService.CheckFromAdminOrAnonymous()) return;
 
         await _telegramService.SaveWelcomeSettingsAsync();
     }

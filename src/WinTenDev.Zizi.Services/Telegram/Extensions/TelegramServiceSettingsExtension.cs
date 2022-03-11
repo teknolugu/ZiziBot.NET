@@ -119,6 +119,14 @@ public static class TelegramServiceSettingsExtension
         var command = telegramService.GetCommand();
         var key = command.Remove(0, 5);
 
+        if (telegramService.IsPrivateChat)
+        {
+            await telegramService.SendTextMessageAsync("Atur pesan Welcome hanya untuk grup saja");
+            return;
+        }
+
+        if (!await telegramService.CheckFromAdminOrAnonymous()) return;
+
         var columnTarget = new Dictionary<string, string>()
         {
             { "welcome_btn", "welcome_button" },
@@ -148,7 +156,7 @@ public static class TelegramServiceSettingsExtension
         }
         else
         {
-            var welcomeData = message.CloneText().GetTextWithoutCmd();
+            var welcomeData = message.CloneText(key == "welcome_btn").GetTextWithoutCmd();
 
             if (welcomeData.IsNullOrEmpty())
             {

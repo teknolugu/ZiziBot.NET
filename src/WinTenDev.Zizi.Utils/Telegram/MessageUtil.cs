@@ -83,7 +83,7 @@ public static class MessageUtil
         return webhookInfoStr;
     }
 
-    public static string CloneText(this Message message)
+    public static string CloneText(this Message message, bool disableFormatting = false)
     {
         if (message.ReplyToMessage != null) message = message.ReplyToMessage;
 
@@ -93,6 +93,7 @@ public static class MessageUtil
         var entitiesValue = message.EntityValues ?? message.CaptionEntityValues;
         var messageText = message.Text ?? message.Caption;
 
+        if (disableFormatting) return messageText;
         if (messageText == null) return string.Empty;
         if (entities == null) return messageText;
 
