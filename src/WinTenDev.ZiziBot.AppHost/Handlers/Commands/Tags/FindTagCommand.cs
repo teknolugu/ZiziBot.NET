@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using SerilogTimings;
 using Telegram.Bot.Framework.Abstractions;
-using Telegram.Bot.Types.ReplyMarkups;
 using WinTenDev.Zizi.Models.Enums;
 using WinTenDev.Zizi.Models.Tables;
 using WinTenDev.Zizi.Services.Internals;
@@ -102,12 +101,7 @@ public class FindTagCommand : IUpdateHandler
         var typeData = tagData.TypeData;
         var idData = tagData.FileId;
 
-        var buttonMarkup = InlineKeyboardMarkup.Empty();
-
-        if (!buttonStr.IsNullOrEmpty())
-        {
-            buttonMarkup = buttonStr.ToReplyMarkup(2);
-        }
+        var buttonMarkup = buttonStr.ToButtonMarkup();
 
         if (typeData != MediaType.Unknown)
         {

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Hangfire;
@@ -136,26 +137,21 @@ public class NewChatMembersHandler : IUpdateHandler
             }
         );
 
-        var keyboard = InlineKeyboardMarkup.Empty();
-
-        if (!welcomeButton.IsNullOrEmpty())
-        {
-            keyboard = welcomeButton.ToReplyMarkup(2);
-        }
+        var listKeyboardButton = welcomeButton.ToInlineKeyboardButton().ToList();
 
         if (chatSetting.EnableHumanVerification)
         {
             Log.Debug("Adding verify button..");
 
-            const string verifyButton = $"Saya adalah Manusia!|verify";
-            var withVerify = string.Join(
-                ",",
-                welcomeButton,
-                verifyButton
+            listKeyboardButton.Add(
+                new[]
+                {
+                    InlineKeyboardButton.WithCallbackData("Saya adalah Manusia!", "verify")
+                }
             );
-
-            keyboard = withVerify.ToReplyMarkup(2);
         }
+
+        var inlineKeyboardMarkup = listKeyboardButton.ToButtonMarkup();
 
         Message sentMessage;
 
@@ -170,7 +166,7 @@ public class NewChatMembersHandler : IUpdateHandler
                 fileId: welcomeMedia,
                 mediaType: mediaType,
                 caption: sendText,
-                replyMarkup: keyboard,
+                replyMarkup: inlineKeyboardMarkup,
                 replyToMsgId: 0
             );
         }
@@ -178,7 +174,7 @@ public class NewChatMembersHandler : IUpdateHandler
         {
             sentMessage = await _telegramService.SendTextMessageAsync(
                 sendText,
-                keyboard,
+                inlineKeyboardMarkup,
                 0
             );
         }

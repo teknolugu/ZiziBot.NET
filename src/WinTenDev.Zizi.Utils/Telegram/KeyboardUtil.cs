@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Serilog;
 using Telegram.Bot.Types.ReplyMarkups;
+using WinTenDev.Zizi.Models.Configs;
 using WinTenDev.Zizi.Models.Types;
 using WinTenDev.Zizi.Utils.Text;
 
@@ -25,7 +26,11 @@ public static class KeyboardUtil
             if (button.Contains("|"))
             {
                 var buttonLink = button.Split('|').ToList();
-                Log.Information("Appending keyboard: {V} -> {V1}", buttonLink[0], buttonLink[1]);
+                Log.Information(
+                    "Appending keyboard: {V} -> {V1}",
+                    buttonLink[0],
+                    buttonLink[1]
+                );
                 dict.Add(buttonLink[0], buttonLink[1]);
             }
         }
@@ -98,12 +103,20 @@ public static class KeyboardUtil
 
             if (data.CheckUrlValid())
             {
-                Log.Verbose("Appending button URL. Text: '{BtnText}', Url: '{Data}'", btnText, data);
+                Log.Verbose(
+                    "Appending button URL. Text: '{BtnText}', Url: '{Data}'",
+                    btnText,
+                    data
+                );
                 btnList.Add(InlineKeyboardButton.WithUrl(btnText, data));
             }
             else
             {
-                Log.Verbose("Appending button callback. Text: '{BtnText}', Data: '{Data}'", btnText, data);
+                Log.Verbose(
+                    "Appending button callback. Text: '{BtnText}', Data: '{Data}'",
+                    btnText,
+                    data
+                );
                 btnList.Add(InlineKeyboardButton.WithCallbackData(btnText, data));
             }
         }
@@ -129,5 +142,69 @@ public static class KeyboardUtil
         }
 
         return buttonMarkup;
+    }
+
+    public static List<List<Button>> ToListButton(this string rawButtonMarkups)
+    {
+        var listButtonMapRaw = rawButtonMarkups.Split("\n")
+            .Select(
+                s => s
+                    .Split(",")
+                    .Select(
+                        x => {
+                            var btn = x.Split("|");
+                            return new Button()
+                            {
+                                Text = btn.ElementAtOrDefault(0),
+                                Url = btn.ElementAtOrDefault(1)
+                            };
+                        }
+                    ).Where(button => button.Text.IsNotNullOrEmpty() && button.Url.IsNotNullOrEmpty()).ToList()
+            ).ToList();
+
+        if (listButtonMapRaw.Count == 1)
+        {
+            listButtonMapRaw = listButtonMapRaw.SelectMany(list => list)
+                .Chunk(2)
+                .Select(x => x.ToList())
+                .ToList();
+        }
+
+        return listButtonMapRaw;
+    }
+
+    public static IEnumerable<IEnumerable<InlineKeyboardButton>> ToInlineKeyboardButton(this IEnumerable<IEnumerable<Button>> lisButtonMap)
+    {
+        var inlineKeyboardMarkup =
+            lisButtonMap
+                .Select(
+                    x => x
+                        .Select(
+                            y =>
+                                InlineKeyboardButton.WithUrl(y.Text, y.Url.ToString())
+                        )
+                );
+
+        return inlineKeyboardMarkup;
+    }
+
+    public static IEnumerable<IEnumerable<InlineKeyboardButton>> ToInlineKeyboardButton(this string rawButtonMarkups)
+    {
+        return rawButtonMarkups.ToListButton().ToInlineKeyboardButton();
+    }
+
+    public static InlineKeyboardMarkup ToButtonMarkup(this string buttonRaw)
+    {
+        return buttonRaw.ToListButton().ToInlineKeyboardButton().ToButtonMarkup();
+    }
+
+    public static InlineKeyboardMarkup ToButtonMarkup(this IEnumerable<IEnumerable<Button>> listButton)
+    {
+        return new InlineKeyboardMarkup(listButton.ToInlineKeyboardButton());
+    }
+
+    public static InlineKeyboardMarkup ToButtonMarkup(this IEnumerable<IEnumerable<InlineKeyboardButton>> listKeyboardButton)
+    {
+        return new InlineKeyboardMarkup(listKeyboardButton);
     }
 }

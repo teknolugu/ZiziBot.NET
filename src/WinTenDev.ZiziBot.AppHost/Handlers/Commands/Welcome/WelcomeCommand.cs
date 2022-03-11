@@ -1,6 +1,5 @@
 ﻿using System.Threading.Tasks;
 using Telegram.Bot.Framework.Abstractions;
-using Telegram.Bot.Types.ReplyMarkups;
 using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Services.Telegram;
 using WinTenDev.Zizi.Utils;
@@ -57,15 +56,10 @@ public class WelcomeCommand : CommandBase
             sendText += $"{welcomeMessage}";
         }
 
-        var keyboard = InlineKeyboardMarkup.Empty();
+        var keyboardMarkup = welcomeButton.ToButtonMarkup();
 
-        if (!welcomeButton.IsNullOrEmpty())
-        {
-            keyboard = welcomeButton.ToReplyMarkup(2);
-
-            sendText += "\n\n<b>Raw Button:</b>" +
-                        $"\n<code>{welcomeButton}</code>";
-        }
+        sendText += "\n\n<b>Raw Button:</b>" +
+                    $"\n<code>{welcomeButton}</code>";
 
         if (welcomeMediaType > 0)
         {
@@ -73,14 +67,14 @@ public class WelcomeCommand : CommandBase
                 fileId: welcomeMedia,
                 mediaType: welcomeMediaType,
                 caption: sendText,
-                replyMarkup: keyboard
+                replyMarkup: keyboardMarkup
             );
         }
         else
         {
             await _telegramService.SendTextMessageAsync(
                 sendText: sendText,
-                replyMarkup: keyboard,
+                replyMarkup: keyboardMarkup,
                 replyToMsgId: 0
             );
         }
