@@ -1570,7 +1570,7 @@ public class TelegramService
         bool includeSender = false
     )
     {
-        var command = GetCommand(false);
+        var command = GetCommand(true);
         var messageFlag = command.ToEnum(MessageFlag.General);
 
         var sentMessageId = SentMessage.MessageId;
@@ -1631,7 +1631,7 @@ public class TelegramService
         var saveHistory = await MessageHistoryService.SaveToMessageHistoryAsync(
             new MessageHistoryInsertDto()
             {
-                MessageFlag = messageFlag.Humanize(),
+                MessageFlag = messageFlag.Humanize().Pascalize(),
                 FromId = FromId,
                 ChatId = ChatId,
                 MessageId = messageId,
