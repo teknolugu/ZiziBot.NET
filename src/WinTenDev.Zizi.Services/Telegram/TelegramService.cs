@@ -883,7 +883,9 @@ public class TelegramService
     public async Task<Message> EditMessageTextAsync(
         string sendText,
         InlineKeyboardMarkup replyMarkup = null,
-        bool disableWebPreview = true
+        bool disableWebPreview = true,
+        DateTime scheduleDeleteAt = default,
+        bool includeSenderMessage = false
     )
     {
         TimeProc = MessageDate.GetDelay();
@@ -926,6 +928,9 @@ public class TelegramService
 
             Log.Error(ex, "Error edit message");
         }
+
+        if (scheduleDeleteAt != default)
+            SaveToMessageHistory(scheduleDeleteAt, includeSenderMessage);
 
         return SentMessage;
     }

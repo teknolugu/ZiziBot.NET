@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using WinTenDev.Zizi.Models.Enums;
 
 namespace WinTenDev.Zizi.Models.Configs;
@@ -25,7 +24,7 @@ public partial class Item
 public partial class Button
 {
     public string Text { get; set; }
-    public Uri Url { get; set; }
+    public string Url { get; set; }
 }
 
 public partial class Caption
