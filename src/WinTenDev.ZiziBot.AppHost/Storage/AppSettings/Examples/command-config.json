@@ -1,0 +1,23 @@
+﻿{
+	"CommandConfig": {
+		"EnsureOnStartup": true,
+		"CommandItems": [
+			{
+				"Command": "start",
+				"Description": "Memulai menggunakan {BotName}"
+			},
+			{
+				"Command": "ping",
+				"Description": "Memeriksa kesehatan/latency"
+			},
+			{
+				"Command": "help",
+				"Description": "Dapatkan bantuan mengenai {BotName}"
+			},
+			{
+				"Command": "about",
+				"Description": "Dapatkan informasi tentang {BotName}"
+			}
+		]
+	}
+}

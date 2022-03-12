@@ -7,6 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Primitives;
 using Nito.AsyncEx.Synchronous;
 using Serilog;
 using Telegram.Bot;
@@ -17,6 +18,7 @@ using WinTenDev.Zizi.Models.Configs;
 using WinTenDev.Zizi.Models.Enums;
 using WinTenDev.Zizi.Services.Externals;
 using WinTenDev.Zizi.Services.Internals;
+using WinTenDev.Zizi.Services.Telegram;
 using WinTenDev.Zizi.Utils;
 
 namespace WinTenDev.ZiziBot.AppHost.Extensions;
@@ -147,9 +149,19 @@ internal static class AppStartupExtensions
         return app;
     }
 
-    public static IApplicationBuilder EnsureTableCollation(this IApplicationBuilder app)
+    public static IApplicationBuilder ExecuteStartupTasks(this IApplicationBuilder app)
     {
+        var config = app.GetRequiredService<IConfiguration>();
+        var botService = app.GetRequiredService<BotService>();
+
         app.GetRequiredService<DatabaseService>().FixTableCollation().WaitAndUnwrapException();
+
+        botService.EnsureCommandRegistration().WaitAndUnwrapException();
+
+        ChangeToken.OnChange(
+            () => config.GetReloadToken(),
+            () => botService.EnsureCommandRegistration().WaitAndUnwrapException()
+        );
 
         return app;
     }

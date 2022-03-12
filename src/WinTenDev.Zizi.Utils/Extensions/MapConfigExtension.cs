@@ -56,9 +56,11 @@ public static class MapConfigExtension
 
         listEnabledConfig.ForEach
         (
-            (
-                filePath
-            ) => builder.AddJsonFile(filePath, true, true)
+            (filePath) => builder.AddJsonFile(
+                filePath,
+                true,
+                true
+            )
         );
 
         return builder;
@@ -74,12 +76,13 @@ public static class MapConfigExtension
         Log.Information("Mapping configuration..");
         var serviceProvider = services.BuildServiceProvider();
         var config = serviceProvider.GetRequiredService<IConfiguration>();
-        
+
         services.Configure<AllDebridConfig>(config.GetSection(nameof(AllDebridConfig)));
         services.Configure<BinderByteConfig>(config.GetSection(nameof(BinderByteConfig)));
         services.Configure<BotConfig>(config.GetSection(nameof(BotConfig)));
         services.Configure<ButtonConfig>(config.GetSection(nameof(ButtonConfig)));
         services.Configure<CacheConfig>(config.GetSection(nameof(CacheConfig)));
+        services.Configure<CommandConfig>(config.GetSection(nameof(CommandConfig)));
         services.Configure<CommonConfig>(config.GetSection(nameof(CommonConfig)));
         services.Configure<ConnectionStrings>(config.GetSection(nameof(ConnectionStrings)));
         services.Configure<DatabaseConfig>(config.GetSection(nameof(DatabaseConfig)));

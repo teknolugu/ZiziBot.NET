@@ -11,12 +11,14 @@ using WinTenDev.Zizi.Models.Configs;
 using WinTenDev.Zizi.Models.Enums;
 using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Utils;
+using WinTenDev.Zizi.Utils.Telegram;
 
 namespace WinTenDev.Zizi.Services.Telegram;
 
 public class BotService
 {
     private readonly ILogger<BotService> _logger;
+    private readonly CommandConfig _commandConfig;
     private readonly ButtonConfig _buttonConfig;
     private readonly ITelegramBotClient _botClient;
     private readonly CacheService _cacheService;
@@ -24,20 +26,30 @@ public class BotService
     public BotService(
         ILogger<BotService> logger,
         IOptionsSnapshot<ButtonConfig> buttonConfig,
+        IOptionsSnapshot<CommandConfig> commandConfig,
         CacheService cacheService,
         ITelegramBotClient botClient
     )
     {
         _logger = logger;
+        _commandConfig = commandConfig.Value;
         _buttonConfig = buttonConfig.Value;
         _botClient = botClient;
         _cacheService = cacheService;
     }
 
+    public async Task GetWebHookInfo()
+    {
+        var webhookInfo = await _botClient.GetWebhookInfoAsync();
+        _logger.LogInformation($"Webhook info: {webhookInfo.Url}");
+        var webHookInfoStr = webhookInfo.ParseWebHookInfo();
+
+        await _botClient.SendTextMessageAsync("", webHookInfoStr);
+    }
+
     public async Task<User> GetMeAsync()
     {
-        var getMe = await _cacheService.GetOrSetAsync
-        (
+        var getMe = await _cacheService.GetOrSetAsync(
             cacheKey: "get-me",
             action: async () => {
                 var getMe = await _botClient.GetMeAsync();
@@ -61,7 +73,11 @@ public class BotService
     {
         var me = await GetMeAsync();
         var isBeta = me.Username?.Contains("dev", StringComparison.OrdinalIgnoreCase) ?? false;
-        _logger.LogDebug("Is Bot {Me} IsDev: {IsBeta}", me, isBeta);
+        _logger.LogDebug(
+            "Is Bot {Me} IsDev: {IsBeta}",
+            me,
+            isBeta
+        );
 
         return isBeta;
     }
@@ -70,7 +86,11 @@ public class BotService
     {
         var me = await GetMeAsync();
         var isBeta = me.Username?.Contains("beta", StringComparison.OrdinalIgnoreCase) ?? false;
-        _logger.LogDebug("Is Bot {Me} IsBeta: {IsBeta}", me, isBeta);
+        _logger.LogDebug(
+            "Is Bot {Me} IsBeta: {IsBeta}",
+            me,
+            isBeta
+        );
 
         return isBeta;
     }
@@ -79,7 +99,11 @@ public class BotService
     {
         var me = await GetMeAsync();
         var isBeta = !me.Username?.ContainsListStr("beta", "dev") ?? false;
-        _logger.LogDebug("Is Bot {Me} IsProd: {IsBeta}", me, isBeta);
+        _logger.LogDebug(
+            "Is Bot {Me} IsProd: {IsBeta}",
+            me,
+            isBeta
+        );
 
         return isBeta;
     }
@@ -93,9 +117,48 @@ public class BotService
         if (await IsProd()) environment = BotEnvironmentLevel.Production;
 
         var me = await GetMeAsync();
-        _logger.LogInformation("Bot {Me} is at Environment: {Environment}", me, environment);
+        _logger.LogInformation(
+            "Bot {Me} is at Environment: {Environment}",
+            me,
+            environment
+        );
 
         return environment;
+    }
+
+    public async Task<IEnumerable<BotCommand>> GetCommandConfigs()
+    {
+        var getMe = await GetMeAsync();
+        var forResolve = new List<(string placeholder, string value)>()
+        {
+            ("BotName", getMe.GetFullName())
+        };
+
+        var commandConfigs = _commandConfig
+            .CommandItems?
+            .Select(
+                item => new BotCommand()
+                {
+                    Command = item.Command,
+                    Description = item.Description.ResolveVariable(forResolve),
+                }
+            );
+
+        return commandConfigs;
+    }
+
+    public async Task EnsureCommandRegistration()
+    {
+        var botCommands = await GetCommandConfigs();
+
+        if (botCommands != null && _commandConfig.EnsureOnStartup)
+        {
+            await _botClient.SetMyCommandsAsync(botCommands);
+        }
+        else
+        {
+            await _botClient.DeleteMyCommandsAsync();
+        }
     }
 
     public List<ButtonItem> GetButtonConfigAll()
