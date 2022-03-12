@@ -12,4 +12,5 @@ public class CommonConfig
     public string SpamWatchToken { get; set; }
     public string DeepAiToken { get; set; }
     public bool IsRestricted { get; set; }
+    public RandomCatSource RandomCatSource { get; set; }
 }
