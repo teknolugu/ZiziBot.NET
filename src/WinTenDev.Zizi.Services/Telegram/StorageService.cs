@@ -24,6 +24,7 @@ namespace WinTenDev.Zizi.Services.Telegram;
 public class StorageService : IStorageService
 {
     private readonly CommonConfig _commonConfig;
+    private readonly EventLogConfig _eventLogConfig;
     private readonly ITelegramBotClient _botClient;
     private readonly QueryService _queryService;
 
@@ -31,15 +32,18 @@ public class StorageService : IStorageService
     /// Storage service constructor
     /// </summary>
     /// <param name="optionsCommonConfig"></param>
+    /// <param name="optionsEventLogConfig"></param>
     /// <param name="botClient"></param>
     /// <param name="queryService"></param>
     public StorageService(
         IOptionsSnapshot<CommonConfig> optionsCommonConfig,
+        IOptionsSnapshot<EventLogConfig> optionsEventLogConfig,
         ITelegramBotClient botClient,
         QueryService queryService
     )
     {
         _commonConfig = optionsCommonConfig.Value;
+        _eventLogConfig = optionsEventLogConfig.Value;
         _botClient = botClient;
         _queryService = queryService;
     }
@@ -50,9 +54,9 @@ public class StorageService : IStorageService
         try
         {
             const string logsPath = "Storage/Logs";
-            var channelTarget = _commonConfig.ChannelLogs;
+            var channelTarget = _eventLogConfig.ChannelId;
 
-            if (!channelTarget.StartsWith("-100") || channelTarget.IsNullOrEmpty())
+            if (channelTarget == 0)
             {
                 Log.Information("Please specify ChannelTarget in appsettings.json");
                 return;
@@ -61,15 +65,21 @@ public class StorageService : IStorageService
             var dirInfo = new DirectoryInfo(logsPath);
             var files = dirInfo.GetFiles();
 
-            var filteredFile = files.Where(fileInfo =>
-                fileInfo.LastWriteTimeUtc < DateTime.UtcNow.AddDays(-1)
-                || fileInfo.CreationTimeUtc < DateTime.UtcNow.AddDays(-1)).ToList();
+            var filteredFile = files.Where(
+                fileInfo =>
+                    fileInfo.LastWriteTimeUtc < DateTime.UtcNow.AddDays(-1) ||
+                    fileInfo.CreationTimeUtc < DateTime.UtcNow.AddDays(-1)
+            ).ToList();
 
             var fileCount = filteredFile.Count;
 
             if (fileCount > 0)
             {
-                Log.Information("Found {FileCount} of {Length}", fileCount, files.Length);
+                Log.Information(
+                    "Found {FileCount} of {Length}",
+                    fileCount,
+                    files.Length
+                );
                 foreach (var fileInfo in filteredFile)
                 {
                     var filePath = fileInfo.FullName;
