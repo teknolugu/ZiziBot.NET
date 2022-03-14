@@ -303,15 +303,19 @@ public class TelegramService
         return adminOrPrivateChat;
     }
 
-    public string GetCommand(bool withoutSlash = false)
+    public string GetCommand(
+        bool withoutSlash = false,
+        bool withoutUsername = true
+    )
     {
         var cmd = string.Empty;
 
-        if (!MessageOrEditedText.StartsWith("/")) return cmd;
+        if (!MessageOrEditedText?.StartsWith("/") ?? true) return cmd;
 
         cmd = MessageTextParts.ElementAtOrDefault(0);
 
         if (withoutSlash) cmd = cmd?.TrimStart('/');
+        if (withoutUsername) cmd = cmd?.RemoveThisString("@" + Context.Bot.Username);
 
         return cmd;
     }
