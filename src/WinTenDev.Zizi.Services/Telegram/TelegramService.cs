@@ -22,6 +22,7 @@ using WinTenDev.Zizi.Models.Dto;
 using WinTenDev.Zizi.Models.Enums;
 using WinTenDev.Zizi.Models.Tables;
 using WinTenDev.Zizi.Models.Types;
+using WinTenDev.Zizi.Services.Externals;
 using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Utils;
 using WinTenDev.Zizi.Utils.IO;
@@ -41,7 +42,9 @@ public class TelegramService
     private readonly UserProfilePhotoService _userProfilePhotoService;
     private readonly StepHistoriesService _stepHistoriesService;
 
+    internal CommonConfig CommonConfig { get; }
     internal AfkService AfkService { get; }
+    internal AnimalsService AnimalsService { get; }
     internal FloodCheckService FloodCheckService { get; }
     internal MessageHistoryService MessageHistoryService { get; }
     internal SettingsService SettingsService { get; }
@@ -102,7 +105,9 @@ public class TelegramService
     public TelegramService(
         IBackgroundJobClient backgroundJob,
         IOptionsSnapshot<EventLogConfig> eventLogConfig,
+        IOptionsSnapshot<CommonConfig> commonConfig,
         AfkService afkService,
+        AnimalsService animalsService,
         ChatService chatService,
         BotService botService,
         FeatureService featureService,
@@ -123,7 +128,9 @@ public class TelegramService
         _userProfilePhotoService = userProfilePhotoService;
         _stepHistoriesService = stepHistoriesService;
 
+        CommonConfig = commonConfig.Value;
         AfkService = afkService;
+        AnimalsService = animalsService;
         FloodCheckService = floodCheckServiceService;
         MessageHistoryService = messageHistoryService;
         SettingsService = settingsService;
