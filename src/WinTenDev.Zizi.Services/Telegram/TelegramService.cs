@@ -45,9 +45,13 @@ public class TelegramService
     internal CommonConfig CommonConfig { get; }
     internal AfkService AfkService { get; }
     internal AnimalsService AnimalsService { get; }
+    internal AntiSpamService AntiSpamService { get; }
     internal FloodCheckService FloodCheckService { get; }
+    internal MataService MataService { get; }
     internal MessageHistoryService MessageHistoryService { get; }
+    internal NotesService NotesService { get; }
     internal SettingsService SettingsService { get; }
+    internal WordFilterService WordFilterService { get; }
 
     public bool IsNoUsername { get; private set; }
     public bool HasUsername { get; private set; }
@@ -108,15 +112,19 @@ public class TelegramService
         IOptionsSnapshot<CommonConfig> commonConfig,
         AfkService afkService,
         AnimalsService animalsService,
+        AntiSpamService antiSpamService,
         ChatService chatService,
         BotService botService,
         FeatureService featureService,
         FloodCheckService floodCheckServiceService,
+        MataService mataService,
         MessageHistoryService messageHistoryService,
+        NotesService notesService,
         SettingsService settingsService,
         PrivilegeService privilegeService,
         UserProfilePhotoService userProfilePhotoService,
-        StepHistoriesService stepHistoriesService
+        StepHistoriesService stepHistoriesService,
+        WordFilterService wordFilterService
     )
     {
         _backgroundJob = backgroundJob;
@@ -131,9 +139,13 @@ public class TelegramService
         CommonConfig = commonConfig.Value;
         AfkService = afkService;
         AnimalsService = animalsService;
+        AntiSpamService = antiSpamService;
         FloodCheckService = floodCheckServiceService;
+        MataService = mataService;
         MessageHistoryService = messageHistoryService;
+        NotesService = notesService;
         SettingsService = settingsService;
+        WordFilterService = wordFilterService;
     }
 
     public Task AddUpdateContext(IUpdateContext updateContext)
@@ -1377,7 +1389,8 @@ public class TelegramService
             FromId
         );
 
-        if (ChannelOrEditedPost != null)
+        if (CallbackQuery != null ||
+            ChannelOrEditedPost != null)
         {
             op.Complete();
             return true;
@@ -1633,12 +1646,13 @@ public class TelegramService
         DateTime deleteAt = default
     )
     {
+        var messageFlagStr = messageFlag.Humanize().Pascalize();
         if (deleteAt == default) deleteAt = DateTime.UtcNow.AddMinutes(1);
 
         var saveHistory = await MessageHistoryService.SaveToMessageHistoryAsync(
             new MessageHistoryInsertDto()
             {
-                MessageFlag = messageFlag.Humanize().Pascalize(),
+                MessageFlag = messageFlagStr,
                 FromId = FromId,
                 ChatId = ChatId,
                 MessageId = messageId,
@@ -1649,9 +1663,10 @@ public class TelegramService
         );
 
         Log.Information(
-            "Save To Message History for {MessageId} at ChatId: {ChatId} Result: {SaveHistory}",
+            "Save To Message History for {MessageId} at ChatId: {ChatId} with Flag: {MessageFlag} Result: {SaveHistory}",
             messageId,
             ChatId,
+            messageFlagStr,
             saveHistory
         );
     }

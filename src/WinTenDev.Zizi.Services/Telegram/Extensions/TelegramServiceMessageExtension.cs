@@ -1,5 +1,7 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using MoreLinq;
+using Serilog;
 using Telegram.Bot.Types;
 using WinTenDev.Zizi.Models.Dto;
 using WinTenDev.Zizi.Models.Enums;
@@ -103,5 +105,80 @@ public static class TelegramServiceMessageExtension
         );
 
         return requestResult;
+    }
+
+    public static async Task<bool> ScanMessageAsync(this TelegramService telegramService)
+    {
+        var chatId = telegramService.ChatId;
+
+        try
+        {
+            var message = telegramService.MessageOrEdited;
+            if (message == null) return false;
+
+            var messageId = message.MessageId;
+            var chatSettings = await telegramService.GetChatSetting();
+
+            if (!chatSettings.EnableWordFilterGroupWide)
+            {
+                Log.Debug("Word Filter on {ChatId} is disabled!", chatId);
+                return false;
+            }
+
+            var text = telegramService.MessageOrEditedText ?? telegramService.MessageOrEditedCaption;
+
+            if (text.IsNullOrEmpty())
+            {
+                Log.Information("No Text at MessageId {MessageId} for scan..", messageId);
+                return false;
+            }
+
+            if (telegramService.IsFromSudo &&
+                (
+                    text.StartsWith("/dkata") ||
+                    text.StartsWith("/delkata") ||
+                    text.StartsWith("/kata")))
+            {
+                Log.Debug("Seem User will modify Kata!");
+                return false;
+            }
+
+            var result = await telegramService.WordFilterService.IsMustDelete(text);
+            var isShouldDelete = result.IsSuccess;
+
+            if (isShouldDelete)
+                Log.Information("Starting scan image if available..");
+
+            Log.Information(
+                "Message {MsgId} IsMustDelete: {IsMustDelete}",
+                messageId,
+                isShouldDelete
+            );
+
+            if (!isShouldDelete) return false;
+
+            Log.Debug(
+                "Scan Message at ChatId: {ChatId}. Result: {@V}",
+                chatId,
+                result
+            );
+
+            var note = "Pesan di Obrolan di hapus karena terdeteksi filter Kata.\n" + result.Notes;
+            await telegramService.SendEventLogAsync(note, withForward: true);
+
+            await telegramService.DeleteAsync(messageId);
+
+            return true;
+        }
+        catch (Exception exception)
+        {
+            Log.Error(
+                exception,
+                "Error occured when Scan Message at ChatId {ChatId}",
+                chatId
+            );
+
+            return false;
+        }
     }
 }
