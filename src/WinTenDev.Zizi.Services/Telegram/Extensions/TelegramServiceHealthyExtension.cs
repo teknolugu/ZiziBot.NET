@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Serilog;
+using WinTenDev.Zizi.Models.Enums;
 using WinTenDev.Zizi.Models.Tables;
 using WinTenDev.Zizi.Models.Types;
 using WinTenDev.Zizi.Utils;
@@ -68,6 +69,8 @@ public static class TelegramServiceHealthyExtension
         var text = $"Hai {nameLink}, seperti nya Anda melakukan Flooding!" +
                    $"\nAnda di mute hingga {span.ToDetailDateTimeString()} di Obrolan ini";
         await telegramService.SendTextMessageAsync(text, replyToMsgId: 0);
+
+        telegramService.SaveSentMessageToHistory(MessageFlag.FloodWarn, span);
 
         return floodCheckResult;
     }
