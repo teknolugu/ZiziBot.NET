@@ -125,10 +125,12 @@ public static class TelegramServiceMemberExtension
         {
             if (telegramService.MessageOrEdited == null) return;
 
-            var message = telegramService.MessageOrEdited;
+            var updateType = telegramService.Update.Type;
+            var currentChat = telegramService.Chat;
             var fromUsername = telegramService.From.Username;
-            var fromFName = telegramService.From.FirstName;
-            var fromLName = telegramService.From.LastName;
+            var fromFirstName = telegramService.From.FirstName;
+            var fromLastName = telegramService.From.LastName;
+            var fromLanguageCode = telegramService.From.LanguageCode;
 
             var chatSettings = await telegramService.GetChatSetting();
             if (!chatSettings.EnableZiziMata)
@@ -139,34 +141,30 @@ public static class TelegramServiceMemberExtension
 
             var botUser = await telegramService.GetMeAsync();
 
+            var userData = new HitActivity
+            {
+                ViaBot = botUser.Username,
+                UpdateType = updateType,
+                FromId = fromId,
+                FromFirstName = fromFirstName,
+                FromLastName = fromLastName,
+                FromUsername = fromUsername,
+                FromLangCode = fromLanguageCode,
+                ChatId = chatId,
+                ChatUsername = currentChat.Username,
+                ChatType = currentChat.Type,
+                ChatTitle = currentChat.Title,
+                Timestamp = DateTime.UtcNow
+            };
+
             Log.Information("Starting SangMata check..");
 
             var hitActivityCache = await telegramService.MataService.GetMataCore(fromId);
             if (hitActivityCache.IsNull)
             {
-                Log.Information(
-                    "This may first Hit from User {UserId}",
-                    fromId
-                );
+                Log.Information("This may first Hit from User {UserId}", fromId);
 
-                await telegramService.MataService.SaveMataAsync(
-                    fromId,
-                    new HitActivity
-                    {
-                        ViaBot = botUser.Username,
-                        UpdateType = telegramService.Update.Type,
-                        FromId = fromId,
-                        FromFirstName = message.From.FirstName,
-                        FromLastName = message.From.LastName,
-                        FromUsername = message.From.Username,
-                        FromLangCode = message.From.LanguageCode,
-                        ChatId = message.Chat.Id,
-                        ChatUsername = message.Chat.Username,
-                        ChatType = message.Chat.Type,
-                        ChatTitle = message.Chat.Title,
-                        Timestamp = DateTime.UtcNow
-                    }
-                );
+                await telegramService.MataService.SaveMataAsync(fromId, userData);
 
                 return;
             }
@@ -175,66 +173,61 @@ public static class TelegramServiceMemberExtension
             var msgBuild = new StringBuilder();
 
             msgBuild.AppendLine("😽 <b>MataZizi</b>");
-            msgBuild.AppendLine($"<b>UserID:</b> {fromId}");
+            msgBuild.Append("<b>UserID:</b> ").Append(fromId).AppendLine();
 
             var hitActivity = hitActivityCache.Value;
 
             if (fromUsername != hitActivity.FromUsername)
             {
                 Log.Debug("Username changed detected!");
-                msgBuild.AppendLine($"Mengubah Username menjadi @{fromUsername}");
+                if (fromUsername.IsNullOrEmpty())
+                    msgBuild.AppendLine("Menghapus Usernamenya");
+                else
+                    msgBuild.Append("Mengubah Username menjadi @").AppendLine(fromUsername);
+
                 changesCount++;
             }
 
-            if (fromFName != hitActivity.FromFirstName)
+            if (fromFirstName != hitActivity.FromFirstName)
             {
                 Log.Debug("First Name changed detected!");
-                msgBuild.AppendLine($"Mengubah nama depan menjadi {fromFName}");
+                if (fromFirstName.IsNullOrEmpty())
+                    msgBuild.AppendLine("Menghapus nama depannya.");
+                else
+                    msgBuild.Append("Mengubah nama depan menjadi ").AppendLine(fromFirstName);
+
                 changesCount++;
             }
 
-            if (fromLName != hitActivity.FromLastName)
+            if (fromLastName != hitActivity.FromLastName)
             {
                 Log.Debug("Last Name changed detected!");
-                msgBuild.AppendLine($"Mengubah nama belakang menjadi {fromLName}");
+                if (fromLastName.IsNullOrEmpty())
+                    msgBuild.AppendLine("Menghapus nama belakangnya");
+                else
+                    msgBuild.Append("Mengubah nama belakang menjadi ").AppendLine(fromLastName);
+
                 changesCount++;
             }
 
             if (changesCount > 0)
             {
-                await telegramService.SendTextMessageAsync(msgBuild.ToString().Trim());
-
-                await telegramService.MataService.SaveMataAsync(
-                    fromId,
-                    new HitActivity
-                    {
-                        ViaBot = botUser.Username,
-                        UpdateType = telegramService.Update.Type,
-                        FromId = fromId,
-                        FromFirstName = message.From.FirstName,
-                        FromLastName = message.From.LastName,
-                        FromUsername = message.From.Username,
-                        FromLangCode = message.From.LanguageCode,
-                        ChatId = message.Chat.Id,
-                        ChatUsername = message.Chat.Username,
-                        ChatType = telegramService.Chat.Type,
-                        ChatTitle = message.Chat.Title,
-                        Timestamp = DateTime.Now
-                    }
+                await telegramService.SendTextMessageAsync(
+                    sendText: msgBuild.ToString().Trim(),
+                    scheduleDeleteAt: DateTime.UtcNow.AddMinutes(10)
                 );
+
+                await telegramService.MataService.SaveMataAsync(fromId, userData);
 
                 Log.Debug("Complete update Cache");
             }
 
-            Log.Information(
-                "MataZizi completed . Changes: {ChangesCount}",
-                changesCount
-            );
+            Log.Information("MataZizi completed . Changes: {ChangesCount}", changesCount);
         }
-        catch (Exception ex)
+        catch (Exception exception)
         {
             Log.Error(
-                ex,
+                exception,
                 "Error SangMata at ChatId {ChatId}",
                 chatId
             );
