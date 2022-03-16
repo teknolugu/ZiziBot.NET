@@ -3,12 +3,83 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Serilog;
 using SerilogTimings;
+using WinTenDev.Zizi.Utils;
 using WinTenDev.Zizi.Utils.Telegram;
 
 namespace WinTenDev.Zizi.Services.Telegram.Extensions;
 
 public static class TelegramServiceActivityExtension
 {
+    public static async Task<bool> OnUpdatePreTaskAsync(this TelegramService telegramService)
+    {
+        var op = Operation.Begin("Run PreTask for ChatId: {ChatId}", telegramService.ChatId);
+
+        if (telegramService.IsUpdateTooOld()) return false;
+
+        var floodCheck = await telegramService.FloodCheckAsync();
+        if (floodCheck.IsFlood)
+            return false;
+
+        var hasRestricted = await telegramService.CheckChatRestriction();
+
+        if (hasRestricted)
+        {
+            return false;
+        }
+
+        await telegramService.FireAnalyzer();
+
+        var shouldDelete = await telegramService.ScanMessageAsync();
+
+        var hasSpam = await telegramService.AntiSpamCheckAsync();
+
+        if (hasSpam.IsAnyBanned)
+        {
+            return false;
+        }
+
+        var hasUsername = await telegramService.RunCheckUserUsername();
+
+        if (!hasUsername)
+        {
+            return false;
+        }
+
+        var hasPhotoProfile = await telegramService.RunCheckUserProfilePhoto();
+
+        if (!hasPhotoProfile)
+        {
+            return false;
+        }
+
+        if (shouldDelete)
+        {
+            return false;
+        }
+
+        op.Complete();
+
+        return true;
+    }
+
+    public static Task OnUpdatePostTaskAsync(this TelegramService telegramService)
+    {
+        var op = Operation.Begin("Run PostTask");
+
+        var nonAwaitTasks = new List<Task>
+        {
+            telegramService.EnsureChatSettingsAsync(),
+            telegramService.AfkCheckAsync(),
+            telegramService.CheckNameChangesAsync()
+        };
+
+        nonAwaitTasks.InBackgroundAll();
+
+        op.Complete();
+
+        return Task.CompletedTask;
+    }
+
     public static async Task AfkCheckAsync(this TelegramService telegramService)
     {
         var operation = Operation.Begin("AFK Check");
