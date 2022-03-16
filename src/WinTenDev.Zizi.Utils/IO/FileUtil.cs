@@ -55,6 +55,8 @@ public static class FileUtil
         var cachePath = "Storage/Caches";
 
         filePath = $"{cachePath}/{filePath}";
+        if (!filePath.IsFileExist()) return string.Empty;
+
         Log.Debug("Reading content to {FilePath}", filePath);
 
         var text = await File.ReadAllTextAsync(filePath);
