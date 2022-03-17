@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Telegram.Bot.Framework.Abstractions;
 using WinTenDev.Zizi.Services.Telegram;
 using WinTenDev.Zizi.Services.Telegram.Extensions;
@@ -21,16 +20,6 @@ public class RestrictCommand : CommandBase
         string[] args
     )
     {
-        try
-        {
-            await _telegramService.RestrictMemberAsync();
-        }
-        catch (Exception ex)
-        {
-            await _telegramService.SendTextMessageAsync(
-                $"Gagal ketika Mute pengguna. " +
-                $"\n{ex.Message}"
-            );
-        }
+        await _telegramService.RestrictMemberAsync();
     }
 }

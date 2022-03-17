@@ -47,73 +47,84 @@ public static class TelegramServiceMemberExtension
 
     public static async Task RestrictMemberAsync(this TelegramService telegramService)
     {
-        string muteAnswer;
-        var command = telegramService.GetCommand(withoutSlash: true);
-        var textParts = telegramService.MessageTextParts.Skip(1);
-        var duration = textParts.ElementAtOrDefault(0);
+        try
+        {
+            string muteAnswer;
+            var command = telegramService.GetCommand(withoutSlash: true);
+            var textParts = telegramService.MessageTextParts.Skip(1);
+            var duration = textParts.ElementAtOrDefault(0);
 
-        if (!await telegramService.CheckFromAdminOrAnonymous())
-        {
-            await telegramService.DeleteSenderMessageAsync();
-            return;
-        }
-
-        if (telegramService.ReplyToMessage == null)
-        {
-            muteAnswer = "Silakan reply pesan yang ingin di mute";
-        }
-        else if (duration == null)
-        {
-            muteAnswer = "Mau di Mute berapa lama?";
-        }
-        else
-        {
-            var muteDuration = duration.ToTimeSpan();
-
-            if (muteDuration < TimeSpan.FromSeconds(30))
+            if (!await telegramService.CheckFromAdminOrAnonymous())
             {
-                muteAnswer = $"Durasi Mute minimal adalah 30 detik.\nContoh: <code>/mute 30s</code>";
+                await telegramService.DeleteSenderMessageAsync();
+                return;
+            }
+
+            if (telegramService.ReplyToMessage == null)
+            {
+                muteAnswer = "Silakan reply pesan yang ingin di mute";
+            }
+            else if (duration == null)
+            {
+                muteAnswer = "Mau di Mute berapa lama?";
             }
             else
             {
-                var isUnMute = command == "unmute";
-                var replyFrom = telegramService.ReplyToMessage.From;
-                var fromNameLink = replyFrom.GetNameLink();
-                var userId = telegramService.ReplyToMessage.From!.Id;
+                var muteDuration = duration.ToTimeSpan();
 
-                var muteUntil = muteDuration.ToDateTime();
-
-                var result = await telegramService.RestrictMemberAsync(
-                    userId,
-                    isUnMute,
-                    muteUntil
-                );
-
-                if (result.IsSuccess)
+                if (muteDuration < TimeSpan.FromSeconds(30))
                 {
-                    if (muteDuration > TimeSpan.FromDays(366))
-                    {
-                        muteAnswer = $"{fromNameLink} telah di mute Selamanya!";
-                    }
-                    else
-                    {
-                        muteAnswer = $"{fromNameLink} berhasil di mute." +
-                                     $"\nMute berakhir sampai dengan {muteUntil}";
-                    }
+                    muteAnswer = $"Durasi Mute minimal adalah 30 detik.\nContoh: <code>/mute 30s</code>";
                 }
                 else
                 {
-                    muteAnswer = $"Gagal ketika mengMute {fromNameLink}" +
-                                 $"\n{result.Exception.Message}";
+                    var isUnMute = command == "unmute";
+                    var replyFrom = telegramService.ReplyToMessage.From;
+                    var fromNameLink = replyFrom.GetNameLink();
+                    var userId = telegramService.ReplyToMessage.From!.Id;
+
+                    var muteUntil = muteDuration.ToDateTime();
+
+                    var result = await telegramService.RestrictMemberAsync(
+                        userId,
+                        isUnMute,
+                        muteUntil
+                    );
+
+                    if (result.IsSuccess)
+                    {
+                        if (muteDuration > TimeSpan.FromDays(366))
+                        {
+                            muteAnswer = $"{fromNameLink} telah di mute Selamanya!";
+                        }
+                        else
+                        {
+                            var untilDateStr = muteUntil.ToDetailDateTimeString();
+                            muteAnswer = $"{fromNameLink} berhasil di mute." +
+                                         $"\nMute berakhir sampai dengan {untilDateStr}";
+                        }
+                    }
+                    else
+                    {
+                        muteAnswer = $"Gagal ketika mengMute {fromNameLink}" +
+                                     $"\n{result.Exception.Message}";
+                    }
                 }
             }
-        }
 
-        await telegramService.SendTextMessageAsync(
-            muteAnswer,
-            scheduleDeleteAt: DateTime.UtcNow.AddMinutes(5),
-            includeSenderMessage: true
-        );
+            await telegramService.SendTextMessageAsync(
+                muteAnswer,
+                scheduleDeleteAt: DateTime.UtcNow.AddMinutes(5),
+                includeSenderMessage: true
+            );
+        }
+        catch (Exception exception)
+        {
+            await telegramService.SendTextMessageAsync(
+                $"Gagal ketika Mute pengguna. " +
+                $"\n{exception.Message}"
+            );
+        }
     }
 
     public static async Task CheckNameChangesAsync(this TelegramService telegramService)
