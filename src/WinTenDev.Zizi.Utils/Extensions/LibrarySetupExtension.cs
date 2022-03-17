@@ -9,6 +9,13 @@ namespace WinTenDev.Zizi.Utils.Extensions;
 
 public static class LibrarySetupExtension
 {
+    public static IApplicationBuilder ConfigureLibrary(this IApplicationBuilder app)
+    {
+        app.ConfigureDapper();
+        app.ConfigureNewtonsoftJson();
+
+        return app;
+    }
 
     public static IApplicationBuilder ConfigureNewtonsoftJson(this IApplicationBuilder app)
     {

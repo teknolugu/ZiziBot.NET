@@ -1,17 +1,14 @@
-name: Deploy to Zizi Beta
+name: Deploy to Zizi Bot
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+    branches: [ stable ]
 
 jobs:
   build:
-    name: Deploy Zizi Beta
+    name: Deploy Zizi Bot
     timeout-minutes: 30
     runs-on: ubuntu-latest
-#     runs-on: self-hosted
 
     steps:
     - name: Prepare Build
@@ -24,7 +21,7 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
     - name: Publish
-      run: dotnet publish src/WinTenDev.ZiziBot.AppHost -r linux-x64 -c Release --self-contained=false /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true -o build/zizi-beta
+      run: dotnet publish src/WinTenDev.ZiziBot.AppHost -r linux-x64 -c Release --self-contained=false /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true -o build/zizi-bot
 
     - name: Send notify to Telegram before deployment
       uses: appleboy/telegram-action@v0.1.1
@@ -35,7 +32,7 @@ jobs:
         token: ${{ secrets.TG_DEV_BOT_TOKEN }}
         # telegram message
         message: |
-          Zizi Beta entering Maintenance Mode
+          Zizi Bot entering Maintenance Mode
         # disables link previews for links in this message
         disable_web_page_preview: true
 
@@ -51,12 +48,12 @@ jobs:
         # ssh remote password
         pass: ${{ secrets.VPS_PASS }}
         # execute pre-commands before scp
-        first_ssh: ${{ secrets.CMD_STOP_ZIZIBETA }}
+        first_ssh: ${{ secrets.CMD_STOP_ZIZIBOT }}
         # scp from local to remote
         scp: |
-          build/zizi-beta/* => ${{ secrets.VPS_REMOTE_DIR }}
+          build/zizi-bot/* => ${{ secrets.VPS_REMOTE_DIR_STABLE }}
         # execute post-commands after scp
-        last_ssh: ${{ secrets.CMD_START_ZIZIBETA }}
+        last_ssh: ${{ secrets.CMD_START_ZIZIBOT }}
 
     - name: Send notify to Telegram after deployment
       uses: appleboy/telegram-action@v0.1.1
@@ -67,7 +64,7 @@ jobs:
         token: ${{ secrets.TG_DEV_BOT_TOKEN }}
         # telegram message
         message: |
-          Zizi Beta Deployment success
+          Zizi Bot Deployment success
           Repo: ${{ github.repository }}
           Changes: https://github.com/${{ github.repository }}/commit/${{github.sha}}
         # disables link previews for links in this message

@@ -146,6 +146,8 @@ public static class KeyboardUtil
 
     public static List<List<Button>> ToListButton(this string rawButtonMarkups)
     {
+        if(rawButtonMarkups.IsNullOrEmpty()) return new List<List<Button>>();
+
         var listButtonMapRaw = rawButtonMarkups.Split("\n")
             .Select(
                 s => s

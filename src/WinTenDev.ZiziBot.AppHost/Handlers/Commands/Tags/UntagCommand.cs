@@ -36,7 +36,7 @@ public class UntagCommand : CommandBase
 
         if (
             !_telegramService.IsFromSudo &&
-            await _telegramService.CheckFromAdminOrAnonymous()
+            !await _telegramService.CheckUserPermission()
         )
         {
             await _telegramService.SendTextMessageAsync(sendText);
