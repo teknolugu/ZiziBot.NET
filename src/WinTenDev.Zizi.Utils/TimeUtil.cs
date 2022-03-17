@@ -338,7 +338,7 @@ public static class TimeUtil
 
     public static string ToDetailDateTimeString(this DateTime dateTime)
     {
-        return dateTime.ToString("yyyy-MM-dd hh:mm:ss tt zz");
+        return dateTime.ToString("yyyy-MM-dd HH:mm:ss zz");
     }
 
     public static TimeSpan ToTimeSpan(this string timeStr)
