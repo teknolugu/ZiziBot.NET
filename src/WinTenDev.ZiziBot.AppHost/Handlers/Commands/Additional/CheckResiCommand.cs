@@ -42,12 +42,6 @@ public class CheckResiCommand : CommandBase
 
         if (!featureConfig.NextHandler) return;
 
-        if (!_telegramService.IsFromSudo)
-        {
-            await _telegramService.SendTextMessageAsync("Sabar ya ngab, fitur sedang di perbaiki");
-            return;
-        }
-
         var resi = _telegramService.MessageTextParts.ElementAtOrDefault(1);
 
         if (resi.IsNullOrEmpty())
