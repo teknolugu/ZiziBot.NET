@@ -3,22 +3,26 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using WinTenDev.Zizi.Models.Dto;
 using WinTenDev.Zizi.Services.Internals;
+using WinTenDev.Zizi.Services.Telegram;
 using WinTenDev.Zizi.Utils;
 using WinTenDev.Zizi.Utils.Telegram;
 
-namespace WinTenDev.ZiziBot.AppHost.Handlers.Starts;
+namespace WinTenDev.Zizi.Services.Starts;
 
 public class RulesProcessor
 {
     private readonly ILogger<RulesProcessor> _logger;
+    private readonly ChatService _chatService;
     private readonly RulesService _rulesService;
 
     public RulesProcessor(
         ILogger<RulesProcessor> logger,
+        ChatService chatService,
         RulesService rulesService
     )
     {
         _logger = logger;
+        _chatService = chatService;
         _rulesService = rulesService;
     }
 
@@ -32,7 +36,15 @@ public class RulesProcessor
 
         if (latestRule == null) return response;
 
-        response.MessageText = ruleText;
+        var chat = await _chatService.GetChatAsync(chatId);
+        var chatNameLink = chat.GetChatNameLink();
+        var lastUpdate = latestRule.UpdatedAt;
+
+        var ruleTextWithTitle = $"📜 Rules di <b>{chatNameLink}</b>\n" +
+                                $"\n{ruleText}" +
+                                $"\n\n<b>Diperbarui: </b> {lastUpdate.ToDetailDateTimeString()}";
+
+        response.MessageText = ruleTextWithTitle;
         response.DisableWebPreview = true;
         response.ReplyToMessageId = 0;
 
