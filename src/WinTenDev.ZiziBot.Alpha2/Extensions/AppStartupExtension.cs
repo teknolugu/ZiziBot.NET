@@ -1,5 +1,7 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using DotNurse.Injector;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Telegram.Bot;
 using TgBotFramework;
 using WinTenDev.Zizi.Models.Configs;
 
@@ -18,11 +20,24 @@ public static class AppStartupExtension
                 .UseLongPolling()
                 .SetPipeline(
                     pipeBuilder => pipeBuilder
+                        .Use<NewUpdateHandler>()
+                        .UseCommand<AddNoteCommand>("add_note")
+                        .UseCommand<NotesCommand>("notes")
                         .UseCommand<StartCommand>("start")
+                        .Use<GenericMessageHandler>()
                 )
         );
 
-        services.AddSingleton<StartCommand>();
+        services.AddSingleton<ITelegramBotClient>(
+            provider =>
+                new TelegramBotClient(tgBotConfig.ApiToken)
+        );
+
+        services.AddServicesFrom(
+            type =>
+                type.Namespace?.Contains("WinTenDev.ZiziBot.Alpha2.Handlers") ?? false,
+            ServiceLifetime.Scoped
+        );
 
         return services;
     }
