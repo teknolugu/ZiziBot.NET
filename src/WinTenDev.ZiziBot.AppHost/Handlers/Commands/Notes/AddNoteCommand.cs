@@ -1,15 +1,16 @@
-﻿using System.Threading.Tasks;
+﻿using System.Threading;
+using System.Threading.Tasks;
 using Telegram.Bot.Framework.Abstractions;
 using WinTenDev.Zizi.Services.Telegram;
 using WinTenDev.Zizi.Services.Telegram.Extensions;
 
 namespace WinTenDev.ZiziBot.AppHost.Handlers.Commands.Notes;
 
-public class NotesCommand : CommandBase
+public class AddNoteCommand : CommandBase
 {
     private readonly TelegramService _telegramService;
 
-    public NotesCommand(TelegramService telegramService)
+    public AddNoteCommand(TelegramService telegramService)
     {
         _telegramService = telegramService;
     }
@@ -22,6 +23,11 @@ public class NotesCommand : CommandBase
     {
         await _telegramService.AddUpdateContext(context);
 
-        await _telegramService.GetNotesAsync();
+        await _telegramService.PrepareSaveNotesAsync();
+
+        var cts = new CancellationTokenSource();
+        cts.CancelAfter(100);
+
+        await next(context, cts.Token);
     }
 }

@@ -37,10 +37,11 @@ public class TagsCommand : CommandBase
         var chatId = _telegramService.ChatId;
         var op = Operation.Begin("On ChatId {ChatId}, /tags command", chatId);
 
-        var sentMessageTask = _telegramService.SendTextMessageAsync("🔄 Sedang mengambil Tags..", replyToMsgId: 0);
+        await _telegramService.DeleteSenderMessageAsync();
+        var sentMessageTask = _telegramService.SendTextMessageAsync("🔄 Sedang mengambil Tags..");
         var tagsDataTask = _tagsService.GetTagsByGroupAsync(chatId);
 
-        await Task.WhenAll(sentMessageTask, tagsDataTask, _telegramService.DeleteSenderMessageAsync());
+        await Task.WhenAll(sentMessageTask, tagsDataTask);
 
         var tagsData = await tagsDataTask;
         var sentMessage = await sentMessageTask;
