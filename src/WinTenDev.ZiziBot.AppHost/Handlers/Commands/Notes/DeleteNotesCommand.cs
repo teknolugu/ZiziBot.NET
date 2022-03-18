@@ -5,11 +5,11 @@ using WinTenDev.Zizi.Services.Telegram.Extensions;
 
 namespace WinTenDev.ZiziBot.AppHost.Handlers.Commands.Notes;
 
-public class NotesCommand : CommandBase
+public class DeleteNotesCommand : CommandBase
 {
     private readonly TelegramService _telegramService;
 
-    public NotesCommand(TelegramService telegramService)
+    public DeleteNotesCommand(TelegramService telegramService)
     {
         _telegramService = telegramService;
     }
@@ -20,8 +20,6 @@ public class NotesCommand : CommandBase
         string[] args
     )
     {
-        await _telegramService.AddUpdateContext(context);
-
-        await _telegramService.GetNotesAsync();
+        await _telegramService.DeleteNoteAsync();
     }
 }

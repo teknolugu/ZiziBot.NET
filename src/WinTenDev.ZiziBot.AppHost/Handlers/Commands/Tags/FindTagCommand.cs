@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using SerilogTimings;
 using Telegram.Bot.Framework.Abstractions;
-using WinTenDev.Zizi.Models.Enums;
 using WinTenDev.Zizi.Models.Tables;
 using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Services.Telegram;
@@ -103,7 +102,7 @@ public class FindTagCommand : IUpdateHandler
 
         var buttonMarkup = buttonStr.ToButtonMarkup();
 
-        if (typeData != MediaType.Unknown)
+        if (idData.IsNotNullOrEmpty())
         {
             await _telegramService.SendMediaAsync(
                 fileId: idData,

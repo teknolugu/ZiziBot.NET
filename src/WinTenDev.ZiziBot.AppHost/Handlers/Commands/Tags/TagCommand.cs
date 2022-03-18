@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Serilog;
@@ -63,7 +64,11 @@ public class TagCommand : CommandBase
 
         if (msg.ReplyToMessage == null)
         {
-            await _telegramService.SendTextMessageAsync(sendText);
+            await _telegramService.SendTextMessageAsync(
+                sendText: sendText,
+                scheduleDeleteAt: DateTime.UtcNow.AddMinutes(10),
+                includeSenderMessage: true
+            );
             return;
         }
 
@@ -134,11 +139,12 @@ public class TagCommand : CommandBase
         await _telegramService.EditMessageTextAsync("📝 Menyimpan tag data..");
         await _tagsService.SaveTagAsync(data);
 
-        await _telegramService.EditMessageTextAsync
-        (
-            "✅ Tag berhasil di simpan.." +
-            $"\nTag: <code>#{slugTag}</code>" +
-            $"\n\nKetik /tags untuk melihat semua Tag."
+        await _telegramService.EditMessageTextAsync(
+            sendText: "✅ Tag berhasil di simpan.." +
+                      $"\nTag: <code>#{slugTag}</code>" +
+                      $"\n\nKetik /tags untuk melihat semua Tag.",
+            scheduleDeleteAt: DateTime.UtcNow.AddMinutes(10),
+            includeSenderMessage: true
         );
 
         await _tagsService.UpdateCacheAsync(chatId);
