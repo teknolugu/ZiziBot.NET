@@ -37,16 +37,17 @@ public class TelegramService
     private readonly IBackgroundJobClient _backgroundJob;
     private readonly EventLogConfig _eventLogConfig;
     private readonly ChatService _chatService;
-    private readonly BotService _botService;
     private readonly FeatureService _featureService;
     private readonly PrivilegeService _privilegeService;
     private readonly UserProfilePhotoService _userProfilePhotoService;
     private readonly StepHistoriesService _stepHistoriesService;
 
     internal CommonConfig CommonConfig { get; }
+    internal EnginesConfig EnginesConfig { get; }
     internal AfkService AfkService { get; }
     internal AnimalsService AnimalsService { get; }
     internal AntiSpamService AntiSpamService { get; }
+    internal BotService BotService { get; }
     internal FloodCheckService FloodCheckService { get; }
     internal MataService MataService { get; }
     internal MessageHistoryService MessageHistoryService { get; }
@@ -109,6 +110,7 @@ public class TelegramService
 
     public TelegramService(
         IBackgroundJobClient backgroundJob,
+        IOptionsSnapshot<EnginesConfig> engOptions,
         IOptionsSnapshot<EventLogConfig> eventLogConfig,
         IOptionsSnapshot<CommonConfig> commonConfig,
         AfkService afkService,
@@ -131,16 +133,17 @@ public class TelegramService
         _backgroundJob = backgroundJob;
         _eventLogConfig = eventLogConfig.Value;
         _chatService = chatService;
-        _botService = botService;
         _featureService = featureService;
         _privilegeService = privilegeService;
         _userProfilePhotoService = userProfilePhotoService;
         _stepHistoriesService = stepHistoriesService;
 
         CommonConfig = commonConfig.Value;
+        EnginesConfig = engOptions.Value;
         AfkService = afkService;
         AnimalsService = animalsService;
         AntiSpamService = antiSpamService;
+        BotService = botService;
         FloodCheckService = floodCheckServiceService;
         MataService = mataService;
         MessageHistoryService = messageHistoryService;
@@ -288,7 +291,7 @@ public class TelegramService
         if (!isShouldLeave) return false;
 
         Log.Warning("I should leave right now!");
-        var me = await _botService.GetMeAsync();
+        var me = await BotService.GetMeAsync();
 
         var sendText = "Untuk mendapatkan pengalaman lingkungan yang lebih stabil, " +
                        "silakan gunakan @MissZiziBot untuk Grup Anda." +
@@ -499,9 +502,9 @@ public class TelegramService
 
     #region Bot
 
-    public async Task<ButtonParsed> GetFeatureConfig()
+    public async Task<ButtonParsed> GetFeatureConfig(string feature = null)
     {
-        var command = GetCommand();
+        var command = feature ?? GetCommand();
         var featureConfig = await _featureService.GetFeatureConfig(command);
 
         if (featureConfig.IsEnabled)
@@ -536,18 +539,18 @@ public class TelegramService
 
     public async Task<User> GetMeAsync()
     {
-        var getMe = await _botService.GetMeAsync();
+        var getMe = await BotService.GetMeAsync();
         return getMe;
     }
 
     public async Task<bool> IsBeta()
     {
-        return await _botService.IsBeta();
+        return await BotService.IsBeta();
     }
 
     public async Task<string> GetUrlStart(string param)
     {
-        return await _botService.GetUrlStart(param);
+        return await BotService.GetUrlStart(param);
     }
 
     public async Task NotifyPendingCount(int pendingLimit = 100)

@@ -56,7 +56,7 @@ public class FeatureService
 
         var mergedCaption = config.Captions?
             .Where(caption => caption.MinimumLevel <= currentEnvironment)
-            .Select(caption => caption.Sections.JoinStr("\n\n"))
+            .Select(caption => caption.Sections.JoinStr(" "))
             .JoinStr("\n\n");
 
         if (config?.Buttons != null)
