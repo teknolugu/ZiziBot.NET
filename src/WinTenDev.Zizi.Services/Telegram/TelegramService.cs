@@ -17,6 +17,7 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InputFiles;
 using Telegram.Bot.Types.ReplyMarkups;
+using TgBotFramework;
 using WinTenDev.Zizi.Models.Configs;
 using WinTenDev.Zizi.Models.Dto;
 using WinTenDev.Zizi.Models.Enums;
@@ -148,6 +149,18 @@ public class TelegramService
         WordFilterService = wordFilterService;
     }
 
+    public Task AddUpdateContext(UpdateContext context)
+    {
+        ChatId = context.ChatId.Identifier ?? 0;
+
+        Client = context.Client;
+        Update = context.Update;
+
+        AddUpdate(context.Update);
+
+        return Task.CompletedTask;
+    }
+
     public Task AddUpdateContext(IUpdateContext updateContext)
     {
         var op = Operation.Begin("Add context for '{ChatId}'", ChatId);
@@ -200,6 +213,64 @@ public class TelegramService
             .ToArray();
 
         KickTimeOffset = TimeSpan.FromMinutes(1);
+
+        var fromLanguageCode = From?.LanguageCode ?? "en";
+
+        op.Complete();
+
+        return Task.CompletedTask;
+    }
+
+    public Task AddUpdate(Update update)
+    {
+        var op = Operation.Begin("Adding Update: '{UpdateId}'", update.Id);
+
+        CallbackQuery = Update.CallbackQuery;
+        MyChatMember = Update.MyChatMember;
+        Message = Update.Message;
+        EditedMessage = Update.EditedMessage;
+        ChannelPost = Update.ChannelPost;
+        EditedChannelPost = Update.EditedChannelPost;
+
+        MessageOrEdited = Message ?? EditedMessage;
+        ChannelOrEditedPost = ChannelPost ?? EditedChannelPost;
+        CallbackMessage = CallbackQuery?.Message;
+
+        ReplyToMessage = MessageOrEdited?.ReplyToMessage;
+        AnyMessage = CallbackMessage ?? Message ?? EditedMessage;
+
+        ReplyFromId = ReplyToMessage?.From?.Id ?? 0;
+
+        From = ChannelOrEditedPost?.From ?? MyChatMember?.From ?? CallbackQuery?.From ?? MessageOrEdited?.From;
+        Chat = ChannelOrEditedPost?.Chat ?? MyChatMember?.Chat ?? CallbackQuery?.Message?.Chat ?? MessageOrEdited?.Chat;
+        SenderChat = MessageOrEdited?.SenderChat;
+        MessageDate = MyChatMember?.Date ?? CallbackQuery?.Message?.Date ?? MessageOrEdited?.Date ?? DateTime.Now;
+
+        TimeInit = MessageDate.GetDelay();
+
+        FromId = From?.Id ?? 0;
+        ChatId = Chat?.Id ?? 0;
+        ReducedChatId = ChatId.ReduceChatId();
+        ChatTitle = Chat?.Title ?? From.GetFullName();
+        FromNameLink = From.GetNameLink();
+
+        IsNoUsername = CheckUsername();
+        HasUsername = !CheckUsername();
+        IsFromSudo = CheckFromSudoer();
+        IsPrivateChat = CheckIsPrivateChat();
+        IsGroupChat = CheckIsGroupChat();
+
+        AnyMessageText = AnyMessage?.Text;
+        MessageOrEditedText = MessageOrEdited?.Text;
+        MessageOrEditedCaption = MessageOrEdited?.Caption;
+
+        MessageTextParts = MessageOrEditedText?.SplitText(" ")
+            .Where(s => s.IsNotNullOrEmpty())
+            .ToArray();
+
+        KickTimeOffset = TimeSpan.FromMinutes(1);
+
+        var fromLanguageCode = From?.LanguageCode ?? "en";
 
         op.Complete();
 
