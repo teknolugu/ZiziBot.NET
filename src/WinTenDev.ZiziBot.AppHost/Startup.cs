@@ -26,7 +26,6 @@ public class Startup
     {
         services.AddTelegramBot();
         services.MappingAppSettings();
-        services.AddMappingConfiguration();
 
         services.AddHealthChecks();
 
@@ -52,8 +51,6 @@ public class Startup
         services.AddLocalTunnelClient();
 
         services.AddHangfireServerAndConfig();
-
-        Log.Information("Services is ready..");
     }
 
     public void Configure(
