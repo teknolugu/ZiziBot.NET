@@ -31,7 +31,12 @@ public class TagsService
     {
         var data = await GetTagByTag(chatId, tagVal);
         var isExist = data.Any();
-        Log.Debug("Tag in '{ChatId}' with slug '{TagVal} is exist? {IsExist}", chatId, tagVal, isExist);
+        Log.Debug(
+            "Tag in '{ChatId}' with slug '{TagVal} is exist? {IsExist}",
+            chatId,
+            tagVal,
+            isExist
+        );
 
         return isExist;
     }
@@ -45,8 +50,11 @@ public class TagsService
     public async Task<IEnumerable<CloudTag>> GetTagsByGroupAsync(long chatId)
     {
         var key = GetCacheKey(chatId);
-        var data = await _cacheService.GetOrSetAsync(key, () =>
-            GetTagsByGroupCoreAsync(chatId));
+        var data = await _cacheService.GetOrSetAsync(
+            key,
+            () =>
+                GetTagsByGroupCoreAsync(chatId)
+        );
 
         return data;
     }
@@ -60,7 +68,7 @@ public class TagsService
             .OrderBy("tag")
             .GetAsync<CloudTag>();
 
-        return data;
+        return data.Where(tag => tag.Tag.WordsCount() == 1);
     }
 
     public async Task<IEnumerable<CloudTag>> GetTagByTag(
@@ -76,7 +84,11 @@ public class TagsService
             .OrderBy("tag")
             .GetAsync<CloudTag>();
 
-        Log.Debug("Tag by Tag for {ChatId} => {@V}", chatId, data);
+        Log.Debug(
+            "Tag by Tag for {ChatId} => {@V}",
+            chatId,
+            data
+        );
         return data;
     }
 
