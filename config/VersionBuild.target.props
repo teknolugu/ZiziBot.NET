@@ -14,4 +14,10 @@
 
         <Copyright>© $([System.DateTime]::UtcNow.Year) WinTenDev</Copyright>
     </PropertyGroup>
+
+    <ItemGroup Condition=" '$(Configuration)' == 'Release'">
+        <AssemblyAttribute Include="WinTenDev.Zizi.Models.Attributes.BuildDateAttribute">
+            <_Parameter1>$([System.DateTime]::UtcNow.ToString("yyyyMMddHHmmss"))</_Parameter1>
+        </AssemblyAttribute>
+    </ItemGroup>
 </Project>
