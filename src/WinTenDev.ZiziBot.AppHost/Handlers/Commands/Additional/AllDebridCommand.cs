@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using Microsoft.Extensions.Options;
 using Serilog;
 using Telegram.Bot.Framework.Abstractions;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -11,27 +12,30 @@ namespace WinTenDev.ZiziBot.AppHost.Handlers.Commands.Additional;
 
 public class AllDebridCommand : CommandBase
 {
+    private readonly AllDebridConfig _allDebridConfig;
     private readonly TelegramService _telegramService;
-    private readonly AppConfig _appConfig;
     private readonly AllDebridService _allDebridService;
 
     public AllDebridCommand(
-        AppConfig appConfig,
+        IOptionsSnapshot<AllDebridConfig> allDebridConfig,
         AllDebridService allDebridService,
         TelegramService telegramService
     )
     {
+        _allDebridConfig = allDebridConfig.Value;
         _telegramService = telegramService;
         _allDebridService = allDebridService;
-        _appConfig = appConfig;
     }
 
-    public override async Task HandleAsync(IUpdateContext context, UpdateDelegate next, string[] args)
+    public override async Task HandleAsync(
+        IUpdateContext context,
+        UpdateDelegate next,
+        string[] args
+    )
     {
         await _telegramService.AddUpdateContext(context);
 
-        var allDebrid = _appConfig.AllDebridConfig;
-        var isEnabled = allDebrid.IsEnabled;
+        var isEnabled = _allDebridConfig.IsEnabled;
 
         if (!isEnabled)
         {
@@ -42,17 +46,20 @@ public class AllDebridCommand : CommandBase
         var txtParts = _telegramService.MessageTextParts;
         var urlParam = txtParts.ValueOfIndex(1);
 
-        if (!_telegramService.IsFromSudo && _telegramService.IsChatRestricted)
+        if (!_telegramService.IsFromSudo &&
+            _telegramService.IsChatRestricted)
         {
             Log.Information("AllDebrid is restricted only to some Chat ID");
             var limitFeature = "Convert link via AllDebrid hanya boleh di grup <b>WinTen Mirror</b>.";
-            var groupBtn = new InlineKeyboardMarkup(new[]
-            {
+            var groupBtn = new InlineKeyboardMarkup(
                 new[]
                 {
-                    InlineKeyboardButton.WithUrl("⬇Ke WinTen Mirror", "https://t.me/WinTenMirror")
+                    new[]
+                    {
+                        InlineKeyboardButton.WithUrl("⬇Ke WinTen Mirror", "https://t.me/WinTenMirror")
+                    }
                 }
-            });
+            );
 
             await _telegramService.SendTextMessageAsync(limitFeature, groupBtn);
             return;
@@ -67,8 +74,11 @@ public class AllDebridCommand : CommandBase
         Log.Information("Converting url: {0}", urlParam);
         await _telegramService.SendTextMessageAsync("Sedang mengkonversi URL via Alldebrid.");
 
-        var result = await _allDebridService.ConvertUrl(urlParam, s =>
-            Log.Debug("Progress: {S}", s));
+        var result = await _allDebridService.ConvertUrl(
+            urlParam,
+            s =>
+                Log.Debug("Progress: {S}", s)
+        );
 
         if (result.Status != "success")
         {
@@ -88,13 +98,15 @@ public class AllDebridCommand : CommandBase
                    $"\n📁 Nama: <code>{fileName}</code>" +
                    $"\n📦 Ukuran: <code>{fileSize.SizeFormat()}</code>";
 
-        var inlineKeyboard = new InlineKeyboardMarkup(new[]
-        {
+        var inlineKeyboard = new InlineKeyboardMarkup(
             new[]
             {
-                InlineKeyboardButton.WithUrl("⬇️ Download", urlResult)
+                new[]
+                {
+                    InlineKeyboardButton.WithUrl("⬇️ Download", urlResult)
+                }
             }
-        });
+        );
 
         await _telegramService.EditMessageTextAsync(text, inlineKeyboard);
     }
