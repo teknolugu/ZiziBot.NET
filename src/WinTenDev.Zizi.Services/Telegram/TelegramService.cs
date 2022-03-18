@@ -803,10 +803,9 @@ public class TelegramService
                 parseMode: ParseMode.Html,
                 replyMarkup: replyMarkup,
                 replyToMessageId: replyToMsgId,
+                allowSendingWithoutReply: true,
                 disableWebPagePreview: disableWebPreview
             );
-
-            // return SentMessage;
         }
         catch (Exception exception1)
         {
@@ -826,31 +825,6 @@ public class TelegramService
                 chatTarget,
                 exception1.Message
             );
-
-            try
-            {
-                Log.Information("Try Sending message to {ChatTarget} without reply to Msg Id", chatTarget);
-
-                SentMessage = await Client.SendTextMessageAsync(
-                    chatId: chatTarget,
-                    text: sendText,
-                    parseMode: ParseMode.Html,
-                    replyMarkup: replyMarkup
-                );
-
-                // return SentMessage;
-            }
-            catch (Exception exception2)
-            {
-                if (!exception2.IsErrorAsWarning())
-                {
-                    Log.Error(
-                        exception2,
-                        "Send Message to {ChatTarget} Exception_2",
-                        chatTarget
-                    );
-                }
-            }
         }
 
         Log.Information("Sent Message Text: {SentMessageId}", SentMessage.MessageId);
@@ -873,10 +847,10 @@ public class TelegramService
             "Sending media: {MediaType}, fileId: {FileId} to {Id}",
             mediaType,
             fileId,
-            Message.Chat.Id
+            ChatId
         );
 
-        TimeProc = Message.Date.GetDelay();
+        TimeProc = MessageDate.GetDelay();
         if (caption.IsNotNullOrEmpty()) caption += $"\n\n⏱ <code>{TimeInit} s</code> | ⌛️ <code>{TimeProc} s</code>";
 
         switch (mediaType)
