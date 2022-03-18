@@ -60,7 +60,7 @@ public static class CommandBuilderExtension
                                         .UseCommand<AddBlockListCommand>("addblist")
                                         .UseCommand<AddKataCommand>("kata")
                                         .UseCommand<AddKataCommand>("wfil")
-                                        .UseCommand<AddNotesCommand>("addfilter")
+                                        .UseCommand<AddNoteCommand>("addfilter")
                                         .UseCommand<AdminCommand>("admin")
                                         .UseCommand<AdminCommand>("adminlist")
                                         .UseCommand<AfkCommand>("afk")
