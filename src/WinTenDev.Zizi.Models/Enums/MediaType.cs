@@ -6,5 +6,6 @@ public enum MediaType
     LocalDocument = 9,
     Photo = 2,
     Video = 4,
-    Unknown = -1
+    Text = 1,
+    Unknown = -1,
 }
