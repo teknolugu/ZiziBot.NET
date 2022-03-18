@@ -1,10 +1,12 @@
 ﻿using System.Collections.Generic;
-using System.Data;
+using System.Linq;
 using System.Threading.Tasks;
 using Serilog;
 using SqlKata.Execution;
+using WinTenDev.Zizi.Models.Dto;
 using WinTenDev.Zizi.Models.Tables;
 using WinTenDev.Zizi.Utils;
+using WinTenDev.Zizi.Utils.Telegram;
 using WinTenDev.Zizi.Utils.Text;
 
 namespace WinTenDev.Zizi.Services.Internals;
@@ -13,7 +15,7 @@ public class NotesService
 {
     private readonly QueryService _queryService;
     private readonly CacheService _cacheService;
-    private const string TableName = "notes";
+    private const string TableName = "tags";
 
     public NotesService(
         QueryService queryService,
@@ -24,19 +26,37 @@ public class NotesService
         _cacheService = cacheService;
     }
 
-    public async Task<DataTable> GetNotesByChatId(long chatId)
+    public async Task<bool> IsExistAsync(
+        long chatId,
+        string slug
+    )
     {
-        var query = await _queryService
-            .CreateMySqlFactory()
-            .FromTable(TableName)
-            .Where("chat_id", chatId)
-            .GetAsync();
+        var note = await GetNotesBySlug(chatId, slug);
 
-        var data = query.ToJson().MapObject<DataTable>();
+        var isExist = note.Any();
+        return isExist;
+    }
+
+    public async Task<IEnumerable<CloudTag>> GetNotesByChatId(long chatId)
+    {
+        var data = await _cacheService.GetOrSetAsync(
+            cacheKey: "notes" + chatId.ReduceChatId(),
+            action: () => {
+                var query = _queryService
+                    .CreateMySqlFactory()
+                    .FromTable(TableName)
+                    .Where("chat_id", chatId)
+                    .OrderBy("tag")
+                    .GetAsync<CloudTag>();
+
+                return query;
+            }
+        );
+
         return data;
     }
 
-    public async Task<List<CloudNote>> GetNotesBySlug(
+    public async Task<IEnumerable<CloudTag>> GetNotesBySlug(
         long chatId,
         string slug
     )
@@ -47,11 +67,10 @@ public class NotesService
             .CreateMySqlFactory()
             .FromTable(TableName)
             .Where("chat_id", chatId)
-            .OrWhereContains("slug", slug)
-            .GetAsync();
+            .Where("tag", slug)
+            .GetAsync<CloudTag>();
 
-        var mapped = query.ToJson().MapObject<List<CloudNote>>();
-        return mapped;
+        return query;
     }
 
     public async Task SaveNote(Dictionary<string, object> data)
@@ -65,6 +84,35 @@ public class NotesService
             .InsertAsync(data);
 
         Log.Information("SaveNote: {Insert}", insert);
+    }
+
+    public async Task<int> SaveNoteAsync(NoteSaveDto noteSaveDto)
+    {
+        var values = noteSaveDto.ToDictionary();
+
+        var insert = await _queryService
+            .CreateMySqlFactory()
+            .FromTable(TableName)
+            .InsertAsync(values);
+
+        return insert;
+    }
+
+    public async Task<int> DeleteNoteAsync(
+        long chatId,
+        string slugOrId
+    )
+    {
+        var query = await _queryService.CreateMySqlFactory()
+            .FromTable(TableName)
+            .Where("chat_id", chatId)
+            .Where(
+                where1 => where1
+                    .Where("tag", slugOrId)
+                    .OrWhere("id", slugOrId)
+            ).DeleteAsync();
+
+        return query;
     }
 
     public async Task UpdateCache(long chatId)
