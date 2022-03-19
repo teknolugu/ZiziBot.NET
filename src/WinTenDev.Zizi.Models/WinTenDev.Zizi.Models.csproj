@@ -24,6 +24,7 @@
         <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="6.0.0" />
         <PackageReference Include="Microsoft.ML" Version="1.7.0" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+        <PackageReference Include="Realm" Version="10.10.0" />
         <PackageReference Include="RepoDb" Version="1.12.10" />
         <PackageReference Include="Roslynator.Analyzers" Version="4.0.2">
             <PrivateAssets>all</PrivateAssets>
