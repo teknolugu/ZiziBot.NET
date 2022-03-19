@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Humanizer;
 using Serilog;
 using WinTenDev.Zizi.Models.Tables;
 using WinTenDev.Zizi.Models.Types;
@@ -136,7 +137,7 @@ public static class TelegramServiceMemberExtension
         {
             if (telegramService.MessageOrEdited == null) return;
 
-            var updateType = telegramService.Update.Type;
+            var updateType = telegramService.Update.Type.Humanize().Pascalize();
             var currentChat = telegramService.Chat;
             var fromUsername = telegramService.From.Username;
             var fromFirstName = telegramService.From.FirstName;
@@ -146,13 +147,13 @@ public static class TelegramServiceMemberExtension
             var chatSettings = await telegramService.GetChatSetting();
             if (!chatSettings.EnableZiziMata)
             {
-                Log.Information("MataZizi is disabled in this Group!");
+                Log.Information("MataZizi is disabled at ChatId: {ChatId}", chatId);
                 return;
             }
 
             var botUser = await telegramService.GetMeAsync();
 
-            var userData = new HitActivity
+            var userHistory = new UserHistory()
             {
                 ViaBot = botUser.Username,
                 UpdateType = updateType,
@@ -163,19 +164,28 @@ public static class TelegramServiceMemberExtension
                 FromLangCode = fromLanguageCode,
                 ChatId = chatId,
                 ChatUsername = currentChat.Username,
-                ChatType = currentChat.Type,
-                ChatTitle = currentChat.Title,
+                ChatType = currentChat.Type.Humanize().Pascalize(),
+                ChatTitle = telegramService.ChatTitle,
+                MessageDate = telegramService.MessageDate,
                 Timestamp = DateTime.UtcNow
             };
 
-            Log.Information("Starting SangMata check..");
+            Log.Information(
+                "Starting SangMata check at ChatId: {ChatId} for UserId: {UserId}",
+                chatId,
+                fromId
+            );
 
-            var hitActivityCache = await telegramService.MataService.GetMataCore(fromId);
-            if (hitActivityCache.IsNull)
+            var lastActivity = await telegramService.MataService.GetLastMataAsync(fromId);
+            if (lastActivity == null)
             {
-                Log.Information("This may first Hit from User {UserId}", fromId);
+                Log.Information(
+                    "This may first Hit from UserId {UserId} at ChatId: {ChatId}",
+                    fromId,
+                    chatId
+                );
 
-                await telegramService.MataService.SaveMataAsync(fromId, userData);
+                await telegramService.MataService.SaveMataAsync(userHistory);
 
                 return;
             }
@@ -186,11 +196,9 @@ public static class TelegramServiceMemberExtension
             msgBuild.AppendLine("😽 <b>MataZizi</b>");
             msgBuild.Append("<b>UserID:</b> ").Append(fromId).AppendLine();
 
-            var hitActivity = hitActivityCache.Value;
-
-            if (fromUsername != hitActivity.FromUsername)
+            if (fromUsername != lastActivity.FromUsername)
             {
-                Log.Debug("Username changed detected!");
+                Log.Debug("Username changed detected for UserId: {UserId}", fromId);
                 if (fromUsername.IsNullOrEmpty())
                     msgBuild.AppendLine("Menghapus Usernamenya");
                 else
@@ -199,9 +207,9 @@ public static class TelegramServiceMemberExtension
                 changesCount++;
             }
 
-            if (fromFirstName != hitActivity.FromFirstName)
+            if (fromFirstName != lastActivity.FromFirstName)
             {
-                Log.Debug("First Name changed detected!");
+                Log.Debug("First Name changed detected for UserId: {UserId}", fromId);
                 if (fromFirstName.IsNullOrEmpty())
                     msgBuild.AppendLine("Menghapus nama depannya.");
                 else
@@ -210,9 +218,9 @@ public static class TelegramServiceMemberExtension
                 changesCount++;
             }
 
-            if (fromLastName != hitActivity.FromLastName)
+            if (fromLastName != lastActivity.FromLastName)
             {
-                Log.Debug("Last Name changed detected!");
+                Log.Debug("Last Name changed detected for UserId: {UserId}", fromId);
                 if (fromLastName.IsNullOrEmpty())
                     msgBuild.AppendLine("Menghapus nama belakangnya");
                 else
@@ -228,19 +236,23 @@ public static class TelegramServiceMemberExtension
                     scheduleDeleteAt: DateTime.UtcNow.AddMinutes(10)
                 );
 
-                await telegramService.MataService.SaveMataAsync(fromId, userData);
-
-                Log.Debug("Complete update Cache");
+                await telegramService.MataService.SaveMataAsync(userHistory);
             }
 
-            Log.Information("MataZizi completed . Changes: {ChangesCount}", changesCount);
+            Log.Information(
+                "MataZizi completed for UserId: {UserId} at ChatId: {ChatId}. Total Changes: {ChangesCount}",
+                fromId,
+                chatId,
+                changesCount
+            );
         }
         catch (Exception exception)
         {
             Log.Error(
                 exception,
-                "Error SangMata at ChatId {ChatId}",
-                chatId
+                "Error MataZizi at ChatId: {ChatId} for UserId: {UserId}",
+                chatId,
+                fromId
             );
         }
     }

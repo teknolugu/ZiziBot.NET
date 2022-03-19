@@ -46,7 +46,11 @@ public static class DirUtil
         var directoryInfos = d.GetDirectories();
         size += directoryInfos.Sum(unused => DirSize(unused.FullName));
 
-        Log.Information("{Path} size is {Size}", path, size);
+        Log.Information(
+            "{Path} size is {Size}",
+            path,
+            size
+        );
         return size;
     }
 
@@ -54,8 +58,16 @@ public static class DirUtil
     {
         if (path.IsNullOrEmpty()) return path;
 
-        return path.Replace(@"\", "/", StringComparison.CurrentCulture)
-            .Replace("\\", "/", StringComparison.CurrentCulture);
+        return path.Replace(
+                @"\",
+                "/",
+                StringComparison.CurrentCulture
+            )
+            .Replace(
+                "\\",
+                "/",
+                StringComparison.CurrentCulture
+            );
     }
 
     public static string GetDirectory(this string path)
@@ -78,9 +90,7 @@ public static class DirUtil
         return path;
     }
 
-    public static IEnumerable<string> RemoveFiles(
-        this IEnumerable<string> paths
-    )
+    public static IEnumerable<string> RemoveFiles(this IEnumerable<string> paths)
     {
         Log.Information("Deleting files in {Path}", paths.Count());
 
@@ -98,7 +108,26 @@ public static class DirUtil
     public static string TrimStartPath(this string filePath)
     {
         var trimStart = filePath.TrimStart(Path.DirectorySeparatorChar).TrimStart(Path.AltDirectorySeparatorChar);
-        Log.Debug("Path trimmed from {FilePath} to {TrimStart}", filePath, trimStart);
+        Log.Debug(
+            "Path trimmed from {FilePath} to {TrimStart}",
+            filePath,
+            trimStart
+        );
         return trimStart;
+    }
+
+    public static string PathCombine(
+        bool prependCurrentDir,
+        params string[] paths
+    )
+    {
+        var combinedPath = prependCurrentDir
+            ? Path.Combine(
+                Environment.CurrentDirectory,
+                Path.Combine(paths)
+            )
+            : Path.Combine(paths);
+
+        return combinedPath.SanitizeSlash();
     }
 }

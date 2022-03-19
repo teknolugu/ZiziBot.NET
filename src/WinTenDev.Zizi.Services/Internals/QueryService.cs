@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using JsonFlatFileDataStore;
 using Microsoft.Extensions.Options;
 using MySqlConnector;
+using Realms;
 using Serilog;
 using SqlKata.Compilers;
 using SqlKata.Execution;
@@ -79,6 +80,19 @@ public class QueryService
             .GetCollection<TEntity>();
 
         return collection;
+    }
+
+    public async Task<Realm> GetMongoRealmInstance()
+    {
+        var realmPath = DirUtil.PathCombine(true, "Storage/Data/Realm.realm").EnsureDirectory();
+        var realmInstance = await Realm.GetInstanceAsync(
+            new RealmConfiguration(realmPath)
+            {
+                ShouldDeleteIfMigrationNeeded = true
+            }
+        );
+
+        return realmInstance;
     }
 
     #region C R U D

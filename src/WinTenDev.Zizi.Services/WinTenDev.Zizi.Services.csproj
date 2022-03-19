@@ -36,6 +36,7 @@
         <PackageReference Include="MySqlConnector" Version="2.1.7" />
         <PackageReference Include="Nito.AsyncEx" Version="5.1.2" />
         <PackageReference Include="NMemory" Version="3.1.4" />
+        <PackageReference Include="Realm" Version="10.10.0" />
         <PackageReference Include="RepoDb.MySqlConnector" Version="1.1.5" />
         <PackageReference Include="Roslynator.Analyzers" Version="4.0.2">
             <PrivateAssets>all</PrivateAssets>
