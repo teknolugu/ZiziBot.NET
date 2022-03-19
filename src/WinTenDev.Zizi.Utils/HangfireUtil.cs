@@ -10,7 +10,6 @@ using Hangfire.Redis;
 using Hangfire.Storage;
 using Hangfire.Storage.SQLite;
 using Serilog;
-using WinTenDev.Zizi.Models.Enums;
 using WinTenDev.Zizi.Utils.IO;
 
 namespace WinTenDev.Zizi.Utils;
@@ -173,12 +172,7 @@ public static class HangfireUtil
     {
         Log.Information("Hangfire Redis: {ConnStr}", connStr);
 
-        var options = new RedisStorageOptions()
-        {
-            Db = (int) RedisMap.HangfireStorage
-        };
-
-        var storage = new RedisStorage(connStr, options);
+        var storage = new RedisStorage(connStr);
         return storage;
     }
 }
