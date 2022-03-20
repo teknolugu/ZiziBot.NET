@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using CacheTower;
-using EasyCaching.Core;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using MoreLinq;
 using WinTenDev.Zizi.Models.Configs;
 
 namespace WinTenDev.Zizi.Services.Internals;
@@ -14,7 +10,6 @@ namespace WinTenDev.Zizi.Services.Internals;
 public class CacheService
 {
     private readonly CacheConfig _cacheConfig;
-    private readonly IEasyCachingProvider _cachingProvider;
     private readonly ILogger<CacheService> _logger;
     private readonly CacheStack _cacheStack;
     private readonly CacheSettings _cacheSettings;
@@ -23,72 +18,17 @@ public class CacheService
 
     public CacheService(
         IOptionsSnapshot<CacheConfig> cachingConfig,
-        IEasyCachingProvider cachingProvider,
+        // IEasyCachingProvider cachingProvider,
         ILogger<CacheService> logger,
         CacheStack cacheStack
     )
     {
         _cacheConfig = cachingConfig.Value;
-        _cachingProvider = cachingProvider;
         _logger = logger;
         _cacheStack = cacheStack;
 
         (_expireAfter, _staleAfter) = cachingConfig.Value;
         _cacheSettings = new CacheSettings(TimeSpan.FromMinutes(_expireAfter), TimeSpan.FromSeconds(_staleAfter));
-    }
-
-    /// <summary>
-    /// Invalidate all cache based on KnownPrefixes
-    /// </summary>
-    public void InvalidateAll()
-    {
-        var knownPrefixes = _cacheConfig.KnownPrefixes;
-
-        if (!_cacheConfig.InvalidateOnStart)
-        {
-            _logger.LogInformation("Invalidate Cache on start is disabled");
-            return;
-        }
-
-        _logger.LogInformation("Invalidating caches..");
-        knownPrefixes.ForEach(Action);
-
-        void Action(string cachePrefix)
-        {
-            _cachingProvider.RemoveByPrefix(cachePrefix);
-        }
-
-        _logger.LogInformation("Invalidate caches finish");
-    }
-
-    /// <summary>
-    /// Get all cache keys based on KnownPrefixes
-    /// </summary>
-    public List<string> GetAllKeys()
-    {
-        var allKeys = new List<string>();
-        var knownPrefixes = _cacheConfig.KnownPrefixes;
-
-        knownPrefixes.ForEach(
-            (
-                cachePrefix,
-                _
-            ) => {
-                var cacheValues = _cachingProvider
-                    .GetByPrefix<dynamic>(cachePrefix);
-
-                allKeys.AddRange(
-                    cacheValues.Select(
-                        (
-                            dictionary,
-                            _
-                        ) => dictionary.Key
-                    )
-                );
-            }
-        );
-
-        return allKeys;
     }
 
     /// <summary>
