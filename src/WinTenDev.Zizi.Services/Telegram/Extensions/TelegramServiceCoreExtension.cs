@@ -19,30 +19,28 @@ public static class TelegramServiceCoreExtension
 
         var keyboard = new InlineKeyboardMarkup(InlineKeyboardButton.WithCallbackData("Ping", "PONG"));
 
-        var sendText = "ℹ️ Pong!!";
+        var htmlMessage = HtmlMessage.Empty
+            .TextBr("ℹ Pong!!");
 
         var featureConfig = await telegramService.GetFeatureConfig("ping");
 
-        if (telegramService.IsPrivateChat &&
-            telegramService.IsFromSudo ||
+        if ((telegramService.IsPrivateChat &&
+             telegramService.IsFromSudo) ||
             (featureConfig.AllowsAt?.Contains(chatId.ToString()) ?? false))
         {
-            sendText += $"\n🕔 <code>{DateTime.Now}</code>" +
-                        "\n🎛 <b>Engine info.</b>";
+            htmlMessage.Bold("📅 Date: ").Code(DateTime.UtcNow.ToDetailDateTimeString()).Br()
+                .TextBr("🎛 Engine Info.").Br();
+
             var getWebHookInfo = await telegramService.Client.GetWebhookInfoAsync();
             if (string.IsNullOrEmpty(getWebHookInfo.Url))
-            {
-                sendText += "\n\n<i>Bot run in Poll mode.</i>";
-            }
+                htmlMessage.Italic("Bot is running in Poll mode");
             else
-            {
-                sendText += getWebHookInfo.ParseWebHookInfo();
-            }
+                htmlMessage.Append(getWebHookInfo.ParseWebHookInfo());
         }
 
         await telegramService.SendTextMessageAsync(
-            sendText,
-            keyboard,
+            sendText: htmlMessage.ToString(),
+            replyMarkup: keyboard,
             scheduleDeleteAt: DateTime.UtcNow.AddMinutes(1),
             includeSenderMessage: true
         );

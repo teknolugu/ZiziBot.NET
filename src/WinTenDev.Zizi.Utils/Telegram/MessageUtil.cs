@@ -4,6 +4,7 @@ using MoreLinq;
 using Serilog;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using WinTenDev.Zizi.Models.Types;
 
 namespace WinTenDev.Zizi.Utils.Telegram;
 
@@ -69,21 +70,25 @@ public static class MessageUtil
         return messageLink;
     }
 
-    public static string ParseWebHookInfo(this WebhookInfo webhookInfo)
+    public static HtmlMessage ParseWebHookInfo(this WebhookInfo webhookInfo)
     {
-        var webhookInfoStr = "\n\n<i>Bot run in WebHook mode.</i>" +
-                             $"\nUrl WebHook: {webhookInfo.Url}" +
-                             $"\nUrl Custom Cert: {webhookInfo.HasCustomCertificate}" +
-                             $"\nAllowed Updates: {webhookInfo.AllowedUpdates}" +
-                             $"\nPending Count: {(webhookInfo.PendingUpdateCount - 1)}" +
-                             $"\nMax Connection: {webhookInfo.MaxConnections}" +
-                             $"\nLast Error: {webhookInfo.LastErrorDate:yyyy-MM-dd}" +
-                             $"\nError Message: {webhookInfo.LastErrorMessage}";
+        var htmlMessage = HtmlMessage.Empty
+            .Bold("EngineMode: ").TextBr("WebHook")
+            .Bold("URL: ").TextBr(webhookInfo.Url)
+            .Bold("Custom Cert: ").TextBr(webhookInfo.HasCustomCertificate.ToString())
+            .Bold("Allowed Updates: ").TextBr(webhookInfo.AllowedUpdates?.ToString())
+            .Bold("Pending Count: ").TextBr((webhookInfo.PendingUpdateCount - 1).ToString())
+            .Bold("Max Connection: ").TextBr(webhookInfo.MaxConnections.ToString())
+            .Bold("Last Error: ").TextBr(webhookInfo.LastErrorDate?.ToDetailDateTimeString())
+            .Bold("Error Message: ").TextBr(webhookInfo.LastErrorMessage);
 
-        return webhookInfoStr;
+        return htmlMessage;
     }
 
-    public static string CloneText(this Message message, bool disableFormatting = false)
+    public static string CloneText(
+        this Message message,
+        bool disableFormatting = false
+    )
     {
         if (message.ReplyToMessage != null) message = message.ReplyToMessage;
 
