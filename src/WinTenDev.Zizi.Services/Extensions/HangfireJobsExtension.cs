@@ -4,7 +4,7 @@ using WinTenDev.Zizi.Models.Enums;
 using WinTenDev.Zizi.Services.Telegram;
 using WinTenDev.Zizi.Utils;
 
-namespace WinTenDev.ZiziBot.AppHost.Extensions;
+namespace WinTenDev.Zizi.Services.Extensions;
 
 public static class HangfireJobsExtension
 {
