@@ -44,7 +44,7 @@ public class BotService
         _logger.LogInformation($"Webhook info: {webhookInfo.Url}");
         var webHookInfoStr = webhookInfo.ParseWebHookInfo();
 
-        await _botClient.SendTextMessageAsync("", webHookInfoStr);
+        await _botClient.SendTextMessageAsync("", webHookInfoStr.ToString());
     }
 
     public async Task<User> GetMeAsync()
