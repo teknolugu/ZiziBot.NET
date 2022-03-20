@@ -4,6 +4,9 @@ using System.Text;
 using System.Threading.Tasks;
 using Humanizer;
 using Serilog;
+using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.ReplyMarkups;
+using WinTenDev.Zizi.Models.Enums;
 using WinTenDev.Zizi.Models.Tables;
 using WinTenDev.Zizi.Models.Types;
 using WinTenDev.Zizi.Utils;
@@ -39,9 +42,17 @@ public static class TelegramServiceMemberExtension
 
         var messageBan = antiSpamResult.MessageResult;
 
-        if (antiSpamResult.IsAnyBanned) await telegramService.KickMemberAsync(fromId, true);
+        if (!antiSpamResult.IsAnyBanned) return antiSpamResult;
 
-        await telegramService.SendTextMessageAsync(messageBan, replyToMsgId: 0);
+        await Task.WhenAll(
+            telegramService.KickMemberAsync(fromId, true),
+            telegramService.DeleteSenderMessageAsync(),
+            telegramService.SendTextMessageAsync(
+                sendText: messageBan,
+                replyToMsgId: 0,
+                scheduleDeleteAt: DateTime.UtcNow.AddMinutes(10)
+            )
+        );
 
         return antiSpamResult;
     }
