@@ -36,7 +36,6 @@ public class TelegramService
 {
     private readonly IBackgroundJobClient _backgroundJob;
     private readonly EventLogConfig _eventLogConfig;
-    private readonly ChatService _chatService;
     private readonly FeatureService _featureService;
     private readonly PrivilegeService _privilegeService;
     private readonly UserProfilePhotoService _userProfilePhotoService;
@@ -54,6 +53,8 @@ public class TelegramService
     internal NotesService NotesService { get; }
     internal SettingsService SettingsService { get; }
     internal WordFilterService WordFilterService { get; }
+
+    public ChatService ChatService { get; }
 
     public bool IsNoUsername { get; private set; }
     public bool HasUsername { get; private set; }
@@ -144,6 +145,7 @@ public class TelegramService
         AnimalsService = animalsService;
         AntiSpamService = antiSpamService;
         BotService = botService;
+        ChatService = chatService;
         FloodCheckService = floodCheckServiceService;
         MataService = mataService;
         MessageHistoryService = messageHistoryService;
@@ -330,12 +332,17 @@ public class TelegramService
 
     public async Task<long> GetMemberCount()
     {
-        return await _chatService.GetMemberCountAsync(ChatId);
+        return await ChatService.GetMemberCountAsync(ChatId);
     }
 
     public async Task<Chat> GetChat()
     {
-        return await _chatService.GetChatAsync(ChatId);
+        return await ChatService.GetChatAsync(ChatId);
+    }
+
+    public async Task<ChatMember> GetChatMemberAsync(long userId)
+    {
+        return await ChatService.GetChatMemberAsync(ChatId, userId);
     }
 
     public async Task<ChatSetting> GetChatSetting()

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Hangfire;
@@ -11,6 +12,7 @@ using Telegram.Bot.Types.Enums;
 using WinTenDev.Zizi.Models.Configs;
 using WinTenDev.Zizi.Models.Dto;
 using WinTenDev.Zizi.Models.Enums;
+using WinTenDev.Zizi.Models.Tables;
 using WinTenDev.Zizi.Models.Types;
 using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Utils;
@@ -234,6 +236,17 @@ public class ChatService
         return result;
     }
 
+    public async Task DeleteMessageHistory(Func<MessageHistory, bool> predicate)
+    {
+        var listMessageHistory = await _messageHistoryService.GetMessageHistoryAsync(null);
+        var filtered = listMessageHistory
+            .SkipLast(1)
+            .Where(predicate)
+            .ToList();
+
+        await DeleteMessageHistoryCoreAsync(filtered);
+    }
+
     [JobDisplayName("Delete Old Message History")]
     public async Task DeleteOldMessageHistoryAsync()
     {
@@ -243,7 +256,12 @@ public class ChatService
                 DateTime.UtcNow >= history.DeleteAt
         ).ToList();
 
-        if (filteredHistory.Count == 0)
+        await DeleteMessageHistoryCoreAsync(filteredHistory);
+    }
+
+    public async Task DeleteMessageHistoryCoreAsync(List<MessageHistory> listMessageHistory)
+    {
+        if (listMessageHistory.Count == 0)
         {
             _logger.LogInformation("No Message History to delete");
             return;
@@ -251,10 +269,10 @@ public class ChatService
 
         _logger.LogInformation(
             "Start deleting old message history. Items: {Count}",
-            filteredHistory.Count
+            listMessageHistory.Count
         );
 
-        await filteredHistory.ForEachAsync(
+        await listMessageHistory.ForEachAsync(
             5,
             async history => {
                 var chatId = history.ChatId;
