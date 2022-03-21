@@ -59,18 +59,30 @@ public static class TelegramServiceHealthyExtension
             return defaultFloodCheck;
         }
 
-        var span = TimeSpan.FromMinutes(floodCheckResult.FloodRate * 5.33)
-            .ToDateTime();
+        var muteUntilDate = TimeSpan.FromMinutes(floodCheckResult.FloodRate * 5.33).ToDateTime();
+        var muteUntilStr = muteUntilDate.ToDetailDateTimeString();
 
-        await telegramService.RestrictMemberAsync(from.Id, until: span);
+        await telegramService.RestrictMemberAsync(from.Id, until: muteUntilDate);
 
         var nameLink = from.GetNameLink();
 
-        var text = $"Hai {nameLink}, seperti nya Anda melakukan Flooding!" +
-                   $"\nAnda di mute hingga {span.ToDetailDateTimeString()} di Obrolan ini";
-        await telegramService.SendTextMessageAsync(text, replyToMsgId: 0);
+        var text = $"Hai {nameLink}, sepertinya Anda melakukan Flooding!" +
+                   $"\nAnda di mute hingga {muteUntilStr} di Obrolan ini";
 
-        telegramService.SaveSentMessageToHistory(MessageFlag.FloodWarn, span);
+        await telegramService.SendTextMessageAsync(
+            text,
+            replyToMsgId: 0,
+            scheduleDeleteAt: muteUntilDate.ToUniversalTime(),
+            messageFlag: MessageFlag.FloodWarn
+        );
+
+        telegramService.ChatService
+            .DeleteMessageHistory(
+                history =>
+                    history.MessageFlag == MessageFlag.FloodWarn &&
+                    history.ChatId == chat.Id
+            )
+            .InBackground();
 
         return floodCheckResult;
     }
