@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Serilog;
 using SerilogTimings;
+using WinTenDev.Zizi.Models.Enums;
 using WinTenDev.Zizi.Utils;
 using WinTenDev.Zizi.Utils.Telegram;
 
@@ -115,7 +116,19 @@ public static class TelegramServiceActivityExtension
                 if (isAfkReply?.IsAfk ?? false)
                 {
                     var repNameLink = repMsg.GetFromNameLink();
-                    await telegramService.SendTextMessageAsync($"{repNameLink} sedang afk");
+                    await telegramService.SendTextMessageAsync(
+                        sendText: $"{repNameLink} sedang afk",
+                        scheduleDeleteAt: DateTime.UtcNow.AddMinutes(5),
+                        messageFlag: MessageFlag.Afk
+                    );
+
+                    telegramService.ChatService
+                        .DeleteMessageHistory(
+                            history =>
+                                history.MessageFlag == MessageFlag.Afk &&
+                                history.ChatId == chatId
+                        )
+                        .InBackground();
                 }
                 else
                 {

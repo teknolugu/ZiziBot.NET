@@ -4,6 +4,7 @@ public enum MessageFlag
 {
     General,
     Rules,
+    Afk,
     Ping,
     About,
     FloodWarn,
