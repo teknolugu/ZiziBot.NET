@@ -133,7 +133,6 @@ public class TelegramService
     {
         _backgroundJob = backgroundJob;
         _eventLogConfig = eventLogConfig.Value;
-        _chatService = chatService;
         _featureService = featureService;
         _privilegeService = privilegeService;
         _userProfilePhotoService = userProfilePhotoService;
@@ -288,7 +287,7 @@ public class TelegramService
     {
         if (IsPrivateChat) return false;
 
-        var isShouldLeave = _chatService.CheckChatRestriction(ChatId);
+        var isShouldLeave = ChatService.CheckChatRestriction(ChatId);
 
         if (!isShouldLeave) return false;
 
@@ -777,7 +776,8 @@ public class TelegramService
         long customChatId = -1,
         bool disableWebPreview = false,
         DateTime scheduleDeleteAt = default,
-        bool includeSenderMessage = false
+        bool includeSenderMessage = false,
+        MessageFlag messageFlag = default
     )
     {
         TimeProc = MessageDate.GetDelay();
@@ -813,6 +813,8 @@ public class TelegramService
                 allowSendingWithoutReply: true,
                 disableWebPagePreview: disableWebPreview
             );
+
+            Log.Information("Sent Message Text: {SentMessageId}", SentMessage?.MessageId);
         }
         catch (Exception exception1)
         {
@@ -834,10 +836,14 @@ public class TelegramService
             );
         }
 
-        Log.Information("Sent Message Text: {SentMessageId}", SentMessage.MessageId);
-
         if (scheduleDeleteAt != default)
-            SaveToMessageHistory(scheduleDeleteAt, includeSenderMessage);
+        {
+            SaveToMessageHistory(
+                scheduleDeleteAt,
+                includeSenderMessage,
+                messageFlag
+            );
+        }
 
         return SentMessage;
     }
@@ -963,7 +969,8 @@ public class TelegramService
         InlineKeyboardMarkup replyMarkup = null,
         bool disableWebPreview = true,
         DateTime scheduleDeleteAt = default,
-        bool includeSenderMessage = false
+        bool includeSenderMessage = false,
+        MessageFlag messageFlag = default
     )
     {
         TimeProc = MessageDate.GetDelay();
@@ -1008,7 +1015,13 @@ public class TelegramService
         }
 
         if (scheduleDeleteAt != default)
-            SaveToMessageHistory(scheduleDeleteAt, includeSenderMessage);
+        {
+            SaveToMessageHistory(
+                scheduleDeleteAt,
+                includeSenderMessage,
+                messageFlag
+            );
+        }
 
         return SentMessage;
     }
@@ -1527,7 +1540,7 @@ public class TelegramService
             return result;
         }
 
-        result = _chatService.FireAnalyzer(MessageOrEditedText);
+        result = ChatService.FireAnalyzer(MessageOrEditedText);
 
         if (!result.IsFired) return result;
         var muteUntil = result.FireRatio * 1.33;
@@ -1646,11 +1659,12 @@ public class TelegramService
 
     public void SaveToMessageHistory(
         DateTime deleteAt = default,
-        bool includeSender = false
+        bool includeSender = false,
+        MessageFlag flag = MessageFlag.General
     )
     {
         var command = GetCommand(true);
-        var messageFlag = command.ToEnum(MessageFlag.General);
+        var messageFlag = flag == MessageFlag.General ? command.ToEnum(MessageFlag.General) : flag;
 
         var sentMessageId = SentMessage.MessageId;
         SaveMessageToHistoryAsync(
