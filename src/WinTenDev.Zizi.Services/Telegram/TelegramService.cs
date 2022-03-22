@@ -1665,6 +1665,8 @@ public class TelegramService
         MessageFlag flag = MessageFlag.General
     )
     {
+        if (SentMessage == null) return;
+
         var command = GetCommand(true);
         var messageFlag = flag == MessageFlag.General ? command.ToEnum(MessageFlag.General) : flag;
 
@@ -1692,6 +1694,8 @@ public class TelegramService
         DateTime deleteAt = default
     )
     {
+        if (MessageOrEdited == null) return;
+
         var messageId = MessageOrEdited.MessageId;
         SaveMessageToHistoryAsync(
                 messageId,
@@ -1706,6 +1710,8 @@ public class TelegramService
         DateTime deleteAt = default
     )
     {
+        if (SentMessage == null) return;
+
         var messageId = SentMessage.MessageId;
         SaveMessageToHistoryAsync(
                 messageId,
