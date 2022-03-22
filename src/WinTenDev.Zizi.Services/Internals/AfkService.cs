@@ -29,11 +29,15 @@ public class AfkService
     /// <returns>
     ///     true if AFK exist otherwise, false.
     /// </returns>
-    public async Task<bool> IsExistCore(int userId)
+    public async Task<bool> IsExistCore(long userId)
     {
         var user = await GetAfkByIdCore(userId);
         var isExist = user != null;
-        Log.Debug("Is UserId: '{UserId}' AFK? {IsExist}", userId, isExist);
+        Log.Debug(
+            "Is UserId: '{UserId}' AFK? {IsExist}",
+            userId,
+            isExist
+        );
 
         return isExist;
     }
@@ -75,10 +79,13 @@ public class AfkService
     {
         var key = CacheKey + $"-{userId}";
 
-        var data = await _cacheService.GetOrSetAsync(key, async () => {
-            var afk = await GetAfkByIdCore(userId);
-            return afk;
-        });
+        var data = await _cacheService.GetOrSetAsync(
+            cacheKey: key,
+            action: async () => {
+                var afk = await GetAfkByIdCore(userId);
+                return afk;
+            }
+        );
 
         return data;
     }
@@ -106,7 +113,7 @@ public class AfkService
 
         int saveResult;
 
-        var isExist = await IsExistCore(@where["user_id"].ToInt());
+        var isExist = await IsExistCore(@where["user_id"].ToInt64());
 
         if (isExist)
         {
