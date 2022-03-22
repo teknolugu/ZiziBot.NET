@@ -751,14 +751,16 @@ public class TelegramService
     public async Task<string> DownloadFileAsync(string prefixName)
     {
         var fileId = Message.GetFileId();
-        if (fileId.IsNullOrEmpty()) fileId = Message.ReplyToMessage.GetFileId();
+        if (fileId.IsNullOrEmpty())
+            fileId = Message.ReplyToMessage.GetFileId();
 
         Log.Information("Getting file by FileId {FileId}", fileId);
         var file = await Client.GetFileAsync(fileId);
 
-        var filePath = file.FilePath;
         Log.Debug("DownloadFile: {@File}", file);
-        var fileName = $"{prefixName}_{filePath}";
+        var filePath = file.FilePath?.Replace("/", "_");
+        var fileUniqueId = file.FileUniqueId;
+        var fileName = $"{prefixName}_{ReducedChatId}_{fileUniqueId}_{filePath}";
 
         fileName = $"Storage/Caches/{fileName}".EnsureDirectory();
 
