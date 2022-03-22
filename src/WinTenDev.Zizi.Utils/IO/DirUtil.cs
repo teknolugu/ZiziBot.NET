@@ -83,9 +83,29 @@ public static class DirUtil
         Log.Information("Deleting files in {Path}", path);
 
         var files = Directory.GetFiles(path)
-            .Where(file => file.Contains(filter, StringComparison.CurrentCulture));
+            .Where(
+                file =>
+                    file.Contains(filter, StringComparison.CurrentCulture)
+            );
 
-        foreach (var file in files) File.Delete(file);
+        foreach (var file in files)
+            File.Delete(file);
+
+        return path;
+    }
+
+    public static string RemoveFiles(
+        this string path,
+        Func<string, bool> predicate
+    )
+    {
+        Log.Information("Deleting files in {Path}", path);
+
+        var files = Directory.GetFiles(path)
+            .Where(predicate);
+
+        foreach (var file in files)
+            File.Delete(file);
 
         return path;
     }
