@@ -236,11 +236,14 @@ public class ChatService
         return result;
     }
 
-    public async Task DeleteMessageHistory(Func<MessageHistory, bool> predicate)
+    public async Task DeleteMessageHistory(
+        Func<MessageHistory, bool> predicate,
+        int skipLast = 1
+    )
     {
         var listMessageHistory = await _messageHistoryService.GetMessageHistoryAsync(null);
         var filtered = listMessageHistory
-            .SkipLast(1)
+            .SkipLast(skipLast)
             .Where(predicate)
             .ToList();
 
