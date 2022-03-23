@@ -242,12 +242,20 @@ public static class TelegramServiceMemberExtension
 
             if (changesCount > 0)
             {
-                await telegramService.SendTextMessageAsync(
-                    sendText: msgBuild.ToString().Trim(),
-                    scheduleDeleteAt: DateTime.UtcNow.AddMinutes(10)
+                await Task.WhenAll(
+                    telegramService.SendTextMessageAsync(
+                        sendText: msgBuild.ToString().Trim(),
+                        scheduleDeleteAt: DateTime.UtcNow.AddMinutes(10),
+                        messageFlag: MessageFlag.ZiziMata
+                    ),
+                    telegramService.ChatService
+                        .DeleteMessageHistory(
+                            history =>
+                                history.MessageFlag == MessageFlag.ZiziMata &&
+                                history.ChatId == chatId
+                        ),
+                    telegramService.MataService.SaveMataAsync(userHistory)
                 );
-
-                await telegramService.MataService.SaveMataAsync(userHistory);
             }
 
             Log.Information(
