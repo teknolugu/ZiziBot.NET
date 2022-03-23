@@ -51,6 +51,7 @@ public class TelegramService
     internal MataService MataService { get; }
     internal MessageHistoryService MessageHistoryService { get; }
     internal NotesService NotesService { get; }
+    internal OptiicDevService OptiicDevService { get; set; }
     internal SettingsService SettingsService { get; }
     internal WordFilterService WordFilterService { get; }
 
@@ -124,6 +125,7 @@ public class TelegramService
         MataService mataService,
         MessageHistoryService messageHistoryService,
         NotesService notesService,
+        OptiicDevService optiicDevService,
         SettingsService settingsService,
         PrivilegeService privilegeService,
         UserProfilePhotoService userProfilePhotoService,
@@ -149,6 +151,7 @@ public class TelegramService
         MataService = mataService;
         MessageHistoryService = messageHistoryService;
         NotesService = notesService;
+        OptiicDevService = optiicDevService;
         SettingsService = settingsService;
         WordFilterService = wordFilterService;
     }
