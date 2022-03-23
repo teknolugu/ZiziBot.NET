@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using SerilogTimings;
 using Telegram.Bot;
 using Telegram.Bot.Types.ReplyMarkups;
+using WinTenDev.Zizi.Models.Enums;
 using WinTenDev.Zizi.Models.Types;
 using WinTenDev.Zizi.Utils;
 using WinTenDev.Zizi.Utils.Telegram;
@@ -52,6 +53,7 @@ public static class TelegramServiceCoreExtension
     {
         var enginesConfig = telegramService.EnginesConfig;
 
+        var chatId = telegramService.ChatId;
         var me = await telegramService.BotService.GetMeAsync();
         var botVersion = enginesConfig.Version;
         var company = enginesConfig.Company;
@@ -86,5 +88,13 @@ public static class TelegramServiceCoreExtension
             scheduleDeleteAt: DateTime.UtcNow.AddMinutes(2),
             includeSenderMessage: true
         );
+
+        telegramService.ChatService.DeleteMessageHistory(
+                history =>
+                    history.MessageFlag == MessageFlag.About &&
+                    history.ChatId == chatId,
+                skipLast: 2
+            )
+            .InBackground();
     }
 }
