@@ -1493,7 +1493,8 @@ public class TelegramService
     public async Task SendWarningStep(StepHistoryName name)
     {
         var humanSpan = KickTimeOffset.Humanize();
-        var featureName = name.Humanize();
+        var featureName = name.Humanize().Pascalize();
+        var messageFlag = featureName.ToEnum(MessageFlag.General);
 
         var sendWarn = $"Hai {FromNameLink}, kamu belum mengatur {featureName}. silakan atur {featureName} yak. " +
                        $"Jika sudah atur {featureName}, silakan tekan tombol dibawah ini untuk verifikasi, " +
@@ -1512,8 +1513,17 @@ public class TelegramService
             sendWarn,
             verifyButton,
             disableWebPreview: true,
-            replyToMsgId: 0
+            replyToMsgId: 0,
+            scheduleDeleteAt: KickTimeOffset.ToDateTime().ToUniversalTime(),
+            messageFlag: messageFlag
         );
+
+        ChatService.DeleteMessageHistory(
+                history =>
+                    history.ChatId == ChatId &&
+                    history.MessageFlag == messageFlag
+            )
+            .InBackground();
 
         var stepHistory = await _stepHistoriesService.GetStepHistoryCore
         (
