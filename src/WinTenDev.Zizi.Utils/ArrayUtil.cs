@@ -13,31 +13,55 @@ public static class ArrayUtil
 
     public static IEnumerable<(T item, int index)> IterWithIndex<T>(this IEnumerable<T> self)
     {
-        return self.Select((item, index) => (item, index));
+        return self.Select(
+            (
+                item,
+                index
+            ) => (item, index)
+        );
     }
 
-    public static T[][] ChunkBy<T>(this IEnumerable<T> btnList, int chunk = 2)
+    public static List<T[]> ChunkBy<T>(
+        this IEnumerable<T> btnList,
+        int chunk = 2
+    )
     {
-        Log.Information("Chunk buttons to {Chunk}", chunk);
+        Log.Information("Chunk items to {Chunk}", chunk);
         var chunksBtn = btnList
-            .Select((s, i) => new { Value = s, Index = i })
+            .Select(
+                (
+                    s,
+                    i
+                ) => new { Value = s, Index = i }
+            )
             .GroupBy(x => x.Index / chunk)
             .Select(grp => grp.Select(x => x.Value).ToArray())
-            .ToArray();
+            .ToList();
 
         return chunksBtn;
     }
 
-    public static List<List<T>> ChunkBy<T>(this List<T> source, int chunkSize = 2)
+    public static List<List<T>> ChunkBy<T>(
+        this List<T> source,
+        int chunkSize = 2
+    )
     {
         return source
-            .Select((x, i) => new { Index = i, Value = x })
+            .Select(
+                (
+                    x,
+                    i
+                ) => new { Index = i, Value = x }
+            )
             .GroupBy(x => x.Index / chunkSize)
             .Select(x => x.Select(v => v.Value).ToList())
             .ToList();
     }
 
-    public static bool IsNullIndex(this object[] array, int index)
+    public static bool IsNullIndex(
+        this object[] array,
+        int index
+    )
     {
         if (array.Length <= index) return false;
 
@@ -45,13 +69,21 @@ public static class ArrayUtil
     }
 
     [Obsolete("Please use ElementAt")]
-    public static string ValueOfIndex(this string[] array, int index)
+    public static string ValueOfIndex(
+        this string[] array,
+        int index
+    )
     {
         string value = null;
-        if (array.Length > index && array[index] != null)
+        if (array.Length > index &&
+            array[index] != null)
         {
             value = array[index];
-            Log.Debug("Get Array index {Index}: {Value}", index, value);
+            Log.Debug(
+                "Get Array index {Index}: {Value}",
+                index,
+                value
+            );
         }
 
         return value;
@@ -74,7 +106,6 @@ public static class ArrayUtil
 
         return result;
     }
-
 
     // Source: https://www.codeproject.com/Articles/44274/Transpose-a-DataTable-using-C
     public static DataTable TransposedTable(this DataTable inputTable)
@@ -115,7 +146,7 @@ public static class ArrayUtil
     // Random Element: https://stackoverflow.com/a/36656460/9436994
     public static T RandomElement<T>(this IList<T> list)
     {
-        return list[RandomObj.Next(list.Count)];
+        return list == null ? default : list[RandomObj.Next(list.Count)];
     }
 
     public static T RandomElement<T>(this T[] array)
@@ -123,22 +154,34 @@ public static class ArrayUtil
         return array[RandomObj.Next(array.Length)];
     }
 
-    public static IEnumerable Append(this IEnumerable first, params object[] second)
+    public static IEnumerable Append(
+        this IEnumerable first,
+        params object[] second
+    )
     {
         return first.OfType<object>().Concat(second);
     }
 
-    public static IEnumerable<T> Append<T>(this IEnumerable<T> first, params T[] second)
+    public static IEnumerable<T> Append<T>(
+        this IEnumerable<T> first,
+        params T[] second
+    )
     {
         return first.Concat(second);
     }
 
-    public static IEnumerable Prepend(this IEnumerable first, params object[] second)
+    public static IEnumerable Prepend(
+        this IEnumerable first,
+        params object[] second
+    )
     {
         return second.Concat(first.OfType<object>());
     }
 
-    public static IEnumerable<T> Prepend<T>(this IEnumerable<T> first, params T[] second)
+    public static IEnumerable<T> Prepend<T>(
+        this IEnumerable<T> first,
+        params T[] second
+    )
     {
         return second.Concat(first);
     }
