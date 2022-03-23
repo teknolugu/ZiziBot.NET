@@ -28,7 +28,7 @@ using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Utils;
 using WinTenDev.Zizi.Utils.IO;
 using WinTenDev.Zizi.Utils.Telegram;
-using File=System.IO.File;
+using File = System.IO.File;
 
 namespace WinTenDev.Zizi.Services.Telegram;
 
@@ -53,6 +53,7 @@ public class TelegramService
     internal NotesService NotesService { get; }
     internal OptiicDevService OptiicDevService { get; set; }
     internal SettingsService SettingsService { get; }
+    internal RssService RssService { get; }
     internal WordFilterService WordFilterService { get; }
 
     public ChatService ChatService { get; }
@@ -128,6 +129,7 @@ public class TelegramService
         OptiicDevService optiicDevService,
         SettingsService settingsService,
         PrivilegeService privilegeService,
+        RssService rssService,
         UserProfilePhotoService userProfilePhotoService,
         StepHistoriesService stepHistoriesService,
         WordFilterService wordFilterService
@@ -152,6 +154,7 @@ public class TelegramService
         MessageHistoryService = messageHistoryService;
         NotesService = notesService;
         OptiicDevService = optiicDevService;
+        RssService = rssService;
         SettingsService = settingsService;
         WordFilterService = wordFilterService;
     }
@@ -782,7 +785,8 @@ public class TelegramService
         bool disableWebPreview = false,
         DateTime scheduleDeleteAt = default,
         bool includeSenderMessage = false,
-        MessageFlag messageFlag = default
+        MessageFlag messageFlag = default,
+        bool preventDuplicateSend = false
     )
     {
         TimeProc = MessageDate.GetDelay();
@@ -848,6 +852,18 @@ public class TelegramService
                 includeSenderMessage,
                 messageFlag
             );
+        }
+
+        if (preventDuplicateSend)
+        {
+            Log.Debug("Preventing duplicate send Message at ChatId: {ChatId}", ChatId);
+
+            ChatService.DeleteMessageHistory(
+                    history =>
+                        history.MessageFlag == messageFlag &&
+                        history.ChatId == ChatId
+                )
+                .InBackground();
         }
 
         return SentMessage;
@@ -975,7 +991,8 @@ public class TelegramService
         bool disableWebPreview = true,
         DateTime scheduleDeleteAt = default,
         bool includeSenderMessage = false,
-        MessageFlag messageFlag = default
+        MessageFlag messageFlag = default,
+        bool preventDuplicateSend = false
     )
     {
         TimeProc = MessageDate.GetDelay();
@@ -1026,6 +1043,18 @@ public class TelegramService
                 includeSenderMessage,
                 messageFlag
             );
+        }
+
+        if (preventDuplicateSend)
+        {
+            Log.Debug("Preventing duplicate send Message at ChatId: {ChatId}", ChatId);
+
+            ChatService.DeleteMessageHistory(
+                    history =>
+                        history.MessageFlag == messageFlag &&
+                        history.ChatId == ChatId
+                )
+                .InBackground();
         }
 
         return SentMessage;
