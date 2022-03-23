@@ -7,7 +7,10 @@ public enum MessageFlag
     Afk,
     Ping,
     About,
+    ForceSubscribe,
     FloodWarn,
     RssCtl,
-    Tag
+    Tag,
+    Photo,
+    Username
 }

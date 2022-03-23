@@ -6,13 +6,15 @@ public enum StepHistoryName
 {
     UnknownFeature = -1,
 
-    [Description("Poto")]
+    [Description("Photo")]
     ChatMemberPhoto,
 
     [Description("Username")]
     ChatMemberUsername,
 
-    HumanVerification
+    HumanVerification,
+
+    ForceSubscription
 }
 
 public enum StepHistoryStatus
