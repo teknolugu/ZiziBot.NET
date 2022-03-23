@@ -9,6 +9,8 @@ public enum MessageFlag
     About,
     ForceSubscribe,
     FloodWarn,
+    NewChatMembers,
+    ZiziMata,
     RssCtl,
     Tag,
     Photo,
