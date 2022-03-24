@@ -759,6 +759,14 @@ public class TelegramService
         return isOld;
     }
 
+    public MessageFlag GetMessageFlag(MessageFlag messageFlag)
+    {
+        var command = GetCommand(true);
+        var fixedFlag = messageFlag == MessageFlag.General ? command.ToEnum(MessageFlag.General) : messageFlag;
+
+        return fixedFlag;
+    }
+
     public async Task<string> DownloadFileAsync(string prefixName)
     {
         var fileId = Message.GetFileId();
@@ -859,17 +867,7 @@ public class TelegramService
             );
         }
 
-        if (preventDuplicateSend)
-        {
-            Log.Debug("Preventing duplicate send Message at ChatId: {ChatId}", ChatId);
-
-            ChatService.DeleteMessageHistory(
-                    history =>
-                        history.MessageFlag == messageFlag &&
-                        history.ChatId == ChatId
-                )
-                .InBackground();
-        }
+        PreventDuplicateSend(preventDuplicateSend, messageFlag);
 
         return SentMessage;
     }
@@ -879,7 +877,11 @@ public class TelegramService
         MediaType mediaType,
         string caption = "",
         IReplyMarkup replyMarkup = null,
-        int replyToMsgId = -1
+        int replyToMsgId = -1,
+        DateTime scheduleDeleteAt = default,
+        bool includeSenderMessage = false,
+        MessageFlag messageFlag = default,
+        bool preventDuplicateSend = false
     )
     {
         Log.Information(
@@ -951,7 +953,18 @@ public class TelegramService
                 return null;
         }
 
-        Log.Information("SendMedia: {MessageId}", SentMessage.MessageId);
+        Log.Information("SendMedia: {MessageId}", SentMessage?.MessageId);
+
+        if (scheduleDeleteAt != default)
+        {
+            SaveToMessageHistory(
+                scheduleDeleteAt,
+                includeSenderMessage,
+                messageFlag
+            );
+        }
+
+        PreventDuplicateSend(preventDuplicateSend, messageFlag);
 
         return SentMessage;
     }
@@ -1050,17 +1063,7 @@ public class TelegramService
             );
         }
 
-        if (preventDuplicateSend)
-        {
-            Log.Debug("Preventing duplicate send Message at ChatId: {ChatId}", ChatId);
-
-            ChatService.DeleteMessageHistory(
-                    history =>
-                        history.MessageFlag == messageFlag &&
-                        history.ChatId == ChatId
-                )
-                .InBackground();
-        }
+        PreventDuplicateSend(preventDuplicateSend, messageFlag);
 
         return SentMessage;
     }
@@ -1092,20 +1095,38 @@ public class TelegramService
 
     public async Task AppendTextAsync(
         string sendText,
-        InlineKeyboardMarkup replyMarkup = null
+        InlineKeyboardMarkup replyMarkup = null,
+        DateTime scheduleDeleteAt = default,
+        bool includeSenderMessage = false,
+        MessageFlag messageFlag = default,
+        bool preventDuplicateSend = false
     )
     {
         if (string.IsNullOrEmpty(AppendText))
         {
             Log.Information("Sending new message");
             AppendText = sendText;
-            await SendTextMessageAsync(AppendText, replyMarkup);
+            await SendTextMessageAsync(
+                sendText: AppendText,
+                replyMarkup: replyMarkup,
+                scheduleDeleteAt: scheduleDeleteAt,
+                includeSenderMessage: includeSenderMessage,
+                messageFlag: messageFlag,
+                preventDuplicateSend: preventDuplicateSend
+            );
         }
         else
         {
             Log.Information("Next, edit existing message");
             AppendText += $"\n{sendText}";
-            await EditMessageTextAsync(AppendText, replyMarkup);
+            await EditMessageTextAsync(
+                sendText: AppendText,
+                replyMarkup: replyMarkup,
+                scheduleDeleteAt: scheduleDeleteAt,
+                includeSenderMessage: includeSenderMessage,
+                messageFlag: messageFlag,
+                preventDuplicateSend: preventDuplicateSend
+            );
         }
     }
 
@@ -1197,6 +1218,25 @@ public class TelegramService
         {
             Log.Error(e, "Error Answer Callback");
         }
+    }
+
+    private void PreventDuplicateSend(
+        bool preventDuplicateSend,
+        MessageFlag flag
+    )
+    {
+        if (!preventDuplicateSend) return;
+
+        var messageFlag = GetMessageFlag(flag);
+
+        Log.Debug("Preventing duplicate send Message at ChatId: {ChatId} with Flag: {MessageFlag}", ChatId, flag);
+
+        ChatService.DeleteMessageHistory(
+                history =>
+                    history.MessageFlag == messageFlag &&
+                    history.ChatId == ChatId
+            )
+            .InBackground();
     }
 
     public void ResetTime()
@@ -1704,6 +1744,7 @@ public class TelegramService
     }
 
     #endregion PostUpdate
+
     #region Message History
 
     public void SaveToMessageHistory(
@@ -1799,5 +1840,5 @@ public class TelegramService
         );
     }
 
-    #endregion
+    #endregion Message History
 }
