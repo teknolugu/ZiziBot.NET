@@ -14,5 +14,6 @@ public enum MessageFlag
     RssCtl,
     Tag,
     Photo,
-    Username
+    Username,
+    Welcome
 }
