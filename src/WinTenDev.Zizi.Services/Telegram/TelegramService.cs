@@ -28,7 +28,7 @@ using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Utils;
 using WinTenDev.Zizi.Utils.IO;
 using WinTenDev.Zizi.Utils.Telegram;
-using File = System.IO.File;
+using File=System.IO.File;
 
 namespace WinTenDev.Zizi.Services.Telegram;
 
@@ -50,6 +50,7 @@ public class TelegramService
     internal FloodCheckService FloodCheckService { get; }
     internal MataService MataService { get; }
     internal MessageHistoryService MessageHistoryService { get; }
+    internal NewChatMembersService NewChatMembersService { get; set; }
     internal NotesService NotesService { get; }
     internal OptiicDevService OptiicDevService { get; set; }
     internal SettingsService SettingsService { get; }
@@ -92,6 +93,10 @@ public class TelegramService
     public Chat SenderChat { get; set; }
 
     public DateTime MessageDate { get; set; }
+    public DateTime? MessageEditDate { get; set; }
+    public DateTime MessageDateOrEditDate { get; set; }
+    private TimeSpan TimeInitSpan { get; set; }
+    private TimeSpan TimeProcSpan { get; set; }
     public TimeSpan KickTimeOffset { get; set; }
 
     public Message AnyMessage { get; set; }
@@ -125,6 +130,7 @@ public class TelegramService
         FloodCheckService floodCheckServiceService,
         MataService mataService,
         MessageHistoryService messageHistoryService,
+        NewChatMembersService newChatMembersService,
         NotesService notesService,
         OptiicDevService optiicDevService,
         SettingsService settingsService,
@@ -152,6 +158,7 @@ public class TelegramService
         FloodCheckService = floodCheckServiceService;
         MataService = mataService;
         MessageHistoryService = messageHistoryService;
+        NewChatMembersService = newChatMembersService;
         NotesService = notesService;
         OptiicDevService = optiicDevService;
         RssService = rssService;
