@@ -401,7 +401,12 @@ public class TelegramService
         cmd = MessageTextParts.ElementAtOrDefault(0);
 
         if (withoutSlash) cmd = cmd?.TrimStart('/');
-        if (withoutUsername) cmd = cmd?.RemoveThisString("@" + Context.Bot.Username);
+        if (withoutUsername)
+            cmd = cmd?.Replace(
+                "@" + Context.Bot.Username,
+                string.Empty,
+                StringComparison.CurrentCultureIgnoreCase
+            );
 
         return cmd;
     }
