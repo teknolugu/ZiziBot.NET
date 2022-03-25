@@ -17,6 +17,8 @@ public static class Program
     {
         try
         {
+            LocalizationLoaderUtil.LoadJsonLocalizationLang();
+
             await CreateHostBuilder(args)
                 .Build()
                 .RunAsync();

@@ -48,6 +48,7 @@ public class TelegramService
     internal AntiSpamService AntiSpamService { get; }
     internal BotService BotService { get; }
     internal FloodCheckService FloodCheckService { get; }
+    internal LocalizationService LocalizationService { get; }
     internal MataService MataService { get; }
     internal MessageHistoryService MessageHistoryService { get; }
     internal NewChatMembersService NewChatMembersService { get; set; }
@@ -128,6 +129,7 @@ public class TelegramService
         BotService botService,
         FeatureService featureService,
         FloodCheckService floodCheckServiceService,
+        LocalizationService localizationService,
         MataService mataService,
         MessageHistoryService messageHistoryService,
         NewChatMembersService newChatMembersService,
@@ -156,6 +158,7 @@ public class TelegramService
         BotService = botService;
         ChatService = chatService;
         FloodCheckService = floodCheckServiceService;
+        LocalizationService = localizationService;
         MataService = mataService;
         MessageHistoryService = messageHistoryService;
         NewChatMembersService = newChatMembersService;
@@ -421,6 +424,16 @@ public class TelegramService
     public bool IsCommand(string command)
     {
         return GetCommand() == command;
+    }
+
+    public async Task<string> GetLocalization(Enum value)
+    {
+        var settings = await GetChatSetting();
+
+        var langCode = settings.LanguageCode ?? "id";
+        var localized = LocalizationService.GetLoc(langCode, value);
+
+        return localized;
     }
 
     #endregion Chat

@@ -1,0 +1,10 @@
+﻿{
+	"Qr.MissingTextOrEmpty": {
+		"id": "Buat QR dari teks atau media caption\n<b>Usage : </b><code>/qr</code> (di Balasan)\n                <code>/qr teks anda di sini</code> (di Pesan)",
+		"en": "Generate QR from text or caption media\n<b>Usage : </b><code>/qr</code> (In-Reply)\n                <code>/qr your text here</code> (In-Message)"
+	},
+	"Qr.SourceButtonCaption": {
+		"id": "Sumber",
+		"en": "Source"
+	}
+}

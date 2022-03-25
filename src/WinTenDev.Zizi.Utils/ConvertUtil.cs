@@ -114,4 +114,16 @@ public static class ConvertUtil
         if (str.IsNullOrEmpty()) return false;
         return str.All(char.IsDigit);
     }
+
+    public static string ToNameValue(
+        this Enum value,
+        string delimiter = "."
+    )
+    {
+        var pathName = value.GetType().Name;
+        var enumValue = value.ToString();
+        var path = $"{pathName}{delimiter}{enumValue}";
+
+        return path;
+    }
 }

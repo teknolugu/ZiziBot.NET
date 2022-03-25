@@ -11,6 +11,7 @@ public enum MessageFlag
     FloodWarn,
     NewChatMembers,
     ZiziMata,
+    Qr,
     RssCtl,
     Tag,
     Photo,
