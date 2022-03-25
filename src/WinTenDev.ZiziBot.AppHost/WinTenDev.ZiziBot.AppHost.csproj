@@ -129,4 +129,12 @@
         <ProjectReference Include="..\WinTenDev.Zizi.Handlers\WinTenDev.Zizi.Handlers.csproj" />
         <ProjectReference Include="..\WinTenDev.Zizi.Services\WinTenDev.Zizi.Services.csproj" />
     </ItemGroup>
+
+    <Target Name="CopyJsonLanguageFiles" AfterTargets="AfterBuild">
+        <ItemGroup>
+            <LanguageDir Include="$(SolutionDir)\Resource\**\*.*" />
+        </ItemGroup>
+        <Copy SourceFiles="@(LanguageDir)" DestinationFolder="$(ProjectDir)\Storage\%(RecursiveDir)" />
+    </Target>
+
 </Project>
