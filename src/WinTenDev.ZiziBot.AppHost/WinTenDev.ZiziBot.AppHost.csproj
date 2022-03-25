@@ -130,7 +130,7 @@
         <ProjectReference Include="..\WinTenDev.Zizi.Services\WinTenDev.Zizi.Services.csproj" />
     </ItemGroup>
 
-    <Target Name="CopyJsonLanguageFiles" AfterTargets="AfterBuild">
+    <Target Name="CopyJsonLanguageFiles" AfterTargets="AfterBuild;AfterPublish">
         <ItemGroup>
             <LanguageDir Include="$(SolutionDir)\Resource\**\*.*" />
         </ItemGroup>
