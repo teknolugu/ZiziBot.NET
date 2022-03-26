@@ -122,6 +122,7 @@
     <!--            <DependentUpon>Lang.resx</DependentUpon>-->
     <!--        </EmbeddedResource>-->
     <!--    </ItemGroup>-->
+    
     <ItemGroup>
         <ProjectReference Include="..\WinTenDev.Zizi.DbMigrations\WinTenDev.Zizi.DbMigrations.csproj"/>
         <ProjectReference Include="..\WinTenDev.Zizi.Utils\WinTenDev.Zizi.Utils.csproj"/>
@@ -130,17 +131,14 @@
         <ProjectReference Include="..\WinTenDev.Zizi.Services\WinTenDev.Zizi.Services.csproj"/>
     </ItemGroup>
 
-    <Target Name="CopyJsonLanguageFiles" AfterTargets="AfterBuild">
-        <ItemGroup>
-            <SharedResourceDir Include="$(SolutionDir)\Resource\**\*.*"/>
-        </ItemGroup>
-        <Copy SourceFiles="@(SharedResourceDir)" DestinationFolder="$(ProjectDir)\Storage\%(RecursiveDir)"/>
+    <ItemGroup>
+        <Content Include="..\..\Resources\**\*" LinkBase="Storage">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
 
-        <ItemGroup>
-            <None Update="Storage\**">
-                <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-            </None>
-        </ItemGroup>
-    </Target>
+        <None Update="Storage\**">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
 
 </Project>
