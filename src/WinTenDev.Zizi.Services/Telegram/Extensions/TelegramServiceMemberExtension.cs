@@ -23,6 +23,7 @@ public static class TelegramServiceMemberExtension
 
         if (telegramService.IsPrivateChat ||
             telegramService.CheckFromAnonymous() ||
+            await telegramService.CheckFromAdminOrAnonymous() ||
             telegramService.CheckSenderChannel())
         {
             return new AntiSpamResult
@@ -32,7 +33,7 @@ public static class TelegramServiceMemberExtension
                 IsAnyBanned = false,
                 IsEs2Banned = false,
                 IsCasBanned = false,
-                IsSpamWatched = false,
+                IsSpamWatched = false
             };
         }
 
@@ -50,7 +51,9 @@ public static class TelegramServiceMemberExtension
             telegramService.SendTextMessageAsync(
                 sendText: messageBan,
                 replyToMsgId: 0,
-                scheduleDeleteAt: DateTime.UtcNow.AddMinutes(10)
+                scheduleDeleteAt: DateTime.UtcNow.AddMinutes(10),
+                preventDuplicateSend: true,
+                messageFlag: MessageFlag.GBan
             )
         );
 
