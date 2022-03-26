@@ -81,60 +81,66 @@
         <PackageReference Include="Telegram.Bot" Version="17.0.0" />
         <PackageReference Include="WTelegramClient" Version="2.1.2" />
     </ItemGroup>
+    <!--    <ItemGroup>-->
+    <!--        <None Update="Storage\Buttons\**">-->
+    <!--            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>-->
+    <!--        </None>-->
+    <!--        <None Update="Storage\Config\**">-->
+    <!--            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>-->
+    <!--        </None>-->
+    <!--        <None Update="Storage\InbotDocs\**">-->
+    <!--            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>-->
+    <!--        </None>-->
+    <!--        <None Update="Storage\SQL\**">-->
+    <!--            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>-->
+    <!--        </None>-->
+    <!--    </ItemGroup>-->
+    <!--    <ItemGroup>-->
+    <!--        <Compile Update="I18n\MainLanguage.Designer.cs">-->
+    <!--            <DesignTime>True</DesignTime>-->
+    <!--            <AutoGen>True</AutoGen>-->
+    <!--            <DependentUpon>Lang.resx</DependentUpon>-->
+    <!--        </Compile>-->
+    <!--    </ItemGroup>-->
+    <!--    <ItemGroup>-->
+    <!--        <EmbeddedResource Update="I18n\MainLanguage.en.resx">-->
+    <!--            <Generator>PublicResXFileCodeGenerator</Generator>-->
+    <!--            <DependentUpon>Lang.resx</DependentUpon>-->
+    <!--        </EmbeddedResource>-->
+    <!--        <EmbeddedResource Update="I18n\MainLanguage.id.resx">-->
+    <!--            <Generator>PublicResXFileCodeGenerator</Generator>-->
+    <!--            <DependentUpon>Lang.resx</DependentUpon>-->
+    <!--        </EmbeddedResource>-->
+    <!--        <EmbeddedResource Update="I18n\MainLanguage.resx">-->
+    <!--            <Generator>PublicResXFileCodeGenerator</Generator>-->
+    <!--            <LastGenOutput>MainLanguage.Designer.cs</LastGenOutput>-->
+    <!--        </EmbeddedResource>-->
+    <!--        <EmbeddedResource Update="I18n\MainLanguage.jv.resx">-->
+    <!--            <DependentUpon>Lang.resx</DependentUpon>-->
+    <!--        </EmbeddedResource>-->
+    <!--        <EmbeddedResource Update="I18n\MainLanguage.su.resx">-->
+    <!--            <DependentUpon>Lang.resx</DependentUpon>-->
+    <!--        </EmbeddedResource>-->
+    <!--    </ItemGroup>-->
     <ItemGroup>
-        <None Update="Storage\Buttons\**">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Update="Storage\Config\**">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Update="Storage\InbotDocs\**">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Update="Storage\SQL\**">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-    </ItemGroup>
-    <ItemGroup>
-        <Compile Update="I18n\MainLanguage.Designer.cs">
-            <DesignTime>True</DesignTime>
-            <AutoGen>True</AutoGen>
-            <DependentUpon>Lang.resx</DependentUpon>
-        </Compile>
-    </ItemGroup>
-    <ItemGroup>
-        <EmbeddedResource Update="I18n\MainLanguage.en.resx">
-            <Generator>PublicResXFileCodeGenerator</Generator>
-            <DependentUpon>Lang.resx</DependentUpon>
-        </EmbeddedResource>
-        <EmbeddedResource Update="I18n\MainLanguage.id.resx">
-            <Generator>PublicResXFileCodeGenerator</Generator>
-            <DependentUpon>Lang.resx</DependentUpon>
-        </EmbeddedResource>
-        <EmbeddedResource Update="I18n\MainLanguage.resx">
-            <Generator>PublicResXFileCodeGenerator</Generator>
-            <LastGenOutput>MainLanguage.Designer.cs</LastGenOutput>
-        </EmbeddedResource>
-        <EmbeddedResource Update="I18n\MainLanguage.jv.resx">
-          <DependentUpon>Lang.resx</DependentUpon>
-        </EmbeddedResource>
-        <EmbeddedResource Update="I18n\MainLanguage.su.resx">
-          <DependentUpon>Lang.resx</DependentUpon>
-        </EmbeddedResource>
-    </ItemGroup>
-    <ItemGroup>
-        <ProjectReference Include="..\WinTenDev.Zizi.DbMigrations\WinTenDev.Zizi.DbMigrations.csproj" />
-        <ProjectReference Include="..\WinTenDev.Zizi.Utils\WinTenDev.Zizi.Utils.csproj" />
-        <ProjectReference Include="..\WinTenDev.Zizi.Models\WinTenDev.Zizi.Models.csproj" />
-        <ProjectReference Include="..\WinTenDev.Zizi.Handlers\WinTenDev.Zizi.Handlers.csproj" />
-        <ProjectReference Include="..\WinTenDev.Zizi.Services\WinTenDev.Zizi.Services.csproj" />
+        <ProjectReference Include="..\WinTenDev.Zizi.DbMigrations\WinTenDev.Zizi.DbMigrations.csproj"/>
+        <ProjectReference Include="..\WinTenDev.Zizi.Utils\WinTenDev.Zizi.Utils.csproj"/>
+        <ProjectReference Include="..\WinTenDev.Zizi.Models\WinTenDev.Zizi.Models.csproj"/>
+        <ProjectReference Include="..\WinTenDev.Zizi.Handlers\WinTenDev.Zizi.Handlers.csproj"/>
+        <ProjectReference Include="..\WinTenDev.Zizi.Services\WinTenDev.Zizi.Services.csproj"/>
     </ItemGroup>
 
-    <Target Name="CopyJsonLanguageFiles" AfterTargets="AfterBuild;AfterPublish">
+    <Target Name="CopyJsonLanguageFiles" AfterTargets="AfterBuild">
         <ItemGroup>
-            <LanguageDir Include="$(SolutionDir)\Resource\**\*.*" />
+            <SharedResourceDir Include="$(SolutionDir)\Resource\**\*.*"/>
         </ItemGroup>
-        <Copy SourceFiles="@(LanguageDir)" DestinationFolder="$(ProjectDir)\Storage\%(RecursiveDir)" />
+        <Copy SourceFiles="@(SharedResourceDir)" DestinationFolder="$(ProjectDir)\Storage\%(RecursiveDir)"/>
+
+        <ItemGroup>
+            <None Update="Storage\**">
+                <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            </None>
+        </ItemGroup>
     </Target>
 
 </Project>
