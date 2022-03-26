@@ -48,6 +48,7 @@ public class TelegramService
     internal AntiSpamService AntiSpamService { get; }
     internal BotService BotService { get; }
     internal FloodCheckService FloodCheckService { get; }
+    internal GlobalBanService GlobalBanService { get; }
     internal LocalizationService LocalizationService { get; }
     internal MataService MataService { get; }
     internal MessageHistoryService MessageHistoryService { get; }

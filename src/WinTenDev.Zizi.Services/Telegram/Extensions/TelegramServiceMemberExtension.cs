@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -277,5 +277,103 @@ public static class TelegramServiceMemberExtension
                 fromId
             );
         }
+    }
+
+    public static async Task AddGlobalBanAsync(this TelegramService telegramService)
+    {
+        long userId;
+        string reason;
+
+        var msg = telegramService.Message;
+
+        var chatId = telegramService.ChatId;
+        var fromId = telegramService.FromId;
+        var partedText = telegramService.MessageTextParts;
+        var param0 = partedText.ElementAtOrDefault(0) ?? "";
+        var param1 = partedText.ElementAtOrDefault(1) ?? "";
+
+        await telegramService.DeleteSenderMessageAsync();
+
+        if (!telegramService.IsFromSudo)
+        {
+            return;
+        }
+
+        if (telegramService.ReplyToMessage != null)
+        {
+            var replyToMessage = telegramService.ReplyToMessage;
+            userId = replyToMessage.From.Id;
+            reason = msg.Text;
+
+            if (replyToMessage.ForwardFrom != null)
+            {
+                userId = replyToMessage.ForwardFrom.Id;
+            }
+
+            if (reason.IsNotNullOrEmpty())
+                reason = partedText.Skip(1).JoinStr(" ").Trim();
+        }
+        else
+        {
+            if (param1.IsNullOrEmpty())
+            {
+                await telegramService.SendTextMessageAsync(
+                    sendText: "Balas seseorang yang mau di ban",
+                    scheduleDeleteAt: DateTime.UtcNow.AddMinutes(1),
+                    includeSenderMessage: true
+                );
+
+                return;
+            }
+
+            userId = param1.ToInt64();
+            reason = msg.Text;
+
+            if (reason.IsNotNullOrEmpty())
+                reason = partedText.Skip(2).JoinStr(" ").Trim();
+        }
+
+        Log.Information("Execute Global Ban");
+        await telegramService.AppendTextAsync($"<b>Global Ban</b>", replyToMsgId: 0);
+        await telegramService.AppendTextAsync($"Telegram UserId: <code>{userId}</code>");
+
+        reason = reason.IsNullOrEmpty() ? "General SpamBot" : reason;
+
+        var banData = new GlobalBanItem()
+        {
+            UserId = userId,
+            BannedBy = fromId,
+            BannedFrom = chatId,
+            ReasonBan = reason
+        };
+
+        var isBan = await telegramService.GlobalBanService.IsExist(userId);
+
+        if (isBan)
+        {
+            await telegramService.AppendTextAsync(
+                sendText: "Pengguna sudah di ban",
+                scheduleDeleteAt: DateTime.UtcNow.AddMinutes(2),
+                includeSenderMessage: true
+            );
+
+            return;
+        }
+
+        await telegramService.AppendTextAsync("Menyimpan informasi..");
+        var save = await telegramService.GlobalBanService.SaveBanAsync(banData);
+
+        await telegramService.AppendTextAsync($"Alasan: {reason}");
+
+        Log.Information("SaveBan: {Save}", save);
+
+        await telegramService.AppendTextAsync("Memperbarui cache.");
+        await telegramService.GlobalBanService.UpdateCache(userId);
+
+        await telegramService.AppendTextAsync(
+            sendText: "Pengguna berhasil di tambahkan",
+            scheduleDeleteAt: DateTime.UtcNow.AddMinutes(2),
+            includeSenderMessage: true
+        );
     }
 }
