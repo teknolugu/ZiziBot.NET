@@ -130,6 +130,7 @@ public class TelegramService
         BotService botService,
         FeatureService featureService,
         FloodCheckService floodCheckServiceService,
+        GlobalBanService globalBanService,
         LocalizationService localizationService,
         MataService mataService,
         MessageHistoryService messageHistoryService,
@@ -159,6 +160,7 @@ public class TelegramService
         BotService = botService;
         ChatService = chatService;
         FloodCheckService = floodCheckServiceService;
+        GlobalBanService = globalBanService;
         LocalizationService = localizationService;
         MataService = mataService;
         MessageHistoryService = messageHistoryService;
