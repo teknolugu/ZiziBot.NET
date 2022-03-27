@@ -888,7 +888,11 @@ public class TelegramService
             );
         }
 
-        PreventDuplicateSend(preventDuplicateSend, messageFlag);
+        PreventDuplicateSend(
+            preventDuplicateSend,
+            messageFlag,
+            includeSenderMessage ? 2 : 1
+        );
 
         return SentMessage;
     }
@@ -1245,19 +1249,25 @@ public class TelegramService
 
     private void PreventDuplicateSend(
         bool preventDuplicateSend,
-        MessageFlag flag
+        MessageFlag flag,
+        int skipLast = 1
     )
     {
         if (!preventDuplicateSend) return;
 
         var messageFlag = GetMessageFlag(flag);
 
-        Log.Debug("Preventing duplicate send Message at ChatId: {ChatId} with Flag: {MessageFlag}", ChatId, flag);
+        Log.Debug(
+            "Preventing duplicate send Message at ChatId: {ChatId} with Flag: {MessageFlag}",
+            ChatId,
+            flag
+        );
 
         ChatService.DeleteMessageHistory(
-                history =>
+                predicate: history =>
                     history.MessageFlag == messageFlag &&
-                    history.ChatId == ChatId
+                    history.ChatId == ChatId,
+                skipLast: skipLast
             )
             .InBackground();
     }
