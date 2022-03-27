@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Flurl.Http;
 using Serilog;
@@ -113,5 +114,35 @@ public static class TelegramServiceAdditionalExtension
             scheduleDeleteAt: DateTime.UtcNow.AddMinutes(20),
             includeSenderMessage: true
         );
+    }
+
+    public static async Task ReadQrAsync(this TelegramService telegramService)
+    {
+        try
+        {
+            await telegramService.SendTextMessageAsync("Sedang mengambil berkas");
+
+            var localFile = await telegramService.DownloadFileAsync("qr");
+
+            await telegramService.EditMessageTextAsync("Sedang membaca QR Code");
+            var qrReadResults = await localFile.ReadQrCodeAsync();
+
+            var symbol = qrReadResults.FirstOrDefault()?.Symbol.FirstOrDefault();
+            var result = symbol?.Data ?? "Tidak terdeteksi adanya QR Code";
+
+            await telegramService.EditMessageTextAsync(result);
+        }
+        catch (FlurlHttpException httpException)
+        {
+            await telegramService.EditMessageTextAsync(
+                "Terjadi kesalahan ketika membaca QR." +
+                "\nErrorCode: " +
+                httpException.StatusCode
+            );
+        }
+        catch (Exception exception)
+        {
+            Log.Error(exception, "Error while read qr");
+        }
     }
 }

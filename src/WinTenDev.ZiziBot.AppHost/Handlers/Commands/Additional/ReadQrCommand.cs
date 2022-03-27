@@ -6,11 +6,11 @@ using WinTenDev.Zizi.Utils;
 
 namespace WinTenDev.ZiziBot.AppHost.Handlers.Commands.Additional;
 
-public class QrCommand : CommandBase
+public class ReadQrCommand : CommandBase
 {
     private readonly TelegramService _telegramService;
 
-    public QrCommand(TelegramService telegramService)
+    public ReadQrCommand(TelegramService telegramService)
     {
         _telegramService = telegramService;
     }
@@ -23,6 +23,6 @@ public class QrCommand : CommandBase
     {
         await _telegramService.AddUpdateContext(context);
 
-        _telegramService.CreateQrAsync().InBackground();
+        _telegramService.ReadQrAsync().InBackground();
     }
 }
