@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CodingSeb.ExpressionEvaluator;
+using CodingSeb.Localization;
 using Humanizer;
 using Serilog;
 using SerilogTimings;
@@ -18,9 +19,15 @@ public static class TelegramServiceSettingsExtension
 {
     public static async Task SaveInlineSettingsAsync(this TelegramService telegramService)
     {
+        var defaultScheduleDelete = DateTime.UtcNow.AddMinutes(1);
+
         if (!await telegramService.CheckUserPermission())
         {
-            await telegramService.SendTextMessageAsync("Kamu tidak mempunyai hak akses", scheduleDeleteAt: DateTime.UtcNow.AddSeconds(5));
+            await telegramService.SendTextMessageAsync(
+                sendText: "Kamu tidak mempunyai hak akses",
+                scheduleDeleteAt: DateTime.UtcNow.AddSeconds(10)
+            );
+
             return;
         }
 
@@ -37,12 +44,9 @@ public static class TelegramServiceSettingsExtension
 
         if (setValues.Count != 2)
         {
-            await telegramService.SendMessageTextAsync(
-                new MessageResponseDto()
-                {
-                    MessageText = "Silakan masukan Key dan Value yang dinginkan",
-                    ScheduleDeleteAt = DateTime.UtcNow.AddMinutes(10)
-                }
+            await telegramService.SendTextMessageAsync(
+                sendText: "Silakan masukan Key dan Value yang dinginkan",
+                scheduleDeleteAt: defaultScheduleDelete
             );
 
             return;
@@ -58,12 +62,10 @@ public static class TelegramServiceSettingsExtension
             if (verifyKey == null ||
                 verifyValue == null)
             {
-                await telegramService.SendMessageTextAsync(
-                    new MessageResponseDto()
-                    {
-                        MessageText = "Key dan Value yang anda masukan tidak valid",
-                        ScheduleDeleteAt = DateTime.UtcNow.AddMinutes(10)
-                    }
+                await telegramService.SendTextMessageAsync(
+                    sendText: "Key atau Value yang anda masukan tidak valid",
+                    scheduleDeleteAt: defaultScheduleDelete,
+                    includeSenderMessage: true
                 );
 
                 return;
@@ -75,24 +77,20 @@ public static class TelegramServiceSettingsExtension
                 value: verifyValue
             );
 
-            await telegramService.SendMessageTextAsync(
-                new MessageResponseDto()
-                {
-                    MessageText = "Pengaturan berhasil di perbarui" +
-                                  $"\n<code>{verifyKey}</code> => <code>{verifyValue}</code>",
-                    ScheduleDeleteAt = DateTime.UtcNow.AddMinutes(1)
-                }
+            await telegramService.SendTextMessageAsync(
+                sendText: "Pengaturan berhasil di perbarui" +
+                          $"\nSet <code>{verifyKey.Humanize().Titleize()}</code> to <code>{verifyValue}</code>",
+                scheduleDeleteAt: defaultScheduleDelete,
+                includeSenderMessage: true
             );
         }
         catch (Exception ex)
         {
-            await telegramService.SendMessageTextAsync(
-                new MessageResponseDto()
-                {
-                    MessageText = "Terjadi kesalahan saat menyimpan pengaturan" +
-                                  $"\n{ex.Message}",
-                    ScheduleDeleteAt = DateTime.UtcNow.AddMinutes(10)
-                }
+            await telegramService.SendTextMessageAsync(
+                sendText: "Terjadi kesalahan saat menyimpan pengaturan" +
+                          $"\n{ex.Message}",
+                scheduleDeleteAt: defaultScheduleDelete,
+                includeSenderMessage: true
             );
         }
     }
@@ -105,12 +103,14 @@ public static class TelegramServiceSettingsExtension
         var resultKey = key switch
         {
             "tz" => "timezone_offset",
+            "lang" => "language_code",
             _ => null
         };
 
         var resultValue = resultKey switch
         {
             "timezone_offset" => TimeUtil.FindTimeZoneByOffsetBase(value)?.BaseUtcOffset.ToStringFormat(@"hh\:mm"),
+            "language_code" => Loc.Instance.AvailableLanguages.FirstOrDefault(s => s == value),
             _ => null
         };
 
@@ -429,4 +429,5 @@ public static class TelegramServiceSettingsExtension
 
         op.Complete();
     }
+
 }
