@@ -15,6 +15,7 @@ public enum MessageFlag
     Qr,
     RssCtl,
     Tag,
+    Tags,
     Photo,
     Username,
     Welcome
