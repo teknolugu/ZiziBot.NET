@@ -135,7 +135,7 @@ public static class CommandBuilderExtension
                                         .UseCommand<TestCommand>("test")
                                         .UseCommand<TranslateCommand>("tr")
                                         .UseCommand<ReadQrCommand>("read_qr")
-                                        .UseCommand<ReadQrCommand>("rqr")
+                                        .UseCommand<ReadQrCommand>("readqr")
                                         .UseCommand<UntagCommand>("untag")
                                         .UseCommand<UsernameCommand>("username")
                                         .UseCommand<WarnCommand>("warn")

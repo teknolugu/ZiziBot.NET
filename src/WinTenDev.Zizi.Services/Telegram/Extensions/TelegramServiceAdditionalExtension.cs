@@ -120,6 +120,8 @@ public static class TelegramServiceAdditionalExtension
     {
         try
         {
+            var chatId = telegramService.ReducedChatId;
+
             await telegramService.SendTextMessageAsync("Sedang mengambil berkas");
 
             var localFile = await telegramService.DownloadFileAsync("qr");
@@ -130,7 +132,17 @@ public static class TelegramServiceAdditionalExtension
             var symbol = qrReadResults.FirstOrDefault()?.Symbol.FirstOrDefault();
             var result = symbol?.Data ?? "Tidak terdeteksi adanya QR Code";
 
-            await telegramService.EditMessageTextAsync(result);
+            await telegramService.EditMessageTextAsync(
+                sendText: result,
+                scheduleDeleteAt: DateTime.UtcNow.AddMinutes(10),
+                includeSenderMessage: true
+            );
+
+            DirUtil.CleanCacheFiles(
+                path =>
+                    path.Contains(chatId.ToString()) &&
+                    path.Contains("qr")
+            );
         }
         catch (FlurlHttpException httpException)
         {

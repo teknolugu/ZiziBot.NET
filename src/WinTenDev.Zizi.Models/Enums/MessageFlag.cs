@@ -13,6 +13,7 @@ public enum MessageFlag
     ZiziMata,
     GBan,
     Qr,
+    ReadQr,
     RssCtl,
     Tag,
     Tags,
