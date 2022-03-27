@@ -795,25 +795,32 @@ public class TelegramService
 
     public async Task<string> DownloadFileAsync(string prefixName)
     {
-        var fileId = Message.GetFileId();
-        if (fileId.IsNullOrEmpty())
-            fileId = Message.ReplyToMessage.GetFileId();
+        var message = Message;
+        if (message.ReplyToMessage != null) message = message.ReplyToMessage;
+
+        var fileMetaData = message.GetFileMetadata();
+        var fileId = fileMetaData.FileId;
 
         Log.Information("Getting file by FileId {FileId}", fileId);
         var file = await Client.GetFileAsync(fileId);
 
         Log.Debug("DownloadFile: {@File}", file);
-        var filePath = file.FilePath?.Replace("/", "_");
+        var fileType = fileMetaData.Type.Humanize().ToLower();
         var fileUniqueId = file.FileUniqueId;
-        var fileName = $"{prefixName}_{ReducedChatId}_{fileUniqueId}_{filePath}";
+        var randomStr = StringUtil.GenerateUniqueId(5);
+        var fileName = fileMetaData.FileName;
 
-        fileName = $"Storage/Caches/{fileName}".EnsureDirectory();
+        var fullFilePath = $"{prefixName}_{ReducedChatId}_{fileType}_{fileUniqueId}_{randomStr}#{fileName}";
 
-        await using var fileStream = File.OpenWrite(fileName);
-        await Client.DownloadFileAsync(file.FilePath, fileStream);
-        Log.Information("File saved to {FileName}", fileName);
+        fullFilePath = $"Storage/Caches/{fullFilePath}".EnsureDirectory();
 
-        return fileName;
+        var fileStream = File.OpenWrite(fullFilePath);
+        await Client.DownloadFileAsync(file.FilePath!, fileStream);
+        Log.Information("File saved to {FileName}", fullFilePath);
+
+        fileStream.Close();
+
+        return fullFilePath;
     }
 
     public async Task<Message> SendTextMessageAsync(

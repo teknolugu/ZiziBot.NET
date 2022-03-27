@@ -32,6 +32,35 @@ public static class MessageUtil
         return fileId;
     }
 
+    public static FileMetaData GetFileMetadata(this Message message)
+    {
+        var metaData = new FileMetaData
+        {
+            Type = message.Type
+        };
+
+        switch (message.Type)
+        {
+            case MessageType.Document:
+                metaData.FileId = message.Document?.FileId;
+                metaData.FileName = message.Document?.FileName;
+                metaData.FileSize = message.Document?.FileSize ?? 0;
+                break;
+
+            case MessageType.Photo:
+                metaData.FileId = message.Photo?.Last().FileId;
+                metaData.FileName = "photo.jpg";
+                break;
+
+            case MessageType.Video:
+                metaData.FileId = message.Video?.FileId;
+                metaData.FileName = message.Video?.FileName;
+                break;
+        }
+
+        return metaData;
+    }
+
     public static string GetReducedFileId(this Message message)
     {
         return GetFileId(message).Substring(0, 17);
