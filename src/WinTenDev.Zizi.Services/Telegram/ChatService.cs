@@ -157,14 +157,16 @@ public class ChatService
 
     public async Task<ChatMember> GetChatMemberAsync(
         long chatId,
-        long userId
+        long userId,
+        bool evictAfter = false
     )
     {
         var cacheKey = "chat-member_" + chatId.ReduceChatId() + $"_{userId}";
 
         var data = await _cacheService.GetOrSetAsync(
             cacheKey,
-            async () => {
+            evictAfter: evictAfter,
+            action: async () => {
                 var chat = await _botClient.GetChatMemberAsync(chatId, userId);
 
                 return chat;
