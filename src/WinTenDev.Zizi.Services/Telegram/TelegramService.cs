@@ -1117,6 +1117,7 @@ public class TelegramService
     public async Task AppendTextAsync(
         string sendText,
         InlineKeyboardMarkup replyMarkup = null,
+        int replyToMsgId = -1,
         DateTime scheduleDeleteAt = default,
         bool includeSenderMessage = false,
         MessageFlag messageFlag = default,
@@ -1130,6 +1131,7 @@ public class TelegramService
             await SendTextMessageAsync(
                 sendText: AppendText,
                 replyMarkup: replyMarkup,
+                replyToMsgId: replyToMsgId,
                 scheduleDeleteAt: scheduleDeleteAt,
                 includeSenderMessage: includeSenderMessage,
                 messageFlag: messageFlag,
