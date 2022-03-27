@@ -424,6 +424,12 @@ public static class TelegramServiceMemberExtension
         await telegramService.AppendTextAsync($"<b>Global Ban</b>", replyToMsgId: 0);
         await telegramService.AppendTextAsync($"Telegram UserId: <code>{userId}</code>");
 
+        if (await telegramService.CheckFromAdmin(fromId))
+        {
+            await telegramService.AppendTextAsync($"Tidak dapat melakukan Global Ban kepada Admin");
+            return;
+        }
+
         reason = reason.IsNullOrEmpty() ? "General SpamBot" : reason;
 
         var banData = new GlobalBanItem()
