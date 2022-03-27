@@ -429,14 +429,17 @@ public class TelegramService
         return GetCommand() == command;
     }
 
-    public async Task<string> GetLocalization(Enum value)
+    public async Task<string> GetLocalization(
+        Enum value,
+        IEnumerable<(string placeholder, string value)> placeHolders = null
+    )
     {
         var settings = await GetChatSetting();
 
         var langCode = settings.LanguageCode ?? "id";
         var localized = LocalizationService.GetLoc(langCode, value);
 
-        return localized;
+        return placeHolders == null ? localized : localized.ResolveVariable(placeHolders);
     }
 
     #endregion Chat
