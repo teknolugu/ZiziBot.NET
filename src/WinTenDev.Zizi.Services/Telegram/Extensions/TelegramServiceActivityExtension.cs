@@ -71,7 +71,8 @@ public static class TelegramServiceActivityExtension
         {
             telegramService.EnsureChatSettingsAsync(),
             telegramService.AfkCheckAsync(),
-            telegramService.CheckNameChangesAsync()
+            telegramService.CheckNameChangesAsync(),
+            telegramService.CheckSubscriptionIntoLinkedChannelAsync()
         };
 
         nonAwaitTasks.InBackgroundAll();

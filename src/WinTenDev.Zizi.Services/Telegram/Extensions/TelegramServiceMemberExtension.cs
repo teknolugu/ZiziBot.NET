@@ -279,6 +279,93 @@ public static class TelegramServiceMemberExtension
         }
     }
 
+    public static async Task<bool> CheckSubscriptionIntoLinkedChannelAsync(this TelegramService telegramService)
+    {
+        var fromId = telegramService.FromId;
+        var chatId = telegramService.ChatId;
+
+        try
+        {
+            if (await telegramService.CheckUserPermission())
+            {
+                Log.Information(
+                    "UserId: {UserId} at ChatId: {ChatId} is Have privilege for skip Force Subscription",
+                    fromId,
+                    chatId
+                );
+
+                return true;
+            }
+
+            var settings = await telegramService.GetChatSetting();
+            if (!settings.EnableForceSubscription)
+            {
+                Log.Information(
+                    "Force Subscription is disabled at ChatId: {ChatId}",
+                    chatId
+                );
+
+                return true;
+            }
+
+            var fromNameLink = telegramService.FromNameLink;
+
+            var getChat = await telegramService.GetChat();
+            var linkedChatId = getChat.LinkedChatId ?? 0;
+
+            if (getChat.LinkedChatId == null) return true;
+            var chatLinked = await telegramService.ChatService.GetChatAsync(linkedChatId);
+
+            if (chatLinked.Username == null)
+            {
+                Log.Information(
+                    "Force Subs for ChatId: {ChatId} is disabled because linked channel with Id: {LinkedChatId} is not a Public Channel",
+                    chatId,
+                    linkedChatId
+                );
+
+                return true;
+            }
+
+            var chatMember = await telegramService.ChatService.GetChatMemberAsync(
+                chatId: linkedChatId,
+                userId: fromId,
+                evictAfter: true
+            );
+
+            if (chatMember.Status != ChatMemberStatus.Left) return true;
+
+            var keyboard = new InlineKeyboardMarkup(
+                InlineKeyboardButton.WithUrl(chatLinked.GetChatTitle(), chatLinked.GetChatLink())
+            );
+            var sendText = $"Hai {fromNameLink}" + 
+                           "\nKamu belum Subscribe ke Channel dibawah ini, silakan segera Subcribe agar tidak di tendang.";
+
+            await telegramService.SendTextMessageAsync(
+                sendText: sendText,
+                replyMarkup: keyboard,
+                replyToMsgId: 0,
+                scheduleDeleteAt: DateTime.UtcNow.AddMinutes(1),
+                messageFlag: MessageFlag.ForceSubscribe,
+                preventDuplicateSend: true
+            );
+
+            await telegramService.ScheduleKickJob(StepHistoryName.ForceSubscription);
+        }
+        catch (Exception exception)
+        {
+            Log.Warning(
+                exception,
+                "Error When check subscription into linked channel. ChatId: {ChatId}",
+                chatId
+            );
+
+            return true;
+        }
+
+        return false;
+    }
+
     public static async Task AddGlobalBanAsync(this TelegramService telegramService)
     {
         long userId;

@@ -94,6 +94,7 @@ public class ChatSetting
 
     public bool EnableFireCheck { get; set; }
     public bool EnableFloodCheck { get; set; }
+    public bool EnableForceSubscription { get; set; }
 
     [Column("enable_word_filter_group")]
     [JsonProperty("enable_word_filter_group")]
