@@ -1072,8 +1072,6 @@ public class TelegramService
                 replyMarkup: replyMarkup,
                 disableWebPagePreview: disableWebPreview
             );
-
-            return SentMessage;
         }
         catch (Exception ex)
         {
@@ -1272,7 +1270,7 @@ public class TelegramService
         Log.Debug(
             "Preventing duplicate send Message at ChatId: {ChatId} with Flag: {MessageFlag}",
             ChatId,
-            flag
+            messageFlag
         );
 
         ChatService.DeleteMessageHistory(
@@ -1800,8 +1798,7 @@ public class TelegramService
     {
         if (SentMessage == null) return;
 
-        var command = GetCommand(true);
-        var messageFlag = flag == MessageFlag.General ? command.ToEnum(MessageFlag.General) : flag;
+        var messageFlag = GetMessageFlag(flag);
 
         var sentMessageId = SentMessage.MessageId;
         SaveMessageToHistoryAsync(
