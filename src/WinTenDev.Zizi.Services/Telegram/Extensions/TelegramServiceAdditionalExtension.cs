@@ -122,6 +122,18 @@ public static class TelegramServiceAdditionalExtension
         {
             var chatId = telegramService.ReducedChatId;
 
+            if (telegramService.ReplyToMessage == null)
+            {
+                await telegramService.SendTextMessageAsync(
+                    sendText: "Silakan balas pesan untuk membaca QR Code",
+                    scheduleDeleteAt: DateTime.UtcNow.AddMinutes(1),
+                    includeSenderMessage: true,
+                    preventDuplicateSend: true
+                );
+
+                return;
+            }
+
             await telegramService.SendTextMessageAsync("Sedang mengambil berkas");
 
             var localFile = await telegramService.DownloadFileAsync("qr");
