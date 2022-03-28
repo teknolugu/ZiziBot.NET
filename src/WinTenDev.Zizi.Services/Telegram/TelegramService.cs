@@ -1299,7 +1299,8 @@ public class TelegramService
 
     public async Task<bool> KickMemberAsync(
         long userId,
-        bool unban = false
+        bool unban = false,
+        DateTime untilDate = default
     )
     {
         bool isKicked;
@@ -1310,12 +1311,14 @@ public class TelegramService
             ChatId
         );
 
+        if (untilDate == default) untilDate = DateTime.Now.AddSeconds(10);
+
         try
         {
             await Client.BanChatMemberAsync(
-                ChatId,
-                userId,
-                DateTime.Now
+                chatId: ChatId,
+                userId: userId,
+                untilDate: untilDate
             );
 
             if (unban) await UnBanMemberAsync(userId);
