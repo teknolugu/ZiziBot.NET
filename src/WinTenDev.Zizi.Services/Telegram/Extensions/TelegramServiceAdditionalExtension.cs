@@ -62,12 +62,11 @@ public static class TelegramServiceAdditionalExtension
             Log.Error(exception, "Error while OCR");
         }
 
-        savedFile.GetDirectory()
-            .RemoveFiles(
-                path =>
-                    path.Contains(chatId.ToString()) &&
-                    path.Contains("ocr")
-            );
+        DirUtil.CleanCacheFiles(
+            path =>
+                path.Contains(chatId.ReduceChatId().ToString()) &&
+                path.Contains("ocr")
+        );
     }
 
     public static async Task CreateQrAsync(this TelegramService telegramService)
