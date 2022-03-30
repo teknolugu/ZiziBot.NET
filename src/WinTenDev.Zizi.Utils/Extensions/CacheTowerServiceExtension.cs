@@ -1,7 +1,6 @@
 ﻿using System;
 using CacheTower;
 using CacheTower.Extensions;
-using CacheTower.Providers.FileSystem.Json;
 using CacheTower.Providers.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -16,25 +15,25 @@ public static class CacheTowerServiceExtension
     {
         var cacheTowerPath = "Storage/Cache-Tower/".EnsureDirectory();
         var serviceProvider = services.BuildServiceProvider();
-        var config = serviceProvider.GetRequiredService<IOptions<CacheConfig>>().Value;
+        var cacheConfig = serviceProvider.GetRequiredService<IOptions<CacheConfig>>().Value;
 
-        if (config.InvalidateOnStart)
+        var cacheLayers = new ICacheLayer[]
+        {
+            new MemoryCacheLayer()
+        };
+
+        if (cacheConfig.InvalidateOnStart)
         {
             cacheTowerPath.DeleteDirectory().EnsureDirectory();
         }
 
-        services.AddSingleton
-        (
+        services.AddSingleton(
             _ => {
-                var stack = new CacheStack
-                (
-                    new ICacheLayer[]
+                var stack = new CacheStack(
+                    cacheLayers: cacheLayers,
+                    extensions: new ICacheExtension[]
                     {
-                        new MemoryCacheLayer(),
-                        new JsonFileCacheLayer(cacheTowerPath)
-                    }, new ICacheExtension[]
-                    {
-                        new AutoCleanupExtension(TimeSpan.FromMinutes(config.ExpireAfter))
+                        new AutoCleanupExtension(TimeSpan.FromMinutes(cacheConfig.ExpireAfter))
                     }
                 );
 
