@@ -30,8 +30,6 @@ public static class TelegramServiceActivityExtension
 
         await telegramService.FireAnalyzer();
 
-        var shouldDelete = await telegramService.ScanMessageAsync();
-
         var hasSpam = await telegramService.AntiSpamCheckAsync();
 
         if (hasSpam.IsAnyBanned)
@@ -39,6 +37,7 @@ public static class TelegramServiceActivityExtension
             return false;
         }
 
+        var shouldDelete = await telegramService.ScanMessageAsync();
         var hasUsername = await telegramService.RunCheckUserUsername();
 
         if (!hasUsername)
