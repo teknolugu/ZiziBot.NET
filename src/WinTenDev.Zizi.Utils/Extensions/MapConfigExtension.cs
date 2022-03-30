@@ -94,6 +94,7 @@ public static class MapConfigExtension
         services.Configure<GoogleCloudConfig>(config.GetSection(nameof(GoogleCloudConfig)));
         services.Configure<GrafanaConfig>(config.GetSection(nameof(GrafanaConfig)));
         services.Configure<HangfireConfig>(config.GetSection(nameof(HangfireConfig)));
+        services.Configure<LocalizationConfig>(config.GetSection(nameof(LocalizationConfig)));
         services.Configure<OptiicDevConfig>(config.GetSection(nameof(OptiicDevConfig)));
         services.Configure<SentryConfig>(config.GetSection(nameof(SentryConfig)));
         services.Configure<TdLibConfig>(config.GetSection(nameof(TdLibConfig)));
