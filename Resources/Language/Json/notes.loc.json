@@ -1,0 +1,10 @@
+﻿{
+	"Notes.Title": {
+		"id": "{Name} di {ChatTitle}.",
+		"en": "{Name} in {ChatTitle}."
+	},
+	"Notes.NoNotes": {
+		"id": "Tidak ada {Name} di Obrolan ini.\nUntuk menambahkannya ketik /add_note",
+		"en": "No {Name} in this Chat.\nTo add one, type /add_note"
+	}
+}

@@ -85,6 +85,12 @@ public static class ChatUtil
         return chatLink;
     }
 
+    public static string GetChatLink(this Chat chat)
+    {
+        var chatLink = chat.Username.GetChatLink();
+        return chatLink;
+    }
+
     public static string GetChatNameLink(
         this string chatUsername,
         string chatTitle
@@ -108,6 +114,13 @@ public static class ChatUtil
 
         Log.Debug("ChatNameLink: {Link}", chatNameLink);
         return chatNameLink;
+    }
+
+    public static string GetChatTitle(this Chat chat)
+    {
+        var chatTitle = chat.Title;
+
+        return chatTitle.IsNullOrEmpty() ? "" : chatTitle;
     }
 
     public static string ToAdminListStr(this ChatMember[] chatMembers)

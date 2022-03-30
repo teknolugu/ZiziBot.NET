@@ -150,4 +150,9 @@ public static class DirUtil
 
         return combinedPath.SanitizeSlash();
     }
+
+    public static string CleanCacheFiles(Func<string, bool> predicate)
+    {
+        return "Storage/Caches".RemoveFiles(predicate);
+    }
 }

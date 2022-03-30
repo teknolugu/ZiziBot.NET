@@ -60,6 +60,7 @@ public class Startup
     )
     {
         app.PrintAboutApp();
+        app.LoadJsonLocalization();
 
         app.UseFluentMigration();
         app.ConfigureNewtonsoftJson();

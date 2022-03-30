@@ -148,6 +148,7 @@ public class SettingsService
             // "enable_find_notes",
             "enable_fire_check",
             "enable_find_tags",
+            "enable_force_subscription",
             "enable_human_verification",
             "enable_check_profile_photo",
             "enable_reply_notification",

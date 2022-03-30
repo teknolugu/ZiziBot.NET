@@ -11,8 +11,13 @@ public enum MessageFlag
     FloodWarn,
     NewChatMembers,
     ZiziMata,
+    GBan,
+    Qr,
+    ReadQr,
     RssCtl,
     Tag,
+    Tags,
     Photo,
-    Username
+    Username,
+    Welcome
 }

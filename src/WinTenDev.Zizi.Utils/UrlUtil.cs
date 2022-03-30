@@ -7,8 +7,8 @@ using System.Threading.Tasks;
 using Flurl;
 using Flurl.Http;
 using Serilog;
+using WinTenDev.Zizi.Models.Types;
 using WinTenDev.Zizi.Utils.IO;
-using WinTenDev.Zizi.Utils.Text;
 
 namespace WinTenDev.Zizi.Utils;
 
@@ -21,6 +21,19 @@ public static class UrlUtil
         return new Uri($"{baseUrl}/v1/create-qr-code/?size=300x300&margin=10&data={strData}");
     }
 
+    public static async Task<List<GoQrReadResult>> ReadQrCodeAsync(this string filePath)
+    {
+        var baseUrl = "https://api.qrserver.com";
+        var request = await baseUrl
+            .AppendPathSegment("/v1/read-qr-code/")
+            .PostMultipartAsync(
+                content => content
+                    .AddFile("file", filePath)
+            );
+
+        return await request.GetJsonAsync<List<GoQrReadResult>>();
+    }
+
     public static void SaveUrlTo(
         this string remoteFileUrl,
         string localFileName
@@ -28,7 +41,11 @@ public static class UrlUtil
     {
         var webClient = new WebClient();
 
-        Log.Information("Saving {RemoteFileUrl} to {LocalFileName}", remoteFileUrl, localFileName);
+        Log.Information(
+            "Saving {RemoteFileUrl} to {LocalFileName}",
+            remoteFileUrl,
+            localFileName
+        );
         webClient.DownloadFile(remoteFileUrl, localFileName);
         webClient.Dispose();
     }
@@ -43,7 +60,11 @@ public static class UrlUtil
         var cachePath = Path.Combine("Storage", "Caches");
         var localPath = Path.Combine(cachePath, localFileName).SanitizeSlash().EnsureDirectory();
 
-        Log.Debug("Saving {RemoteFileUrl} to {LocalPath}", remoteFileUrl, localPath);
+        Log.Debug(
+            "Saving {RemoteFileUrl} to {LocalPath}",
+            remoteFileUrl,
+            localPath
+        );
         webClient.DownloadFile(remoteFileUrl, localPath);
         webClient.Dispose();
 
@@ -58,7 +79,11 @@ public static class UrlUtil
         var cachePath = Path.Combine("Storage", "Caches");
         var localPath = Path.Combine(cachePath, localFileName).SanitizeSlash().EnsureDirectory();
 
-        Log.Debug("Saving {RemoteFileUrl} to {LocalPath}", remoteFileUrl, localPath);
+        Log.Debug(
+            "Saving {RemoteFileUrl} to {LocalPath}",
+            remoteFileUrl,
+            localPath
+        );
         await remoteFileUrl.DownloadFileAsync(remoteFileUrl, localPath);
 
         return localPath;
@@ -94,7 +119,7 @@ public static class UrlUtil
         if (string.IsNullOrWhiteSpace(url))
             return url;
 
-        Log.Information("Trying get redirected url: {0}", url);
+        Log.Information("Trying get redirected url: {Url}", url);
         var maxRedirCount = 8;// prevent infinite loops
         var newUrl = url;
         do
@@ -108,9 +133,10 @@ public static class UrlUtil
                 webRequest.AllowAutoRedirect = true;
                 webResponse = (HttpWebResponse) webRequest.GetResponse();
                 var statusCode = (int) webResponse.StatusCode;
-                Log.Debug("Response: {0}", webResponse.ToJson(true));
+                Log.Debug("Response: {@Response}", webResponse);
 
-                if (statusCode >= 300 && statusCode <= 399)
+                if (statusCode >= 300 &&
+                    statusCode <= 399)
                 {
                     Log.Debug("Getting redirected from Headers");
 
@@ -125,7 +151,7 @@ public static class UrlUtil
                         newUrl = u.ToString();
                     }
 
-                    Log.Debug("Finish redirect.");
+                    Log.Debug("Finish redirect");
                 }
 
                 newUrl = webResponse.ResponseUri.AbsoluteUri;
@@ -177,7 +203,7 @@ public static class UrlUtil
             }
         } while (maxRedirCount-- > 0);
 
-        Log.Debug("Redirected URL: {0}", url);
+        Log.Debug("Redirected URL: {Url}", url);
         return url;
     }
 
@@ -197,7 +223,7 @@ public static class UrlUtil
     public static bool IsNeedRedirect(string url)
     {
         var uri = new Uri(url);
-        Log.Debug("Uri: {0}", uri.Host.ToJson(true));
+        Log.Debug("Uri: {Host}", uri);
 
         var skipRedirect = new List<string>()
         {
@@ -214,7 +240,11 @@ public static class UrlUtil
             }
         }
 
-        Log.Debug("Is {0} need redirect {1}", host, needRedirect);
+        Log.Debug(
+            "Is {Host} need redirect {NeedRedirect}",
+            host,
+            needRedirect
+        );
         return needRedirect;
     }
 

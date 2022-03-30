@@ -4,15 +4,13 @@ using WinTenDev.Zizi.Services.Telegram;
 using WinTenDev.Zizi.Services.Telegram.Extensions;
 using WinTenDev.Zizi.Utils;
 
-namespace WinTenDev.ZiziBot.AppHost.Handlers.Commands.Rss;
+namespace WinTenDev.ZiziBot.AppHost.Handlers.Commands.Additional;
 
-public class RssCtlCommand : CommandBase
+public class ReadQrCommand : CommandBase
 {
     private readonly TelegramService _telegramService;
 
-    public RssCtlCommand(
-        TelegramService telegramService
-    )
+    public ReadQrCommand(TelegramService telegramService)
     {
         _telegramService = telegramService;
     }
@@ -25,6 +23,6 @@ public class RssCtlCommand : CommandBase
     {
         await _telegramService.AddUpdateContext(context);
 
-        _telegramService.GetRssControlAsync().InBackground();
+        _telegramService.ReadQrAsync().InBackground();
     }
 }

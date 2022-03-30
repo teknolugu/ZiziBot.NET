@@ -15,9 +15,7 @@ public class ExceptionHandler : IUpdateHandler
 {
     private readonly TelegramService _telegramService;
 
-    public ExceptionHandler(
-        TelegramService telegramService
-    )
+    public ExceptionHandler(TelegramService telegramService)
     {
         _telegramService = telegramService;
     }
@@ -39,13 +37,17 @@ public class ExceptionHandler : IUpdateHandler
         }
         catch (Exception e)
         {
-            Log.Error(e.Demystify(), "Exception handler at ChatId: {ChatId}", chatId);
+            Log.Error(
+                e.Demystify(),
+                "Exception handler at ChatId: {ChatId}",
+                chatId
+            );
 
             var eventBuilder = new StringBuilder()
                 .Append("<b>Message: </b>").AppendLine(e.Message)
                 .AppendLine()
                 .Append("<code>")
-                .Append(update.ToJson(true))
+                .Append(update.ToJson(true).HtmlEncode())
                 .Append("</code>");
 
             await _telegramService.SendEventLogRawAsync(eventBuilder.ToTrimmedString());

@@ -1,9 +1,9 @@
 using System.Threading.Tasks;
 using Flurl.Http;
+using Microsoft.Extensions.Options;
 using Serilog;
 using WinTenDev.Zizi.Models.Configs;
 using WinTenDev.Zizi.Models.Types;
-using WinTenDev.Zizi.Utils.Text;
 
 namespace WinTenDev.Zizi.Services.Externals;
 
@@ -18,9 +18,9 @@ public class DeepAiService
 
     }
 
-    public DeepAiService(CommonConfig commonConfig)
+    public DeepAiService(IOptionsSnapshot<CommonConfig> commonConfig)
     {
-        _commonConfig = commonConfig;
+        _commonConfig = commonConfig.Value;
     }
 
     // public string NsfwDetector(string imagePath)
@@ -42,14 +42,16 @@ public class DeepAiService
 
         var flurlResponse = await baseUrl
             .WithHeader("api-key", token)
-            .PostMultipartAsync(content => {
-                content.AddFile("image", imagePath);
-                // content.AddString("image", imagePath);
-                // content.AddUrlEncoded("image", imagePath);
-            });
+            .PostMultipartAsync(
+                content => {
+                    content.AddFile("image", imagePath);
+                    // content.AddString("image", imagePath);
+                    // content.AddUrlEncoded("image", imagePath);
+                }
+            );
 
         var deepAiResult = await flurlResponse.GetJsonAsync<DeepAiResult>();
-        Log.Debug("NSFW Result: {0}", deepAiResult.ToJson(true));
+        Log.Debug("NSFW Result: {@Result}", deepAiResult);
 
         return deepAiResult;
     }

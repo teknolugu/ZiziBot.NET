@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Serilog;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 using WinTenDev.Zizi.Models.Enums;
 using WinTenDev.Zizi.Models.Tables;
 using WinTenDev.Zizi.Services.Internals;
@@ -39,20 +40,26 @@ public class VerifyCallback
         var fromId = _telegramService.FromId;
         var chatId = _telegramService.ChatId;
 
-        Log.Debug("CallbackData: {CallbackData} from {FromId}", callbackData, fromId);
+        Log.Debug(
+            "CallbackData: {CallbackData} from {FromId}",
+            callbackData,
+            fromId
+        );
 
         var partCallbackData = callbackData.Split(" ");
         var callBackParam1 = partCallbackData.ElementAtOrDefault(1);
         var answer = "Tombol ini bukan untukmu Bep!";
 
-        Log.Debug("Verify Param1: {0}", callBackParam1);
+        Log.Debug("Verify Param1: {Param}", callBackParam1);
 
         Log.Information("Starting Verify from History for UserId: {UserId}", fromId);
-        var needVerifyList = await _stepHistoriesService.GetStepHistoryVerifyCore(new StepHistory()
-        {
-            ChatId = chatId,
-            UserId = fromId
-        });
+        var needVerifyList = (await _stepHistoriesService.GetStepHistoryVerifyCore(
+            new StepHistory()
+            {
+                ChatId = chatId,
+                UserId = fromId
+            }
+        )).ToList();
 
         if (!needVerifyList.Any())
         {
@@ -85,6 +92,18 @@ public class VerifyCallback
                         }
                         break;
 
+                    case StepHistoryName.ForceSubscription:
+                        var chatMember = await _telegramService.ChatService.GetChatMemberAsync(
+                            chatId: chatId,
+                            userId: fromId,
+                            evictAfter: true
+                        );
+
+                        if (chatMember.Status != ChatMemberStatus.Left)
+                            updateHistory.Status = StepHistoryStatus.HasVerify;
+
+                        break;
+
                     case StepHistoryName.HumanVerification:
                         updateHistory.Status = StepHistoryStatus.HasVerify;
                         break;
@@ -96,11 +115,13 @@ public class VerifyCallback
                 await _stepHistoriesService.SaveStepHistory(updateHistory);
             }
 
-            var afterVerify = await _stepHistoriesService.GetStepHistoryVerifyCore(new StepHistory()
-            {
-                ChatId = chatId,
-                UserId = fromId
-            });
+            var afterVerify = await _stepHistoriesService.GetStepHistoryVerifyCore(
+                new StepHistory()
+                {
+                    ChatId = chatId,
+                    UserId = fromId
+                }
+            );
 
             if (!afterVerify.Any())
             {

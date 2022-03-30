@@ -47,12 +47,18 @@ public class TelegramService
     internal AnimalsService AnimalsService { get; }
     internal AntiSpamService AntiSpamService { get; }
     internal BotService BotService { get; }
+    internal DeepAiService DeepAiService { get; }
+    internal EventLogService EventLogService { get; }
     internal FloodCheckService FloodCheckService { get; }
+    internal GlobalBanService GlobalBanService { get; }
+    internal LocalizationService LocalizationService { get; }
     internal MataService MataService { get; }
     internal MessageHistoryService MessageHistoryService { get; }
+    internal NewChatMembersService NewChatMembersService { get; set; }
     internal NotesService NotesService { get; }
     internal OptiicDevService OptiicDevService { get; set; }
     internal SettingsService SettingsService { get; }
+    internal RssService RssService { get; }
     internal WordFilterService WordFilterService { get; }
 
     public ChatService ChatService { get; }
@@ -91,6 +97,10 @@ public class TelegramService
     public Chat SenderChat { get; set; }
 
     public DateTime MessageDate { get; set; }
+    public DateTime? MessageEditDate { get; set; }
+    public DateTime MessageDateOrEditDate { get; set; }
+    private TimeSpan TimeInitSpan { get; set; }
+    private TimeSpan TimeProcSpan { get; set; }
     public TimeSpan KickTimeOffset { get; set; }
 
     public Message AnyMessage { get; set; }
@@ -120,14 +130,20 @@ public class TelegramService
         AntiSpamService antiSpamService,
         ChatService chatService,
         BotService botService,
+        DeepAiService deepAiService,
+        EventLogService eventLogService,
         FeatureService featureService,
         FloodCheckService floodCheckServiceService,
+        GlobalBanService globalBanService,
+        LocalizationService localizationService,
         MataService mataService,
         MessageHistoryService messageHistoryService,
+        NewChatMembersService newChatMembersService,
         NotesService notesService,
         OptiicDevService optiicDevService,
         SettingsService settingsService,
         PrivilegeService privilegeService,
+        RssService rssService,
         UserProfilePhotoService userProfilePhotoService,
         StepHistoriesService stepHistoriesService,
         WordFilterService wordFilterService
@@ -146,12 +162,18 @@ public class TelegramService
         AnimalsService = animalsService;
         AntiSpamService = antiSpamService;
         BotService = botService;
+        DeepAiService = deepAiService;
+        EventLogService = eventLogService;
         ChatService = chatService;
         FloodCheckService = floodCheckServiceService;
+        GlobalBanService = globalBanService;
+        LocalizationService = localizationService;
         MataService = mataService;
         MessageHistoryService = messageHistoryService;
+        NewChatMembersService = newChatMembersService;
         NotesService = notesService;
         OptiicDevService = optiicDevService;
+        RssService = rssService;
         SettingsService = settingsService;
         WordFilterService = wordFilterService;
     }
@@ -398,7 +420,12 @@ public class TelegramService
         cmd = MessageTextParts.ElementAtOrDefault(0);
 
         if (withoutSlash) cmd = cmd?.TrimStart('/');
-        if (withoutUsername) cmd = cmd?.RemoveThisString("@" + Context.Bot.Username);
+        if (withoutUsername)
+            cmd = cmd?.Replace(
+                "@" + Context.Bot.Username,
+                string.Empty,
+                StringComparison.CurrentCultureIgnoreCase
+            );
 
         return cmd;
     }
@@ -406,6 +433,19 @@ public class TelegramService
     public bool IsCommand(string command)
     {
         return GetCommand() == command;
+    }
+
+    public async Task<string> GetLocalization(
+        Enum value,
+        IEnumerable<(string placeholder, string value)> placeHolders = null
+    )
+    {
+        var settings = await GetChatSetting();
+
+        var langCode = settings.LanguageCode ?? "id";
+        var localized = LocalizationService.GetLoc(langCode, value);
+
+        return placeHolders == null ? localized : localized.ResolveVariable(placeHolders);
     }
 
     #endregion Chat
@@ -751,27 +791,42 @@ public class TelegramService
         return isOld;
     }
 
+    public MessageFlag GetMessageFlag(MessageFlag messageFlag)
+    {
+        var command = GetCommand(true);
+        var fixedFlag = messageFlag == MessageFlag.General ? command.ToEnum(MessageFlag.General) : messageFlag;
+
+        return fixedFlag;
+    }
+
     public async Task<string> DownloadFileAsync(string prefixName)
     {
-        var fileId = Message.GetFileId();
-        if (fileId.IsNullOrEmpty())
-            fileId = Message.ReplyToMessage.GetFileId();
+        var message = Message;
+        if (message.ReplyToMessage != null) message = message.ReplyToMessage;
+
+        var fileMetaData = message.GetFileMetadata();
+        var fileId = fileMetaData.FileId;
 
         Log.Information("Getting file by FileId {FileId}", fileId);
         var file = await Client.GetFileAsync(fileId);
 
         Log.Debug("DownloadFile: {@File}", file);
-        var filePath = file.FilePath?.Replace("/", "_");
+        var fileType = fileMetaData.Type.Humanize().ToLower();
         var fileUniqueId = file.FileUniqueId;
-        var fileName = $"{prefixName}_{ReducedChatId}_{fileUniqueId}_{filePath}";
+        var randomStr = StringUtil.GenerateUniqueId(5);
+        var fileName = fileMetaData.FileName;
 
-        fileName = $"Storage/Caches/{fileName}".EnsureDirectory();
+        var fullFilePath = $"{prefixName}_{ReducedChatId}_{fileType}_{fileUniqueId}_{randomStr}#{fileName}";
 
-        await using var fileStream = File.OpenWrite(fileName);
-        await Client.DownloadFileAsync(file.FilePath, fileStream);
-        Log.Information("File saved to {FileName}", fileName);
+        fullFilePath = $"Storage/Caches/{fullFilePath}".EnsureDirectory();
 
-        return fileName;
+        var fileStream = File.OpenWrite(fullFilePath);
+        await Client.DownloadFileAsync(file.FilePath!, fileStream);
+        Log.Information("File saved to {FileName}", fullFilePath);
+
+        fileStream.Close();
+
+        return fullFilePath;
     }
 
     public async Task<Message> SendTextMessageAsync(
@@ -782,7 +837,8 @@ public class TelegramService
         bool disableWebPreview = false,
         DateTime scheduleDeleteAt = default,
         bool includeSenderMessage = false,
-        MessageFlag messageFlag = default
+        MessageFlag messageFlag = default,
+        bool preventDuplicateSend = false
     )
     {
         TimeProc = MessageDate.GetDelay();
@@ -850,6 +906,12 @@ public class TelegramService
             );
         }
 
+        PreventDuplicateSend(
+            preventDuplicateSend,
+            messageFlag,
+            includeSenderMessage ? 2 : 1
+        );
+
         return SentMessage;
     }
 
@@ -858,7 +920,11 @@ public class TelegramService
         MediaType mediaType,
         string caption = "",
         IReplyMarkup replyMarkup = null,
-        int replyToMsgId = -1
+        int replyToMsgId = -1,
+        DateTime scheduleDeleteAt = default,
+        bool includeSenderMessage = false,
+        MessageFlag messageFlag = default,
+        bool preventDuplicateSend = false
     )
     {
         Log.Information(
@@ -930,7 +996,18 @@ public class TelegramService
                 return null;
         }
 
-        Log.Information("SendMedia: {MessageId}", SentMessage.MessageId);
+        Log.Information("SendMedia: {MessageId}", SentMessage?.MessageId);
+
+        if (scheduleDeleteAt != default)
+        {
+            SaveToMessageHistory(
+                scheduleDeleteAt,
+                includeSenderMessage,
+                messageFlag
+            );
+        }
+
+        PreventDuplicateSend(preventDuplicateSend, messageFlag);
 
         return SentMessage;
     }
@@ -975,7 +1052,8 @@ public class TelegramService
         bool disableWebPreview = true,
         DateTime scheduleDeleteAt = default,
         bool includeSenderMessage = false,
-        MessageFlag messageFlag = default
+        MessageFlag messageFlag = default,
+        bool preventDuplicateSend = false
     )
     {
         TimeProc = MessageDate.GetDelay();
@@ -1000,8 +1078,6 @@ public class TelegramService
                 replyMarkup: replyMarkup,
                 disableWebPagePreview: disableWebPreview
             );
-
-            return SentMessage;
         }
         catch (Exception ex)
         {
@@ -1027,6 +1103,8 @@ public class TelegramService
                 messageFlag
             );
         }
+
+        PreventDuplicateSend(preventDuplicateSend, messageFlag);
 
         return SentMessage;
     }
@@ -1058,20 +1136,40 @@ public class TelegramService
 
     public async Task AppendTextAsync(
         string sendText,
-        InlineKeyboardMarkup replyMarkup = null
+        InlineKeyboardMarkup replyMarkup = null,
+        int replyToMsgId = -1,
+        DateTime scheduleDeleteAt = default,
+        bool includeSenderMessage = false,
+        MessageFlag messageFlag = default,
+        bool preventDuplicateSend = false
     )
     {
         if (string.IsNullOrEmpty(AppendText))
         {
             Log.Information("Sending new message");
             AppendText = sendText;
-            await SendTextMessageAsync(AppendText, replyMarkup);
+            await SendTextMessageAsync(
+                sendText: AppendText,
+                replyMarkup: replyMarkup,
+                replyToMsgId: replyToMsgId,
+                scheduleDeleteAt: scheduleDeleteAt,
+                includeSenderMessage: includeSenderMessage,
+                messageFlag: messageFlag,
+                preventDuplicateSend: preventDuplicateSend
+            );
         }
         else
         {
             Log.Information("Next, edit existing message");
             AppendText += $"\n{sendText}";
-            await EditMessageTextAsync(AppendText, replyMarkup);
+            await EditMessageTextAsync(
+                sendText: AppendText,
+                replyMarkup: replyMarkup,
+                scheduleDeleteAt: scheduleDeleteAt,
+                includeSenderMessage: includeSenderMessage,
+                messageFlag: messageFlag,
+                preventDuplicateSend: preventDuplicateSend
+            );
         }
     }
 
@@ -1165,6 +1263,31 @@ public class TelegramService
         }
     }
 
+    private void PreventDuplicateSend(
+        bool preventDuplicateSend,
+        MessageFlag flag,
+        int skipLast = 1
+    )
+    {
+        if (!preventDuplicateSend) return;
+
+        var messageFlag = GetMessageFlag(flag);
+
+        Log.Debug(
+            "Preventing duplicate send Message at ChatId: {ChatId} with Flag: {MessageFlag}",
+            ChatId,
+            messageFlag
+        );
+
+        ChatService.DeleteMessageHistory(
+                predicate: history =>
+                    history.MessageFlag == messageFlag &&
+                    history.ChatId == ChatId,
+                skipLast: skipLast
+            )
+            .InBackground();
+    }
+
     public void ResetTime()
     {
         Log.Information("Resetting time..");
@@ -1182,7 +1305,8 @@ public class TelegramService
 
     public async Task<bool> KickMemberAsync(
         long userId,
-        bool unban = false
+        bool unban = false,
+        DateTime untilDate = default
     )
     {
         bool isKicked;
@@ -1193,12 +1317,14 @@ public class TelegramService
             ChatId
         );
 
+        if (untilDate == default) untilDate = DateTime.Now.AddSeconds(10);
+
         try
         {
             await Client.BanChatMemberAsync(
-                ChatId,
-                userId,
-                DateTime.Now
+                chatId: ChatId,
+                userId: userId,
+                untilDate: untilDate
             );
 
             if (unban) await UnBanMemberAsync(userId);
@@ -1670,6 +1796,7 @@ public class TelegramService
     }
 
     #endregion PostUpdate
+
     #region Message History
 
     public void SaveToMessageHistory(
@@ -1680,8 +1807,7 @@ public class TelegramService
     {
         if (SentMessage == null) return;
 
-        var command = GetCommand(true);
-        var messageFlag = flag == MessageFlag.General ? command.ToEnum(MessageFlag.General) : flag;
+        var messageFlag = GetMessageFlag(flag);
 
         var sentMessageId = SentMessage.MessageId;
         SaveMessageToHistoryAsync(
@@ -1765,5 +1891,5 @@ public class TelegramService
         );
     }
 
-    #endregion
+    #endregion Message History
 }

@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Humanizer;
 using MoreLinq;
 using WinTenDev.Zizi.Models.Dto;
 using WinTenDev.Zizi.Models.Enums;
+using WinTenDev.Zizi.Models.Enums.Languages;
 using WinTenDev.Zizi.Models.Types;
 using WinTenDev.Zizi.Utils;
 using WinTenDev.Zizi.Utils.Telegram;
@@ -13,36 +15,60 @@ namespace WinTenDev.Zizi.Services.Telegram.Extensions;
 
 public static class TelegramServiceNotesExtension
 {
-    public static async Task GetNotesAsync(this TelegramService telegramService)
+    public static async Task GetNotesAsync(
+        this TelegramService telegramService,
+        bool useTags = false
+    )
     {
+        var htmlMessage = HtmlMessage.Empty;
         var chatId = telegramService.ChatId;
 
         var notesData = await telegramService.NotesService.GetNotesByChatId(chatId);
+        var filteredNotes = notesData.Where(
+            tag => {
+                if (!useTags) return true;
 
-        var htmlMessage = HtmlMessage.Empty;
+                return !tag.Tag.Contains(' ');
+            }
+        ).ToList();
 
-        if (notesData.Any())
+        var placeHolders = new List<(string placeholder, string value)>()
         {
-            htmlMessage.Bold("Catatan di Obrolan ini.").Br().Br();
+            ("Name", useTags ? "Tags" : "Notes"),
+            ("ChatTitle", telegramService.ChatTitle)
+        };
 
-            notesData.ForEach(
+        if (filteredNotes.Count > 0)
+        {
+            var notesTitleTr = await telegramService.GetLocalization(Notes.Title, placeHolders);
+            htmlMessage.Bold(notesTitleTr).Br().Br();
+
+            filteredNotes.ForEach(
                 (
                     tag,
-                    index
+                    _
                 ) => {
-                    htmlMessage.Code(tag.Id.ToString()).Text(" | ").Text(tag.Tag).Br();
+                    if (useTags)
+                        htmlMessage.Text("#").Text(tag.Tag).Text(" ");
+                    else
+                        htmlMessage.Code(tag.Id.ToString()).Text(" | ").Text(tag.Tag).Br();
                 }
             );
         }
         else
         {
-            htmlMessage.Text(
-                "Tidak ada Catatan di Obrolan ini." +
-                "\nUntuk menambahkannya ketik /add_note"
-            );
+            var noNotesTr = await telegramService.GetLocalization(Notes.NoNotes, placeHolders);
+            htmlMessage.Text(noNotesTr);
         }
 
-        await telegramService.SendTextMessageAsync(htmlMessage.ToString(), replyToMsgId: 0);
+        await telegramService.SendTextMessageAsync(
+            sendText: htmlMessage.ToString(),
+            replyToMsgId: 0,
+            scheduleDeleteAt: DateTime.UtcNow.AddDays(1),
+            includeSenderMessage: true,
+            preventDuplicateSend: true
+        );
+
         await telegramService.NotesService.UpdateCache(chatId);
     }
 

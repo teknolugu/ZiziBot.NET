@@ -15,6 +15,7 @@
         <PackageReference Include="ClickHouse.Client" Version="4.2.2" />
         <PackageReference Include="CloudFlareUtilities" Version="1.3.0" />
         <PackageReference Include="CodeHollow.FeedReader" Version="1.2.4" />
+        <PackageReference Include="CodingSeb.Localization.JsonFileLoader" Version="1.2.0" />
         <PackageReference Include="CsvHelper" Version="27.2.1" />
         <PackageReference Include="DotNetZip" Version="1.16.0" />
         <PackageReference Include="DotNurse.Injector" Version="2.5.2" />

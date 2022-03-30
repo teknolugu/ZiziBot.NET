@@ -59,7 +59,11 @@ public static class Program
                     context,
                     builder
                 ) => {
-                    builder.AddJsonFile("appsettings.json", true, true);
+                    builder.AddJsonFile(
+                        path: "appsettings.json",
+                        optional: true,
+                        reloadOnChange: true
+                    );
                     builder.AddAppSettingsJson();
                 }
             )
@@ -104,7 +108,11 @@ public static class Program
                     configBuilder
                 ) => {
                     configBuilder
-                        .AddJsonFile("appsettings.json", true, true)
+                        .AddJsonFile(
+                            path: "appsettings.json",
+                            optional: true,
+                            reloadOnChange: true
+                        )
                         // .AddJsonFile($"appsettings.{hostBuilder.HostingEnvironment.EnvironmentName}.json", true, true)
                         // .AddJsonFile("Storage/Config/security-base.json", true, true)
                         .AddJsonEnvVar("QUICKSTART_SETTINGS", true);
