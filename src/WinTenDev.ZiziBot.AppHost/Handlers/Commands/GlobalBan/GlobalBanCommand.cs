@@ -2,6 +2,7 @@
 using Telegram.Bot.Framework.Abstractions;
 using WinTenDev.Zizi.Services.Telegram;
 using WinTenDev.Zizi.Services.Telegram.Extensions;
+using WinTenDev.Zizi.Utils;
 
 namespace WinTenDev.ZiziBot.AppHost.Handlers.Commands.GlobalBan;
 
@@ -9,9 +10,7 @@ public class GlobalBanCommand : CommandBase
 {
     private readonly TelegramService _telegramService;
 
-    public GlobalBanCommand(
-        TelegramService telegramService
-    )
+    public GlobalBanCommand(TelegramService telegramService)
     {
         _telegramService = telegramService;
     }
@@ -24,6 +23,6 @@ public class GlobalBanCommand : CommandBase
     {
         await _telegramService.AddUpdateContext(context);
 
-        await _telegramService.AddGlobalBanAsync();
+        _telegramService.AddGlobalBanAsync().InBackground();
     }
 }
