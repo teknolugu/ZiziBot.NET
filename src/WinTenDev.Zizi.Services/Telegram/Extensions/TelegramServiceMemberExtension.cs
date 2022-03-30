@@ -45,15 +45,27 @@ public static class TelegramServiceMemberExtension
 
         if (!antiSpamResult.IsAnyBanned) return antiSpamResult;
 
+        var message = telegramService.Message;
+
         await Task.WhenAll(
-            telegramService.KickMemberAsync(fromId, true),
-            telegramService.DeleteSenderMessageAsync(),
+            telegramService.KickMemberAsync(
+                userId: fromId,
+                unban: false,
+                untilDate: DateTime.Now.AddMinutes(1)
+            ),
             telegramService.SendTextMessageAsync(
                 sendText: messageBan,
                 replyToMsgId: 0,
                 scheduleDeleteAt: DateTime.UtcNow.AddMinutes(10),
                 preventDuplicateSend: true,
                 messageFlag: MessageFlag.GBan
+            ),
+            telegramService.EventLogService.SendEventLogAsync(
+                chatId: chatId,
+                message: message,
+                messageFlag: MessageFlag.GBan,
+                forwardMessageId: message.MessageId,
+                deleteForwardedMessage: true
             )
         );
 
