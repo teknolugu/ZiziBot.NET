@@ -47,6 +47,8 @@ public class TelegramService
     internal AnimalsService AnimalsService { get; }
     internal AntiSpamService AntiSpamService { get; }
     internal BotService BotService { get; }
+    internal DeepAiService DeepAiService { get; }
+    internal EventLogService EventLogService { get; }
     internal FloodCheckService FloodCheckService { get; }
     internal GlobalBanService GlobalBanService { get; }
     internal LocalizationService LocalizationService { get; }
@@ -128,6 +130,8 @@ public class TelegramService
         AntiSpamService antiSpamService,
         ChatService chatService,
         BotService botService,
+        DeepAiService deepAiService,
+        EventLogService eventLogService,
         FeatureService featureService,
         FloodCheckService floodCheckServiceService,
         GlobalBanService globalBanService,
@@ -158,6 +162,8 @@ public class TelegramService
         AnimalsService = animalsService;
         AntiSpamService = antiSpamService;
         BotService = botService;
+        DeepAiService = deepAiService;
+        EventLogService = eventLogService;
         ChatService = chatService;
         FloodCheckService = floodCheckServiceService;
         GlobalBanService = globalBanService;

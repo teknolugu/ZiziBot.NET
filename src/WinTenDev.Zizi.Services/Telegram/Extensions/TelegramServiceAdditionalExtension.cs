@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Flurl.Http;
 using Serilog;
+using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using WinTenDev.Zizi.Models.Enums;
 using WinTenDev.Zizi.Models.Enums.Languages;
@@ -167,5 +168,37 @@ public static class TelegramServiceAdditionalExtension
         {
             Log.Error(exception, "Error while read qr");
         }
+    }
+
+    public static async Task NsfwCheckAsync(this TelegramService telegramService)
+    {
+        var message = telegramService.Message;
+
+        var replyToMessage = message.ReplyToMessage;
+
+        if (replyToMessage is not { Type: MessageType.Photo })
+        {
+            await telegramService.SendTextMessageAsync("Silakan balas pesan Gambar yang mau dicek");
+
+            return;
+        }
+
+        await telegramService.SendTextMessageAsync("Sedang memeriksa Nudity..");
+
+        var fileName = await telegramService.DownloadFileAsync("nsfw-check");
+
+        var result = await telegramService.DeepAiService.NsfwDetectCoreAsync(fileName);
+        var output = result.Output;
+
+        var text = $"NSFW Score: {output.NsfwScore}" +
+                   $"\n\nPowered by https://deepai.org";
+
+        await telegramService.EditMessageTextAsync(text, disableWebPreview: true);
+
+        DirUtil.CleanCacheFiles(
+            path =>
+                path.Contains("nsfw-check") &&
+                path.Contains(telegramService.ReducedChatId.ToString())
+        );
     }
 }
