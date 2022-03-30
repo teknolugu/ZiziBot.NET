@@ -350,7 +350,7 @@ public static class TelegramServiceMemberExtension
             var keyboard = new InlineKeyboardMarkup(
                 InlineKeyboardButton.WithUrl(chatLinked.GetChatTitle(), chatLinked.GetChatLink())
             );
-            var sendText = $"Hai {fromNameLink}" + 
+            var sendText = $"Hai {fromNameLink}" +
                            "\nKamu belum Subscribe ke Channel dibawah ini, silakan segera Subcribe agar tidak di tendang.";
 
             await telegramService.SendTextMessageAsync(
@@ -383,7 +383,7 @@ public static class TelegramServiceMemberExtension
         long userId;
         string reason;
 
-        var msg = telegramService.Message;
+        var message = telegramService.Message;
 
         var chatId = telegramService.ChatId;
         var fromId = telegramService.FromId;
@@ -402,7 +402,7 @@ public static class TelegramServiceMemberExtension
         {
             var replyToMessage = telegramService.ReplyToMessage;
             userId = replyToMessage.From.Id;
-            reason = msg.Text;
+            reason = message.Text;
 
             if (replyToMessage.ForwardFrom != null)
             {
@@ -426,7 +426,7 @@ public static class TelegramServiceMemberExtension
             }
 
             userId = param1.ToInt64();
-            reason = msg.Text;
+            reason = message.Text;
 
             if (reason.IsNotNullOrEmpty())
                 reason = partedText.Skip(2).JoinStr(" ").Trim();
@@ -452,17 +452,52 @@ public static class TelegramServiceMemberExtension
             ReasonBan = reason
         };
 
-        var isBan = await telegramService.GlobalBanService.IsExist(userId);
+        var isGlobalBanned = await telegramService.GlobalBanService.IsExist(userId);
 
-        if (isBan)
+        if (isGlobalBanned)
         {
             await telegramService.AppendTextAsync(
                 sendText: "Pengguna sudah di ban",
                 scheduleDeleteAt: DateTime.UtcNow.AddMinutes(2),
                 includeSenderMessage: true
             );
+        }
 
-            return;
+        if (telegramService.ReplyToMessage?.ForwardFrom == null)
+        {
+            var messageId = telegramService.ReplyToMessage?.MessageId ?? -1;
+
+            if (telegramService.ReplyToMessage == null)
+            {
+                messageId = -1;
+            }
+            else
+            {
+                await telegramService.KickMemberAsync(userId, untilDate: DateTime.Now.AddSeconds(30));// Kick and Unban after 8 hours
+            }
+
+            if (isGlobalBanned)
+            {
+                await telegramService.AppendTextAsync(
+                    "Selesai.",
+                    scheduleDeleteAt: DateTime.UtcNow.AddMinutes(2),
+                    includeSenderMessage: true
+                );
+
+                return;
+            }
+
+            await Task.WhenAll(
+                telegramService.AppendTextAsync("Sedang membersihkan jejak.."),
+                telegramService.EventLogService.SendEventLogAsync(
+                    chatId: chatId,
+                    message: message,
+                    text: "Global Ban di tambahkan baru",
+                    forwardMessageId: messageId,
+                    deleteForwardedMessage: true,
+                    messageFlag: MessageFlag.GBan
+                )
+            );
         }
 
         await telegramService.AppendTextAsync("Menyimpan informasi..");
