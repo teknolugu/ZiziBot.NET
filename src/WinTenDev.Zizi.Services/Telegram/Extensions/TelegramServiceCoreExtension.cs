@@ -177,4 +177,34 @@ public static class TelegramServiceCoreExtension
             )
             .InBackground();
     }
+
+    public static async Task SendAboutUsernameAsync(this TelegramService telegramService)
+    {
+        var urlStart = await telegramService.GetUrlStart("start=set-username");
+        var usernameStr = telegramService.IsNoUsername ? "belum" : "sudah";
+        var sendText = "Tentang Username" +
+                       $"\nKamu {usernameStr} mengatur Username";
+
+        var inlineKeyboard = new InlineKeyboardMarkup(
+            new[]
+            {
+                new[]
+                {
+                    InlineKeyboardButton.WithUrl("Cara Pasang Username", urlStart)
+                },
+                new[]
+                {
+                    InlineKeyboardButton.WithCallbackData("Verifikasi Username", "verify username-only")
+                }
+            }
+        );
+
+        await telegramService.SendTextMessageAsync(
+            sendText: sendText,
+            replyMarkup: inlineKeyboard,
+            scheduleDeleteAt: DateTime.UtcNow.AddMinutes(1),
+            includeSenderMessage: true,
+            preventDuplicateSend: true
+        );
+    }
 }
