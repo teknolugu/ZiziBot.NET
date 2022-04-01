@@ -1313,12 +1313,14 @@ public class TelegramService
         bool isKicked;
 
         Log.Information(
-            "Kick {UserId} from {ChatId}",
+            "Send request Kick chat member UserId: {UserId} at ChatId: {ChatId}",
             userId,
             ChatId
         );
 
-        if (untilDate == default) untilDate = DateTime.Now.AddSeconds(10);
+        if (untilDate == default)
+            // Under 30s and more than 366d is considered as forever
+            untilDate = DateTime.Now.AddSeconds(10);
 
         try
         {
@@ -1331,9 +1333,14 @@ public class TelegramService
             if (unban) await UnBanMemberAsync(userId);
             isKicked = true;
         }
-        catch (Exception ex)
+        catch (Exception exception)
         {
-            Log.Error(ex, "Error Kick Member");
+            Log.Error(
+                exception,
+                "Error request Kick chat Member UserId: {UserId} at ChatId: {ChatId}",
+                userId,
+                ChatId
+            );
             isKicked = false;
         }
 
