@@ -25,7 +25,6 @@ using WinTenDev.Zizi.Models.Tables;
 using WinTenDev.Zizi.Models.Types;
 using WinTenDev.Zizi.Services.Externals;
 using WinTenDev.Zizi.Services.Internals;
-using WinTenDev.Zizi.Services.Repositories;
 using WinTenDev.Zizi.Utils;
 using WinTenDev.Zizi.Utils.IO;
 using WinTenDev.Zizi.Utils.Telegram;
