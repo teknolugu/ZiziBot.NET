@@ -463,6 +463,8 @@ public static class TelegramServiceMemberExtension
                 scheduleDeleteAt: DateTime.UtcNow.AddMinutes(2),
                 includeSenderMessage: true
             );
+
+            return;
         }
 
         if (telegramService.ReplyToMessage?.ForwardFrom == null)
@@ -476,17 +478,6 @@ public static class TelegramServiceMemberExtension
             else
             {
                 await telegramService.KickMemberAsync(userId, untilDate: DateTime.Now.AddSeconds(30));// Kick and Unban after 8 hours
-            }
-
-            if (isGlobalBanned)
-            {
-                await telegramService.AppendTextAsync(
-                    "Selesai.",
-                    scheduleDeleteAt: DateTime.UtcNow.AddMinutes(2),
-                    includeSenderMessage: true
-                );
-
-                return;
             }
 
             await Task.WhenAll(
