@@ -1546,8 +1546,9 @@ public class TelegramService
 
     public bool CheckUsername()
     {
+        if (IsGlobalIgnored()) return false;
+
         if (From == null) return false;
-        if (IsGlobalIgnored()) return true;
 
         return From.Username == null;
     }
