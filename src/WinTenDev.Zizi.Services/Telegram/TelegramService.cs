@@ -794,7 +794,7 @@ public class TelegramService
 
     public MessageFlag GetMessageFlag(MessageFlag messageFlag)
     {
-        var command = GetCommand(true);
+        var command = GetCommand(true).Pascalize();
         var fixedFlag = messageFlag == MessageFlag.General ? command.ToEnum(MessageFlag.General) : messageFlag;
 
         return fixedFlag;
