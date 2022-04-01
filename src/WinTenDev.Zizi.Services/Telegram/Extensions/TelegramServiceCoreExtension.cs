@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Reflection;
 using System.Threading.Tasks;
 using SerilogTimings;
 using Telegram.Bot;
@@ -53,25 +52,19 @@ public static class TelegramServiceCoreExtension
     {
         var enginesConfig = telegramService.EnginesConfig;
 
+        var htmlMessage = HtmlMessage.Empty;
         var chatId = telegramService.ChatId;
         var me = await telegramService.BotService.GetMeAsync();
-        var botVersion = enginesConfig.Version;
-        var company = enginesConfig.Company;
+        var aboutFeature = await telegramService.GetFeatureConfig();
         var description = enginesConfig.Description;
 
-        var aboutFeature = await telegramService.GetFeatureConfig();
-        var currentAssembly = Assembly.GetExecutingAssembly().GetName();
-        var assemblyVersion = currentAssembly.Version?.ToString();
-        var buildDate = AssemblyUtil.GetBuildDate();
-
-        var htmlMessage = HtmlMessage.Empty
-            .Bold(company).Text(" ").Bold(me.GetFullName()).Text(" ").Code(botVersion).Br()
-            .Bold("Version: ").Code(assemblyVersion).Br()
-            .Bold("BuildDate: ").Code(buildDate.ToDetailDateTimeString()).Br();
+        htmlMessage.Append(me.GetAboutHeader());
 
         if (description.IsNotNullOrEmpty())
         {
-            htmlMessage.Text(enginesConfig.Description).Br();
+            htmlMessage.Br()
+                .Text(enginesConfig.Description)
+                .Br();
         }
 
         if (aboutFeature.Caption.IsNotNullOrEmpty())
