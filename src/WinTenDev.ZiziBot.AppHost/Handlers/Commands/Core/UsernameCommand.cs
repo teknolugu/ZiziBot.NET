@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Telegram.Bot.Framework.Abstractions;
-using Telegram.Bot.Types.ReplyMarkups;
 using WinTenDev.Zizi.Services.Telegram;
+using WinTenDev.Zizi.Services.Telegram.Extensions;
 
 namespace WinTenDev.ZiziBot.AppHost.Handlers.Commands.Core;
 
@@ -14,29 +14,14 @@ public class UsernameCommand : CommandBase
         _telegramService = telegramService;
     }
 
-    public override async Task HandleAsync(IUpdateContext context, UpdateDelegate next, string[] args)
+    public override async Task HandleAsync(
+        IUpdateContext context,
+        UpdateDelegate next,
+        string[] args
+    )
     {
         await _telegramService.AddUpdateContext(context);
 
-        if (!await _telegramService.IsBeta()) return;
-
-        var urlStart = await _telegramService.GetUrlStart("start=set-username");
-        var usernameStr = _telegramService.IsNoUsername ? "belum" : "sudah";
-        var sendText = "Tentang Username" +
-                       $"\nKamu {usernameStr} mengatur Username";
-
-        var inlineKeyboard = new InlineKeyboardMarkup(new[]
-        {
-            new[]
-            {
-                InlineKeyboardButton.WithUrl("Cara Pasang Username", urlStart)
-            },
-            new[]
-            {
-                InlineKeyboardButton.WithCallbackData("Verifikasi Username", "verify username-only")
-            }
-        });
-
-        await _telegramService.SendTextMessageAsync(sendText, inlineKeyboard);
+        await _telegramService.SendAboutUsernameAsync();
     }
 }
