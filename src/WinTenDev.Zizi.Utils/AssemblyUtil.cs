@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using MoreLinq.Extensions;
+using Telegram.Bot.Types;
 using WinTenDev.Zizi.Models.Attributes;
+using WinTenDev.Zizi.Models.Types;
+using WinTenDev.Zizi.Utils.Telegram;
+using File=System.IO.File;
 
 namespace WinTenDev.Zizi.Utils;
 
@@ -61,5 +64,27 @@ public static class AssemblyUtil
 #endif
 
         return buildDate;
+    }
+
+    public static string FormatVersion(this Version version)
+    {
+        var versionStr = $"{version.Minor} Build {version.Build}";
+        return versionStr;
+    }
+
+    public static HtmlMessage GetAboutHeader(this User me)
+    {
+        var meFullName = me.GetFullName();
+        var currentAssembly = Assembly.GetExecutingAssembly().GetName();
+        var buildNumber = currentAssembly.Version?.Build.ToString();
+        var assemblyVersion = currentAssembly.Version?.ToString();
+        var buildDate = AssemblyUtil.GetBuildDate();
+
+        var htmlMessage = HtmlMessage.Empty
+            .Bold($"{meFullName} 4 Build {buildNumber}").Br()
+            .Bold("Version: ").Code(assemblyVersion).Br()
+            .Bold("Build Date: ").Code(buildDate.ToDetailDateTimeString()).Br();
+
+        return htmlMessage;
     }
 }
