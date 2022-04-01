@@ -43,6 +43,7 @@ public class TelegramService
 
     internal CommonConfig CommonConfig { get; }
     internal EnginesConfig EnginesConfig { get; }
+    internal IServiceProvider ServiceProvider { get; }
     internal AfkService AfkService { get; }
     internal AnimalsService AnimalsService { get; }
     internal AntiSpamService AntiSpamService { get; }
@@ -125,6 +126,7 @@ public class TelegramService
         IOptionsSnapshot<EnginesConfig> engOptions,
         IOptionsSnapshot<EventLogConfig> eventLogConfig,
         IOptionsSnapshot<CommonConfig> commonConfig,
+        IServiceProvider serviceProvider,
         AfkService afkService,
         AnimalsService animalsService,
         AntiSpamService antiSpamService,
@@ -158,6 +160,7 @@ public class TelegramService
 
         CommonConfig = commonConfig.Value;
         EnginesConfig = engOptions.Value;
+        ServiceProvider = serviceProvider;
         AfkService = afkService;
         AnimalsService = animalsService;
         AntiSpamService = antiSpamService;
