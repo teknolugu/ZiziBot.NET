@@ -1080,20 +1080,26 @@ public class TelegramService
                 disableWebPagePreview: disableWebPreview
             );
         }
-        catch (Exception ex)
+        catch (Exception exception)
         {
-            if (ex.IsErrorAsWarning())
+            if (exception.IsErrorAsWarning())
             {
                 Log.Warning(
-                    "Failed when trying edit Message on {ChatTarget}. {Message}",
+                    "Failed edit MessageId: {MessageId} at ChatId: {ChatId}. {Message}",
+                    targetMessageId,
                     ChatId,
-                    ex.Message
+                    exception.Message
                 );
 
                 return SentMessage;
             }
 
-            Log.Error(ex, "Error edit message");
+            Log.Error(
+                exception,
+                "Error edit messageId: {MessageId} at ChatId: {ChatId}",
+                targetMessageId,
+                ChatId
+            );
         }
 
         if (scheduleDeleteAt != default)
