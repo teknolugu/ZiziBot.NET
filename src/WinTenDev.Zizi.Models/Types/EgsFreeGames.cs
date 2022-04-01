@@ -8,6 +8,8 @@ namespace WinTenDev.Zizi.Models.Types;
 
 public class EgsFreeGameParsed
 {
+    public string ProductUrl { get; set; }
+    public string ProductTitle { get; set; }
     public string Text { get; set; }
     public string Detail { get; set; }
     public Uri Images { get; set; }

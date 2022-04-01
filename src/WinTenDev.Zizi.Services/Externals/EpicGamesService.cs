@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -7,12 +8,16 @@ using Flurl.Http;
 using Hangfire;
 using Humanizer;
 using MoreLinq;
+using Serilog;
 using Telegram.Bot;
+using Telegram.Bot.Types.Enums;
 using WinTenDev.Zizi.Models.Dto;
+using WinTenDev.Zizi.Models.Tables;
 using WinTenDev.Zizi.Models.Types;
 using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Services.Telegram;
 using WinTenDev.Zizi.Utils;
+using WinTenDev.Zizi.Utils.Telegram;
 
 namespace WinTenDev.Zizi.Services.Externals;
 
@@ -49,27 +54,64 @@ public class EpicGamesService
         allowAt?.ForEach(
             target => {
                 var chatId = target.ToInt64();
-                var jobId = "egs-free-" + target;
+                var jobId = "egs-free-" + chatId.ReduceChatId();
                 _recurringJobManager.AddOrUpdate(
                     recurringJobId: jobId,
                     methodCall: () => SendEpicGamesBroadcaster(chatId),
-                    cronExpression: Cron.Daily
+                    cronExpression: Cron.Minutely
                 );
             }
         );
     }
 
-    public async Task SendEpicGamesBroadcaster(long channelId)
+    [JobDisplayName("EpicGames Broadcaster {0}")]
+    public async Task SendEpicGamesBroadcaster(long chatId)
     {
-        var games = await GetFreeGamesRaw();
-        var freeGames = games.FreeGames.FirstOrDefault();
-        var title = freeGames.Title;
-        var slug = freeGames.ProductSlug;
+        var games = await GetFreeGamesParsed();
+        var freeGames = games.FirstOrDefault();
 
-        await _botClient.SendTextMessageAsync(channelId, "Lorem");
+        if (freeGames == null) return;
+
+        var productUrl = freeGames.ProductUrl;
+        var productTitle = freeGames.ProductTitle;
+
+        var chat = await _botClient.GetChatAsync(chatId);
+        if (chat.LinkedChatId != null) chatId = chat.LinkedChatId.Value;
+
+        var isHistoryExist = await _rssService.IsHistoryExist(chatId, productUrl);
+        if (isHistoryExist)
+        {
+            Log.Information(
+                "Seem EpicGames with Title: '{Title}' already sent to ChatId: {ChannelId}",
+                productTitle,
+                chatId
+            );
+        }
+        else
+        {
+            await _botClient.SendPhotoAsync(
+                chatId: chatId,
+                photo: freeGames.Images.ToString(),
+                caption: freeGames.Detail,
+                parseMode: ParseMode.Html
+            );
+
+            await _rssService.SaveRssHistoryAsync(
+                new RssHistory()
+                {
+                    ChatId = chatId,
+                    Title = productTitle,
+                    Url = productUrl,
+                    PublishDate = DateTime.UtcNow,
+                    Author = "EpicGames Free",
+                    CreatedAt = DateTime.UtcNow,
+                    RssSource = "https://store.epicgames.com"
+                }
+            );
+        }
     }
 
-    public async Task<List<EgsFreeGameParsed>> GetFreeGamesParsed()
+    public async Task<List<EgsFreeGameParsed>> GetFreeGamesParsed(bool preferEmoji = false)
     {
         var egsFreeGame = await GetFreeGamesRaw();
         var offeredGameList = egsFreeGame.DiscountGames.Select(
@@ -82,13 +124,14 @@ public class EpicGamesService
 
                     var slug = element.ProductSlug ?? element.UrlSlug;
                     var url = Url.Combine("https://www.epicgames.com/store/en-US/p/", slug);
-                    var title = element.Title.MkUrl(url);
+                    var title = element.Title;
+                    var titleLink = element.Title.MkUrl(url);
 
                     var promotionOffers = element.Promotions.PromotionalOffers?.FirstOrDefault()?.PromotionalOffers.FirstOrDefault();
                     var upcomingPromotionalOffers = element.Promotions.UpcomingPromotionalOffers?.FirstOrDefault()?.PromotionalOffers.FirstOrDefault();
                     var offers = promotionOffers ?? upcomingPromotionalOffers;
 
-                    captionBuilder.AppendLine($"{index + 1}. {title}");
+                    captionBuilder.AppendLine($"{index + 1}. {titleLink}");
 
                     // if (offers != null)
                     captionBuilder
@@ -115,6 +158,8 @@ public class EpicGamesService
 
                     var egsParsed = new EgsFreeGameParsed()
                     {
+                        ProductUrl = url,
+                        ProductTitle = title,
                         Text = captionBuilder.ToTrimmedString(),
                         Detail = detailBuilder.ToTrimmedString(),
                         Images = element.KeyImages.FirstOrDefault(keyImage => keyImage.Type == "OfferImageWide")?.Url

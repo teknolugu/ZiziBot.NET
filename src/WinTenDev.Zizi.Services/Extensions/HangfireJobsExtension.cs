@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using WinTenDev.Zizi.Models.Enums;
+using WinTenDev.Zizi.Services.Externals;
 using WinTenDev.Zizi.Services.Telegram;
 using WinTenDev.Zizi.Utils;
 
@@ -16,6 +17,7 @@ public static class HangfireJobsExtension
         var jobService = serviceProvider.GetRequiredService<JobsService>();
 
         serviceProvider.GetRequiredService<RssFeedService>().RegisterJobAllRssScheduler().InBackground();
+        serviceProvider.GetRequiredService<EpicGamesService>().RegisterJobEpicGamesBroadcaster().InBackground();
 
         jobService.RegisterJobChatCleanUp().InBackground();
         jobService.RegisterJobClearLog();
@@ -27,6 +29,8 @@ public static class HangfireJobsExtension
         var botEnvironment = botService.CurrentEnvironment()
             .Result;
 
+        // This job enabled for non Production,
+        // Daily demote for free Administrator at Testing Group
         if (botEnvironment != BotEnvironmentLevel.Production)
         {
             serviceProvider.GetRequiredService<JobsService>()
