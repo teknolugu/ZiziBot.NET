@@ -25,6 +25,7 @@ using WinTenDev.Zizi.Models.Tables;
 using WinTenDev.Zizi.Models.Types;
 using WinTenDev.Zizi.Services.Externals;
 using WinTenDev.Zizi.Services.Internals;
+using WinTenDev.Zizi.Services.Repositories;
 using WinTenDev.Zizi.Utils;
 using WinTenDev.Zizi.Utils.IO;
 using WinTenDev.Zizi.Utils.Telegram;
@@ -1509,20 +1510,31 @@ public class TelegramService
         return await RestrictMemberAsync(userId, true);
     }
 
-    public bool CheckUsername()
+    public string[] GlobalIgnoreIds()
     {
         var ignoredIds = new[]
         {
             "777000"
         };
 
+        return ignoredIds;
+    }
+
+    public bool IsGlobalIgnored(long userId = -1)
+    {
+        var ignoredIds = GlobalIgnoreIds();
+
+        if (userId == -1) userId = FromId;
+
+        return ignoredIds.Contains(userId.ToString());
+    }
+
+    public bool CheckUsername()
+    {
         if (From == null) return false;
+        if (IsGlobalIgnored()) return true;
 
-        var match = ignoredIds.FirstOrDefault(id => id == FromId.ToString());
-        if (!match.IsNotNullOrEmpty()) return From.Username == null;
-
-        Log.Information("This user true Ignored!");
-        return false;
+        return From.Username == null;
     }
 
     #endregion Member

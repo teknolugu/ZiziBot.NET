@@ -46,10 +46,12 @@ public class RssFeedService
         var rssSettings = await _rssService.GetAllRssSettingsAsync();
         var listChatId = rssSettings.Select(setting => setting.ChatId).Distinct();
 
-        await listChatId.ForEachAsync(4,
-            async chatId => {
+        await listChatId.ForEachAsync(
+            degreeOfParallel: 4,
+            body: async chatId => {
                 await RegisterRssFeedByChatId(chatId);
-            });
+            }
+        );
 
         op.Complete();
     }

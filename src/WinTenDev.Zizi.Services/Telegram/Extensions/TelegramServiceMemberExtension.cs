@@ -296,6 +296,8 @@ public static class TelegramServiceMemberExtension
         var fromId = telegramService.FromId;
         var chatId = telegramService.ChatId;
 
+        if (telegramService.IsGlobalIgnored()) return true;
+
         try
         {
             if (await telegramService.CheckUserPermission())
