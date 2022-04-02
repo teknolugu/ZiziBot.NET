@@ -1,8 +1,8 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Telegram.Bot.Framework.Abstractions;
+using WinTenDev.Zizi.Services.Extensions;
 using WinTenDev.Zizi.Services.Telegram;
-using WinTenDev.Zizi.Services.Telegram.Extensions;
 using WinTenDev.Zizi.Utils;
 
 namespace WinTenDev.ZiziBot.AppHost.Handlers.Commands.Group;
@@ -11,9 +11,7 @@ public class NewChatMembersHandler : IUpdateHandler
 {
     private readonly TelegramService _telegramService;
 
-    public NewChatMembersHandler(
-        TelegramService telegramService
-    )
+    public NewChatMembersHandler(TelegramService telegramService)
     {
         _telegramService = telegramService;
     }

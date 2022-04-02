@@ -10,10 +10,11 @@ using WinTenDev.Zizi.Models.Enums;
 using WinTenDev.Zizi.Models.Tables;
 using WinTenDev.Zizi.Models.Types;
 using WinTenDev.Zizi.Services.Internals;
+using WinTenDev.Zizi.Services.Telegram;
 using WinTenDev.Zizi.Utils;
 using WinTenDev.Zizi.Utils.Telegram;
 
-namespace WinTenDev.Zizi.Services.Telegram.Extensions;
+namespace WinTenDev.Zizi.Services.Extensions;
 
 public static class TelegramServiceMemberExtension
 {

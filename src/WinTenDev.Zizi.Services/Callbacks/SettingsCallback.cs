@@ -8,7 +8,7 @@ using WinTenDev.Zizi.Utils;
 using WinTenDev.Zizi.Utils.Telegram;
 using WinTenDev.Zizi.Utils.Text;
 
-namespace WinTenDev.ZiziBot.AppHost.Handlers.Callbacks;
+namespace WinTenDev.Zizi.Services.Callbacks;
 
 public class SettingsCallback
 {
@@ -55,10 +55,11 @@ public class SettingsCallback
         var columnTarget = "enable" + keyParamStr;
         var newValue = currentVal == 0 ? 1 : 0;
 
-        Log.Information
-        (
+        Log.Information(
             "Column: {ColumnTarget}, Value: {CurrentVal}, NewValue: {NewValue}",
-            columnTarget, currentVal, newValue
+            columnTarget,
+            currentVal,
+            newValue
         );
 
         var data = new Dictionary<string, object>()

@@ -4,7 +4,7 @@ using Telegram.Bot.Types;
 using WinTenDev.Zizi.Services.Telegram;
 using WinTenDev.Zizi.Utils;
 
-namespace WinTenDev.ZiziBot.AppHost.Handlers.Callbacks;
+namespace WinTenDev.Zizi.Services.Callbacks;
 
 public class ActionCallback
 {
@@ -29,7 +29,11 @@ public class ActionCallback
         var callbackData = _callbackQuery.Data;
         var chatId = _callbackQuery.Message.Chat.Id;
         var fromId = _callbackQuery.From.Id;
-        Log.Information("CallbackData: {CallbackData} from {FromId}", callbackData, fromId);
+        Log.Information(
+            "CallbackData: {CallbackData} from {FromId}",
+            callbackData,
+            fromId
+        );
 
         var partCallbackData = callbackData.Split(" ");
         var action = partCallbackData.ValueOfIndex(1);

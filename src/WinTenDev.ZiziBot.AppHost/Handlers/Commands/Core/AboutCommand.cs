@@ -2,8 +2,8 @@
 using Microsoft.Extensions.Options;
 using Telegram.Bot.Framework.Abstractions;
 using WinTenDev.Zizi.Models.Configs;
+using WinTenDev.Zizi.Services.Extensions;
 using WinTenDev.Zizi.Services.Telegram;
-using WinTenDev.Zizi.Services.Telegram.Extensions;
 
 namespace WinTenDev.ZiziBot.AppHost.Handlers.Commands.Core;
 

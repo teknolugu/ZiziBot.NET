@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
+using WinTenDev.Zizi.Services.Telegram;
 
-namespace WinTenDev.Zizi.Services.Telegram.Extensions
+namespace WinTenDev.Zizi.Services.Extensions
 {
     public static class TelegramServiceRssExtension
     {

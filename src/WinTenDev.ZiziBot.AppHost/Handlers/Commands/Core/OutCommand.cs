@@ -5,8 +5,8 @@ using Serilog;
 using Telegram.Bot;
 using Telegram.Bot.Framework.Abstractions;
 using WinTenDev.Zizi.Models.Dto;
+using WinTenDev.Zizi.Services.Extensions;
 using WinTenDev.Zizi.Services.Telegram;
-using WinTenDev.Zizi.Services.Telegram.Extensions;
 using WinTenDev.Zizi.Utils;
 using WinTenDev.Zizi.Utils.Telegram;
 

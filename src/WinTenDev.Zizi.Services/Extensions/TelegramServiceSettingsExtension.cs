@@ -10,10 +10,11 @@ using SerilogTimings;
 using Telegram.Bot.Types.ReplyMarkups;
 using WinTenDev.Zizi.Models.Dto;
 using WinTenDev.Zizi.Models.Enums;
+using WinTenDev.Zizi.Services.Telegram;
 using WinTenDev.Zizi.Utils;
 using WinTenDev.Zizi.Utils.Telegram;
 
-namespace WinTenDev.Zizi.Services.Telegram.Extensions;
+namespace WinTenDev.Zizi.Services.Extensions;
 
 public static class TelegramServiceSettingsExtension
 {
@@ -145,6 +146,12 @@ public static class TelegramServiceSettingsExtension
 
         if (key == "welcome_doc")
         {
+            if (telegramService.ReplyToMessage == null)
+            {
+                await telegramService.EditMessageTextAsync("Silakan balas file yang ingin di simpan");
+
+                return;
+            }
             var mediaFileId = telegramService.ReplyToMessage.GetFileId();
             var mediaType = telegramService.ReplyToMessage.Type;
 
