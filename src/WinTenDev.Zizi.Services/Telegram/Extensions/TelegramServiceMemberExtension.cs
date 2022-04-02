@@ -9,6 +9,7 @@ using Telegram.Bot.Types.ReplyMarkups;
 using WinTenDev.Zizi.Models.Enums;
 using WinTenDev.Zizi.Models.Tables;
 using WinTenDev.Zizi.Models.Types;
+using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Utils;
 using WinTenDev.Zizi.Utils.Telegram;
 
@@ -291,7 +292,7 @@ public static class TelegramServiceMemberExtension
         }
     }
 
-    public static async Task<bool> CheckSubscriptionIntoLinkedChannelAsync(this TelegramService telegramService)
+    public static async Task<bool> EnsureForceSubscriptionAsync(this TelegramService telegramService)
     {
         var fromId = telegramService.FromId;
         var chatId = telegramService.ChatId;
@@ -507,6 +508,33 @@ public static class TelegramServiceMemberExtension
             sendText: "Pengguna berhasil di tambahkan",
             scheduleDeleteAt: DateTime.UtcNow.AddMinutes(2),
             includeSenderMessage: true
+        );
+    }
+
+    public static async Task EnsureChatAdminAsync(this TelegramService telegramService)
+    {
+        var chatId = telegramService.ChatId;
+        var chatAdminRepository = telegramService.GetRequiredService<ChatAdminService>();
+
+        if (telegramService.IsPrivateChat)
+        {
+            Log.Debug("No Chat Admin for private chat. ChatId: {ChatId}", chatId);
+            return;
+        }
+
+        var admins = await telegramService.GetChatAdmin();
+
+        await chatAdminRepository.SaveAll(
+            admins.Select(
+                member =>
+                    new ChatAdmin()
+                    {
+                        UserId = member.User.Id,
+                        ChatId = telegramService.ChatId,
+                        Role = member.Status,
+                        CreatedAt = DateTime.UtcNow
+                    }
+            )
         );
     }
 }
