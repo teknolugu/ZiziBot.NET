@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Telegram.Bot.Types;
+using WinTenDev.Zizi.Utils.Text;
 
 namespace WinTenDev.Zizi.Utils.Telegram;
 
@@ -41,7 +42,7 @@ public static class MemberUtil
         var firstName = user.FirstName;
         var lastName = user.LastName;
 
-        return (firstName + " " + lastName).Trim();
+        return (firstName + " " + lastName).Trim().HtmlEncode();
     }
 
     public static string GetFullName(this TL.User user)
