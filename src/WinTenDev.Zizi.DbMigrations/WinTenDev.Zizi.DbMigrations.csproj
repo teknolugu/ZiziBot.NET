@@ -16,7 +16,7 @@
         </PackageReference>
         <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="6.0.1" />
         <PackageReference Include="Serilog.Extensions.Logging" Version="3.1.0" />
-        <PackageReference Include="SonarAnalyzer.CSharp" Version="8.36.1.44192">
+        <PackageReference Include="SonarAnalyzer.CSharp" Version="8.37.0.45539">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
