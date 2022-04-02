@@ -65,6 +65,7 @@ public class EpicGamesService
     }
 
     [JobDisplayName("EpicGames Broadcaster {0}")]
+    [AutomaticRetry(Attempts = 0, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
     public async Task SendEpicGamesBroadcaster(long chatId)
     {
         var games = await GetFreeGamesParsed();
