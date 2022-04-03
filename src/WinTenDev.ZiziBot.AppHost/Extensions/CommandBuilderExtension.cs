@@ -11,6 +11,7 @@ using WinTenDev.ZiziBot.AppHost.Handlers.Commands.Group;
 using WinTenDev.ZiziBot.AppHost.Handlers.Commands.Metrics;
 using WinTenDev.ZiziBot.AppHost.Handlers.Commands.Notes;
 using WinTenDev.ZiziBot.AppHost.Handlers.Commands.Rss;
+using WinTenDev.ZiziBot.AppHost.Handlers.Commands.ShalatTime;
 using WinTenDev.ZiziBot.AppHost.Handlers.Commands.SpamLearning;
 using WinTenDev.ZiziBot.AppHost.Handlers.Commands.Tags;
 using WinTenDev.ZiziBot.AppHost.Handlers.Commands.Welcome;
@@ -114,6 +115,7 @@ public static class CommandBuilderExtension
                                         .UseCommand<RssInfoCommand>("rssinfo")
                                         .UseCommand<RssPullCommand>("rsspull")
                                         .UseCommand<RulesCommand>("rules")
+                                        .UseCommand<SetCityCommand>("set_city")
                                         .UseCommand<SetRulesCommand>("setrules")
                                         .UseCommand<SetRssCommand>("addrss")
                                         .UseCommand<SetRssCommand>("setrss")
@@ -123,6 +125,7 @@ public static class CommandBuilderExtension
                                         .UseCommand<SetWelcomeCommand>("set_welcome_btn")
                                         .UseCommand<SetWelcomeCommand>("set_welcome_doc")
                                         .UseCommand<SetWelcomeCommand>("set_welcome_msg")
+                                        .UseCommand<ShalatTimeCommand>("shalat")
                                         .UseCommand<StartCommand>("start")
                                         .UseCommand<StatsCommand>("stats")
                                         .UseCommand<StickerPackCommand>("stickerpack")
