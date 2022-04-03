@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using MySqlConnector;
@@ -72,11 +73,28 @@ namespace WinTenDev.Zizi.Services.Internals
             );
         }
 
+        public async Task<IEnumerable<ShalatTime>> GetCities()
+        {
+            var shalatTime = await DbConnection.QueryAllAsync<ShalatTime>();
+
+            return shalatTime;
+        }
+
         public async Task<ShalatTime> GetCityByChatId(long chatId)
         {
             var shalatTime = await DbConnection.QueryAsync<ShalatTime>(time => time.ChatId == chatId);
 
             return shalatTime.FirstOrDefault();
+        }
+
+        public async Task<int> DeleteCityAsync(long chatId)
+        {
+            var delete = await DbConnection.DeleteAsync<ShalatTime>(
+                time =>
+                    time.ChatId == chatId
+            );
+
+            return delete;
         }
     }
 }

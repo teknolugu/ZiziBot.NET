@@ -18,6 +18,7 @@ public static class HangfireJobsExtension
 
         serviceProvider.GetRequiredService<RssFeedService>().RegisterJobAllRssScheduler().InBackground();
         serviceProvider.GetRequiredService<EpicGamesService>().RegisterJobEpicGamesBroadcaster().InBackground();
+        serviceProvider.GetRequiredService<ShalatTimeNotifyService>().RegisterJobShalatTimeAsync().InBackground();
 
         jobService.RegisterJobChatCleanUp().InBackground();
         jobService.RegisterJobClearLog();
