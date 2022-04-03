@@ -126,6 +126,12 @@ public static class TelegramServiceMessageExtension
                 return false;
             }
 
+            if (await telegramService.CheckFromAdminOrAnonymous())
+            {
+                Log.Debug("Scan Message disabled for Administrator. ChatId: {ChatId}", chatId);
+                return false;
+            }
+
             var text = telegramService.MessageOrEditedText ?? telegramService.MessageOrEditedCaption;
 
             if (text.IsNullOrEmpty())
