@@ -12,6 +12,7 @@ public enum MessageFlag
     NewChatMembers,
     ZiziMata,
     GBan,
+    DelCity,
     Qr,
     ReadQr,
     RssCtl,
@@ -19,5 +20,6 @@ public enum MessageFlag
     Tags,
     Photo,
     Username,
+    SetCity,
     Welcome
 }

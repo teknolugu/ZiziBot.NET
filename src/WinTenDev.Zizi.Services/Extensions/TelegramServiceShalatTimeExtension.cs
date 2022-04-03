@@ -19,9 +19,24 @@ namespace WinTenDev.Zizi.Services.Extensions
 
             var inputCity = telegramService.GetCommandParam(0);
 
+            if (!await telegramService.CheckUserPermission())
+            {
+                await telegramService.SendTextMessageAsync(
+                    "Untuk waktu Shalat, hanya Admin yang dapat mengatur Kota untuk obrolan ini, " +
+                    "namun kamu bisa mengaturnya di Japri untukmu sendiri.",
+                    scheduleDeleteAt: DateTime.UtcNow.AddMinutes(5),
+                    includeSenderMessage: true
+                );
+                return;
+            }
+
             if (inputCity.IsNullOrEmpty())
             {
-                await telegramService.SendTextMessageAsync("Silahkan tulis nama kota yang ingin dicari");
+                await telegramService.SendTextMessageAsync(
+                    "Silahkan tulis nama kota yang ingin dicari",
+                    scheduleDeleteAt: DateTime.UtcNow.AddMinutes(5),
+                    includeSenderMessage: true
+                );
                 return;
             }
 
@@ -34,11 +49,16 @@ namespace WinTenDev.Zizi.Services.Extensions
 
             if (filterCity.Count != 1)
             {
-                await telegramService.SendTextMessageAsync("Ketikkan nama kota yang lebih spesifik");
+                await telegramService.SendTextMessageAsync(
+                    "Ketikkan nama kota yang lebih spesifik",
+                    scheduleDeleteAt: DateTime.UtcNow.AddMinutes(5),
+                    includeSenderMessage: true
+                );
                 return;
             }
 
             var shalatTome = telegramService.GetRequiredService<ShalatTimeService>();
+            var shalatTimeNotifyService = telegramService.GetRequiredService<ShalatTimeNotifyService>();
             var firstCity = filterCity.FirstOrDefault();
 
             await telegramService.AppendTextAsync($"<b>Kota/Kab ID: </b><code>{firstCity.Id}</code>");
@@ -57,7 +77,41 @@ namespace WinTenDev.Zizi.Services.Extensions
                 }
             );
 
-            await telegramService.AppendTextAsync("Kota berhasil disimpan");
+            shalatTimeNotifyService.RegisterJobShalatTime(chatId);
+
+            await telegramService.AppendTextAsync(
+                "Kota berhasil disimpan",
+                scheduleDeleteAt: DateTime.UtcNow.AddMinutes(5),
+                includeSenderMessage: true
+            );
+        }
+
+        public static async Task DeleteCityAsync(this TelegramService telegramService)
+        {
+            if (!await telegramService.CheckUserPermission())
+            {
+                await telegramService.SendTextMessageAsync(
+                    "Kamu tidak memiliki akses untuk menghapus tetapan Kota",
+                    scheduleDeleteAt: DateTime.UtcNow.AddMinutes(5),
+                    includeSenderMessage: true
+                );
+                return;
+            }
+
+            await telegramService.AppendTextAsync("Sedang menghapus Kota");
+            var chatId = telegramService.ChatId;
+            var shalatTome = telegramService.GetRequiredService<ShalatTimeService>();
+            await shalatTome.DeleteCityAsync(chatId);
+
+            await telegramService.AppendTextAsync("Melepaskan penjadwal notifikasi");
+            var shalatTimeNotifyService = telegramService.GetRequiredService<ShalatTimeNotifyService>();
+            shalatTimeNotifyService.UnRegisterJobShalatTime(chatId);
+
+            await telegramService.AppendTextAsync(
+                "Kota berhasil di hapus",
+                scheduleDeleteAt: DateTime.UtcNow.AddMinutes(5),
+                includeSenderMessage: true
+            );
         }
 
         public static async Task GetShalatTimeAsync(this TelegramService telegramService)
@@ -67,6 +121,17 @@ namespace WinTenDev.Zizi.Services.Extensions
 
             var chatId = telegramService.ChatId;
             var shalatTime = await shalatTimeService.GetCityByChatId(chatId);
+
+            if (shalatTime == null)
+            {
+                await telegramService.SendTextMessageAsync(
+                    "Kota belum diatur. \nSilakan gunakan <code>/set_city</code> untuk mengatur.",
+                    scheduleDeleteAt: DateTime.UtcNow.AddMinutes(5),
+                    includeSenderMessage: true
+                );
+
+                return;
+            }
 
             var shalatTimeResponse = await fathimahApiService.GetShalatTime(
                 dateTime: DateTime.Now,

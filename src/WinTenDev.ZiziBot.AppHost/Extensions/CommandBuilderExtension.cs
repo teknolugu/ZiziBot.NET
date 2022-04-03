@@ -78,6 +78,7 @@ public static class CommandBuilderExtension
                                         .UseCommand<DeleteBanCommand>("dban")
                                         .UseCommand<DeleteKataCommand>("dkata")
                                         .UseCommand<DeleteKataCommand>("delkata")
+                                        .UseCommand<DelCityCommand>("del_city")
                                         .UseCommand<DelRssCommand>("delrss")
                                         .UseCommand<DemoteCommand>("demote")
                                         .UseCommand<EpicFreeGamesCommand>("egs_free")
