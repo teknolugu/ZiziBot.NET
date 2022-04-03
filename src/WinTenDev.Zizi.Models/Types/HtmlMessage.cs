@@ -13,6 +13,7 @@ public class HtmlMessage
     public static HtmlMessage Empty => new HtmlMessage();
 
     public HtmlMessage Bold(string text) => TagBuilder("b", text);
+    public HtmlMessage BoldBr(string text) => TagBuilder("b", text).Br();
 
     public HtmlMessage Bold(HtmlMessage inner) => TagBuilder("b", inner);
 
@@ -92,6 +93,7 @@ public class HtmlMessage
     }
 
     public HtmlMessage Code(string text) => TagBuilder("code", text);
+    public HtmlMessage CodeBr(string text) => TagBuilder("code", text).Br();
 
     public HtmlMessage Pre(string text) => TagBuilder("pre", text);
 

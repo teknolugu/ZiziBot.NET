@@ -3,9 +3,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using WinTenDev.Zizi.Exceptions;
 using WinTenDev.Zizi.Models.Enums;
+using WinTenDev.Zizi.Services.Telegram;
 using WinTenDev.Zizi.Utils;
 
-namespace WinTenDev.Zizi.Services.Telegram.Extensions;
+namespace WinTenDev.Zizi.Services.Extensions;
 
 public static class TelegramServiceAnimalExtension
 {

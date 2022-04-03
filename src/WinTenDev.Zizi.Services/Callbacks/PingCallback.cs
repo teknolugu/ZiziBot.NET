@@ -3,7 +3,7 @@ using Serilog;
 using Telegram.Bot.Types;
 using WinTenDev.Zizi.Services.Telegram;
 
-namespace WinTenDev.ZiziBot.AppHost.Handlers.Callbacks;
+namespace WinTenDev.Zizi.Services.Callbacks;
 
 public class PingCallback
 {
@@ -14,7 +14,6 @@ public class PingCallback
     {
         _telegramService = telegramService;
         _callbackQuery = telegramService.CallbackQuery;
-
     }
 
     public async Task<bool> ExecuteAsync()

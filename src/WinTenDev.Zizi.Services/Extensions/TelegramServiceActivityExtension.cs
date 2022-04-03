@@ -1,16 +1,71 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Serilog;
 using SerilogTimings;
 using WinTenDev.Zizi.Models.Enums;
+using WinTenDev.Zizi.Services.Callbacks;
+using WinTenDev.Zizi.Services.Telegram;
 using WinTenDev.Zizi.Utils;
 using WinTenDev.Zizi.Utils.Telegram;
+using WinTenDev.Zizi.Utils.Text;
 
-namespace WinTenDev.Zizi.Services.Telegram.Extensions;
+namespace WinTenDev.Zizi.Services.Extensions;
 
 public static class TelegramServiceActivityExtension
 {
+    public static async Task OnCallbackReceiveAsync(this TelegramService telegramService)
+    {
+        var callbackQuery = telegramService.CallbackQuery;
+        telegramService.CallBackMessageId = callbackQuery.Message.MessageId;
+
+        var pingCallback = telegramService.GetRequiredService<PingCallback>();
+        var actionCallback = telegramService.GetRequiredService<ActionCallback>();
+        var helpCallback = telegramService.GetRequiredService<HelpCallback>();
+        var rssCtlCallback = telegramService.GetRequiredService<RssCtlCallback>();
+        var settingsCallback = telegramService.GetRequiredService<SettingsCallback>();
+        var verifyCallback = telegramService.GetRequiredService<VerifyCallback>();
+
+        Log.Verbose("CallbackQuery: {Json}", callbackQuery.ToJson(true));
+
+        var partsCallback = callbackQuery.Data.SplitText(" ");
+        Log.Debug("Callbacks: {CB}", partsCallback);
+
+        switch (partsCallback.ElementAtOrDefault(0))// Level 0
+        {
+            case "pong":
+            case "PONG":
+                var pingResult = await pingCallback.ExecuteAsync();
+                Log.Information("PingResult: {0}", pingResult.ToJson(true));
+                break;
+
+            case "action":
+                var actionResult = await actionCallback.ExecuteAsync();
+                Log.Information("ActionResult: {V}", actionResult.ToJson(true));
+                break;
+
+            case "help":
+                var helpResult = await helpCallback.ExecuteAsync();
+                Log.Information("HelpResult: {V}", helpResult.ToJson(true));
+                break;
+
+            case "rssctl":
+                var result = await rssCtlCallback.ExecuteAsync();
+                break;
+
+            case "setting":
+                var settingResult = await settingsCallback.ExecuteToggleAsync();
+                Log.Information("SettingsResult: {V}", settingResult.ToJson(true));
+                break;
+
+            case "verify":
+                var verifyResult = await verifyCallback.ExecuteVerifyAsync();
+                Log.Information("VerifyResult: {V}", verifyResult.ToJson(true));
+                break;
+        }
+    }
+
     public static async Task<bool> OnUpdatePreTaskAsync(this TelegramService telegramService)
     {
         var op = Operation.Begin("Run PreTask for ChatId: {ChatId}", telegramService.ChatId);

@@ -433,6 +433,13 @@ public class TelegramService
         return cmd;
     }
 
+    public string GetCommandParam(int index)
+    {
+        var value = MessageTextParts.Skip(1).ElementAtOrDefault(index);
+
+        return value;
+    }
+
     public bool IsCommand(string command)
     {
         return GetCommand() == command;

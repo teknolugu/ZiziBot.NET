@@ -5,7 +5,7 @@ using WinTenDev.Zizi.Utils;
 using WinTenDev.Zizi.Utils.Telegram;
 using WinTenDev.Zizi.Utils.Text;
 
-namespace WinTenDev.ZiziBot.AppHost.Handlers.Callbacks;
+namespace WinTenDev.Zizi.Services.Callbacks;
 
 public class HelpCallback
 {

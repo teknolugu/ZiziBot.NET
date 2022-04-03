@@ -6,9 +6,10 @@ using Telegram.Bot.Types;
 using WinTenDev.Zizi.Models.Dto;
 using WinTenDev.Zizi.Models.Enums;
 using WinTenDev.Zizi.Models.Types;
+using WinTenDev.Zizi.Services.Telegram;
 using WinTenDev.Zizi.Utils;
 
-namespace WinTenDev.Zizi.Services.Telegram.Extensions;
+namespace WinTenDev.Zizi.Services.Extensions;
 
 public static class TelegramServiceMessageExtension
 {
@@ -122,6 +123,12 @@ public static class TelegramServiceMessageExtension
             if (!chatSettings.EnableWordFilterGroupWide)
             {
                 Log.Debug("Word Filter on {ChatId} is disabled!", chatId);
+                return false;
+            }
+
+            if (await telegramService.CheckFromAdminOrAnonymous())
+            {
+                Log.Debug("Scan Message disabled for Administrator. ChatId: {ChatId}", chatId);
                 return false;
             }
 

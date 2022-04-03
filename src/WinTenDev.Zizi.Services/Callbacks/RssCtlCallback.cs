@@ -7,7 +7,7 @@ using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Services.Telegram;
 using WinTenDev.Zizi.Utils;
 
-namespace WinTenDev.ZiziBot.AppHost.Handlers.Callbacks;
+namespace WinTenDev.Zizi.Services.Callbacks;
 
 public class RssCtlCallback
 {

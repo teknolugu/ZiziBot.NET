@@ -127,6 +127,14 @@ public static class FluentMigrationExtension
         execute.Sql($"DROP VIEW IF EXISTS {tableName}");
     }
 
+    public static void DropTableIfExists(
+        this IExecuteExpressionRoot self,
+        string tableName
+    )
+    {
+        self.Sql($"DROP TABLE IF EXISTS {tableName}");
+    }
+
     public static IFluentSyntax CreateTableIfNotExists(
         this MigrationBase self,
         string tableName,
@@ -159,4 +167,5 @@ public static class FluentMigrationExtension
 
         return null;
     }
+
 }
