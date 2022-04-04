@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Hangfire;
+using Humanizer;
 using MoreLinq;
 using Serilog;
 using Telegram.Bot;
@@ -95,8 +96,12 @@ namespace WinTenDev.Zizi.Services.Telegram
                 return;
             }
 
+            var timeName = findCurrent.Key.Titleize();
+            var cityName = shalatTime.CityName.Titleize();
+
             var sendText = HtmlMessage.Empty
-                .Bold(findCurrent.Key).Text($" Telah masuk untuk kawasan {shalatTime.CityName} dan sekitarnya.");
+                .Text("Telah masuk waktu ").Bold(timeName)
+                .Text($" untuk kawasan {cityName} dan sekitarnya.");
 
             await _botClient.SendTextMessageAsync(
                 chatId: chatId,
