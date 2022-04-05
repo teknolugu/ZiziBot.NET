@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using CacheTower;
 using Hangfire;
-using Humanizer;
 using Microsoft.Extensions.Logging;
 using MoreLinq;
 using Serilog;
@@ -82,44 +81,68 @@ namespace WinTenDev.Zizi.Services.Telegram
         {
             Log.Information("Starting send Shalat Time notification to ChatId: {ChatId}", chatId);
             var shalatTimes = await _shalatTimeService.GetCities(chatId);
+            var shalatTimesCount = shalatTimes.Count;
 
-            if (shalatTimes.Count == 0)
+            if (shalatTimesCount == 0)
             {
                 Log.Debug("No City set for ChatId: {ChatId}", chatId);
                 return;
             }
 
-            foreach (var shalatTime in shalatTimes)
-            {
-                var shalatTimeResponse = await _fathimahApiService.GetShalatTime(
-                    dateTime: DateTime.Now,
-                    cityId: shalatTime.CityId
-                );
+            _logger.LogInformation(
+                "Found about {Count} cities Shalat Time configuration for ChatId: {ChatId}",
+                shalatTimesCount,
+                chatId
+            );
 
-                var currentTime = DateTime.Now.ToString("HH:mm");
-                var jadwalStr = shalatTimeResponse.Jadwal.Data.ToDictionary();
-                var findCurrent = jadwalStr
-                    .FirstOrDefault(dictObj => dictObj.Value.ToString() == currentTime);
+            await shalatTimes.AsyncParallelForEach(
+                maxDegreeOfParallelism: 8,
+                body: async shalatTime => {
+                    _logger.LogDebug(
+                        "Sending notification for City: {City} to ChatId: {ChatId}",
+                        shalatTime.CityId,
+                        chatId
+                    );
 
-                if (findCurrent.IsNull())
-                {
-                    Log.Debug("Not Shalat Time found current time at ChatId: {ChatId}", chatId);
-                    return;
+                    var shalatTimeResponse = await _fathimahApiService.GetShalatTime(
+                        dateTime: DateTime.Now,
+                        cityId: shalatTime.CityId
+                    );
+
+                    var currentTime = DateTime.Now.ToString("HH:mm");
+                    var jadwalStr = shalatTimeResponse.Jadwal.Data.ToDictionary();
+                    var findCurrent = jadwalStr
+                        .FirstOrDefault(dictObj => dictObj.Value.ToString() == currentTime);
+
+                    if (findCurrent.IsNull())
+                    {
+                        Log.Debug(
+                            "No Shalat Time found current time for CityId: {CityId} at ChatId: {ChatId}",
+                            shalatTime.CityId,
+                            chatId
+                        );
+                        return;
+                    }
+
+                    var timeName = findCurrent.Key.ToTitleCase();
+                    var cityName = shalatTime.CityName.ToTitleCase();
+
+                    var sendText = HtmlMessage.Empty
+                        .Text($"Telah masuk waktu <b>{timeName}</b> untuk <b>{cityName}</b> dan sekitarnya.");
+
+                    await _botClient.SendTextMessageAsync(
+                        chatId: chatId,
+                        text: sendText.ToString(),
+                        parseMode: ParseMode.Html
+                    );
+
+                    _logger.LogDebug(
+                        "Notification sent for City: {City} to ChatId: {ChatId}",
+                        shalatTime.CityId,
+                        chatId
+                    );
                 }
-
-                var timeName = findCurrent.Key.Titleize();
-                var cityName = shalatTime.CityName.Titleize();
-
-                var sendText = HtmlMessage.Empty
-                    .Text("Telah masuk waktu ").Bold(timeName)
-                    .Text($" untuk kawasan {cityName} dan sekitarnya.");
-
-                await _botClient.SendTextMessageAsync(
-                    chatId: chatId,
-                    text: sendText.ToString(),
-                    parseMode: ParseMode.Html
-                );
-            }
+            );
 
             Log.Information("Send notification Shalat Time to ChatId: {ChatId} finish", chatId);
         }
