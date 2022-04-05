@@ -45,14 +45,28 @@ namespace WinTenDev.Zizi.Services.Extensions
             var fathimahApiService = telegramService.GetRequiredService<FathimahApiService>();
 
             var cities = await fathimahApiService.GetAllCityAsync();
-            var filterCity = cities.Kota
-                .Where(kota => kota.Nama.Contains(inputCity, StringComparison.CurrentCultureIgnoreCase))
+            var filteredCity = cities.Kota
+                .Where(
+                    kota =>
+                        kota.Nama.Contains(inputCity, StringComparison.CurrentCultureIgnoreCase) ||
+                        kota.Id.ToString() == inputCity
+                )
                 .ToList();
+            var filteredCityCount = filteredCity.Count;
+            var filteredCityStr = filteredCity
+                .Select(
+                    (
+                        kota,
+                        index
+                    ) => $"{index + 1}. <code>{kota.Id}</code> <code>{kota.Nama}</code>"
+                )
+                .JoinStr("\n");
 
-            var findResult = filterCity.Count switch
+            var findResult = filteredCity.Count switch
             {
                 0 => "Kota yang di masukkan tidak di temukan, silakan cari kota lain",
-                > 1 => "Ditemukan sebanyak " + filterCity.Count + " kota, silakan pilih salah satu",
+                > 1 => $"Ditemukan sebanyak {filteredCityCount} kota, silakan pilih salah satu" +
+                       $"\n{filteredCityStr}",
                 _ => null
             };
 
@@ -67,14 +81,14 @@ namespace WinTenDev.Zizi.Services.Extensions
                 return;
             }
 
-            var shalatTome = telegramService.GetRequiredService<ShalatTimeService>();
+            var shalatTimeService = telegramService.GetRequiredService<ShalatTimeService>();
             var shalatTimeNotifyService = telegramService.GetRequiredService<ShalatTimeNotifyService>();
-            var firstCity = filterCity.FirstOrDefault();
+            var firstCity = filteredCity.FirstOrDefault();
 
             await telegramService.AppendTextAsync($"<b>Kota/Kab ID: </b><code>{firstCity.Id}</code>");
             await telegramService.AppendTextAsync($"<b>Nama: </b><code>{firstCity.Nama}</code>");
 
-            if (await shalatTome.IsExistAsync(chatId, firstCity.Nama))
+            if (await shalatTimeService.IsExistAsync(chatId, firstCity.Nama))
             {
                 await telegramService.AppendTextAsync(
                     sendText: "Sepertinya kota ini sudah ditambahkan",
@@ -84,7 +98,7 @@ namespace WinTenDev.Zizi.Services.Extensions
             }
 
             await telegramService.AppendTextAsync("Sedang menyimpan data kota");
-            await shalatTome.SaveCityAsync(
+            await shalatTimeService.SaveCityAsync(
                 new ShalatTime()
                 {
                     ChatId = chatId,
