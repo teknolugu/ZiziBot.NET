@@ -47,7 +47,7 @@ public static class TelegramServiceMemberExtension
 
         if (!antiSpamResult.IsAnyBanned) return antiSpamResult;
 
-        var message = telegramService.Message;
+        var message = telegramService.MessageOrEdited;
 
         await Task.WhenAll(
             telegramService.KickMemberAsync(
