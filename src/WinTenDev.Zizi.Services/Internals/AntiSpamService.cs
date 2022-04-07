@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
 using Flurl;
@@ -8,6 +9,7 @@ using Serilog;
 using SerilogTimings;
 using SpamWatch.Types;
 using WinTenDev.Zizi.Models.Configs;
+using WinTenDev.Zizi.Models.Enums.Languages;
 using WinTenDev.Zizi.Models.Tables;
 using WinTenDev.Zizi.Models.Types;
 using WinTenDev.Zizi.Models.Validators;
@@ -23,6 +25,7 @@ public class AntiSpamService
 {
     private readonly CacheService _cacheService;
     private readonly ChatService _chatService;
+    private readonly LocalizationService _localizationService;
     private readonly GlobalBanService _globalBanService;
     private readonly SettingsService _settingsService;
     private readonly SpamWatchConfig _spamWatchConfig;
@@ -34,12 +37,14 @@ public class AntiSpamService
     /// <param name="spamWatchConfig"></param>
     /// <param name="cacheService"></param>
     /// <param name="chatService"></param>
+    /// <param name="localizationService"></param>
     /// <param name="globalBanService">The global ban service.</param>
     /// <param name="settingsService"></param>
     public AntiSpamService(
         IOptionsSnapshot<SpamWatchConfig> spamWatchConfig,
         CacheService cacheService,
         ChatService chatService,
+        LocalizationService localizationService,
         GlobalBanService globalBanService,
         SettingsService settingsService
     )
@@ -47,6 +52,7 @@ public class AntiSpamService
         _spamWatchConfig = spamWatchConfig.Value;
         _cacheService = cacheService;
         _chatService = chatService;
+        _localizationService = localizationService;
         _globalBanService = globalBanService;
         _settingsService = settingsService;
     }
@@ -82,7 +88,11 @@ public class AntiSpamService
         var casBanTask = CheckCasBan(userId);
         var gBanTask = CheckEs2Ban(userId);
 
-        await Task.WhenAll(spamWatchTask, casBanTask, gBanTask);
+        await Task.WhenAll(
+            spamWatchTask,
+            casBanTask,
+            gBanTask
+        );
 
         var swBan = spamWatchTask.Result;
         var casBan = casBanTask.Result;
@@ -95,15 +105,25 @@ public class AntiSpamService
         }
         else
         {
-            var banMsg = $"Pengguna {userId} telah di Ban di Federasi";
+            var banMessage = _localizationService.GetLoc(
+                langCode: _chatSetting.LanguageCode,
+                enumPath: GlobalBan.BanMessage,
+                placeHolders: new List<(string placeholder, string value)>()
+                {
+                    ("UserId", userId.ToString())
+                }
+            );
 
-            if (es2Ban) banMsg += "\n- ES2 Global Ban";
-            if (casBan) banMsg += "\n- CAS Fed";
-            if (swBan) banMsg += "\n- SpamWatch Fed";
+            var htmlMessage = HtmlMessage.Empty
+                .TextBr(banMessage);
+
+            if (es2Ban) htmlMessage.Url("https://t.me/WinTenDev", "- ES2 Global Ban").Br();
+            if (casBan) htmlMessage.Url($"https://cas.chat/query?u={userId}", "- CAS Fed").Br();
+            if (swBan) htmlMessage.Url("https://t.me/SpamWatchSupport", "- SpamWatch Fed");
 
             spamResult = new AntiSpamResult()
             {
-                MessageResult = banMsg,
+                MessageResult = htmlMessage.ToString(),
                 IsAnyBanned = anyBan,
                 IsEs2Banned = es2Ban,
                 IsCasBanned = casBan,
@@ -145,10 +165,18 @@ public class AntiSpamService
         }
         catch (Exception exception)
         {
-            Log.Error(exception, "Error check ES2 Ban for UserId {UserId}", userId);
+            Log.Error(
+                exception,
+                "Error check ES2 Ban for UserId {UserId}",
+                userId
+            );
         }
 
-        Log.Debug("ES2 Ban result for UserId: '{UserId}' ? '{IsBan}'", userId, isBan);
+        Log.Debug(
+            "ES2 Ban result for UserId: '{UserId}' ? '{IsBan}'",
+            userId,
+            isBan
+        );
 
         op.Complete();
 
@@ -194,55 +222,66 @@ public class AntiSpamService
             return false;
         }
 
-        var check = await _cacheService.GetOrSetAsync(cacheKey, async () => {
-            var isBan = false;
+        var check = await _cacheService.GetOrSetAsync(
+            cacheKey: cacheKey,
+            action: async () => {
+                var isBan = false;
 
-            try
-            {
-                var check = await baseUrl
-                    .AppendPathSegment("banlist")
-                    .AppendPathSegment(userId)
-                    .WithOAuthBearerToken(apiToken)
-                    .AllowHttpStatus("404")
-                    .GetJsonAsync<Ban>();
-
-                isBan = check.Reason.IsNotNullOrEmpty();
-                Log.Debug("SpamWatch Result: {@V}", check);
-            }
-            catch (FlurlHttpException ex)
-            {
-                if (!ex.Message.Contains("timeout", StringComparison.CurrentCultureIgnoreCase))
+                try
                 {
-                    var callHttpStatus = ex.Call.HttpResponseMessage?.StatusCode;
+                    var check = await baseUrl
+                        .AppendPathSegment("banlist")
+                        .AppendPathSegment(userId)
+                        .WithOAuthBearerToken(apiToken)
+                        .AllowHttpStatus("404")
+                        .GetJsonAsync<Ban>();
 
-                    // ReSharper disable once SwitchStatementHandlesSomeKnownEnumValuesWithDefault
-                    switch (callHttpStatus)
+                    isBan = check.Reason.IsNotNullOrEmpty();
+                    Log.Debug("SpamWatch Result: {@V}", check);
+                }
+                catch (FlurlHttpException ex)
+                {
+                    if (!ex.Message.Contains("timeout", StringComparison.CurrentCultureIgnoreCase))
                     {
-                        case HttpStatusCode.NotFound:
-                            Log.Debug("No UserId {UserId} found at SpamWatch Fed", userId);
-                            isBan = false;
-                            break;
+                        var callHttpStatus = ex.Call.HttpResponseMessage?.StatusCode;
 
-                        case HttpStatusCode.Unauthorized:
-                            Log.Warning("Please check your SpamWatch API Token!");
-                            Log.Error(ex, "SpamWatch Exception");
-                            break;
+                        // ReSharper disable once SwitchStatementHandlesSomeKnownEnumValuesWithDefault
+                        switch (callHttpStatus)
+                        {
+                            case HttpStatusCode.NotFound:
+                                Log.Debug("No UserId {UserId} found at SpamWatch Fed", userId);
+                                isBan = false;
+                                break;
 
-                        default:
-                            Log.Error(ex, "SpamWatch - Unknown call status");
-                            break;
+                            case HttpStatusCode.Unauthorized:
+                                Log.Warning("Please check your SpamWatch API Token!");
+                                Log.Error(ex, "SpamWatch Exception");
+                                break;
+
+                            default:
+                                Log.Error(ex, "SpamWatch - Unknown call status");
+                                break;
+                        }
                     }
                 }
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "SpamWatch Exception UserId: {UserId}", userId);
-            }
+                catch (Exception ex)
+                {
+                    Log.Error(
+                        ex,
+                        "SpamWatch Exception UserId: {UserId}",
+                        userId
+                    );
+                }
 
-            return isBan;
-        });
+                return isBan;
+            }
+        );
 
-        Log.Debug("SpamWatch result for UserId: '{UserId}' ? '{IsBan}'", userId, check);
+        Log.Debug(
+            "SpamWatch result for UserId: '{UserId}' ? '{IsBan}'",
+            userId,
+            check
+        );
         op.Complete();
 
         return check;
@@ -268,17 +307,24 @@ public class AntiSpamService
 
         try
         {
-            var data = await _cacheService.GetOrSetAsync(casCacheKey, async () => {
-                var url = "https://api.cas.chat/check".SetQueryParam("user_id", userId);
-                var resp = await url.GetJsonAsync<CasBan>();
+            var data = await _cacheService.GetOrSetAsync(
+                cacheKey: casCacheKey,
+                action: async () => {
+                    var url = "https://api.cas.chat/check".SetQueryParam("user_id", userId);
+                    var resp = await url.GetJsonAsync<CasBan>();
 
-                return resp;
-            });
+                    return resp;
+                }
+            );
 
             Log.Debug("CasBan Result: {@V}", data);
 
             var isBan = data.Ok;
-            Log.Debug("CAS Ban result for UserId: '{UserId}' ? '{IsBan}'", userId, isBan);
+            Log.Debug(
+                "CAS Ban result for UserId: '{UserId}' ? '{IsBan}'",
+                userId,
+                isBan
+            );
 
             op.Complete();
 
@@ -286,7 +332,11 @@ public class AntiSpamService
         }
         catch (Exception exception)
         {
-            Log.Error(exception, "CAS Ban Exception UserId: {UserId}", userId);
+            Log.Error(
+                exception,
+                "CAS Ban Exception UserId: {UserId}",
+                userId
+            );
 
             op.Complete();
             return false;

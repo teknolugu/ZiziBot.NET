@@ -58,6 +58,7 @@ public static class TelegramServiceMemberExtension
             telegramService.SendTextMessageAsync(
                 sendText: messageBan,
                 replyToMsgId: 0,
+                disableWebPreview: true,
                 scheduleDeleteAt: DateTime.UtcNow.AddDays(1),
                 preventDuplicateSend: true,
                 messageFlag: MessageFlag.GBan
