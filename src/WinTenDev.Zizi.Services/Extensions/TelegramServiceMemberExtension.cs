@@ -47,7 +47,7 @@ public static class TelegramServiceMemberExtension
 
         if (!antiSpamResult.IsAnyBanned) return antiSpamResult;
 
-        var message = telegramService.Message;
+        var message = telegramService.MessageOrEdited;
 
         await Task.WhenAll(
             telegramService.KickMemberAsync(
@@ -58,6 +58,7 @@ public static class TelegramServiceMemberExtension
             telegramService.SendTextMessageAsync(
                 sendText: messageBan,
                 replyToMsgId: 0,
+                disableWebPreview: true,
                 scheduleDeleteAt: DateTime.UtcNow.AddDays(1),
                 preventDuplicateSend: true,
                 messageFlag: MessageFlag.GBan

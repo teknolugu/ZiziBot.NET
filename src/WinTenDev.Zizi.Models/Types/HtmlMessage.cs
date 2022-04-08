@@ -53,7 +53,10 @@ public class HtmlMessage
         return this;
     }
 
-    public HtmlMessage TextBr(string text) => Text(text + "\n\r");
+    public HtmlMessage TextBr(
+        string text,
+        bool encoded = false
+    ) => Text(text + "\n\r", encoded);
 
     public HtmlMessage Br()
     {

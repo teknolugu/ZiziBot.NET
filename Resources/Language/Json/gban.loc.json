@@ -1,0 +1,6 @@
+﻿{
+	"GlobalBan.BanMessage": {
+		"id": "<b>Global Ban Fed</b>\n<b>UserId: </b><code>{UserId}</code>\n<b>Catatan: </b>Pengguna telah di Ban di Federasi dibawah ini.",
+		"en": "<b>Global Ban Fed</b>\n<b>UserId: </b><code>{UserId}</code>\n<b>Note: </b>User has been banned in the following federations."
+	}
+}
