@@ -11,17 +11,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Prepare Build
-      uses: actions/checkout@v2
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: 6.0.x
+#     - name: Prepare Build
+#       uses: actions/checkout@v2
+#     - name: Setup .NET
+#       uses: actions/setup-dotnet@v1
+#       with:
+#         dotnet-version: 6.0.x
 
-    - name: Restore dependencies
-      run: dotnet restore
-    - name: Publish
-      run: dotnet publish src/WinTenDev.ZiziBot.AppHost -r linux-x64 -c Release --self-contained=false /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true -o build/zizi-bot
+#     - name: Restore dependencies
+#       run: dotnet restore
+#     - name: Publish
+#       run: dotnet publish src/WinTenDev.ZiziBot.AppHost -r linux-x64 -c Release --self-contained=false /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true -o build/zizi-bot
 
     - name: Send notify to Telegram before deployment
       uses: appleboy/telegram-action@v0.1.1
@@ -35,25 +35,44 @@ jobs:
           Zizi Bot entering Maintenance Mode
         # disables link previews for links in this message
         disable_web_page_preview: true
-
-    - name: ssh-scp-ssh-pipelines
+        
+    - name: Copy Binary from Beta
       # You may pin to the exact commit or the version.
-      # uses: cross-the-world/ssh-scp-ssh-pipelines@78e864b4890087a58248ff39320406971ca88b89
-      uses: cross-the-world/ssh-scp-ssh-pipelines@v1.1.4
+      # uses: cross-the-world/ssh-pipeline@7f022867934a210af826af99ef80d96f03a094d5
+      uses: cross-the-world/ssh-pipeline@v1.2.0
       with:
         # ssh remote host
         host: ${{ secrets.VPS_HOST }}
+        # ssh remote port
+        port: 22
         # ssh remote user
         user: ${{ secrets.VPS_USER }}
         # ssh remote password
-        pass: ${{ secrets.VPS_PASS }}
-        # execute pre-commands before scp
-        first_ssh: ${{ secrets.CMD_STOP_ZIZIBOT }}
-        # scp from local to remote
-        scp: |
-          build/zizi-bot/* => ${{ secrets.VPS_REMOTE_DIR_STABLE }}
-        # execute post-commands after scp
-        last_ssh: ${{ secrets.CMD_START_ZIZIBOT }}
+        pass:  ${{ secrets.VPS_PASS }}
+        # execute commands on ssh
+        script: |
+          ${{ secrets.CMD_STOP_ZIZIBOT }}
+          cp ${{ secrets.VPS_REMOTE_DIR }}/WinTenDev.ZiziBot.AppHost ${{ secrets.VPS_REMOTE_DIR_STABLE }}/WinTenDev.ZiziBot.AppHost
+          ${{ secrets.CMD_START_ZIZIBOT }}
+
+#     - name: ssh-scp-ssh-pipelines
+#       # You may pin to the exact commit or the version.
+#       # uses: cross-the-world/ssh-scp-ssh-pipelines@78e864b4890087a58248ff39320406971ca88b89
+#       uses: cross-the-world/ssh-scp-ssh-pipelines@v1.1.4
+#       with:
+#         # ssh remote host
+#         host: ${{ secrets.VPS_HOST }}
+#         # ssh remote user
+#         user: ${{ secrets.VPS_USER }}
+#         # ssh remote password
+#         pass: ${{ secrets.VPS_PASS }}
+#         # execute pre-commands before scp
+#         first_ssh: ${{ secrets.CMD_STOP_ZIZIBOT }}
+#         # scp from local to remote
+#         scp: |
+#           build/zizi-bot/* => ${{ secrets.VPS_REMOTE_DIR_STABLE }}
+#         # execute post-commands after scp
+#         last_ssh: ${{ secrets.CMD_START_ZIZIBOT }}
 
     - name: Send notify to Telegram after deployment
       uses: appleboy/telegram-action@v0.1.1
