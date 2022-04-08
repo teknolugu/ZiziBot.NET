@@ -90,8 +90,8 @@ public static class HangfireServiceExtension
         {
             if (lastFtlError.Contains("Storage", StringComparison.CurrentCultureIgnoreCase))
             {
-                Log.Warning("Last error about Hangfire, seem need to Reset Storage");
-                storageService.ResetHangfire(ResetTableMode.Truncate).WaitAndUnwrapException();
+                Log.Warning("Last error about Hangfire, seem need to Reset MySql Storage");
+                storageService.ResetHangfireMySqlStorage().WaitAndUnwrapException();
 
                 "".SaveErrorToText().WaitAndUnwrapException();
             }
@@ -111,7 +111,11 @@ public static class HangfireServiceExtension
         var password = hangfireConfig.Password;
 
         Log.Information("Hangfire Url: {HangfireBaseUrl}", baseUrl);
-        Log.Information("Hangfire Auth: {HangfireUsername} | {HangfirePassword}", username, password);
+        Log.Information(
+            "Hangfire Auth: {HangfireUsername} | {HangfirePassword}",
+            username,
+            password
+        );
 
         app.ResetHangfireStorageIfRequired();
 
@@ -136,9 +140,9 @@ public static class HangfireServiceExtension
             Queues = hangfireConfig.Queues
         };
 
-        app.UseHangfireServer
-        (
-            serverOptions, new[]
+        app.UseHangfireServer(
+            serverOptions,
+            new[]
             {
                 new ProcessMonitor(TimeSpan.FromSeconds(3))
             }
