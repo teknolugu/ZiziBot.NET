@@ -19,7 +19,7 @@
         <PackageReference Include="EasyCaching.SQLite" Version="1.5.1"/>
         <PackageReference Include="EasyEncrypt" Version="2.2.1"/>
         <PackageReference Include="Exceptionless.AspNetCore" Version="4.6.2"/>
-        <PackageReference Include="Fedorus.Telegram.Bot.Framework" Version="1.0.3"/>
+        <PackageReference Include="Fedorus.Telegram.Bot.Framework" Version="1.0.4"/>
         <PackageReference Include="FluentMigrator.Runner" Version="3.3.2"/>
         <PackageReference Include="Flurl.Http" Version="3.2.2"/>
         <PackageReference Include="Google.Cloud.Firestore" Version="2.5.0"/>
@@ -57,8 +57,8 @@
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="Scrutor.LYKA" Version="1.0.0"/>
-        <PackageReference Include="Sentry.AspNetCore" Version="3.15.0"/>
-        <PackageReference Include="Sentry.Serilog" Version="3.15.0"/>
+        <PackageReference Include="Sentry.AspNetCore" Version="3.16.0"/>
+        <PackageReference Include="Sentry.Serilog" Version="3.16.0"/>
         <PackageReference Include="Serilog" Version="2.10.0"/>
         <PackageReference Include="Serilog.AspNetCore" Version="5.0.0"/>
         <PackageReference Include="Serilog.Expressions" Version="3.3.0"/>
@@ -91,13 +91,14 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Content Include="..\..\Resources\**\*" LinkBase="Storage">
+        <Content Include="..\..\Resources\Language\**\*" LinkBase="Storage\Language">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </Content>
 
         <None Update="Storage\**">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
+
     </ItemGroup>
 
 </Project>
