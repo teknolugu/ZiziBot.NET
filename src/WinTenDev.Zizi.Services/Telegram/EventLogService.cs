@@ -34,7 +34,10 @@ public class EventLogService
         _settingsService = settingsService;
     }
 
-    private async Task<List<long>> GetEventLogTargets(long chatId)
+    private async Task<List<long>> GetEventLogTargets(
+        long chatId,
+        bool sendGlobalOnly = false
+    )
     {
         var currentSetting = await _settingsService.GetSettingsByGroup(chatId);
 
@@ -44,7 +47,7 @@ public class EventLogService
         var eventLogTargets = new List<long>()
         {
             globalLogTarget,
-            chatLogTarget
+            sendGlobalOnly ? -1 : chatLogTarget
         };
 
         var filteredTargets = eventLogTargets
@@ -57,12 +60,13 @@ public class EventLogService
     }
 
     public async Task SendEventLogAsync(
-        long chatId,
         Message message,
+        long chatId = -1,
         string text = "N/A",
         MessageFlag messageFlag = MessageFlag.General,
         int forwardMessageId = -1,
-        bool deleteForwardedMessage = false
+        bool deleteForwardedMessage = false,
+        bool sendGlobalOnly = false
     )
     {
         Log.Information("Preparing send EventLog");
@@ -83,8 +87,8 @@ public class EventLogService
         var sendLog = "🐾 <b>EventLog Preview</b>" +
                       $"\n<b>Chat:</b> <code>{reducedChatId}</code> - {chatNameLink}" +
                       $"\n<b>User:</b> <code>{fromId}</code> - {fromNameLink}" +
-                      $"\n<b>Flag</b>: #{messageFlag}" +
-                      $"\nNote: {text}" +
+                      $"\n<b>Flag:</b> #{messageFlag}" +
+                      $"\n<b>Note:</b> {text}" +
                       $"\n<a href='{messageLink}'>Go to Message</a>" +
                       $"\n#{message.Type} #U{fromId} #C{reducedChatId}";
 
@@ -93,20 +97,22 @@ public class EventLogService
             chatId: chatId,
             disableWebPreview: true,
             forwardMessageId: forwardMessageId,
-            deleteForwardedMessage: deleteForwardedMessage
+            deleteForwardedMessage: deleteForwardedMessage,
+            sendGlobalOnly: sendGlobalOnly
         );
     }
 
     public async Task SendEventLogCoreAsync(
         string sendText,
-        long chatId,
+        long chatId = -1,
         bool disableWebPreview = false,
         int replyToMessageId = -1,
         int forwardMessageId = -1,
-        bool deleteForwardedMessage = false
+        bool deleteForwardedMessage = false,
+        bool sendGlobalOnly = false
     )
     {
-        var eventLogTargets = await GetEventLogTargets(chatId);
+        var eventLogTargets = await GetEventLogTargets(chatId, sendGlobalOnly);
 
         foreach (var eventLogTarget in eventLogTargets)
         {
