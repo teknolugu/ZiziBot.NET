@@ -37,7 +37,20 @@ internal static class AppStartupExtensions
             .Configure<BotOptions<BotClient>>(configSection)
             .Configure<CustomBotOptions<BotClient>>(configSection);
 
-        services.AddScoped<ITelegramBotClient>(_ => new TelegramBotClient(tgBotConfig.ApiToken));
+        if (tgBotConfig.UseLocalBotServer &&
+            tgBotConfig.EngineMode == EngineMode.WebHook)
+        {
+            services.AddScoped<ITelegramBotClient>(
+                _ => new TelegramBotClient(
+                    token: tgBotConfig.ApiToken,
+                    baseUrl: tgBotConfig.CustomBotServer
+                )
+            );
+        }
+        else
+        {
+            services.AddScoped<ITelegramBotClient>(_ => new TelegramBotClient(tgBotConfig.ApiToken));
+        }
 
         return services;
     }
