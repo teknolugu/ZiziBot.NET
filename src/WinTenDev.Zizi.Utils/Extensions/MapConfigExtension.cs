@@ -96,6 +96,7 @@ public static class MapConfigExtension
         services.Configure<HangfireConfig>(config.GetSection(nameof(HangfireConfig)));
         services.Configure<HealthConfig>(config.GetSection(nameof(HealthConfig)));
         services.Configure<LocalizationConfig>(config.GetSection(nameof(LocalizationConfig)));
+        services.Configure<NewRelicConfig>(config.GetSection(nameof(NewRelicConfig)));
         services.Configure<OptiicDevConfig>(config.GetSection(nameof(OptiicDevConfig)));
         services.Configure<SentryConfig>(config.GetSection(nameof(SentryConfig)));
         services.Configure<TdLibConfig>(config.GetSection(nameof(TdLibConfig)));

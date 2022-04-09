@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
+using NewRelic.LogEnrichers.Serilog;
 using Serilog;
 using Serilog.Configuration;
 using Serilog.Debugging;
@@ -135,6 +136,7 @@ public static class SerilogServiceExtension
         var datadogConfig = serviceProvider.GetRequiredService<IOptions<DataDogConfig>>().Value;
         var eventLogConfig = serviceProvider.GetRequiredService<IOptions<EventLogConfig>>().Value;
         var exceptionLessConfig = serviceProvider.GetRequiredService<IOptions<ExceptionlessConfig>>().Value;
+        var newRelicConfig = serviceProvider.GetRequiredService<IOptions<NewRelicConfig>>().Value;
         var grafanaConfig = serviceProvider.GetRequiredService<IOptions<GrafanaConfig>>().Value;
         var tgBotConfig = serviceProvider.GetRequiredService<IOptions<TgBotConfig>>().Value;
         var sentryConfig = serviceProvider.GetRequiredService<IOptions<SentryConfig>>().Value;
@@ -186,6 +188,7 @@ public static class SerilogServiceExtension
         configuration.AddSentry(sentryConfig);
         configuration.AddTelegramBot4EventLog(eventLogConfig);
         configuration.AddExceptionless(exceptionLessConfig);
+        configuration.AddNewRelic(newRelicConfig);
 
         return configuration;
     }
@@ -321,6 +324,26 @@ public static class SerilogServiceExtension
         ExceptionlessClient.Default.Startup(config.ApiKey);
 
         logger.WriteTo.Exceptionless(builder => builder.AddTags(config.Tags));
+
+        return logger;
+    }
+
+    private static LoggerConfiguration AddNewRelic(
+        this LoggerConfiguration logger,
+        NewRelicConfig config
+    )
+    {
+        if (!config.IsEnabled) return logger;
+
+        logger
+            .Enrich.WithNewRelicLogsInContext()
+            .Enrich.WithNewRelicLogsInContext();
+
+        logger.WriteTo.NewRelicLogs(
+            endpointUrl: "https://log-api.newrelic.com/log/v1",
+            applicationName: config.ApplicationName,
+            licenseKey: config.ApiKey
+        );
 
         return logger;
     }
