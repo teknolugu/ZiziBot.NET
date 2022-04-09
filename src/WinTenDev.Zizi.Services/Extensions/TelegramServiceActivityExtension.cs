@@ -127,7 +127,8 @@ public static class TelegramServiceActivityExtension
             telegramService.AfkCheckAsync(),
             telegramService.CheckNameChangesAsync(),
             telegramService.EnsureForceSubscriptionAsync(),
-            telegramService.EnsureChatAdminAsync()
+            telegramService.EnsureChatAdminAsync(),
+            telegramService.NotifyBotSlowdown()
         };
 
         nonAwaitTasks.InBackgroundAll();

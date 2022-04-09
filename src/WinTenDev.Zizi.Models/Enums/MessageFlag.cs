@@ -20,6 +20,7 @@ public enum MessageFlag
     Rules,
     SetCity,
     Shalat,
+    SlowDown,
     Tag,
     Tags,
     Username,

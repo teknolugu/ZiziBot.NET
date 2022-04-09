@@ -85,8 +85,8 @@ public class TelegramService
     public string ChatTitle { get; set; }
     public string FromNameLink { get; set; }
     private string AppendText { get; set; }
-    private string TimeInit { get; set; }
-    private string TimeProc { get; set; }
+    internal string TimeInit { get; set; }
+    internal string TimeProc { get; set; }
 
     public string AnyMessageText { get; set; }
     public string MessageOrEditedText { get; set; }
