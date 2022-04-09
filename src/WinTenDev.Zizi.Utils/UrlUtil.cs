@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using Downloader;
 using Flurl;
 using Flurl.Http;
 using Serilog;
@@ -48,6 +50,64 @@ public static class UrlUtil
         );
         webClient.DownloadFile(remoteFileUrl, localFileName);
         webClient.Dispose();
+    }
+
+    public static async Task<string> DownloadFileAsync(this string url)
+    {
+        var paths = Path.Combine("Storage/Caches/");
+        var saved = await url
+            .WithAutoRedirect(true)
+            .DownloadFileAsync(paths);
+
+        return saved;
+    }
+
+    public static async Task<string> MultiThreadDownloadFileAsync(this string url)
+    {
+        var fileName = Path.GetFileName(url);
+        var parseUrl = url.ParseUrl();
+
+        var paths = Path.Combine(
+            "Storage/Caches/",
+            parseUrl.PathSegments.Take(2).JoinStr("_"),
+            fileName
+        );
+        var downloadOpt = new DownloadConfiguration()
+        {
+            ChunkCount = 4
+        };
+
+        var downloader = new DownloadService(downloadOpt);
+
+        downloader.DownloadProgressChanged += (
+            sender,
+            args
+        ) => {
+            var downloadService = sender as DownloadService;
+            if (downloadService == null) return;
+
+            var downloadPackage = downloadService.Package;
+
+            Log.Debug(
+                "Downloading URL: {FileName}. {Run}/{Size} ({Progress}%)",
+                downloadPackage.Address,
+                downloadPackage.ReceivedBytesSize.SizeFormat(),
+                downloadPackage.TotalFileSize.SizeFormat(),
+                args.ProgressPercentage.ToString("N2")
+            );
+        };
+
+        downloader.DownloadFileCompleted += (
+            sender,
+            args
+        ) => {
+            var downloadService = sender as DownloadService;
+            Log.Information("Download completed. Sender: {@Sender}", downloadService?.Package);
+        };
+
+        await downloader.DownloadFileTaskAsync(url, paths);
+
+        return paths;
     }
 
     public static string SaveToCache(

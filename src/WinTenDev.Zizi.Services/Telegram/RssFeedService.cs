@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,10 +10,13 @@ using MoreLinq;
 using Serilog;
 using SerilogTimings;
 using Telegram.Bot;
+using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using WinTenDev.Zizi.Models.Tables;
+using WinTenDev.Zizi.Services.Externals;
 using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Utils;
+using WinTenDev.Zizi.Utils.IO;
 using WinTenDev.Zizi.Utils.Parsers;
 using WinTenDev.Zizi.Utils.Telegram;
 
@@ -23,17 +27,20 @@ public class RssFeedService
     private readonly RssService _rssService;
     private readonly IRecurringJobManager _recurringJobManager;
     private readonly ITelegramBotClient _botClient;
+    private readonly OctokitApiService _octokitApiService;
     private readonly JobsService _jobsService;
 
     public RssFeedService(
         IRecurringJobManager recurringJobManager,
         ITelegramBotClient botClient,
+        OctokitApiService octokitApiService,
         JobsService jobsService,
         RssService rssService
     )
     {
         _recurringJobManager = recurringJobManager;
         _botClient = botClient;
+        _octokitApiService = octokitApiService;
         _jobsService = jobsService;
         _rssService = rssService;
     }
@@ -93,8 +100,6 @@ public class RssFeedService
             rssUrl
         );
 
-        var isWordpress = await rssUrl.IsWordpress();
-
         var rssFeeds = await FeedReader.ReadAsync(rssUrl);
 
         var rssTitle = rssFeeds.Title;
@@ -126,56 +131,80 @@ public class RssFeedService
                 rssUrl,
                 chatId
             );
-        }
-        else
-        {
-            Log.Information(
-                "Sending article from feed {RssUrl} to {ChatId}",
-                rssUrl,
-                chatId
-            );
 
-            try
+            return;
+        }
+
+        Log.Information(
+            "Sending article from feed {RssUrl} to {ChatId}",
+            rssUrl,
+            chatId
+        );
+
+        var listAlbum = new List<IAlbumInputMedia>();
+
+        var rssSettings = await _rssService.GetRssSettingsAsync(chatId);
+        var urlSetting = rssSettings.FirstOrDefault(setting => setting.UrlFeed == rssUrl);
+
+        if (rssUrl.IsGithubReleaseUrl() &&
+            (urlSetting?.IncludeAttachment ?? false))
+        {
+            listAlbum = await _octokitApiService.GetLatestReleaseAssets(rssUrl);
+        }
+
+        try
+        {
+            if (listAlbum.Any())
+            {
+                await _botClient.SendMediaGroupAsync(
+                    chatId: chatId,
+                    media: listAlbum
+                );
+
+                var tempPath = rssUrl.ParseUrl().PathSegments.Take(2).JoinStr("_");
+                tempPath.DeleteCachesSubDir();
+            }
+            else
             {
                 await _botClient.SendTextMessageAsync(
-                    chatId,
-                    sendText,
-                    ParseMode.Html
-                );
-
-                Log.Debug("Writing to RSS History");
-
-                await _rssService.SaveRssHistoryAsync
-                (
-                    new RssHistory
-                    {
-                        Url = rssFeed.Link,
-                        RssSource = rssUrl,
-                        ChatId = chatId,
-                        Title = rssFeed.Title,
-                        PublishDate = rssFeed.PublishingDate ?? DateTime.Now,
-                        Author = rssFeed.Author ?? "N/A",
-                        CreatedAt = DateTime.Now
-                    }
+                    chatId: chatId,
+                    text: sendText,
+                    parseMode: ParseMode.Html
                 );
             }
-            catch (Exception ex)
-            {
-                Log.Error(
-                    ex.Demystify(),
-                    "RSS Broadcaster Error at ChatId {ChatId}. Url: {Url}",
-                    chatId,
-                    rssUrl
-                );
 
-                if (ex.Message.ContainsListStr(
-                        "blocked",
-                        "not found",
-                        "deactivated"
-                    ))
+            Log.Debug("Writing to RSS History");
+
+            await _rssService.SaveRssHistoryAsync
+            (
+                new RssHistory
                 {
-                    UnregisterRssFeed(chatId, rssUrl);
+                    Url = rssFeed.Link,
+                    RssSource = rssUrl,
+                    ChatId = chatId,
+                    Title = rssFeed.Title,
+                    PublishDate = rssFeed.PublishingDate ?? DateTime.Now,
+                    Author = rssFeed.Author ?? "N/A",
+                    CreatedAt = DateTime.Now
                 }
+            );
+        }
+        catch (Exception ex)
+        {
+            Log.Error(
+                ex.Demystify(),
+                "RSS Broadcaster Error at ChatId {ChatId}. Url: {Url}",
+                chatId,
+                rssUrl
+            );
+
+            if (ex.Message.ContainsListStr(
+                    "blocked",
+                    "not found",
+                    "deactivated"
+                ))
+            {
+                UnregisterRssFeed(chatId, rssUrl);
             }
         }
     }

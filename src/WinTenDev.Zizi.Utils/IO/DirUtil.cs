@@ -136,6 +136,12 @@ public static class DirUtil
         return trimStart;
     }
 
+    public static string GetPath(this string path)
+    {
+        var fileName = Path.GetFileName(path);
+        return path.TrimStartPath().Replace(fileName, "");
+    }
+
     public static string PathCombine(
         bool prependCurrentDir,
         params string[] paths
@@ -154,5 +160,11 @@ public static class DirUtil
     public static string CleanCacheFiles(Func<string, bool> predicate)
     {
         return "Storage/Caches".RemoveFiles(predicate);
+    }
+
+    public static string DeleteCachesSubDir(this string dirPath)
+    {
+        var path = Path.Combine("Storage/Caches/", dirPath).DeleteDirectory();
+        return path;
     }
 }
