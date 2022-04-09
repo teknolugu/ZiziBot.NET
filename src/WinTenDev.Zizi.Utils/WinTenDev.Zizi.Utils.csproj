@@ -18,6 +18,7 @@
         <PackageReference Include="CodeHollow.FeedReader" Version="1.2.4"/>
         <PackageReference Include="CodingSeb.Localization.JsonFileLoader" Version="1.2.0"/>
         <PackageReference Include="CsvHelper" Version="27.2.1"/>
+        <PackageReference Include="DebounceThrottle" Version="1.0.0"/>
         <PackageReference Include="DotNetZip" Version="1.16.0"/>
         <PackageReference Include="DotNurse.Injector" Version="2.5.2"/>
         <PackageReference Include="Downloader" Version="2.3.3"/>
@@ -96,12 +97,12 @@
         <PackageReference Include="Telegram.Bot" Version="17.0.0"/>
         <PackageReference Include="TgBotFramework" Version="0.5.2"/>
         <PackageReference Include="TimeSpanParserUtil" Version="1.2.0"/>
-        <PackageReference Include="WordPressPCL" Version="1.9.0" />
+        <PackageReference Include="WordPressPCL" Version="1.9.0"/>
         <PackageReference Include="WTelegramClient" Version="2.2.1"/>
-        <PackageReference Include="YamlConvert" Version="2.1.1" />
-        <PackageReference Include="YamlDotNet" Version="11.2.1" />
-        <PackageReference Include="YoutubeExplode" Version="6.1.0" />
-        <PackageReference Include="YouTubeSearch" Version="2.2.6" />
+        <PackageReference Include="YamlConvert" Version="2.1.1"/>
+        <PackageReference Include="YamlDotNet" Version="11.2.1"/>
+        <PackageReference Include="YoutubeExplode" Version="6.1.0"/>
+        <PackageReference Include="YouTubeSearch" Version="2.2.6"/>
     </ItemGroup>
 
     <ItemGroup>

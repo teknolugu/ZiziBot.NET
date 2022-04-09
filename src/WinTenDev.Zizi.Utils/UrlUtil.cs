@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using DebounceThrottle;
 using Downloader;
 using Flurl;
 using Flurl.Http;
@@ -62,22 +62,40 @@ public static class UrlUtil
         return saved;
     }
 
-    public static async Task<string> MultiThreadDownloadFileAsync(this string url)
+    public static async Task<string> MultiThreadDownloadFileAsync(
+        this string url,
+        string tempDir
+    )
     {
+        var throttleDispatcher = new ThrottleDispatcher(2000);
+
         var fileName = Path.GetFileName(url);
-        var parseUrl = url.ParseUrl();
 
         var paths = Path.Combine(
             "Storage/Caches/",
-            parseUrl.PathSegments.Take(2).JoinStr("_"),
+            tempDir,
             fileName
         );
+
         var downloadOpt = new DownloadConfiguration()
         {
-            ChunkCount = 4
+            ChunkCount = 8,
+            ParallelDownload = true,
+            OnTheFlyDownload = false
         };
 
         var downloader = new DownloadService(downloadOpt);
+
+        downloader.DownloadStarted += (
+            sender,
+            args
+        ) => {
+            Log.Information(
+                "Downloading File. FileName: {FileName}, Size: {Size}",
+                args.FileName,
+                args.TotalBytesToReceive
+            );
+        };
 
         downloader.DownloadProgressChanged += (
             sender,
@@ -87,13 +105,17 @@ public static class UrlUtil
             if (downloadService == null) return;
 
             var downloadPackage = downloadService.Package;
-
-            Log.Debug(
-                "Downloading URL: {FileName}. {Run}/{Size} ({Progress}%)",
-                downloadPackage.Address,
-                downloadPackage.ReceivedBytesSize.SizeFormat(),
-                downloadPackage.TotalFileSize.SizeFormat(),
-                args.ProgressPercentage.ToString("N2")
+            throttleDispatcher.Throttle(
+                () => {
+                    Log.Debug(
+                        "Downloading URL: {FileName}. {Run}/{Size} - {Speed} ({Progress}%)",
+                        downloadPackage.Address,
+                        downloadPackage.ReceivedBytesSize.SizeFormat(),
+                        downloadPackage.TotalFileSize.SizeFormat(),
+                        args.AverageBytesPerSecondSpeed.SizeFormat("/s"),
+                        args.ProgressPercentage.ToString("N2")
+                    );
+                }
             );
         };
 
@@ -102,7 +124,15 @@ public static class UrlUtil
             args
         ) => {
             var downloadService = sender as DownloadService;
-            Log.Information("Download completed. Sender: {@Sender}", downloadService?.Package);
+            if (downloadService == null) return;
+
+            var downloadPackage = downloadService.Package;
+
+            Log.Information(
+                "Download completed. Url: {Address}. Size: {Size}",
+                downloadPackage.Address,
+                downloadPackage.TotalFileSize.SizeFormat()
+            );
         };
 
         await downloader.DownloadFileTaskAsync(url, paths);

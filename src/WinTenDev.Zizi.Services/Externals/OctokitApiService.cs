@@ -55,19 +55,26 @@ public class OctokitApiService
         return githubReleaseAll;
     }
 
-    public async Task<List<IAlbumInputMedia>> GetLatestReleaseAssets(string url)
+    public async Task<List<IAlbumInputMedia>> GetLatestReleaseAssets(
+        string url,
+        long chatId
+    )
     {
         var listAlbum = new List<IAlbumInputMedia>();
 
         var releaseAll = await GetGithubReleaseAssets(url);
         var latestRelease = releaseAll.FirstOrDefault();
 
+        var parseUrl = url.ParseUrl().PathSegments.Take(2).JoinStr("_");
+        var uuid = StringUtil.GenerateUniqueId();
+        var tempDir = $"gh_asset_rss_downloader_{chatId}_{parseUrl}_{uuid}";
+
         if (latestRelease == null) return null;
 
         foreach (var asset in latestRelease.Assets)
         {
             var urlDoc = asset.BrowserDownloadUrl;
-            var savedFile = await urlDoc.MultiThreadDownloadFileAsync();
+            var savedFile = await urlDoc.MultiThreadDownloadFileAsync(tempDir);
             var fileName = Path.GetFileName(savedFile);
 
             var fileStream = new FileStream(

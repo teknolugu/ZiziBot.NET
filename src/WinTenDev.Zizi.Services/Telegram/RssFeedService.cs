@@ -88,6 +88,7 @@ public class RssFeedService
     }
 
     [AutomaticRetry(Attempts = 0, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
+    [MaximumConcurrentExecutions(1)]
     [JobDisplayName("RSS {0}")]
     public async Task ExecuteUrlAsync(
         long chatId,
@@ -149,7 +150,7 @@ public class RssFeedService
         if (rssUrl.IsGithubReleaseUrl() &&
             (urlSetting?.IncludeAttachment ?? false))
         {
-            listAlbum = await _octokitApiService.GetLatestReleaseAssets(rssUrl);
+            listAlbum = await _octokitApiService.GetLatestReleaseAssets(rssUrl, chatId);
         }
 
         try
