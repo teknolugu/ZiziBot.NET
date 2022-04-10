@@ -99,6 +99,7 @@ public static class MapConfigExtension
         services.Configure<NewRelicConfig>(config.GetSection(nameof(NewRelicConfig)));
         services.Configure<OctokitConfig>(config.GetSection(nameof(OctokitConfig)));
         services.Configure<OptiicDevConfig>(config.GetSection(nameof(OptiicDevConfig)));
+        services.Configure<RssFeedConfig>(config.GetSection(nameof(RssFeedConfig)));
         services.Configure<SentryConfig>(config.GetSection(nameof(SentryConfig)));
         services.Configure<TdLibConfig>(config.GetSection(nameof(TdLibConfig)));
         services.Configure<TgBotConfig>(config.GetSection(nameof(TgBotConfig)));

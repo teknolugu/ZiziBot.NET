@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 using Octokit;
+using Serilog;
 using Telegram.Bot.Types;
 using WinTenDev.Zizi.Models.Configs;
 using WinTenDev.Zizi.Services.Internals;
@@ -15,14 +16,17 @@ namespace WinTenDev.Zizi.Services.Externals;
 public class OctokitApiService
 {
     private readonly OctokitConfig _githubConfig;
+    private readonly RssFeedConfig _rssFeedConfig;
     private readonly CacheService _cacheService;
 
     public OctokitApiService(
         IOptionsSnapshot<OctokitConfig> githubConfig,
+        IOptionsSnapshot<RssFeedConfig> rssFeedConfig,
         CacheService cacheService
     )
     {
         _githubConfig = githubConfig.Value;
+        _rssFeedConfig = rssFeedConfig.Value;
         _cacheService = cacheService;
     }
 
@@ -57,7 +61,7 @@ public class OctokitApiService
 
     public async Task<List<IAlbumInputMedia>> GetLatestReleaseAssets(
         string url,
-        long chatId
+        string tempDir
     )
     {
         var listAlbum = new List<IAlbumInputMedia>();
@@ -65,15 +69,23 @@ public class OctokitApiService
         var releaseAll = await GetGithubReleaseAssets(url);
         var latestRelease = releaseAll.FirstOrDefault();
 
-        var parseUrl = url.ParseUrl().PathSegments.Take(2).JoinStr("_");
-        var uuid = StringUtil.GenerateUniqueId();
-        var tempDir = $"gh_asset_rss_downloader_{chatId}_{parseUrl}_{uuid}";
-
         if (latestRelease == null) return null;
+
+        var maxAttachmentSize = _rssFeedConfig.MaxAttachmentSize.ToeByteSize();
 
         var allAssets = latestRelease.Assets;
         var filteredAssets = allAssets
-            .Where(releaseAsset => releaseAsset.Size <= (100 * 1024 ^ 2));// 100MB
+            .Where(
+                releaseAsset =>
+                    releaseAsset.Size <= maxAttachmentSize.Bytes
+            ).ToList();
+
+        Log.Information(
+            "Found filtered assets {FilteredAssets} of {AllAssets} for URL: {Url}",
+            filteredAssets.Count,
+            allAssets.Count,
+            url
+        );
 
         foreach (var asset in filteredAssets)
         {
@@ -100,6 +112,6 @@ public class OctokitApiService
             );
         }
 
-        return listAlbum;
+        return listAlbum.Take(10).ToList();
     }
 }
