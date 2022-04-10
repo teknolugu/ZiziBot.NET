@@ -28,4 +28,4 @@ jobs:
           REMOTE: ${{ secrets.GIT_ZIZI_MIRROR_REPO }}
           GIT_USERNAME: ${{ secrets.GIT_USERNAME }}
           GIT_PASSWORD: ${{ secrets.GIT_PASSWORD }}
-          DEBUG: false
+          DEBUG: true
