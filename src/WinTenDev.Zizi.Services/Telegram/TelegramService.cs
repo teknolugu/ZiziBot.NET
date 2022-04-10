@@ -1133,7 +1133,11 @@ public class TelegramService
     {
         try
         {
-            Log.Information("Editing {CallBackMessageId}", CallBackMessageId);
+            Log.Information(
+                "Editing Message Callback at ChatId: {ChatId}, MessageId: {CallBackMessageId}",
+                ChatId,
+                CallBackMessageId
+            );
 
             await Client.EditMessageTextAsync(
                 ChatId,
@@ -1146,7 +1150,12 @@ public class TelegramService
         }
         catch (Exception e)
         {
-            Log.Error(e, "Error EditMessage");
+            Log.Error(
+                e,
+                "Error Edit Message Callback at ChatId: {ChatId}, MessageId: {CallBackMessageId}",
+                ChatId,
+                CallBackMessageId
+            );
         }
     }
 
@@ -1162,7 +1171,7 @@ public class TelegramService
     {
         if (string.IsNullOrEmpty(AppendText))
         {
-            Log.Information("Sending new message");
+            Log.Information("First, Sending new message to ChatId: {ChatId}", ChatId);
             AppendText = sendText;
             await SendTextMessageAsync(
                 sendText: AppendText,
@@ -1176,7 +1185,11 @@ public class TelegramService
         }
         else
         {
-            Log.Information("Next, edit existing message");
+            Log.Information(
+                "Next, edit existing messageId: {MessageId} at ChatId: {ChatId}",
+                SentMessage.MessageId,
+                ChatId
+            );
             AppendText += $"\n{sendText}";
             await EditMessageTextAsync(
                 sendText: AppendText,
