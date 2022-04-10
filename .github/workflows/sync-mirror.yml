@@ -22,10 +22,19 @@ jobs:
       - name: Build project
         run: dotnet build src/WinTenDev.ZiziBot.AppHost
         
+#       - name: Run Mirror repository
+#         uses: yesolutions/mirror-action@v0.5.0
+#         with:
+#           REMOTE: ${{ secrets.GIT_ZIZI_MIRROR_REPO }}
+#           GIT_USERNAME: ${{ secrets.GIT_USERNAME }}
+#           GIT_PASSWORD: ${{ secrets.GIT_PASSWORD }}
+#           DEBUG: true
+
       - name: Run Mirror repository
-        uses: yesolutions/mirror-action@v0.5.0
+        uses: wei/git-sync@v3
         with:
-          REMOTE: ${{ secrets.GIT_ZIZI_MIRROR_REPO }}
-          GIT_USERNAME: ${{ secrets.GIT_USERNAME }}
-          GIT_PASSWORD: ${{ secrets.GIT_PASSWORD }}
-          DEBUG: true
+          source_repo: https://github.com/WinTenDev/ZiziBot.NET
+          source_branch: "refs/remotes/source/*"
+          destination_repo: ${{ secrets.GIT_ZIZI_MIRROR_REPO }}
+          destination_branch: "refs/heads/*"
+          ssh_private_key: ${{ secrets.GH_PRIVATE_KEY }} # optional
