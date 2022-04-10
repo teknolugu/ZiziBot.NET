@@ -31,6 +31,7 @@ public static class DirUtil
 
     public static string DeleteDirectory(this string dirPath)
     {
+        Log.Information("Delete recursively directory: {DirPath}", dirPath);
         Directory.Delete(dirPath, recursive: true);
         return dirPath;
     }
@@ -110,6 +111,35 @@ public static class DirUtil
         return path;
     }
 
+    public static string RemoveDirs(
+        this string path,
+        Func<string, bool> predicate
+    )
+    {
+        try
+        {
+            Log.Information("Deleting files in {Path}", path);
+
+            var directories = Directory.GetDirectories(path)
+                .Where(predicate)
+                .ToList();
+
+            Log.Debug("Directory to remove: {Directory}", directories);
+
+            foreach (var directory in directories)
+                directory.DeleteDirectory();
+
+            Log.Information("Total removed Directories: {Count}", directories.Count);
+        }
+        catch (Exception e)
+        {
+            Log.Error(e, "Error removing dirs");
+        }
+
+        return path;
+    }
+
+
     public static IEnumerable<string> RemoveFiles(this IEnumerable<string> paths)
     {
         Log.Information("Deleting files in {Path}", paths.Count());
@@ -160,6 +190,11 @@ public static class DirUtil
     public static string CleanCacheFiles(Func<string, bool> predicate)
     {
         return "Storage/Caches".RemoveFiles(predicate);
+    }
+
+    public static string CleanCacheDirs(Func<string, bool> predicate)
+    {
+        return "Storage/Caches".RemoveDirs(predicate);
     }
 
     public static string DeleteCachesSubDir(this string dirPath)

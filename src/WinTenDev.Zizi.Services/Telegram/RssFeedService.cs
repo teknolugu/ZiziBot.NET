@@ -88,7 +88,7 @@ public class RssFeedService
     }
 
     [AutomaticRetry(Attempts = 0, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
-    [MaximumConcurrentExecutions(1)]
+    [MaximumConcurrentExecutions(1, timeoutInSeconds: 500)]
     [JobDisplayName("RSS {0}")]
     public async Task ExecuteUrlAsync(
         long chatId,
@@ -142,6 +142,8 @@ public class RssFeedService
             chatId
         );
 
+        var tempDir = GetTempDirectory(rssUrl, chatId);
+
         var listAlbum = new List<IAlbumInputMedia>();
 
         var rssSettings = await _rssService.GetRssSettingsAsync(chatId);
@@ -150,7 +152,7 @@ public class RssFeedService
         if (rssUrl.IsGithubReleaseUrl() &&
             (urlSetting?.IncludeAttachment ?? false))
         {
-            listAlbum = await _octokitApiService.GetLatestReleaseAssets(rssUrl, chatId);
+            listAlbum = await _octokitApiService.GetLatestReleaseAssets(rssUrl, tempDir);
         }
 
         try
@@ -162,8 +164,7 @@ public class RssFeedService
                     media: listAlbum
                 );
 
-                var tempPath = rssUrl.ParseUrl().PathSegments.Take(2).JoinStr("_");
-                tempPath.DeleteCachesSubDir();
+                tempDir.DeleteCachesSubDir();
             }
             else
             {
@@ -174,10 +175,13 @@ public class RssFeedService
                 );
             }
 
-            Log.Debug("Writing to RSS History");
+            Log.Debug(
+                "Writing to RSS History for ChatId: {ChatId}, Rss: {UrlFeed}",
+                chatId,
+                rssUrl
+            );
 
-            await _rssService.SaveRssHistoryAsync
-            (
+            await _rssService.SaveRssHistoryAsync(
                 new RssHistory
                 {
                     Url = rssFeed.Link,
@@ -208,6 +212,20 @@ public class RssFeedService
                 UnregisterRssFeed(chatId, rssUrl);
             }
         }
+    }
+
+    public string GetTempDirectory(
+        string prefix,
+        long chatId
+    )
+    {
+        var uuid = StringUtil.GenerateUniqueId();
+        var fixedPrefix = prefix.Replace("/", "_")
+            .Replace(":", "_");
+
+        var tempDir = $"rss_assets_downloader_{chatId}_{fixedPrefix}_{uuid}";
+
+        return tempDir;
     }
 
     public int UnRegisterRssFeedByChatId(long chatId)
