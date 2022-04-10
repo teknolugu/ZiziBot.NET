@@ -129,6 +129,7 @@ public static class CommandBuilderExtension
                                         .UseCommand<SetWelcomeCommand>("set_welcome_doc")
                                         .UseCommand<SetWelcomeCommand>("set_welcome_msg")
                                         .UseCommand<ShalatTimeCommand>("shalat")
+                                        .UseCommand<ShalatTimeCommand>("sholat")
                                         .UseCommand<StartCommand>("start")
                                         .UseCommand<StatsCommand>("stats")
                                         .UseCommand<StickerPackCommand>("stickerpack")
