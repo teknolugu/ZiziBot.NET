@@ -33,8 +33,8 @@ jobs:
       - name: Run Mirror repository
         uses: wei/git-sync@v3
         with:
-          source_repo: git@github.com:WinTenDev/ZiziBot.NET.git
+          source_repo: "git@github.com:WinTenDev/ZiziBot.NET.git"
           source_branch: "refs/remotes/source/*"
           destination_repo: ${{ secrets.GIT_ZIZI_MIRROR_REPO }}
           destination_branch: "refs/heads/*"
-          ssh_private_key: ${{ secrets.GH_PRIVATE_KEY }} # optional
+          ssh_private_key: ${{ secrets.GH_PRIVATE_KEY }}
