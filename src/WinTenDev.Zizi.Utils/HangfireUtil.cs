@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
@@ -10,6 +11,7 @@ using Hangfire.Redis;
 using Hangfire.Storage;
 using Hangfire.Storage.SQLite;
 using Serilog;
+using StackExchange.Redis;
 using WinTenDev.Zizi.Utils.IO;
 
 namespace WinTenDev.Zizi.Utils;
@@ -26,16 +28,35 @@ public static class HangfireUtil
 
         var numOfJobs = recurringJobs.Count;
 
-        Parallel.ForEach(recurringJobs, (dto, pls, index) => {
-            var recurringJobId = dto.Id;
+        Parallel.ForEach(
+            recurringJobs,
+            (
+                recurringJobDto,
+                parallelLoopState,
+                index
+            ) => {
+                var recurringJobId = recurringJobDto.Id;
 
-            Log.Debug("Deleting jobId: {RecurringJobId}, Index: {Index}", recurringJobId, index);
-            RecurringJob.RemoveIfExists(recurringJobId);
+                Log.Debug(
+                    "Deleting jobId: {RecurringJobId}, Index: {Index}",
+                    recurringJobId,
+                    index
+                );
+                RecurringJob.RemoveIfExists(recurringJobId);
 
-            Log.Debug("Delete succeeded {RecurringJobId}, Index: {Index}", recurringJobId, index);
-        });
+                Log.Debug(
+                    "Delete succeeded {RecurringJobId}, Index: {Index}",
+                    recurringJobId,
+                    index
+                );
+            }
+        );
 
-        Log.Information("Hangfire jobs successfully deleted. Total: {NumOfJobs}. Time: {Elapsed}", numOfJobs, sw.Elapsed);
+        Log.Information(
+            "Hangfire jobs successfully deleted. Total: {NumOfJobs}. Time: {Elapsed}",
+            numOfJobs,
+            sw.Elapsed
+        );
 
         sw.Stop();
     }
@@ -64,48 +85,94 @@ public static class HangfireUtil
         return storage;
     }
 
-    public static void RegisterJob(string jobId, Expression<Action> methodCall, Func<string> cronExpression,
-        TimeZoneInfo timeZone = null, string queue = "default")
+    public static void RegisterJob(
+        string jobId,
+        Expression<Action> methodCall,
+        Func<string> cronExpression,
+        TimeZoneInfo timeZone = null,
+        string queue = "default"
+    )
     {
         var sw = Stopwatch.StartNew();
 
         Log.Debug("Registering Job with ID: {JobId}", jobId);
         RecurringJob.RemoveIfExists(jobId);
-        RecurringJob.AddOrUpdate(jobId, methodCall, cronExpression, timeZone, queue);
+        RecurringJob.AddOrUpdate(
+            jobId,
+            methodCall,
+            cronExpression,
+            timeZone,
+            queue
+        );
         RecurringJob.Trigger(jobId);
 
-        Log.Debug("Registering Job {JobId} finish in {Elapsed}", jobId, sw.Elapsed);
+        Log.Debug(
+            "Registering Job {JobId} finish in {Elapsed}",
+            jobId,
+            sw.Elapsed
+        );
 
         sw.Stop();
     }
 
-    [Obsolete("Please consider use IRecurringJobManager or IBackgroundJobClient for registering Hangfire Jobs if possible")]
-    public static void RegisterJob<T>(string jobId, Expression<Func<T, Task>> methodCall, Func<string> cronExpression,
-        TimeZoneInfo timeZone = null, string queue = "default", bool fireAfterRegister = true)
+    [Obsolete("Please consider use IRecurringJobManager or IBackgroundJobClient if possible")]
+    public static void RegisterJob<T>(
+        string jobId,
+        Expression<Func<T, Task>> methodCall,
+        Func<string> cronExpression,
+        TimeZoneInfo timeZone = null,
+        string queue = "default",
+        bool fireAfterRegister = true
+    )
     {
         var sw = Stopwatch.StartNew();
 
         Log.Debug("Registering Job with ID: {JobId}", jobId);
         RecurringJob.RemoveIfExists(jobId);
-        RecurringJob.AddOrUpdate(jobId, methodCall, cronExpression, timeZone, queue);
+        RecurringJob.AddOrUpdate(
+            jobId,
+            methodCall,
+            cronExpression,
+            timeZone,
+            queue
+        );
         if (fireAfterRegister) RecurringJob.Trigger(jobId);
 
-        Log.Debug("Registering Job {JobId} finish in {Elapsed}", jobId, sw.Elapsed);
+        Log.Debug(
+            "Registering Job {JobId} finish in {Elapsed}",
+            jobId,
+            sw.Elapsed
+        );
 
         sw.Stop();
     }
 
-    public static void RegisterJob(string jobId, Expression<Func<Task>> methodCall, Func<string> cronExpression,
-        TimeZoneInfo timeZone = null, string queue = "default")
+    public static void RegisterJob(
+        string jobId,
+        Expression<Func<Task>> methodCall,
+        Func<string> cronExpression,
+        TimeZoneInfo timeZone = null,
+        string queue = "default"
+    )
     {
         var sw = Stopwatch.StartNew();
 
         Log.Debug("Registering Job with ID: {JobId}", jobId);
         RecurringJob.RemoveIfExists(jobId);
-        RecurringJob.AddOrUpdate(jobId, methodCall, cronExpression, timeZone, queue);
+        RecurringJob.AddOrUpdate(
+            jobId,
+            methodCall,
+            cronExpression,
+            timeZone,
+            queue
+        );
         RecurringJob.Trigger(jobId);
 
-        Log.Debug("Registering Job {JobId} finish in {Elapsed}", jobId, sw.Elapsed);
+        Log.Debug(
+            "Registering Job {JobId} finish in {Elapsed}",
+            jobId,
+            sw.Elapsed
+        );
 
         sw.Stop();
     }
@@ -120,20 +187,43 @@ public static class HangfireUtil
 
         var recurringJobs = connection.GetRecurringJobs();
         var filteredJobs = recurringJobs.Where(dto => dto.Id.StartsWith(prefixId)).ToList();
-        Log.Debug("Found {Count} of {Count1}", filteredJobs.Count, recurringJobs.Count);
+        Log.Debug(
+            "Found {Count} of {Count1}",
+            filteredJobs.Count,
+            recurringJobs.Count
+        );
 
         var numOfJobs = filteredJobs.Count;
 
-        Parallel.ForEach(filteredJobs, (dto, pls, index) => {
-            var recurringJobId = dto.Id;
+        Parallel.ForEach(
+            filteredJobs,
+            (
+                recurringJobDto,
+                parallelLoopState,
+                index
+            ) => {
+                var recurringJobId = recurringJobDto.Id;
 
-            Log.Debug("Triggering jobId: {RecurringJobId}, Index: {Index}", recurringJobId, index);
-            RecurringJob.Trigger(recurringJobId);
+                Log.Debug(
+                    "Triggering jobId: {RecurringJobId}, Index: {Index}",
+                    recurringJobId,
+                    index
+                );
+                RecurringJob.Trigger(recurringJobId);
 
-            Log.Debug("Trigger succeeded {RecurringJobId}, Index: {Index}", recurringJobId, index);
-        });
+                Log.Debug(
+                    "Trigger succeeded {RecurringJobId}, Index: {Index}",
+                    recurringJobId,
+                    index
+                );
+            }
+        );
 
-        Log.Information("Hangfire jobs successfully trigger. Total: {NumOfJobs}. Time: {Elapsed}", numOfJobs, sw.Elapsed);
+        Log.Information(
+            "Hangfire jobs successfully trigger. Total: {NumOfJobs}. Time: {Elapsed}",
+            numOfJobs,
+            sw.Elapsed
+        );
 
         sw.Stop();
 
@@ -168,11 +258,27 @@ public static class HangfireUtil
         return storage;
     }
 
+    [SuppressMessage("Minor Code Smell", "S3220:Method calls should not resolve ambiguously to overloads with \"params\"")]
     public static RedisStorage GetRedisStorage(string connStr)
     {
-        Log.Information("Hangfire Redis: {ConnStr}", connStr);
+        var redisConnectionStr = connStr;
+        var redisUrl = Environment.GetEnvironmentVariable("REDIS_URL");
+        if (redisUrl != null)
+        {
+            var tokens = redisUrl.Split(':', '@');
+            var redisHost = tokens.ElementAtOrDefault(3);
+            var redisPort = tokens.ElementAtOrDefault(4);
+            var redisPassword = tokens.ElementAtOrDefault(2);
 
-        var storage = new RedisStorage(connStr);
+            if (tokens.Length < 5)
+                throw new RedisException("Please ensure REDIS_URL or use another Hangfire storage");
+
+            redisConnectionStr = $"{redisHost}:{redisPort},password={redisPassword}";
+        }
+
+        Log.Information("Hangfire Redis: {ConnStr}", redisConnectionStr);
+
+        var storage = new RedisStorage(redisConnectionStr);
         return storage;
     }
 }
