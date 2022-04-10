@@ -33,7 +33,7 @@ jobs:
       - name: Run Mirror repository
         uses: wei/git-sync@v3
         with:
-          source_repo: https://github.com/WinTenDev/ZiziBot.NET
+          source_repo: git@github.com:WinTenDev/ZiziBot.NET.git
           source_branch: "refs/remotes/source/*"
           destination_repo: ${{ secrets.GIT_ZIZI_MIRROR_REPO }}
           destination_branch: "refs/heads/*"
