@@ -19,11 +19,11 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore
         
-      - name: Build
+      - name: Build project
         run: dotnet build src/WinTenDev.ZiziBot.AppHost
         
-      - name: mirror-repository
-        uses: spyoungtech/mirror-action@v0.4.3
+      - name: Run Mirror repository
+        uses: yesolutions/mirror-action@v0.5.0
         with:
           REMOTE: ${{ secrets.GIT_ZIZI_MIRROR_REPO }}
           GIT_USERNAME: ${{ secrets.GIT_USERNAME }}
