@@ -71,7 +71,11 @@ public class OctokitApiService
 
         if (latestRelease == null) return null;
 
-        foreach (var asset in latestRelease.Assets)
+        var allAssets = latestRelease.Assets;
+        var filteredAssets = allAssets
+            .Where(releaseAsset => releaseAsset.Size <= (100 * 1024 ^ 2));// 100MB
+
+        foreach (var asset in filteredAssets)
         {
             var urlDoc = asset.BrowserDownloadUrl;
             var savedFile = await urlDoc.MultiThreadDownloadFileAsync(tempDir);
