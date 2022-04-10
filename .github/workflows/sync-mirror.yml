@@ -45,7 +45,7 @@ jobs:
           repository: ${{ secrets.GIT_ZIZI_MIRROR_REPO }}
           token: ${{ secrets.GH_PAT }}
           path: ./project/Mirror
-          fetch-depth: 0
+          ref: main
           
       - name: Push to Mirror
         run: |
