@@ -30,11 +30,27 @@ jobs:
 #           GIT_PASSWORD: ${{ secrets.GIT_PASSWORD }}
 #           DEBUG: true
 
-      - name: Run Mirror repository
-        uses: wei/git-sync@v3
-        with:
-          source_repo: "git@github.com:WinTenDev/ZiziBot.NET.git"
-          source_branch: "refs/remotes/source/*"
-          destination_repo: ${{ secrets.GIT_ZIZI_MIRROR_REPO }}
-          destination_branch: "refs/heads/*"
-          ssh_private_key: ${{ secrets.GH_PRIVATE_KEY }}
+#       - name: Run Mirror repository
+#         uses: wei/git-sync@v3
+#         with:
+#           source_repo: "git@github.com:WinTenDev/ZiziBot.NET.git"
+#           source_branch: "refs/remotes/source/*"
+#           destination_repo: ${{ secrets.GIT_ZIZI_MIRROR_REPO }}
+#           destination_branch: "refs/heads/*"
+#           ssh_private_key: ${{ secrets.GH_PRIVATE_KEY }}
+
+      - name: Clone Mirror
+        uses: actions/checkout@master
+        with: 
+          repository: ${{ secrets.GIT_ZIZI_MIRROR_REPO }}
+          token: ${{ secrets.GH_PAT }}
+          path: ./project/Mirror
+          
+      - name: Push to Mirror
+        run: |
+          cd ./project/Mirror
+          git add .
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git commit -am "Update from $GITHUB_REPOSITORY"
+          git push
