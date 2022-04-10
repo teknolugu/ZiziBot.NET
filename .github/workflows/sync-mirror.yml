@@ -1,14 +1,12 @@
-name: Sync to Mirror
+name: Sync to Other Repo
 
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
 
 jobs:
   build:
-
+    name: Sync To Mirror
     runs-on: ubuntu-latest
 
     steps:
@@ -17,19 +15,17 @@ jobs:
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: 6.0.x
+          
       - name: Restore dependencies
         run: dotnet restore
+        
       - name: Build
-        run: dotnet build --no-restore
-      #     - name: Test
-      #       run: dotnet test --no-build --verbosity normal
+        run: dotnet build src/WinTenDev.ZiziBot.AppHost
+        
       - name: mirror-repository
         uses: spyoungtech/mirror-action@v0.4.3
         with:
-          # The remote repository e.g. https://github.com/octocat/foo.git or git@github.com:octocat/foo.git
-          REMOTE: 'https://github.com/WinTenDev/ZiziBot.NET-Mirror.git'
-          GIT_USERNAME: azhe403
+          REMOTE: ${{ secrets.GIT_ZIZI_MIRROR_REPO }}
+          GIT_USERNAME: ${{ secrets.GIT_USERNAME }}
           GIT_PASSWORD: ${{ secrets.GIT_PASS }}
-          # set to "true" to enable debug mode
           DEBUG: false
-      
