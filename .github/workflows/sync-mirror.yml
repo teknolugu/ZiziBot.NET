@@ -33,9 +33,9 @@ jobs:
         run: |
           cd ./mirror
           git remote add upstream ${{ github.server_url }}/${{ github.repository }}
-          git fetch upstream main --rebase --allow-unrelated-histories
+          git fetch upstream main
           git reset --hard upstream/main
-          git merge --strategy-option theirs
+          git merge --strategy-option theirs  --rebase --allow-unrelated-histories
           git push origin main:main
 
 
