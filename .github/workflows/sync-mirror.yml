@@ -33,7 +33,7 @@ jobs:
         run: |
           cd ./mirror
           git remote add upstream ${{ github.server_url }}/${{ github.repository }}
-          git pull upstream main:main --allow-unrelated-histories
+          git pull upstream --allow-unrelated-histories
           git push origin main:main
 
 
