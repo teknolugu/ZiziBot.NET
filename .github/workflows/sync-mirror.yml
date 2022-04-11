@@ -32,6 +32,8 @@ jobs:
       - name: Sync to Mirror
         run: |
           cd ./mirror
+          git config --global user.email "fulan@winten.my.id"
+          git config --global user.name "Fulan bin Fulan"
           git remote add upstream ${{ github.server_url }}/${{ github.repository }}
           git fetch upstream main
           git reset --hard upstream/main
