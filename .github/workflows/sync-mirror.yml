@@ -43,7 +43,7 @@ jobs:
         env:
           GH_ZIZI_MIRROR_URL: ${{secrets.GH_ZIZI_MIRROR_URL}}
         run: |
-          git add remote mirror $GH_ZIZI_MIRROR_URL
+          git remote add mirror $GH_ZIZI_MIRROR_URL
           git add .
           git config user.name github-actions
           git config user.email github-actions@github.com
