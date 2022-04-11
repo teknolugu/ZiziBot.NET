@@ -24,7 +24,7 @@ jobs:
         run: dotnet build src/WinTenDev.ZiziBot.AppHost
 
       - name: Sync Repo
-        uses: action/checkout@v3
+        uses: action/checkout@v2
         with:
           repository: ${{secrets.GH_ZIZI_MIRROR_URL}}
           token: ${{ secrets.GH_PAT }}
