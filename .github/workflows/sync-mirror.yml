@@ -32,7 +32,7 @@ jobs:
       - name: Sync to Mirror
         run: |
           cd ./mirror
-          git remote add upstream $GITHUB_REPOSITORY
+          git remote add upstream ${{ github.server_url }}/${{ github.repository }}
           git pull upstream --allow-unrelated-histories
           git push origin main
 
