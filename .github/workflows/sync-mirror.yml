@@ -33,8 +33,9 @@ jobs:
         run: |
           cd ./mirror
           git remote add upstream ${{ github.server_url }}/${{ github.repository }}
-          git pull upstream main --allow-unrelated-histories
-          git push origin main
+          git checkout -b main origin/main
+          git pull upstream main:main --allow-unrelated-histories
+          git push origin main:main
 
 
 #       - name: Run Mirror repository
