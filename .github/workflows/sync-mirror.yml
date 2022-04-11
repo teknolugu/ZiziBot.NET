@@ -40,8 +40,10 @@ jobs:
 #           ssh_private_key: ${{ secrets.GH_PRIVATE_KEY }}
           
       - name: Push to Mirror
+        env:
+          GH_ZIZI_MIRROR_URL: ${{secrets.GH_ZIZI_MIRROR_URL}}
         run: |
-          git add remote mirror ${{ secrets.GH_ZIZI_MIRROR_URL }}
+          git add remote mirror $GH_ZIZI_MIRROR_URL
           git add .
           git config user.name github-actions
           git config user.email github-actions@github.com
