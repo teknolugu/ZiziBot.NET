@@ -16,13 +16,25 @@ jobs:
         with:
           dotnet-version: 6.0.x
           token: ${{ secrets.GH_PAT }}
-          
+
       - name: Restore dependencies
         run: dotnet restore
-        
+
       - name: Build project
         run: dotnet build src/WinTenDev.ZiziBot.AppHost
-        
+
+      - name: Sync Repo
+        uses: action/checkout@v3
+        with:
+          repository: ${{secrets.GH_ZIZI_MIRROR_URL}}
+          token: ${{ secrets.GH_PAT }}
+          path: ./mirror
+          run: |
+            git remote add upstream $GITHUB_REPOSITORY
+            git pull upstream --allow-unrelated-histories
+            git push origin main
+
+
 #       - name: Run Mirror repository
 #         uses: yesolutions/mirror-action@v0.5.0
 #         with:
@@ -39,14 +51,14 @@ jobs:
 #           destination_repo: ${{ secrets.GIT_ZIZI_MIRROR_REPO }}
 #           destination_branch: "refs/heads/*"
 #           ssh_private_key: ${{ secrets.GH_PRIVATE_KEY }}
-          
-      - name: Push to Mirror
-        env:
-          GH_ZIZI_MIRROR_URL: ${{secrets.GH_ZIZI_MIRROR_URL}}
-        run: |
-          git remote add mirror $GH_ZIZI_MIRROR_URL
-          git add .
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          git commit -am "Update from $GITHUB_REPOSITORY"
-          git push mirror main
+
+#      - name: Push to Mirror
+#        env:
+#          GH_ZIZI_MIRROR_URL: ${{secrets.GH_ZIZI_MIRROR_URL}}
+#        run: |
+#          git remote add mirror $GH_ZIZI_MIRROR_URL
+#          git add .
+#          git config user.name github-actions
+#          git config user.email github-actions@github.com
+#          git commit -am "Update from $GITHUB_REPOSITORY"
+#          git push mirror main
