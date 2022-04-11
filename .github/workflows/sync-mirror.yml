@@ -35,7 +35,7 @@ jobs:
           git remote add upstream ${{ github.server_url }}/${{ github.repository }}
           git fetch upstream main
           git reset --hard upstream/main
-          git merge --strategy-option theirs  --rebase --allow-unrelated-histories
+          git merge --strategy-option theirs --allow-unrelated-histories
           git push origin main:main
 
 
