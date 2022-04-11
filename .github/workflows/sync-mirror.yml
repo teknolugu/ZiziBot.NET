@@ -15,7 +15,6 @@ jobs:
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: 6.0.x
-          token: ${{ secrets.GH_PAT }}
 
       - name: Restore dependencies
         run: dotnet restore
@@ -23,16 +22,19 @@ jobs:
       - name: Build project
         run: dotnet build src/WinTenDev.ZiziBot.AppHost
 
-      - name: Sync Repo
+      - name: Clone from Mirror
         uses: actions/checkout@v2
         with:
-          repository: ${{secrets.GH_ZIZI_MIRROR_URL}}
+          repository: ${{secrets.GIT_ZIZI_MIRROR_REPO}}
           token: ${{ secrets.GH_PAT }}
           path: ./mirror
-          run: |
-            git remote add upstream $GITHUB_REPOSITORY
-            git pull upstream --allow-unrelated-histories
-            git push origin main
+
+      - name: Sync to Mirror
+        run: |
+          cd ./mirror
+          git remote add upstream $GITHUB_REPOSITORY
+          git pull upstream --allow-unrelated-histories
+          git push origin main
 
 
 #       - name: Run Mirror repository
