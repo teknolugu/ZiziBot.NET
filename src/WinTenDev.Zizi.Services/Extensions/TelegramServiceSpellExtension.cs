@@ -80,13 +80,21 @@ public static class TelegramServiceSpellExtension
 
         if (messageText.IsNullOrEmpty())
         {
-            Log.Information("No message text for Spell check. ChatId: {ChatId}", chatId);
+            Log.Debug("No message text for Spell check. ChatId: {ChatId}", chatId);
             return;
         }
 
         if (telegramService.GetCommand().IsNotNullOrEmpty())
         {
-            Log.Information("Spell check is disabled for command. ChatId: {ChatId}", chatId);
+            Log.Debug("Spell check is disabled for command. ChatId: {ChatId}", chatId);
+            return;
+        }
+
+        var chatSettings = await telegramService.GetChatSetting();
+
+        if (!chatSettings.EnableSpellCheck)
+        {
+            Log.Debug("Spell check is disabled. ChatId: {ChatId}", chatId);
             return;
         }
 
