@@ -64,6 +64,7 @@ public static class TelegramServiceMemberExtension
                 messageFlag: MessageFlag.GBan
             ),
             telegramService.EventLogService.SendEventLogAsync(
+                text: messageBan,
                 chatId: chatId,
                 message: message,
                 messageFlag: MessageFlag.GBan,
@@ -383,7 +384,7 @@ public static class TelegramServiceMemberExtension
         return false;
     }
 
-    public static async Task AddGlobalBanAsync(this TelegramService telegramService)
+    public static async Task AddGlobalBanUserAsync(this TelegramService telegramService)
     {
         long userId;
         string reason;
