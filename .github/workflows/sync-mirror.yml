@@ -35,7 +35,6 @@ jobs:
           git config --global user.email "fulan@winten.my.id"
           git config --global user.name "Fulan bin Fulan"
           git remote add upstream ${{ github.server_url }}/${{ github.repository }}
-          git fetch upstream main
-          git reset --hard upstream/main
-          git merge --strategy-option theirs --allow-unrelated-histories
-          git push origin main:main
+          git checkout main
+          git rebase upstream/main -X theirs
+          git push origin main --force
