@@ -36,35 +36,6 @@ jobs:
           git config --global user.name "Fulan bin Fulan"
           git remote add upstream ${{ github.server_url }}/${{ github.repository }}
           git fetch upstream main
-          git reset --hard upstream/main
           git merge --strategy-option theirs --allow-unrelated-histories
           git push origin main:main
-
-
-#       - name: Run Mirror repository
-#         uses: yesolutions/mirror-action@v0.5.0
-#         with:
-#           REMOTE: ${{ secrets.GIT_ZIZI_MIRROR_REPO }}
-#           GIT_USERNAME: ${{ secrets.GIT_USERNAME }}
-#           GIT_PASSWORD: ${{ secrets.GIT_PASSWORD }}
-#           DEBUG: true
-
-#       - name: Run Mirror repository
-#         uses: wei/git-sync@v3
-#         with:
-#           source_repo: "git@github.com:WinTenDev/ZiziBot.NET.git"
-#           source_branch: "refs/remotes/source/*"
-#           destination_repo: ${{ secrets.GIT_ZIZI_MIRROR_REPO }}
-#           destination_branch: "refs/heads/*"
-#           ssh_private_key: ${{ secrets.GH_PRIVATE_KEY }}
-
-#      - name: Push to Mirror
-#        env:
-#          GH_ZIZI_MIRROR_URL: ${{secrets.GH_ZIZI_MIRROR_URL}}
-#        run: |
-#          git remote add mirror $GH_ZIZI_MIRROR_URL
-#          git add .
-#          git config user.name github-actions
-#          git config user.email github-actions@github.com
-#          git commit -am "Update from $GITHUB_REPOSITORY"
-#          git push mirror main
+          
