@@ -5,6 +5,7 @@ public enum MessageFlag
     General,
     About,
     AddCity,
+    AddSpell,
     Afk,
     DelCity,
     FloodWarn,
