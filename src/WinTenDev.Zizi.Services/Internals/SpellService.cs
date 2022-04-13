@@ -41,10 +41,11 @@ public class SpellService
         return true;
     }
 
-    public async Task<List<Spell>> GetSpellAll()
+    public async Task<List<Spell>> GetSpellAll(bool evictBefore = false)
     {
         var spells = await _cacheService.GetOrSetAsync(
             cacheKey: "spelling",
+            evictBefore: evictBefore,
             action: () => {
                 var spells = DbConnection.QueryAllAsync<Spell>();
                 return spells;

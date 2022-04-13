@@ -65,6 +65,8 @@ public static class TelegramServiceSpellExtension
             htmlMessage.TextBr("Spell sudah disimpan");
         }
 
+        await spellService.GetSpellAll(evictBefore: true);
+
         await telegramService.AppendTextAsync(
             sendText: htmlMessage.ToString(),
             scheduleDeleteAt: DateTime.UtcNow.AddMinutes(5),
