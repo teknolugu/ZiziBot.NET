@@ -124,9 +124,6 @@ internal static class AppStartupExtensions
         var tunnelService = app.GetRequiredService<LocalTunnelService>();
 
         var configuration = app.GetRequiredService<IConfiguration>();
-        var urlHost = configuration.GetValue<string>("Kestrel:Endpoints:Http:Url");
-        var parted = urlHost.Split(":");
-        var portHost = parted.ElementAtOrDefault(2);
 
         Log.Information("Starting Bot in WebHook mode..");
 
@@ -136,6 +133,10 @@ internal static class AppStartupExtensions
         if (tgBotConfig.EnableLocalTunnel)
         {
             var tunnelSubdomain = tgBotConfig.LocalTunnelSubdomain;
+
+            var urlHost = configuration.GetValue<string>("Kestrel:Endpoints:Http:Url");
+            var parted = urlHost.Split(":");
+            var portHost = parted.ElementAtOrDefault(2);
 
             var tunnel = tunnelService.CreateTunnel(tunnelSubdomain, portHost);
             var tunnelUrl = tunnel.Information.Url;
