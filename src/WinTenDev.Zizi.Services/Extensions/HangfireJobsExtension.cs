@@ -20,6 +20,7 @@ public static class HangfireJobsExtension
         serviceProvider.GetRequiredService<EpicGamesService>().RegisterJobEpicGamesBroadcaster().InBackground();
         serviceProvider.GetRequiredService<ShalatTimeNotifyService>().RegisterJobShalatTimeAsync().InBackground();
 
+        jobService.ClearPendingJobs();
         jobService.RegisterJobChatCleanUp().InBackground();
         jobService.RegisterJobClearLog();
         jobService.RegisterJobDeleteOldStep();
