@@ -11,6 +11,7 @@ using WinTenDev.Zizi.Services.Telegram;
 using WinTenDev.Zizi.Utils;
 using WinTenDev.Zizi.Utils.IO;
 using WinTenDev.Zizi.Utils.Telegram;
+using WinTenDev.Zizi.Utils.Text;
 
 namespace WinTenDev.Zizi.Services.Extensions;
 
@@ -43,7 +44,7 @@ public static class TelegramServiceAdditionalExtension
             Log.Information("Preparing send file to Optiic OCR");
 
             var optiicDevOcr = await telegramService.OptiicDevService.ScanImageText(savedFile);
-            var ocr = optiicDevOcr.Text;
+            var ocr = optiicDevOcr.Text.HtmlEncode();
 
             if (ocr.IsNullOrEmpty())
             {
