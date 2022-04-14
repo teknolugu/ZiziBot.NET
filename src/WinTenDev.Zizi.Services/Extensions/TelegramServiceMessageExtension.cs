@@ -188,4 +188,31 @@ public static class TelegramServiceMessageExtension
             return false;
         }
     }
+
+    public static async Task DeleteMessageManyAsync(this TelegramService telegramService)
+    {
+        var wTelegramService = telegramService.GetRequiredService<WTelegramApiService>();
+        var chatId = telegramService.ChatId;
+        var userId = telegramService.FromId;
+        var messageId = telegramService.MessageOrEdited.MessageId;
+
+        var messageIds = await wTelegramService.GetMessagesIdByUserId(
+            chatId: chatId,
+            userId: userId,
+            lastMessageId: messageId
+        );
+
+        Log.Debug(
+            "Deleting {MessageIdsCount} Messages for UserId {UserId}",
+            messageIds.Count,
+            userId
+        );
+
+        await messageIds.AsyncParallelForEach(
+            maxDegreeOfParallelism: 8,
+            body: async id => {
+                await telegramService.DeleteAsync(id);
+            }
+        );
+    }
 }

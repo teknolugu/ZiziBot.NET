@@ -23,21 +23,27 @@ public static class TelegramServiceMemberExtension
         var fromId = telegramService.FromId;
         var chatId = telegramService.ChatId;
 
+        var defaultResult = new AntiSpamResult
+        {
+            UserId = fromId,
+            MessageResult = string.Empty,
+            IsAnyBanned = false,
+            IsEs2Banned = false,
+            IsCasBanned = false,
+            IsSpamWatched = false
+        };
+
         if (telegramService.IsPrivateChat ||
+            telegramService.MessageOrEdited == null ||
             telegramService.CheckFromAnonymous() ||
-            await telegramService.CheckFromAdminOrAnonymous() ||
             telegramService.CheckSenderChannel())
         {
-            return new AntiSpamResult
-            {
-                UserId = fromId,
-                MessageResult = string.Empty,
-                IsAnyBanned = false,
-                IsEs2Banned = false,
-                IsCasBanned = false,
-                IsSpamWatched = false
-            };
+            return defaultResult;
         }
+
+        if (await telegramService.CheckFromAdminOrAnonymous()) return defaultResult;
+
+        var message = telegramService.MessageOrEdited;
 
         var antiSpamResult = await telegramService.AntiSpamService.CheckSpam(chatId, fromId);
 
@@ -46,8 +52,6 @@ public static class TelegramServiceMemberExtension
         var messageBan = antiSpamResult.MessageResult;
 
         if (!antiSpamResult.IsAnyBanned) return antiSpamResult;
-
-        var message = telegramService.MessageOrEdited;
 
         await Task.WhenAll(
             telegramService.KickMemberAsync(
@@ -68,10 +72,11 @@ public static class TelegramServiceMemberExtension
                 chatId: chatId,
                 message: message,
                 messageFlag: MessageFlag.GBan,
-                forwardMessageId: message.MessageId,
-                deleteForwardedMessage: true
+                forwardMessageId: message.MessageId
             )
         );
+
+        await telegramService.DeleteMessageManyAsync();
 
         return antiSpamResult;
     }
