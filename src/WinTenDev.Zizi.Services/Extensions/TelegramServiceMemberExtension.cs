@@ -72,7 +72,8 @@ public static class TelegramServiceMemberExtension
                 chatId: chatId,
                 message: message,
                 messageFlag: MessageFlag.GBan,
-                forwardMessageId: message.MessageId
+                forwardMessageId: message.MessageId,
+                deleteForwardedMessage: true
             )
         );
 
