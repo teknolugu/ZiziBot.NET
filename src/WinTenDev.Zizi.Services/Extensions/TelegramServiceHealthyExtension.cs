@@ -114,7 +114,10 @@ public static class TelegramServiceHealthyExtension
 
             var memberCount = await telegramService.GetMemberCount();
 
-            var message = telegramService.AnyMessage;
+            var message = telegramService.Message;
+
+            if (message == null) return;
+
             var htmlMessage = HtmlMessage.Empty
                 .TextBr("Uh Oh, Saya melambat!")
                 .Bold("Response: ").CodeBr(timeInit.ToString())
