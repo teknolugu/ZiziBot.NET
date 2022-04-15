@@ -7,6 +7,7 @@ using Hangfire;
 using Humanizer;
 using Microsoft.Extensions.Options;
 using Serilog;
+using StackExchange.Redis;
 using Telegram.Bot;
 using Telegram.Bot.Types.InputFiles;
 using WinTenDev.Zizi.Models.Configs;
@@ -175,5 +176,20 @@ public class StorageService : IStorageService
             .RunSqlAsync(sqlTruncate);
 
         Log.Information("Reset Hangfire MySQL storage finish. Result: {RowCount}", rowCount);
+    }
+
+    public async Task ResetHangfireRedisStorage()
+    {
+        if (_hangfireConfig.DataStore != HangfireDataStore.Redis)
+        {
+            Log.Information("Reset Hangfire Redis Storage isn't required because Hangfire DataStore is {HangfireDataStore}", _hangfireConfig.DataStore);
+            return;
+        }
+
+        var redis = await ConnectionMultiplexer.ConnectAsync(_hangfireConfig.Redis);
+        var endPoint = redis.GetEndPoints().FirstOrDefault();
+
+        var server = redis.GetServer(endPoint);
+        await server.FlushDatabaseAsync();
     }
 }
