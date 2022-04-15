@@ -690,6 +690,7 @@ public class TelegramService
 
     #region EventLog
 
+    [Obsolete("Please look EventLogService")]
     private async Task<List<long>> GetEventLogTargets()
     {
         var currentSetting = await GetChatSetting();
@@ -712,9 +713,11 @@ public class TelegramService
         return filteredTargets;
     }
 
+    [Obsolete("Please look EventLogService")]
     public async Task SendEventLogAsync(
         string text = "N/A",
-        bool withForward = false
+        bool withForward = false,
+        int forwardMessageId = -1
     )
     {
         Log.Information("Preparing send EventLog");
@@ -727,7 +730,7 @@ public class TelegramService
 
             if (withForward)
             {
-                forwardMessage = await ForwardMessageAsync(toChatId: chatId);
+                forwardMessage = await ForwardMessageAsync(messageId: forwardMessageId, toChatId: chatId);
             }
 
             await SendEventLogCoreAsync(
@@ -739,6 +742,7 @@ public class TelegramService
         }
     }
 
+    [Obsolete("Please look EventLogService")]
     public async Task SendEventLogCoreAsync(
         string additionalText = "N/A",
         long customChatId = 0,
@@ -766,6 +770,7 @@ public class TelegramService
         );
     }
 
+    [Obsolete("Please look EventLogService")]
     public async Task SendEventLogRawAsync(string sendLog)
     {
         var chatId = _eventLogConfig.ChannelId;
