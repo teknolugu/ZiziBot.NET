@@ -494,7 +494,7 @@ public class TelegramService
     public bool CheckFromAnonymous()
     {
         const int anonId = 1087968824;
-        var isAnonymous = FromId == anonId && ChatId == SenderChat.Id;
+        var isAnonymous = FromId == anonId;
 
         Log.Debug(
             "Check is From Anonymous Admin on ChatId: {ChatId}? {IsAnonymous}",
