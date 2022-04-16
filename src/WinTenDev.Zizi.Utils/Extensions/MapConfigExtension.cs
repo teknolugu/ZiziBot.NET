@@ -94,8 +94,12 @@ public static class MapConfigExtension
         services.Configure<GoogleCloudConfig>(config.GetSection(nameof(GoogleCloudConfig)));
         services.Configure<GrafanaConfig>(config.GetSection(nameof(GrafanaConfig)));
         services.Configure<HangfireConfig>(config.GetSection(nameof(HangfireConfig)));
+        services.Configure<HealthConfig>(config.GetSection(nameof(HealthConfig)));
         services.Configure<LocalizationConfig>(config.GetSection(nameof(LocalizationConfig)));
+        services.Configure<NewRelicConfig>(config.GetSection(nameof(NewRelicConfig)));
+        services.Configure<OctokitConfig>(config.GetSection(nameof(OctokitConfig)));
         services.Configure<OptiicDevConfig>(config.GetSection(nameof(OptiicDevConfig)));
+        services.Configure<RssFeedConfig>(config.GetSection(nameof(RssFeedConfig)));
         services.Configure<SentryConfig>(config.GetSection(nameof(SentryConfig)));
         services.Configure<TdLibConfig>(config.GetSection(nameof(TdLibConfig)));
         services.Configure<TgBotConfig>(config.GetSection(nameof(TgBotConfig)));

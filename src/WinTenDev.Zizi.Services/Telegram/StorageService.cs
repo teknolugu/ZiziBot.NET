@@ -7,6 +7,7 @@ using Hangfire;
 using Humanizer;
 using Microsoft.Extensions.Options;
 using Serilog;
+using StackExchange.Redis;
 using Telegram.Bot;
 using Telegram.Bot.Types.InputFiles;
 using WinTenDev.Zizi.Models.Configs;
@@ -25,6 +26,7 @@ public class StorageService : IStorageService
 {
     private readonly CommonConfig _commonConfig;
     private readonly EventLogConfig _eventLogConfig;
+    private readonly HangfireConfig _hangfireConfig;
     private readonly ITelegramBotClient _botClient;
     private readonly QueryService _queryService;
 
@@ -33,17 +35,20 @@ public class StorageService : IStorageService
     /// </summary>
     /// <param name="optionsCommonConfig"></param>
     /// <param name="optionsEventLogConfig"></param>
+    /// <param name="hangfireConfig"></param>
     /// <param name="botClient"></param>
     /// <param name="queryService"></param>
     public StorageService(
         IOptionsSnapshot<CommonConfig> optionsCommonConfig,
         IOptionsSnapshot<EventLogConfig> optionsEventLogConfig,
+        IOptionsSnapshot<HangfireConfig> hangfireConfig,
         ITelegramBotClient botClient,
         QueryService queryService
     )
     {
         _commonConfig = optionsCommonConfig.Value;
         _eventLogConfig = optionsEventLogConfig.Value;
+        _hangfireConfig = hangfireConfig.Value;
         _botClient = botClient;
         _queryService = queryService;
     }
@@ -119,8 +124,14 @@ public class StorageService : IStorageService
     /// <summary>
     /// Hangfire storage reset
     /// </summary>
-    public async Task ResetHangfire(ResetTableMode resetTableMode = ResetTableMode.Truncate)
+    public async Task ResetHangfireMySqlStorage(ResetTableMode resetTableMode = ResetTableMode.Truncate)
     {
+        if (_hangfireConfig.DataStore != HangfireDataStore.MySql)
+        {
+            Log.Information("Reset Hangfire MySQL Storage isn't required because Hangfire DataStore is {HangfireDataStore}", _hangfireConfig.DataStore);
+            return;
+        }
+
         Log.Information("Starting reset Hangfire MySQL storage");
 
         const string prefixTable = "_hangfire";
@@ -165,5 +176,20 @@ public class StorageService : IStorageService
             .RunSqlAsync(sqlTruncate);
 
         Log.Information("Reset Hangfire MySQL storage finish. Result: {RowCount}", rowCount);
+    }
+
+    public async Task ResetHangfireRedisStorage()
+    {
+        if (_hangfireConfig.DataStore != HangfireDataStore.Redis)
+        {
+            Log.Information("Reset Hangfire Redis Storage isn't required because Hangfire DataStore is {HangfireDataStore}", _hangfireConfig.DataStore);
+            return;
+        }
+
+        var redis = await ConnectionMultiplexer.ConnectAsync(_hangfireConfig.Redis);
+        var endPoint = redis.GetEndPoints().FirstOrDefault();
+
+        var server = redis.GetServer(endPoint);
+        await server.FlushDatabaseAsync();
     }
 }

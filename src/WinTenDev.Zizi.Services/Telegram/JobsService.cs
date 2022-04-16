@@ -6,7 +6,9 @@ using System.Text;
 using System.Threading.Tasks;
 using Hangfire;
 using Hangfire.Storage;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using MoreLinq;
 using RepoDb;
 using Serilog;
 using Telegram.Bot;
@@ -24,6 +26,8 @@ public class JobsService
 {
     private readonly EventLogConfig _eventLogConfig;
     private readonly RestrictionConfig _restrictionConfig;
+    private readonly ILogger<JobsService> _logger;
+    private readonly IBackgroundJobClient _backgroundJobClient;
     private readonly IRecurringJobManager _recurringJobManager;
     private readonly StepHistoriesService _stepHistoriesService;
     private readonly ChatService _chatService;
@@ -31,8 +35,10 @@ public class JobsService
     private readonly SettingsService _settingsService;
 
     public JobsService(
+        ILogger<JobsService> logger,
         IOptionsSnapshot<EventLogConfig> eventLogConfig,
         IOptions<RestrictionConfig> restrictionConfig,
+        IBackgroundJobClient backgroundJobClient,
         IRecurringJobManager recurringJobManager,
         StepHistoriesService stepHistoriesService,
         ChatService chatService,
@@ -42,6 +48,8 @@ public class JobsService
     {
         _eventLogConfig = eventLogConfig.Value;
         _restrictionConfig = restrictionConfig.Value;
+        _logger = logger;
+        _backgroundJobClient = backgroundJobClient;
         _recurringJobManager = recurringJobManager;
         _stepHistoriesService = stepHistoriesService;
         _chatService = chatService;
@@ -142,6 +150,7 @@ public class JobsService
                             queue: "admin-checker"
                         );
                         break;
+
                     default:
                         Log.Verbose(
                             "Currently no action for type {ChatType}",
@@ -298,5 +307,25 @@ public class JobsService
         );
 
         return result;
+    }
+
+    public void ClearPendingJobs()
+    {
+        _logger.LogInformation("Starting clear pending Jobs..");
+        
+        var monitor = JobStorage.Current.GetMonitoringApi();
+        var queues = monitor.Queues();
+
+        _logger.LogInformation("Found {QueueCount} queues to delete", queues.Count);
+
+        queues.ForEach(
+            dto =>
+                dto.FirstJobs.ForEach(
+                    job => _backgroundJobClient.Delete(job.Key)
+                )
+        );
+
+        _logger.LogInformation("Clear pending Jobs done!");
+
     }
 }

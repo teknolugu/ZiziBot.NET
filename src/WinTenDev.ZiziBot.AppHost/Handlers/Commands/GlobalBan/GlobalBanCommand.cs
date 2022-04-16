@@ -23,6 +23,6 @@ public class GlobalBanCommand : CommandBase
     {
         await _telegramService.AddUpdateContext(context);
 
-        _telegramService.AddGlobalBanAsync().InBackground();
+        _telegramService.AddGlobalBanUserAsync().InBackground();
     }
 }

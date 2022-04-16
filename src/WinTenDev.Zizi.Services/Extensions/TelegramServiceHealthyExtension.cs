@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Options;
 using Serilog;
+using WinTenDev.Zizi.Models.Configs;
 using WinTenDev.Zizi.Models.Enums;
 using WinTenDev.Zizi.Models.Tables;
 using WinTenDev.Zizi.Models.Types;
@@ -86,5 +89,55 @@ public static class TelegramServiceHealthyExtension
             .InBackground();
 
         return floodCheckResult;
+    }
+
+    [SuppressMessage("ReSharper", "SpecifyACultureInStringConversionExplicitly")]
+    public static async Task NotifyBotSlowdown(this TelegramService telegramService)
+    {
+        var eventLogService = telegramService.GetRequiredService<EventLogService>();
+        var healthConfig = telegramService.GetRequiredService<IOptionsSnapshot<HealthConfig>>().Value;
+
+        if (telegramService.ChannelOrEditedPost != null) return;
+        if (telegramService.CallbackQuery != null) return;
+
+        var timeInit = telegramService.TimeInit.ToDouble();
+        var timeProc = telegramService.TimeProc.ToDouble();
+
+        if (timeInit >= healthConfig.SlowdownOffset ||
+            timeProc >= healthConfig.SlowdownOffset)
+        {
+            Log.Information(
+                "Bot slowdown detected. Time Init: {TimeInit}, TimeProc: {TimeProc}",
+                timeInit,
+                timeProc
+            );
+
+            var memberCount = await telegramService.GetMemberCount();
+
+            var message = telegramService.Message;
+
+            if (message == null) return;
+
+            var htmlMessage = HtmlMessage.Empty
+                .TextBr("Uh Oh, Saya melambat!")
+                .Bold("Response: ").CodeBr(timeInit.ToString())
+                .Bold("Eksekusi: ").CodeBr(timeProc.ToString())
+                .Bold("Jumlah Anggota: ").CodeBr(memberCount.ToString());
+
+            await eventLogService.SendEventLogAsync(
+                text: htmlMessage.ToString(),
+                message: message,
+                sendGlobalOnly: true,
+                messageFlag: MessageFlag.SlowDown
+            );
+        }
+        else
+        {
+            Log.Information(
+                "Slowdown Offset not be reached! Time Init: {TimeInit}, TimeProc: {TimeProc}",
+                timeInit,
+                timeProc
+            );
+        }
     }
 }

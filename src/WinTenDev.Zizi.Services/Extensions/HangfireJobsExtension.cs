@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
+using Nito.AsyncEx.Synchronous;
 using WinTenDev.Zizi.Models.Enums;
 using WinTenDev.Zizi.Services.Externals;
 using WinTenDev.Zizi.Services.Telegram;
@@ -16,10 +17,12 @@ public static class HangfireJobsExtension
         var serviceProvider = app.GetServiceProvider();
         var jobService = serviceProvider.GetRequiredService<JobsService>();
 
+        serviceProvider.GetRequiredService<StorageService>().ResetHangfireRedisStorage().WaitAndUnwrapException();
         serviceProvider.GetRequiredService<RssFeedService>().RegisterJobAllRssScheduler().InBackground();
         serviceProvider.GetRequiredService<EpicGamesService>().RegisterJobEpicGamesBroadcaster().InBackground();
         serviceProvider.GetRequiredService<ShalatTimeNotifyService>().RegisterJobShalatTimeAsync().InBackground();
 
+        jobService.ClearPendingJobs();
         jobService.RegisterJobChatCleanUp().InBackground();
         jobService.RegisterJobClearLog();
         jobService.RegisterJobDeleteOldStep();

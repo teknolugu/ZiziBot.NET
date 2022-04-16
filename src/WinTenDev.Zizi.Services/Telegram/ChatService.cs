@@ -27,6 +27,7 @@ public class ChatService
 
     private readonly ILogger<ChatService> _logger;
     private readonly ITelegramBotClient _botClient;
+    private readonly BotService _botService;
     private readonly MessageHistoryService _messageHistoryService;
     private readonly SettingsService _settingsService;
     private readonly CacheService _cacheService;
@@ -37,12 +38,14 @@ public class ChatService
         CacheService cacheService,
         IOptionsSnapshot<RestrictionConfig> restrictionConfig,
         ITelegramBotClient botClient,
+        BotService botService,
         MessageHistoryService messageHistoryService,
         SettingsService settingsService
     )
     {
         _logger = logger;
         _botClient = botClient;
+        _botService = botService;
         _messageHistoryService = messageHistoryService;
         _cacheService = cacheService;
         _restrictionConfig = restrictionConfig.Value;
@@ -174,6 +177,15 @@ public class ChatService
         );
 
         return data;
+    }
+
+    public async Task<bool> IsMeHereAsync(long chatId)
+    {
+        var me = await _botService.GetMeAsync();
+        var chatMember = await GetChatMemberAsync(chatId, me.Id);
+        var isHere = chatMember.Status is not (ChatMemberStatus.Left or ChatMemberStatus.Kicked);
+
+        return isHere;
     }
 
     public async Task<bool> IsPrivateChat(long chatId)

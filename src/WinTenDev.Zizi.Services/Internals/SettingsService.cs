@@ -32,7 +32,11 @@ public class SettingsService
         var data = await GetSettingsByGroupCore(chatId);
         var isExist = data != null;
 
-        Log.Debug("Group setting for ChatID '{ChatId}' IsExist? {IsExist}", chatId, isExist);
+        Log.Debug(
+            "Group setting for ChatID '{ChatId}' IsExist? {IsExist}",
+            chatId,
+            isExist
+        );
         return isExist;
     }
 
@@ -62,9 +66,9 @@ public class SettingsService
         Log.Information("Get settings chat {ChatId}", chatId);
         var cacheKey = GetCacheKey(chatId);
 
-        var settings = await _cacheService.GetOrSetAsync
-        (
-            cacheKey, async () => {
+        var settings = await _cacheService.GetOrSetAsync(
+            cacheKey,
+            async () => {
                 var data = await _queryService
                     .CreateMySqlFactory()
                     .FromTable(BaseTable)
@@ -116,7 +120,11 @@ public class SettingsService
             .Where("chat_id", chatId)
             .DeleteAsync();
 
-        Log.Debug("Delete ChatSetting by ChatID: '{ChatId}' result => {ChatGroups}", chatId, deleteSetting);
+        Log.Debug(
+            "Delete ChatSetting by ChatID: '{ChatId}' result => {ChatGroups}",
+            chatId,
+            deleteSetting
+        );
         return deleteSetting;
     }
 
@@ -152,6 +160,7 @@ public class SettingsService
             "enable_human_verification",
             "enable_check_profile_photo",
             "enable_reply_notification",
+            "enable_spell_check",
             "enable_warn_username",
             "enable_welcome_message",
             // "enable_word_filter_group",
@@ -159,7 +168,11 @@ public class SettingsService
             "enable_zizi_mata"
         };
 
-        Log.Debug("Append Settings button with Chat ID '{ChatId}'? {AppendChatId}", chatId, appendChatId);
+        Log.Debug(
+            "Append Settings button with Chat ID '{ChatId}'? {AppendChatId}",
+            chatId,
+            appendChatId
+        );
 
         var data = await _queryService
             .CreateMySqlFactory()
@@ -182,7 +195,11 @@ public class SettingsService
             var textOrig = row["id"].ToString();
             var value = row[rowId ?? string.Empty].ToString();
 
-            Log.Verbose("Orig: {TextOrig}, Value: {Value}", textOrig, value);
+            Log.Verbose(
+                "Orig: {TextOrig}, Value: {Value}",
+                textOrig,
+                value
+            );
 
             var boolVal = value.ToBool();
 
@@ -258,7 +275,12 @@ public class SettingsService
         object value
     )
     {
-        Log.Debug("Updating Chat Settings '{ChatId}'. Field '{Key}' with value '{Value}'", chatId, key, value);
+        Log.Debug(
+            "Updating Chat Settings '{ChatId}'. Field '{Key}' with value '{Value}'",
+            chatId,
+            key,
+            value
+        );
         var where = new Dictionary<string, object> { { "chat_id", chatId } };
         var data = new Dictionary<string, object> { { key, value } };
 

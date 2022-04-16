@@ -13,7 +13,7 @@ public static class WordPressUtil
         {
             var uri = url.ParseUrl();
             var client = new WordPressClient(uri.Host);
-            var post = await client.Posts.GetAll();
+            var post = await client.Posts.GetAllAsync();
 
             return true;
         }

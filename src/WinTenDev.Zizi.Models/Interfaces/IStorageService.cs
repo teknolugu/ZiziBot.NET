@@ -12,8 +12,9 @@ public interface IStorageService
     /// Log management for delete old log and upload to channel
     /// </summary>
     Task ClearLog();
+
     /// <summary>
     /// Hangfire storage reset
     /// </summary>
-    Task ResetHangfire(ResetTableMode resetTableMode = ResetTableMode.Truncate);
+    Task ResetHangfireMySqlStorage(ResetTableMode resetTableMode = ResetTableMode.Truncate);
 }

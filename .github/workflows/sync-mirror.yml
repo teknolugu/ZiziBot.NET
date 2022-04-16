@@ -1,14 +1,12 @@
-name: Sync to Mirror
+name: Sync to Other Repo
 
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
 
 jobs:
   build:
-
+    name: Sync To Mirror
     runs-on: ubuntu-latest
 
     steps:
@@ -17,19 +15,26 @@ jobs:
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: 6.0.x
+
       - name: Restore dependencies
         run: dotnet restore
-      - name: Build
-        run: dotnet build --no-restore
-      #     - name: Test
-      #       run: dotnet test --no-build --verbosity normal
-      - name: mirror-repository
-        uses: spyoungtech/mirror-action@v0.4.3
+
+      - name: Build project
+        run: dotnet build src/WinTenDev.ZiziBot.AppHost
+
+      - name: Clone from Mirror
+        uses: actions/checkout@v2
         with:
-          # The remote repository e.g. https://github.com/octocat/foo.git or git@github.com:octocat/foo.git
-          REMOTE: 'https://github.com/WinTenDev/ZiziBot.NET-Mirror.git'
-          GIT_USERNAME: azhe403
-          GIT_PASSWORD: ${{ secrets.GIT_PASS }}
-          # set to "true" to enable debug mode
-          DEBUG: false
-      
+          repository: ${{secrets.GIT_ZIZI_MIRROR_REPO}}
+          token: ${{ secrets.GH_PAT }}
+          path: ./mirror
+
+      - name: Sync to Mirror
+        run: |
+          cd ./mirror
+          git config --global user.email "fulan@winten.my.id"
+          git config --global user.name "Fulan bin Fulan"
+          git remote add upstream ${{ github.server_url }}/${{ github.repository }}
+          git checkout main
+          git rebase upstream/main -X theirs
+          git push origin main --force

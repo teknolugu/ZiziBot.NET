@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
+using AsyncAwaitBestPractices;
 using Humanizer;
 using Nito.AsyncEx;
 using Serilog;
@@ -20,7 +21,10 @@ public static class TaskUtil
 
     public static void InBackground(this Task task)
     {
-        Task.Run(() => task);
+        task.SafeFireAndForget(
+            exception =>
+                Log.Error(exception, "Error when run Fire and Forget task")
+        );
     }
 
     public static void InBackgroundAll(this List<Task> tasks)

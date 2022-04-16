@@ -4,8 +4,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using Serilog;
 using SerilogTimings;
+using Telegram.Bot.Types.Enums;
 using WinTenDev.Zizi.Models.Enums;
+using WinTenDev.Zizi.Models.Tables;
 using WinTenDev.Zizi.Services.Callbacks;
+using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Services.Telegram;
 using WinTenDev.Zizi.Utils;
 using WinTenDev.Zizi.Utils.Telegram;
@@ -127,7 +130,10 @@ public static class TelegramServiceActivityExtension
             telegramService.AfkCheckAsync(),
             telegramService.CheckNameChangesAsync(),
             telegramService.EnsureForceSubscriptionAsync(),
-            telegramService.EnsureChatAdminAsync()
+            telegramService.EnsureChatAdminAsync(),
+            telegramService.NotifyBotSlowdown(),
+            telegramService.RunSpellingAsync(),
+            telegramService.SaveUpdateAsync()
         };
 
         nonAwaitTasks.InBackgroundAll();
@@ -229,5 +235,37 @@ public static class TelegramServiceActivityExtension
         }
 
         operation.Complete();
+    }
+
+    public static async Task SaveUpdateAsync(this TelegramService telegramService)
+    {
+        var botUpdateService = telegramService.GetRequiredService<BotUpdateService>();
+
+        if (telegramService.Chat.Username == null ||
+            telegramService.Chat.Type == ChatType.Private)
+        {
+            Log.Debug("Save update only for Public group/channel!");
+            return;
+        }
+
+        try
+        {
+            await botUpdateService.SaveUpdateAsync(
+                new BotUpdate()
+                {
+                    BotName = telegramService.Context.Bot.Username,
+                    Update = telegramService.Update,
+                    CreatedAt = DateTime.UtcNow
+                }
+            );
+        }
+        catch (Exception exception)
+        {
+            Log.Error(
+                exception,
+                "Save Update - Error occured on {ChatId}",
+                telegramService.ChatId
+            );
+        }
     }
 }

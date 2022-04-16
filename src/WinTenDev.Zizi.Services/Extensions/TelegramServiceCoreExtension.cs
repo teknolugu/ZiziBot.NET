@@ -208,4 +208,93 @@ public static class TelegramServiceCoreExtension
             preventDuplicateSend: true
         );
     }
+
+    public static async Task GetOutAsync(this TelegramService telegramService)
+    {
+        var chatId = telegramService.ChatId;
+        var partsMsg = telegramService.MessageTextParts;
+        var client = telegramService.Client;
+
+        await telegramService.DeleteSenderMessageAsync();
+
+        if (!telegramService.IsFromSudo) return;
+
+        var sendText = "Maaf, saya harus keluar";
+
+        if (partsMsg.ElementAtOrDefault(2) != null)
+        {
+            sendText += $"\n{partsMsg.ElementAtOrDefault(2)}";
+        }
+
+        var message = telegramService.Message;
+        var chatService = telegramService.GetRequiredService<ChatService>();
+        var eventLogService = telegramService.GetRequiredService<EventLogService>();
+
+        var targetChatId = partsMsg.ElementAtOrDefault(1).ToInt64();
+        Log.Information("Target out: {ChatId}", targetChatId);
+
+        var me = await telegramService.GetMeAsync();
+        var meFullName = me.GetFullName();
+
+        try
+        {
+            if (targetChatId == 0) targetChatId = chatId;
+
+            var isMeHere = await chatService.IsMeHereAsync(targetChatId);
+
+            if (!isMeHere)
+            {
+                await telegramService.SendTextMessageAsync(
+                    sendText: $"Sepertinya {meFullName} bukan lagi anggota grub {targetChatId}",
+                    disableWebPreview: true,
+                    scheduleDeleteAt: DateTime.UtcNow.AddMinutes(3),
+                    includeSenderMessage: true
+                );
+
+                return;
+            }
+
+            await telegramService.SendTextMessageAsync(
+                sendText,
+                customChatId: targetChatId,
+                replyToMsgId: 0
+            );
+
+            await client.LeaveChatAsync(targetChatId);
+
+            if (targetChatId != chatId)
+            {
+                var chatInfo = await chatService.GetChatAsync(targetChatId);
+                var memberCount = await chatService.GetMemberCountAsync(targetChatId);
+
+                var htmlMessage = HtmlMessage.Empty
+                    .Bold(meFullName).TextBr(" berhasil keluar dari Grup")
+                    .Bold("ChatId: ").CodeBr(targetChatId.ToString())
+                    .Bold("Name: ").TextBr(chatInfo.GetChatNameLink())
+                    .Bold("Member Count: ").Code(memberCount.ToString());
+
+                await telegramService.SendTextMessageAsync(
+                    sendText: htmlMessage.ToString(),
+                    disableWebPreview: true,
+                    scheduleDeleteAt: DateTime.UtcNow.AddDays(3)
+                );
+
+                await eventLogService.SendEventLogAsync(
+                    message: message,
+                    text: htmlMessage.ToString(),
+                    chatId: chatId,
+                    messageFlag: MessageFlag.Leave,
+                    sendGlobalOnly: true
+                );
+            }
+        }
+        catch (Exception e)
+        {
+            await telegramService.SendTextMessageAsync(
+                sendText: $"Sepertinya {meFullName} bukan lagi anggota ChatId {targetChatId}" +
+                          $"\nMessage: {e.Message}",
+                scheduleDeleteAt: DateTime.UtcNow.AddDays(3)
+            );
+        }
+    }
 }

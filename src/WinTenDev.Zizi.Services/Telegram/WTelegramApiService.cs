@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -54,9 +56,9 @@ public class WTelegramApiService : IWTelegramApiService
 
         var cacheKey = MethodBase.GetCurrentMethod().CreateCacheKey(channelId);
 
-        var channelParticipants = await _cacheService.GetOrSetAsync
-        (
-            cacheKey, async () => {
+        var channelParticipants = await _cacheService.GetOrSetAsync(
+            cacheKey: cacheKey,
+            action: async () => {
                 var chats = await _client.Messages_GetAllChats(null);
                 // var channel = (Channel) chats.chats[1234567890];// the channel we want
                 var channel = (Channel) chats.chats.Values.First(chat => chat.ID == channelId);
@@ -69,9 +71,7 @@ public class WTelegramApiService : IWTelegramApiService
         return channelParticipants;
     }
 
-    public async Task<Channels_ChannelParticipants> GetAllParticipantsCore(
-        long chatId
-    )
+    public async Task<Channels_ChannelParticipants> GetAllParticipantsCore(long chatId)
     {
         var channelId = chatId.ReduceChatId();
 
@@ -86,11 +86,12 @@ public class WTelegramApiService : IWTelegramApiService
     {
         var channel = await GetChannel(chatId);
 
-        var channelsParticipants = await _client.Channels_GetParticipants
-        (
-            channel,
-            new ChannelParticipantsAdmins(),
-            0, 0, 0
+        var channelsParticipants = await _client.Channels_GetParticipants(
+            channel: channel,
+            filter: new ChannelParticipantsAdmins(),
+            offset: 0,
+            limit: 0,
+            hash: 0
         );
 
         var participantCreator = channelsParticipants.participants
@@ -111,18 +112,85 @@ public class WTelegramApiService : IWTelegramApiService
             ParticipantCreator = new Channels_ChannelParticipants()
             {
                 participants = participantCreator.ToArray(),
-                users = channelsParticipants.users.Where(x => x.Value.ID == participantCreator.FirstOrDefault().UserID)
+                users = channelsParticipants.users.Where(x => x.Value.ID == participantCreator.FirstOrDefault()?.UserID)
                     .ToDictionary(x => x.Key, x => x.Value)
             },
             ParticipantAdmin = new Channels_ChannelParticipants()
             {
                 participants = participantAdmins.ToArray(),
-                users = channelsParticipants.users.Where(x => x.Value.ID != participantCreator.FirstOrDefault().UserID)
+                users = channelsParticipants.users.Where(x => x.Value.ID != participantCreator.FirstOrDefault()?.UserID)
                     .Where(x => participantAdmins.Any(y => y.UserID == x.Value.ID))
                     .ToDictionary(x => x.Key, x => x.Value)
             }
         };
 
         return participants;
+    }
+
+    public async Task<List<int>> GetMessagesIdByUserId(
+        long chatId,
+        long userId,
+        int lastMessageId
+    )
+    {
+        _logger.LogInformation(
+            "Deleting messages from UserId {UserId} in ChatId {ChatId}",
+            userId,
+            chatId
+        );
+
+        var offset = 200;
+        var channel = await GetChannel(chatId);
+
+        var messageRanges = Enumerable
+            .Range(lastMessageId - offset, offset)
+            .Reverse()
+            .Select(id => new InputMessageID() { id = id })
+            .Cast<InputMessage>()
+            .ToArray();
+
+        var allMessages = await _client.Channels_GetMessages(channel, messageRanges);
+        var filteredMessage = allMessages.Messages
+            .Where(messageBase => messageBase.GetType() == typeof(Message))
+            .Where(messageBase => messageBase.From.ID == userId);
+        var messageIds = filteredMessage.Select(messageBase => messageBase.ID);
+
+        return messageIds.ToList();
+    }
+
+    public async Task DeleteMessageByUserId(
+        long chatId,
+        long userId,
+        int lastMessageId
+    )
+    {
+        try
+        {
+            _logger.LogInformation(
+                "Deleting messages from UserId {UserId} in ChatId {ChatId}",
+                userId,
+                chatId
+            );
+
+            var channel = await GetChannel(chatId);
+            var messageIds = await GetMessagesIdByUserId(
+                chatId,
+                userId,
+                lastMessageId
+            );
+
+            var deleteMessages = await _client.Channels_DeleteMessages(channel, messageIds.ToArray());
+
+            _logger.LogDebug("Deleted {@AffectedHistory} messages", deleteMessages);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(
+                exception,
+                "Error deleting messages from UserId {UserId} in ChatId {ChatId}",
+                userId,
+                chatId
+            );
+        }
     }
 }

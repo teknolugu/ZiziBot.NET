@@ -85,8 +85,8 @@ public class TelegramService
     public string ChatTitle { get; set; }
     public string FromNameLink { get; set; }
     private string AppendText { get; set; }
-    private string TimeInit { get; set; }
-    private string TimeProc { get; set; }
+    internal string TimeInit { get; set; }
+    internal string TimeProc { get; set; }
 
     public string AnyMessageText { get; set; }
     public string MessageOrEditedText { get; set; }
@@ -494,7 +494,7 @@ public class TelegramService
     public bool CheckFromAnonymous()
     {
         const int anonId = 1087968824;
-        var isAnonymous = FromId == anonId && ChatId == SenderChat.Id;
+        var isAnonymous = FromId == anonId;
 
         Log.Debug(
             "Check is From Anonymous Admin on ChatId: {ChatId}? {IsAnonymous}",
@@ -690,6 +690,7 @@ public class TelegramService
 
     #region EventLog
 
+    [Obsolete("Please look EventLogService")]
     private async Task<List<long>> GetEventLogTargets()
     {
         var currentSetting = await GetChatSetting();
@@ -712,9 +713,11 @@ public class TelegramService
         return filteredTargets;
     }
 
+    [Obsolete("Please look EventLogService")]
     public async Task SendEventLogAsync(
         string text = "N/A",
-        bool withForward = false
+        bool withForward = false,
+        int forwardMessageId = -1
     )
     {
         Log.Information("Preparing send EventLog");
@@ -727,7 +730,7 @@ public class TelegramService
 
             if (withForward)
             {
-                forwardMessage = await ForwardMessageAsync(toChatId: chatId);
+                forwardMessage = await ForwardMessageAsync(messageId: forwardMessageId, toChatId: chatId);
             }
 
             await SendEventLogCoreAsync(
@@ -739,6 +742,7 @@ public class TelegramService
         }
     }
 
+    [Obsolete("Please look EventLogService")]
     public async Task SendEventLogCoreAsync(
         string additionalText = "N/A",
         long customChatId = 0,
@@ -766,6 +770,7 @@ public class TelegramService
         );
     }
 
+    [Obsolete("Please look EventLogService")]
     public async Task SendEventLogRawAsync(string sendLog)
     {
         var chatId = _eventLogConfig.ChannelId;
@@ -1133,7 +1138,11 @@ public class TelegramService
     {
         try
         {
-            Log.Information("Editing {CallBackMessageId}", CallBackMessageId);
+            Log.Information(
+                "Editing Message Callback at ChatId: {ChatId}, MessageId: {CallBackMessageId}",
+                ChatId,
+                CallBackMessageId
+            );
 
             await Client.EditMessageTextAsync(
                 ChatId,
@@ -1146,7 +1155,12 @@ public class TelegramService
         }
         catch (Exception e)
         {
-            Log.Error(e, "Error EditMessage");
+            Log.Error(
+                e,
+                "Error Edit Message Callback at ChatId: {ChatId}, MessageId: {CallBackMessageId}",
+                ChatId,
+                CallBackMessageId
+            );
         }
     }
 
@@ -1162,7 +1176,7 @@ public class TelegramService
     {
         if (string.IsNullOrEmpty(AppendText))
         {
-            Log.Information("Sending new message");
+            Log.Information("First, Sending new message to ChatId: {ChatId}", ChatId);
             AppendText = sendText;
             await SendTextMessageAsync(
                 sendText: AppendText,
@@ -1176,7 +1190,11 @@ public class TelegramService
         }
         else
         {
-            Log.Information("Next, edit existing message");
+            Log.Information(
+                "Next, edit existing messageId: {MessageId} at ChatId: {ChatId}",
+                SentMessage.MessageId,
+                ChatId
+            );
             AppendText += $"\n{sendText}";
             await EditMessageTextAsync(
                 sendText: AppendText,

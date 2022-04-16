@@ -13,6 +13,7 @@ using WinTenDev.ZiziBot.AppHost.Handlers.Commands.Notes;
 using WinTenDev.ZiziBot.AppHost.Handlers.Commands.Rss;
 using WinTenDev.ZiziBot.AppHost.Handlers.Commands.ShalatTime;
 using WinTenDev.ZiziBot.AppHost.Handlers.Commands.SpamLearning;
+using WinTenDev.ZiziBot.AppHost.Handlers.Commands.Spelling;
 using WinTenDev.ZiziBot.AppHost.Handlers.Commands.Tags;
 using WinTenDev.ZiziBot.AppHost.Handlers.Commands.Welcome;
 using WinTenDev.ZiziBot.AppHost.Handlers.Commands.Words;
@@ -62,6 +63,8 @@ public static class CommandBuilderExtension
                                         .UseCommand<AddKataCommand>("kata")
                                         .UseCommand<AddKataCommand>("wfil")
                                         .UseCommand<AddNoteCommand>("addfilter")
+                                        .UseCommand<AddSpellCommand>("addspell")
+                                        .UseCommand<AddSpellCommand>("add_spell")
                                         .UseCommand<AdminCommand>("admin")
                                         .UseCommand<AdminCommand>("adminlist")
                                         .UseCommand<AfkCommand>("afk")
@@ -71,6 +74,7 @@ public static class CommandBuilderExtension
                                         .UseCommand<BotCommand>("bot")
                                         .UseCommand<CatCommand>("cat")
                                         .UseCommand<CatCommand>("cats")
+                                        .UseCommand<ChatCommand>("chat")
                                         .UseCommand<CheckResiCommand>("resi")
                                         .UseCommand<CovidCommand>("covid")
                                         .UseCommand<DebugCommand>("dbg")
@@ -129,6 +133,7 @@ public static class CommandBuilderExtension
                                         .UseCommand<SetWelcomeCommand>("set_welcome_doc")
                                         .UseCommand<SetWelcomeCommand>("set_welcome_msg")
                                         .UseCommand<ShalatTimeCommand>("shalat")
+                                        .UseCommand<ShalatTimeCommand>("sholat")
                                         .UseCommand<StartCommand>("start")
                                         .UseCommand<StatsCommand>("stats")
                                         .UseCommand<StickerPackCommand>("stickerpack")

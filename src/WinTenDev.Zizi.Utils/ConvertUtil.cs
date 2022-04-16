@@ -126,4 +126,16 @@ public static class ConvertUtil
 
         return path;
     }
+
+    public static double ToDouble(this string obj)
+    {
+        if (obj == null) return 0;
+
+        return Convert.ToDouble(obj.Replace(",", "."));
+    }
+
+    public static decimal ToDecimal(this object obj)
+    {
+        return Convert.ToDecimal(obj);
+    }
 }
