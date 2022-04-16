@@ -14,6 +14,7 @@ public enum MessageFlag
     ForceSubscribe,
     GBan,
     GetCity,
+    Leave,
     NewChatMembers,
     Photo,
     Ping,
