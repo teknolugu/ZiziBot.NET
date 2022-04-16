@@ -6,6 +6,7 @@ using Telegram.Bot.Types;
 using WinTenDev.Zizi.Models.Dto;
 using WinTenDev.Zizi.Models.Enums;
 using WinTenDev.Zizi.Models.Types;
+using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Services.Telegram;
 using WinTenDev.Zizi.Utils;
 
@@ -115,6 +116,9 @@ public static class TelegramServiceMessageExtension
         try
         {
             var message = telegramService.MessageOrEdited;
+            var eventLogService = telegramService.GetRequiredService<EventLogService>();
+            var wordFilterService = telegramService.GetRequiredService<WordFilterService>();
+
             if (message == null) return false;
 
             var messageId = message.MessageId;
@@ -150,7 +154,7 @@ public static class TelegramServiceMessageExtension
                 return false;
             }
 
-            var result = await telegramService.WordFilterService.IsMustDelete(text);
+            var result = await wordFilterService.IsMustDelete(text);
             var isShouldDelete = result.IsSuccess;
 
             if (isShouldDelete)
@@ -170,8 +174,17 @@ public static class TelegramServiceMessageExtension
                 result
             );
 
-            var note = "Pesan di Obrolan di hapus karena terdeteksi filter Kata.\n" + result.Notes;
-            await telegramService.SendEventLogAsync(note, withForward: true);
+            var note = "Pesan dihapus karena terdeteksi filter Kata." +
+                       $"\n{result.Notes}";
+
+            await eventLogService.SendEventLogAsync(
+                chatId: chatId,
+                message: message,
+                text: note,
+                messageFlag: MessageFlag.BadWord,
+                forwardMessageId: messageId,
+                deleteForwardedMessage: true
+            );
 
             await telegramService.DeleteAsync(messageId);
 
