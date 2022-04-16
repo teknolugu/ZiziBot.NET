@@ -1,5 +1,4 @@
-﻿using System;
-using CacheTower;
+﻿using CacheTower;
 using CacheTower.Extensions;
 using CacheTower.Providers.Memory;
 using Microsoft.Extensions.DependencyInjection;
@@ -33,7 +32,7 @@ public static class CacheTowerServiceExtension
                     cacheLayers: cacheLayers,
                     extensions: new ICacheExtension[]
                     {
-                        new AutoCleanupExtension(TimeSpan.FromMinutes(cacheConfig.ExpireAfter))
+                        new AutoCleanupExtension(cacheConfig.ExpireAfter.ToTimeSpan())
                     }
                 );
 

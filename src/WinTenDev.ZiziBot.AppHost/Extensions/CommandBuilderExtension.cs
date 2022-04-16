@@ -74,6 +74,7 @@ public static class CommandBuilderExtension
                                         .UseCommand<BotCommand>("bot")
                                         .UseCommand<CatCommand>("cat")
                                         .UseCommand<CatCommand>("cats")
+                                        .UseCommand<ChatCommand>("chat")
                                         .UseCommand<CheckResiCommand>("resi")
                                         .UseCommand<CovidCommand>("covid")
                                         .UseCommand<DebugCommand>("dbg")

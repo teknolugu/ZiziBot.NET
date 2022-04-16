@@ -250,6 +250,7 @@ public class PrivilegeService
 
             Log.Debug("Doing leave chat from {ChatId}", chatId);
 
+            var urlAddTo = await _botService.GetUrlStart("startgroup=new");
             var msgLeave = "Sepertinya saya bukan admin di grup ini, saya akan meninggalkan grup. Sampai jumpa!" +
                            "\n\nTerima kasih sudah menggunakan @MissZiziBot, silakan undang saya kembali jika diperlukan.";
 
@@ -259,8 +260,11 @@ public class PrivilegeService
                 {
                     new[]
                     {
-                        InlineKeyboardButton.WithUrl("👥 Dukungan Grup", "https://t.me/WinTenDev")
-                        // InlineKeyboardButton.WithUrl("↖️ Tambahkan ke Grup", urlAddTo)
+                        InlineKeyboardButton.WithUrl("👥 Dukungan", "https://t.me/WinTenDev"),
+                    },
+                    new[]
+                    {
+                        InlineKeyboardButton.WithUrl("➕ Tambahkan ke Grup", urlAddTo)
                     }
                 }
             );

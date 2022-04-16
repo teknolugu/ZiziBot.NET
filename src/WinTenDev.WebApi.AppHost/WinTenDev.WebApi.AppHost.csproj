@@ -13,13 +13,13 @@
         <PackageReference Include="EasyCaching.Disk" Version="1.5.1"/>
         <PackageReference Include="EasyCaching.SQLite" Version="1.5.1"/>
         <PackageReference Include="JetBrains.Annotations" Version="2021.3.0"/>
-        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.3"/>
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.4"/>
         <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="6.0.0">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.17.0"/>
-        <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="6.0.2"/>
+        <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="6.0.3"/>
         <PackageReference Include="MonkeyCache.FileStore" Version="1.6.3"/>
         <PackageReference Include="MySqlConnector" Version="2.1.8"/>
         <PackageReference Include="Newtonsoft.Json" Version="13.0.1"/>

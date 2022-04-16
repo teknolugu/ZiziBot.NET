@@ -4,6 +4,7 @@ using CacheTower;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using WinTenDev.Zizi.Models.Configs;
+using WinTenDev.Zizi.Utils;
 
 namespace WinTenDev.Zizi.Services.Internals;
 
@@ -12,13 +13,11 @@ public class CacheService
     private readonly CacheConfig _cacheConfig;
     private readonly ILogger<CacheService> _logger;
     private readonly CacheStack _cacheStack;
-    private readonly CacheSettings _cacheSettings;
-    private readonly int _expireAfter;
-    private readonly int _staleAfter;
+    private string _expireAfter;
+    private string _staleAfter;
 
     public CacheService(
         IOptionsSnapshot<CacheConfig> cachingConfig,
-        // IEasyCachingProvider cachingProvider,
         ILogger<CacheService> logger,
         CacheStack cacheStack
     )
@@ -28,7 +27,6 @@ public class CacheService
         _cacheStack = cacheStack;
 
         (_expireAfter, _staleAfter) = cachingConfig.Value;
-        _cacheSettings = new CacheSettings(TimeSpan.FromMinutes(_expireAfter), TimeSpan.FromSeconds(_staleAfter));
     }
 
     /// <summary>
@@ -39,6 +37,8 @@ public class CacheService
     /// <param name="disableCache">If this true, cache will be bypassed</param>
     /// <param name="evictBefore">If this true, cache will be evicted before GetOrSet</param>
     /// <param name="evictAfter">If this true, cache will be evicted after GetOrSet</param>
+    /// <param name="expireAfter">If this parameter given, global config will be overridden</param>
+    /// <param name="staleAfter">If this parameter given, global config will be overridden</param>
     /// <typeparam></typeparam>
     /// <typeparam name="T"></typeparam>
     /// <returns></returns>
@@ -47,17 +47,34 @@ public class CacheService
         Func<Task<T>> action,
         bool disableCache = false,
         bool evictBefore = false,
-        bool evictAfter = false
+        bool evictAfter = false,
+        string expireAfter = null,
+        string staleAfter = null
     )
     {
         if (disableCache) return await action();
 
         if (evictBefore) await EvictAsync(cacheKey);
 
+        if (expireAfter != null) _expireAfter = expireAfter;
+        if (staleAfter != null) _staleAfter = staleAfter;
+
+        var expireAfterSpan = _expireAfter.ToTimeSpan();
+        var staleAfterSpan = _staleAfter.ToTimeSpan();
+
+        _logger.LogDebug(
+            "Loading Cache value with Key: {CacheKey}. StaleAfter: {StaleAfter}. ExpireAfter: {ExpireAfter}",
+            cacheKey,
+            staleAfterSpan,
+            expireAfterSpan
+        );
+
+        var cacheSettings = new CacheSettings(expireAfterSpan, staleAfterSpan);
+
         var cache = await _cacheStack.GetOrSetAsync<T>(
             cacheKey: cacheKey,
             getter: async (_) => await action(),
-            settings: _cacheSettings
+            settings: cacheSettings
         );
 
         if (evictAfter) await EvictAsync(cacheKey);
@@ -75,7 +92,7 @@ public class CacheService
         var cache = await _cacheStack.SetAsync(
             cacheKey,
             value: data,
-            timeToLive: TimeSpan.FromMinutes(_expireAfter)
+            timeToLive: _expireAfter.ToTimeSpan()
         );
 
         return cache.Value;
@@ -89,7 +106,7 @@ public class CacheService
         var cache = await _cacheStack.SetAsync(
             cacheKey: cacheKey,
             value: data,
-            timeToLive: TimeSpan.FromMinutes(_expireAfter)
+            timeToLive: _expireAfter.ToTimeSpan()
         );
 
         return cache.Value;

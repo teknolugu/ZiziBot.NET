@@ -1,15 +1,15 @@
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Telegram.Bot.Framework.Abstractions;
 using WinTenDev.Zizi.Services.Extensions;
 using WinTenDev.Zizi.Services.Telegram;
 
 namespace WinTenDev.ZiziBot.AppHost.Handlers.Commands.Core;
 
-public class OutCommand : CommandBase
+internal class ChatCommand : CommandBase
 {
     private readonly TelegramService _telegramService;
 
-    public OutCommand(TelegramService telegramService)
+    public ChatCommand(TelegramService telegramService)
     {
         _telegramService = telegramService;
     }
@@ -22,6 +22,6 @@ public class OutCommand : CommandBase
     {
         await _telegramService.AddUpdateContext(context);
 
-        await _telegramService.GetOutAsync();
+        await _telegramService.GetChatInfo();
     }
 }
