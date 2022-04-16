@@ -7,6 +7,8 @@ public enum MessageFlag
     AddCity,
     AddSpell,
     Afk,
+    BadWord,
+    Chat,
     DelCity,
     FloodWarn,
     ForceSubscribe,
