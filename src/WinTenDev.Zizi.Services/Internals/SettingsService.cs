@@ -61,14 +61,18 @@ public class SettingsService
         return data;
     }
 
-    public async Task<ChatSetting> GetSettingsByGroup(long chatId)
+    public async Task<ChatSetting> GetSettingsByGroup(
+        long chatId,
+        bool evictBefore = false
+    )
     {
         Log.Information("Get settings chat {ChatId}", chatId);
         var cacheKey = GetCacheKey(chatId);
 
         var settings = await _cacheService.GetOrSetAsync(
-            cacheKey,
-            async () => {
+            cacheKey: cacheKey,
+            evictBefore: evictBefore,
+            action: async () => {
                 var data = await _queryService
                     .CreateMySqlFactory()
                     .FromTable(BaseTable)
@@ -153,13 +157,14 @@ public class SettingsService
             "enable_fed_cas_ban",
             "enable_fed_es2_ban",
             "enable_fed_spamwatch",
-            // "enable_find_notes",
+            "enable_flood_check",
             "enable_fire_check",
             "enable_find_tags",
             "enable_force_subscription",
             "enable_human_verification",
             "enable_check_profile_photo",
             "enable_reply_notification",
+            "enable_privacy_mode",
             "enable_spell_check",
             "enable_warn_username",
             "enable_welcome_message",

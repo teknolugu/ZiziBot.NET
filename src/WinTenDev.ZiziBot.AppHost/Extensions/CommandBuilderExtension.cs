@@ -143,6 +143,8 @@ public static class CommandBuilderExtension
                                         .UseCommand<TagsCommand>("notes")
                                         .UseCommand<TagsCommand>("tags")
                                         .UseCommand<TestCommand>("test")
+                                        .UseCommand<ToggleCommand>("enable")
+                                        .UseCommand<ToggleCommand>("disable")
                                         .UseCommand<TranslateCommand>("tr")
                                         .UseCommand<ReadQrCommand>("read_qr")
                                         .UseCommand<ReadQrCommand>("readqr")

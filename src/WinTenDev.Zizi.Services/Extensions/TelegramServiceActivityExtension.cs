@@ -239,7 +239,16 @@ public static class TelegramServiceActivityExtension
 
     public static async Task SaveUpdateAsync(this TelegramService telegramService)
     {
+        var chatId = telegramService.ChatId;
         var botUpdateService = telegramService.GetRequiredService<BotUpdateService>();
+        var chatSettings = await telegramService.GetChatSetting();
+
+        if (chatSettings.EnablePrivacyMode)
+        {
+            Log.Debug("Privacy Mode is enabled for ChatId {ChatId}", chatId);
+
+            return;
+        }
 
         if (telegramService.Chat.Username == null ||
             telegramService.Chat.Type == ChatType.Private)

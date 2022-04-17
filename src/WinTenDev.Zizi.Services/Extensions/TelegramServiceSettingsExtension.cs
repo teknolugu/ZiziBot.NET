@@ -10,6 +10,8 @@ using SerilogTimings;
 using Telegram.Bot.Types.ReplyMarkups;
 using WinTenDev.Zizi.Models.Dto;
 using WinTenDev.Zizi.Models.Enums;
+using WinTenDev.Zizi.Models.Types;
+using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Services.Telegram;
 using WinTenDev.Zizi.Utils;
 using WinTenDev.Zizi.Utils.Telegram;
@@ -116,6 +118,91 @@ public static class TelegramServiceSettingsExtension
         };
 
         return (resultKey, resultValue);
+    }
+
+    public static async Task SaveSettingToggleInCommandAsync(this TelegramService telegramService)
+    {
+        var defaultScheduleDelete = DateTime.UtcNow.AddMinutes(10);
+
+        if (!await telegramService.CheckFromAdminOrAnonymous())
+        {
+            await telegramService.SendTextMessageAsync(
+                sendText: "Hanya admin yang dapat menggunakan perintah ini",
+                scheduleDeleteAt: defaultScheduleDelete
+            );
+
+            return;
+        }
+
+        var chatId = telegramService.ChatId;
+        var command = telegramService.GetCommand(true);
+        var boolCmd = command.ToBool();
+        var param0 = telegramService.GetCommandParam(0);
+
+        if (param0 == null)
+        {
+            await telegramService.SendTextMessageAsync(
+                sendText: "Silakan masukan parameter yang ingin diubah",
+                scheduleDeleteAt: defaultScheduleDelete
+            );
+
+            return;
+        }
+
+        var settingsService = telegramService.GetRequiredService<SettingsService>();
+
+        var columName = new[]
+        {
+            "afk_status",
+            "anti_malfiles",
+            "fed_cas_ban",
+            "fed_es2_ban",
+            "fed_spamwatch",
+            "flood_check",
+            "fire_check",
+            "find_tags",
+            "force_subscription",
+            "human_verification",
+            "check_profile_photo",
+            "reply_notification",
+            "privacy_mode",
+            "spell_check",
+            "warn_username",
+            "welcome_message",
+            "word_filter_global",
+            "zizi_mata"
+        }.FirstOrDefault(key => key == param0);
+
+        if (columName == null)
+        {
+            await telegramService.SendTextMessageAsync(
+                sendText: "Parameter yang Anda masukan tidak ditemukan",
+                scheduleDeleteAt: defaultScheduleDelete
+            );
+
+            return;
+        }
+
+        var keyFound = $"enable_{columName}";
+        var columnValue = boolCmd.ToInt();
+        var statusStr = boolCmd ? "mengaktifkan" : "mematikan";
+
+        await settingsService.UpdateCell(
+            chatId: chatId,
+            key: keyFound,
+            value: columnValue
+        );
+
+        var htmlMessage = HtmlMessage.Empty
+            .Text($"Berhasil {statusStr} ").Bold(columName.Titleize());
+
+        await telegramService.SendTextMessageAsync(
+            sendText: htmlMessage.ToString(),
+            scheduleDeleteAt: defaultScheduleDelete,
+            includeSenderMessage: true
+        );
+
+        await settingsService.GetSettingsByGroup(chatId, evictBefore: true);
     }
 
     public static async Task SaveWelcomeSettingsAsync(this TelegramService telegramService)
