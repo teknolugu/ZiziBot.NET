@@ -505,6 +505,7 @@ public static class TelegramServiceSettingsExtension
                 sendText: fixedWelcomeMessage,
                 replyMarkup: inlineKeyboardMarkup,
                 replyToMsgId: 0,
+                disableWebPreview: true,
                 scheduleDeleteAt: DateTime.UtcNow.AddDays(1),
                 preventDuplicateSend: true,
                 messageFlag: MessageFlag.NewChatMembers
