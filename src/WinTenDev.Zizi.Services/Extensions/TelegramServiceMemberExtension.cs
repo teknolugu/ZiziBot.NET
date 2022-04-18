@@ -464,7 +464,10 @@ public static class TelegramServiceMemberExtension
             ReasonBan = reason
         };
 
-        var isGlobalBanned = await telegramService.GlobalBanService.IsExist(userId);
+        var globalBanService = telegramService.GetRequiredService<GlobalBanService>();
+        var eventLogService = telegramService.GetRequiredService<EventLogService>();
+
+        var isGlobalBanned = await globalBanService.IsExist(userId);
 
         if (isGlobalBanned)
         {
@@ -490,12 +493,15 @@ public static class TelegramServiceMemberExtension
                 await telegramService.KickMemberAsync(userId, untilDate: DateTime.Now.AddSeconds(30));// Kick and Unban after 8 hours
             }
 
+            var messageLog = HtmlMessage.Empty
+                .TextBr("Global Ban di tambahkan baru")
+                .Bold("UserId: ").CodeBr(userId.ToString());
+
             await Task.WhenAll(
-                telegramService.AppendTextAsync("Sedang membersihkan jejak.."),
-                telegramService.EventLogService.SendEventLogAsync(
+                eventLogService.SendEventLogAsync(
                     chatId: chatId,
                     message: message,
-                    text: "Global Ban di tambahkan baru",
+                    text: messageLog.ToString(),
                     forwardMessageId: messageId,
                     deleteForwardedMessage: true,
                     messageFlag: MessageFlag.GBan
@@ -503,15 +509,13 @@ public static class TelegramServiceMemberExtension
             );
         }
 
-        await telegramService.AppendTextAsync("Menyimpan informasi..");
-        var save = await telegramService.GlobalBanService.SaveBanAsync(banData);
+        var save = await globalBanService.SaveBanAsync(banData);
 
         await telegramService.AppendTextAsync($"Alasan: {reason}");
 
         Log.Information("SaveBan: {Save}", save);
 
-        await telegramService.AppendTextAsync("Memperbarui cache.");
-        await telegramService.GlobalBanService.UpdateCache(userId);
+        await globalBanService.UpdateCache(userId);
 
         await telegramService.AppendTextAsync(
             sendText: "Pengguna berhasil di tambahkan",
