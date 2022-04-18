@@ -482,7 +482,8 @@ public static class TelegramServiceSettingsExtension
 
         var inlineKeyboardMarkup = listKeyboardButton.ToButtonMarkup();
 
-        if (chatSetting.WelcomeMediaType > 0)
+        if (chatSetting.WelcomeMediaType > 0 &&
+            chatSetting.WelcomeMedia.IsNotNullOrEmpty())
         {
             var welcomeMedia = chatSetting.WelcomeMedia;
             var mediaType = chatSetting.WelcomeMediaType;
