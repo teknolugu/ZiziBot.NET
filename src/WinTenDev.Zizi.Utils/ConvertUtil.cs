@@ -27,7 +27,12 @@ public static class ConvertUtil
     /// </returns>
     public static bool ToBool(this string obj)
     {
-        return Convert.ToBoolean(obj);
+        return obj switch
+        {
+            "disable" => false,
+            "enable" => true,
+            _ => Convert.ToBoolean(obj)
+        };
     }
 
     /// <summary>Convert long type to double.</summary>

@@ -249,6 +249,8 @@ public static class HangfireUtil
     {
         Log.Information("HangfireLiteDb: {ConnectionString}", connectionString);
 
+        connectionString.EnsureDirectory();
+
         var options = new LiteDbStorageOptions()
         {
             QueuePollInterval = TimeSpan.FromSeconds(10)

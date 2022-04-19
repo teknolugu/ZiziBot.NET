@@ -10,6 +10,8 @@ public enum MessageFlag
     BadWord,
     Chat,
     DelCity,
+    Disable,
+    Enable,
     FloodWarn,
     ForceSubscribe,
     GBan,
