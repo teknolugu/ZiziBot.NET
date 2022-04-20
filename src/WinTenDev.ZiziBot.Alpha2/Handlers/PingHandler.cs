@@ -2,25 +2,23 @@
 using System.Threading.Tasks;
 using TgBotFramework;
 
-namespace WinTenDev.ZiziBot.Alpha2.Handlers.Chat;
+namespace WinTenDev.ZiziBot.Alpha2.Handlers;
 
-public class AddNoteCommand : CommandBase<UpdateContext>
+public class PingHandler : IUpdateHandler<UpdateContext>
 {
     private readonly TelegramService _telegramService;
 
-    public AddNoteCommand(TelegramService telegramService)
+    public PingHandler(TelegramService telegramService)
     {
         _telegramService = telegramService;
-
     }
 
-    public override async Task HandleAsync(
+    public async Task HandleAsync(
         UpdateContext context,
         UpdateDelegate<UpdateContext> next,
-        string[] args,
         CancellationToken cancellationToken
     )
     {
-        await _telegramService.PrepareSaveNotesAsync();
+        await _telegramService.SendPingAsync();
     }
 }

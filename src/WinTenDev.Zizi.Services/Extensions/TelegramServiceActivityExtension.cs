@@ -262,7 +262,7 @@ public static class TelegramServiceActivityExtension
             await botUpdateService.SaveUpdateAsync(
                 new BotUpdate()
                 {
-                    BotName = telegramService.Context.Bot.Username,
+                    BotName = telegramService.BotUsername,
                     Update = telegramService.Update,
                     CreatedAt = DateTime.UtcNow
                 }

@@ -133,6 +133,8 @@ public static class TelegramServiceNotesExtension
         var chatId = telegramService.ChatId;
         var messageText = telegramService.MessageOrEditedText;
 
+        if (messageText.IsNullOrEmpty()) return;
+
         var notes = await telegramService.NotesService.GetNotesByChatId(chatId);
         var selected = notes.FirstOrDefault(tag => messageText.Contains(tag.Tag, StringComparison.CurrentCultureIgnoreCase));
 

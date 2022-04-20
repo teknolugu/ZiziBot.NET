@@ -58,7 +58,7 @@ public static class TelegramServiceHealthyExtension
 
         if (!telegramService.IsGroupChat ||
             telegramService.CheckSenderChannel() ||
-            await telegramService.CheckFromAdmin())
+            await telegramService.CheckFromAdminOrAnonymous())
         {
             return defaultFloodCheck;
         }

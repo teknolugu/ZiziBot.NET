@@ -13,14 +13,15 @@ builder.Host.ConfigureAppConfiguration(
             configurationBuilder
         ) => {
             configurationBuilder.AddAppSettingsJson();
-        })
+        }
+    )
     .UseSerilog(
-    (
-        context,
-        provider,
-        logger
-    ) => logger.AddSerilogBootstrapper(provider)
-);
+        (
+            context,
+            provider,
+            logger
+        ) => logger.AddSerilogBootstrapper(provider)
+    );
 
 builder.Logging.AddSerilog();
 
@@ -43,6 +44,8 @@ builder.Services.AddHangfireServerAndConfig();
 var app = builder.Build();
 
 app.ConfigureLibrary();
+
+app.UseServiceInjection();
 
 app.UseHangfireDashboardAndServer();
 
