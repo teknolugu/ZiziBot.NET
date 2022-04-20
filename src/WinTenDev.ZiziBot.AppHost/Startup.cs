@@ -8,6 +8,7 @@ using Microsoft.Extensions.Hosting;
 using Serilog;
 using WinTenDev.Zizi.DbMigrations.Extensions;
 using WinTenDev.Zizi.Services.Extensions;
+using WinTenDev.Zizi.Utils;
 using WinTenDev.Zizi.Utils.Extensions;
 using WinTenDev.ZiziBot.AppHost.Extensions;
 
@@ -59,6 +60,7 @@ public class Startup
         IWebHostEnvironment env
     )
     {
+        app.UseServiceInjection();
         app.PrintAboutApp();
         app.LoadJsonLocalization();
 

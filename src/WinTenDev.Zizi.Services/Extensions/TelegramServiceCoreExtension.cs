@@ -19,7 +19,8 @@ public static class TelegramServiceCoreExtension
 {
     public static TService GetRequiredService<TService>(this TelegramService telegramService)
     {
-        var serviceProvider = telegramService.ServiceProvider;
+        var serviceScope = InjectionUtil.GetScope();
+        var serviceProvider = serviceScope.ServiceProvider;
         var resolvedService = serviceProvider.GetRequiredService<TService>();
 
         return resolvedService;
