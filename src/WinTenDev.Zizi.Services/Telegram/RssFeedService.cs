@@ -80,10 +80,10 @@ public class RssFeedService
         );
 
         _recurringJobManager.AddOrUpdate<RssFeedService>(
-            recurringId,
-            service =>
-                service.ExecuteUrlAsync(chatId, urlFeed),
-            Cron.Minutely
+            recurringJobId: recurringId,
+            cronExpression: CronUtil.InMinute(3),
+            methodCall: service =>
+                service.ExecuteUrlAsync(chatId, urlFeed)
         );
     }
 
