@@ -1,8 +1,6 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 using TgBotFramework;
-using WinTenDev.Zizi.Services.Extensions;
-using WinTenDev.Zizi.Services.Telegram;
 
 namespace WinTenDev.ZiziBot.Alpha2.Handlers;
 
