@@ -35,6 +35,7 @@ namespace WinTenDev.Zizi.Services.Telegram;
 public class TelegramService
 {
     private readonly IBackgroundJobClient _backgroundJob;
+    private readonly TgBotConfig _tgBotConfig;
     private readonly EventLogConfig _eventLogConfig;
     private readonly FeatureService _featureService;
     private readonly PrivilegeService _privilegeService;
@@ -82,6 +83,7 @@ public class TelegramService
     public long ChatId { get; set; }
     public long ReducedChatId { get; set; }
 
+    public string BotUsername { get; set; }
     public string ChatTitle { get; set; }
     public string FromNameLink { get; set; }
     private string AppendText { get; set; }
@@ -126,6 +128,7 @@ public class TelegramService
         IOptionsSnapshot<EnginesConfig> engOptions,
         IOptionsSnapshot<EventLogConfig> eventLogConfig,
         IOptionsSnapshot<CommonConfig> commonConfig,
+        IOptionsSnapshot<TgBotConfig> tgBotConfig,
         IServiceProvider serviceProvider,
         AfkService afkService,
         AnimalsService animalsService,
@@ -155,6 +158,7 @@ public class TelegramService
         _eventLogConfig = eventLogConfig.Value;
         _featureService = featureService;
         _privilegeService = privilegeService;
+        _tgBotConfig = tgBotConfig.Value;
         _userProfilePhotoService = userProfilePhotoService;
         _stepHistoriesService = stepHistoriesService;
 
@@ -187,6 +191,8 @@ public class TelegramService
 
         Client = context.Client;
         Update = context.Update;
+
+        BotUsername = _tgBotConfig.Username;
 
         AddUpdate(context.Update);
 
@@ -235,6 +241,8 @@ public class TelegramService
         IsFromSudo = CheckFromSudoer();
         IsPrivateChat = CheckIsPrivateChat();
         IsGroupChat = CheckIsGroupChat();
+
+        BotUsername = Context.Bot.Username;
 
         AnyMessageText = AnyMessage?.Text;
         MessageOrEditedText = MessageOrEdited?.Text;
@@ -425,7 +433,7 @@ public class TelegramService
         if (withoutSlash) cmd = cmd?.TrimStart('/');
         if (withoutUsername)
             cmd = cmd?.Replace(
-                "@" + Context.Bot.Username,
+                "@" + BotUsername,
                 string.Empty,
                 StringComparison.CurrentCultureIgnoreCase
             );
