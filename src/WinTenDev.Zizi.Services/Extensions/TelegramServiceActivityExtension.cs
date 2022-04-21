@@ -263,6 +263,8 @@ public static class TelegramServiceActivityExtension
                 new BotUpdate()
                 {
                     BotName = telegramService.BotUsername,
+                    ChatId = chatId,
+                    UserId = telegramService.FromId,
                     Update = telegramService.Update,
                     CreatedAt = DateTime.UtcNow
                 }
