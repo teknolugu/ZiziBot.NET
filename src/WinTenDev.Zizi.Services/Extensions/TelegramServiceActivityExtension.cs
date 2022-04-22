@@ -110,6 +110,11 @@ public static class TelegramServiceActivityExtension
             return false;
         }
 
+        if (await telegramService.CheckUpdateHistoryAsync())
+        {
+            return false;
+        }
+
         if (shouldDelete)
         {
             return false;

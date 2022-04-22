@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using MoreLinq;
 using Serilog;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 using WinTenDev.Zizi.Models.Dto;
 using WinTenDev.Zizi.Models.Enums;
 using WinTenDev.Zizi.Models.Types;
@@ -200,6 +202,44 @@ public static class TelegramServiceMessageExtension
 
             return false;
         }
+    }
+
+    public static async Task<bool> CheckUpdateHistoryAsync(this TelegramService telegramService)
+    {
+        var chatId = telegramService.ChatId;
+        var fromId = telegramService.FromId;
+        var message = telegramService.MessageOrEdited;
+        var messageEntities = message.Entities ?? message.CaptionEntities;
+
+        if (messageEntities == null) return false;
+
+        var filteredEntities = messageEntities?.Where(
+            x =>
+                x.Type is MessageEntityType.Mention or MessageEntityType.Url
+        ).ToList();
+
+        var botUpdateService = telegramService.GetRequiredService<BotUpdateService>();
+        var botUpdates = await botUpdateService.GetUpdateAsync(chatId, fromId);
+        var isRecentUpdateExist = botUpdates.Count > 0;
+        var entitiesCount = filteredEntities?.Count;
+
+        Log.Debug(
+            "Check Bot Update history for ChatId: {ChatId}. EntitiesCount: {EntitiesCount}. RecentUpdates: {RecentUpdates}",
+            chatId,
+            entitiesCount,
+            botUpdates.Count
+        );
+
+        if (!(filteredEntities?.Count > 0) || isRecentUpdateExist) return false;
+
+        var htmlMessage = HtmlMessage.Empty
+            .Bold("Anti-Spam detection")
+            .Bold("Telegram UserId: ").CodeBr(fromId.ToString())
+            .Text("Telah mengirimkan link atau mention untuk pesan pertamanya, silakan pertimbangkan untuk memblokir pengguna");
+
+        await telegramService.SendTextMessageAsync(htmlMessage.ToString());
+
+        return false;
     }
 
     public static async Task DeleteMessageManyAsync(this TelegramService telegramService)

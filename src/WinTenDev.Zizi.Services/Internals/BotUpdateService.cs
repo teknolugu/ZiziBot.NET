@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using MySqlConnector;
@@ -32,5 +33,20 @@ public class BotUpdateService
     public async Task<IEnumerable<BotUpdate>> GetUpdateAsync()
     {
         return await DbConnection.QueryAllAsync<BotUpdate>(trace: new DefaultTraceLog());
+    }
+
+    public async Task<List<BotUpdate>> GetUpdateAsync(
+        long chatId,
+        long userId
+    )
+    {
+        var botUpdates = await DbConnection.QueryAsync<BotUpdate>(
+            where: update =>
+                update.ChatId == chatId &&
+                update.UserId == userId,
+            trace: new DefaultTraceLog()
+        );
+
+        return botUpdates.ToList();
     }
 }
