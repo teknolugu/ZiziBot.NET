@@ -208,8 +208,15 @@ public static class TelegramServiceMessageExtension
     {
         var chatId = telegramService.ChatId;
         var fromId = telegramService.FromId;
+
+        if (!telegramService.IsPublicGroup)
+        {
+            Log.Debug("Check Update History not available for ChatId: {ChatId} because is Private Group", chatId);
+            return false;
+        }
+
         var message = telegramService.MessageOrEdited;
-        var messageEntities = message.Entities ?? message.CaptionEntities;
+        var messageEntities = message?.Entities ?? message?.CaptionEntities;
 
         if (messageEntities == null) return false;
 
@@ -233,7 +240,7 @@ public static class TelegramServiceMessageExtension
         if (!(filteredEntities?.Count > 0) || isRecentUpdateExist) return false;
 
         var htmlMessage = HtmlMessage.Empty
-            .Bold("Anti-Spam detection")
+            .BoldBr("Anti-Spam detection")
             .Bold("Telegram UserId: ").CodeBr(fromId.ToString())
             .Text("Telah mengirimkan link atau mention untuk pesan pertamanya, silakan pertimbangkan untuk memblokir pengguna");
 
