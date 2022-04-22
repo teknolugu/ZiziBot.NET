@@ -24,7 +24,7 @@ public class SettingsCallback
         _telegramService = telegramService;
         _settingsService = settingsService;
 
-        _callbackQuery = telegramService.Context.Update.CallbackQuery;
+        _callbackQuery = telegramService.CallbackQuery;
     }
 
     public async Task<bool> ExecuteToggleAsync()
