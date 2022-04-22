@@ -34,6 +34,15 @@ public static class TelegramServiceActivityExtension
 
         var partsCallback = callbackQuery.Data.SplitText(" ");
         Log.Debug("Callbacks: {CB}", partsCallback);
+        var callbackCmd = partsCallback.ElementAtOrDefault(0);
+
+        var callbackResult = callbackCmd?.ToLower() switch
+        {
+            "pong" => await telegramService.OnCallbackPingAsync(),
+            _ => false
+        };
+
+        if (callbackResult) return;
 
         switch (partsCallback.ElementAtOrDefault(0))// Level 0
         {
