@@ -39,6 +39,7 @@ public static class TelegramServiceActivityExtension
         var callbackResult = callbackCmd?.ToLower() switch
         {
             "pong" => await telegramService.OnCallbackPingAsync(),
+            "verify" => await telegramService.OnCallbackVerifyAsync(),
             _ => false
         };
 
