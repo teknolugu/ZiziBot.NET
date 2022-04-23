@@ -60,7 +60,7 @@ public class ExportRssCommand : CommandBase
             listRss.AppendLine(rss.UrlFeed);
         }
 
-        Log.Information("ListUrl: \n{ListRss}", listRss);
+        Log.Debug("ListUrl: \n{ListRss}", listRss);
 
         var listRssStr = listRss.ToString().Trim();
         var sendText = "Daftar RSS ini tidak terenkripsi, dapat di pulihkan di obrolan mana saja. " +
@@ -77,7 +77,11 @@ public class ExportRssCommand : CommandBase
         await listRssStr.WriteTextAsync(filePath);
 
         var fileSend = Path.Combine("Storage", "Caches") + $"/{filePath}";
-        await _telegramService.SendMediaAsync(fileSend, MediaType.LocalDocument, sendText);
+        await _telegramService.SendMediaAsync(
+            fileSend,
+            MediaType.LocalDocument,
+            sendText
+        );
 
         fileSend.DeleteFile();
     }
