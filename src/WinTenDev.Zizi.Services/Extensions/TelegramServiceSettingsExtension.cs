@@ -325,7 +325,8 @@ public static class TelegramServiceSettingsExtension
         sendText += "\n\n<b>Raw Button:</b>" +
                     $"\n<code>{welcomeButton}</code>";
 
-        if (welcomeMediaType > 0)
+        if (welcomeMedia.IsNotNullOrEmpty() &&
+            welcomeMediaType > 0)
         {
             await telegramService.SendMediaAsync(
                 fileId: welcomeMedia,
