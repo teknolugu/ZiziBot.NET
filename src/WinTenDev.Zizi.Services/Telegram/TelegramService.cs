@@ -70,6 +70,7 @@ public class TelegramService
     public bool IsFromSudo { get; private set; }
     public bool IsPrivateChat { get; set; }
     public bool IsGroupChat { get; set; }
+    public bool IsPublicGroup { get; set; }
     public bool IsChatRestricted { get; set; }
 
     [Obsolete("Please read value from SentMessage")]
@@ -241,6 +242,7 @@ public class TelegramService
         IsFromSudo = CheckFromSudoer();
         IsPrivateChat = CheckIsPrivateChat();
         IsGroupChat = CheckIsGroupChat();
+        IsPublicGroup = Chat.Username != null && Chat.Type is ChatType.Group or ChatType.Supergroup;
 
         BotUsername = Context.Bot.Username;
 
