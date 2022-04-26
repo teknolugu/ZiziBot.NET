@@ -40,6 +40,7 @@ public static class TelegramServiceActivityExtension
         {
             "pong" => await telegramService.OnCallbackPingAsync(),
             "verify" => await telegramService.OnCallbackVerifyAsync(),
+            "rssctl" => await telegramService.OnCallbackRssCtlAsync(),
             _ => false
         };
 
