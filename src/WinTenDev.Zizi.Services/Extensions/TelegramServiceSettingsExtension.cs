@@ -320,10 +320,10 @@ public static class TelegramServiceSettingsExtension
             sendText += $"{welcomeMessage}";
         }
 
-        var keyboardMarkup = welcomeButton.ToButtonMarkup();
-
         sendText += "\n\n<b>Raw Button:</b>" +
                     $"\n<code>{welcomeButton}</code>";
+
+        var keyboardMarkup = welcomeButton.ToButtonMarkup(validateButton: true);
 
         if (welcomeMedia.IsNotNullOrEmpty() &&
             welcomeMediaType > 0)
@@ -427,7 +427,7 @@ public static class TelegramServiceSettingsExtension
                              "\nKamu adalah anggota ke-{MemberCount}";
         }
 
-        var listKeyboardButton = welcomeButton.ToInlineKeyboardButton().ToList();
+        var listKeyboardButton = welcomeButton.ToInlineKeyboardButton(validateButton: true).ToList();
         var enableHumanVerification = chatSetting.EnableHumanVerification;
 
         if (enableHumanVerification)
