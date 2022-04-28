@@ -8,7 +8,7 @@ namespace WinTenDev.Zizi.DbMigrations.FluentMigrations;
 [UsedImplicitly]
 public class CreateTableBotUpdate : Migration
 {
-    private const string TableName = "bot_update";
+    internal const string TableName = "bot_update";
 
     public override void Up()
     {

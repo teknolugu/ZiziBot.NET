@@ -208,22 +208,22 @@ public class DefaultTraceLog : ITrace
 
     public void BeforeQuery(CancellableTraceLog log)
     {
-        throw new System.NotImplementedException();
+        Log.Debug("RepoDB Trace: {@Log}", log.Statement);
     }
 
     public void AfterQuery(TraceLog log)
     {
-        Log.Debug("RepoDB Trace - AfterQuery. {@Log} ", log);
+        Log.Debug("RepoDB Trace - AfterQuery. {@Log} ", log.ExecutionTime);
     }
 
     public void BeforeQueryAll(CancellableTraceLog log)
     {
-        throw new System.NotImplementedException();
+        Log.Debug("RepoDB Trace: {@Log}", log.Statement);
     }
 
     public void AfterQueryAll(TraceLog log)
     {
-        throw new System.NotImplementedException();
+        Log.Debug("RepoDB Trace - AfterQuery. {@Log} ", log.ExecutionTime);
     }
 
     public void BeforeQueryMultiple(CancellableTraceLog log)

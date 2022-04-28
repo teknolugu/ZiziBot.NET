@@ -4,6 +4,7 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Nito.AsyncEx.Synchronous;
 using Serilog;
 using Telegram.Bot.Types.ReplyMarkups;
 using WinTenDev.Zizi.Models.Configs;
@@ -146,7 +147,7 @@ public static class KeyboardUtil
 
     public static List<List<Button>> ToListButton(this string rawButtonMarkups)
     {
-        if(rawButtonMarkups.IsNullOrEmpty()) return new List<List<Button>>();
+        if (rawButtonMarkups.IsNullOrEmpty()) return new List<List<Button>>();
 
         var listButtonMapRaw = rawButtonMarkups.Split("\n")
             .Select(
@@ -155,13 +156,18 @@ public static class KeyboardUtil
                     .Select(
                         x => {
                             var btn = x.Split("|");
+
                             return new Button()
                             {
-                                Text = btn.ElementAtOrDefault(0),
-                                Url = btn.ElementAtOrDefault(1)
+                                Text = btn.ElementAtOrDefault(0)?.Trim(),
+                                Url = btn.ElementAtOrDefault(1)?.Trim()
                             };
                         }
-                    ).Where(button => button.Text.IsNotNullOrEmpty() && button.Url.IsNotNullOrEmpty()).ToList()
+                    ).Where(
+                        button =>
+                            button.Text.IsNotNullOrEmpty() &&
+                            button.Url.IsNotNullOrEmpty()
+                    ).ToList()
             ).ToList();
 
         if (listButtonMapRaw.Count == 1)
@@ -175,29 +181,46 @@ public static class KeyboardUtil
         return listButtonMapRaw;
     }
 
-    public static IEnumerable<IEnumerable<InlineKeyboardButton>> ToInlineKeyboardButton(this IEnumerable<IEnumerable<Button>> lisButtonMap)
+    public static IEnumerable<IEnumerable<InlineKeyboardButton>> ToInlineKeyboardButton(
+        this IEnumerable<IEnumerable<Button>> lisButtonMap,
+        bool validateButton = false
+    )
     {
         var inlineKeyboardMarkup =
             lisButtonMap
                 .Select(
-                    x => x
+                    buttonRow => buttonRow
                         .Select(
-                            y =>
-                                InlineKeyboardButton.WithUrl(y.Text, y.Url.ToString())
+                            buttonCol => {
+                                var url = buttonCol.Url;
+                                if (!validateButton)
+                                    return InlineKeyboardButton.WithUrl(buttonCol.Text, buttonCol.Url);
+
+                                if (url.IsExistUrl().WaitAndUnwrapException())
+                                    return InlineKeyboardButton.WithUrl(buttonCol.Text, buttonCol.Url);
+
+                                return InlineKeyboardButton.WithCallbackData(buttonCol.Text, $"invalid-url {url}");
+                            }
                         )
                 );
 
         return inlineKeyboardMarkup;
     }
 
-    public static IEnumerable<IEnumerable<InlineKeyboardButton>> ToInlineKeyboardButton(this string rawButtonMarkups)
+    public static IEnumerable<IEnumerable<InlineKeyboardButton>> ToInlineKeyboardButton(
+        this string rawButtonMarkups,
+        bool validateButton = false
+    )
     {
-        return rawButtonMarkups.ToListButton().ToInlineKeyboardButton();
+        return rawButtonMarkups.ToListButton().ToInlineKeyboardButton(validateButton: validateButton);
     }
 
-    public static InlineKeyboardMarkup ToButtonMarkup(this string buttonRaw)
+    public static InlineKeyboardMarkup ToButtonMarkup(
+        this string buttonRaw,
+        bool validateButton = false
+    )
     {
-        return buttonRaw.ToListButton().ToInlineKeyboardButton().ToButtonMarkup();
+        return buttonRaw.ToListButton().ToInlineKeyboardButton(validateButton: validateButton).ToButtonMarkup();
     }
 
     public static InlineKeyboardMarkup ToButtonMarkup(this IEnumerable<IEnumerable<Button>> listButton)

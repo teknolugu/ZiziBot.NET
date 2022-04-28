@@ -34,6 +34,18 @@ public static class TelegramServiceActivityExtension
 
         var partsCallback = callbackQuery.Data.SplitText(" ");
         Log.Debug("Callbacks: {CB}", partsCallback);
+        var callbackCmd = partsCallback.ElementAtOrDefault(0);
+
+        var callbackResult = callbackCmd?.ToLower() switch
+        {
+            "pong" => await telegramService.OnCallbackPingAsync(),
+            "verify" => await telegramService.OnCallbackVerifyAsync(),
+            "rssctl" => await telegramService.OnCallbackRssCtlAsync(),
+            "setting" => await telegramService.OnCallbackSettingAsync(),
+            _ => false
+        };
+
+        if (callbackResult) return;
 
         switch (partsCallback.ElementAtOrDefault(0))// Level 0
         {
@@ -106,6 +118,11 @@ public static class TelegramServiceActivityExtension
         var hasPhotoProfile = await telegramService.RunCheckUserProfilePhoto();
 
         if (!hasPhotoProfile)
+        {
+            return false;
+        }
+
+        if (await telegramService.CheckUpdateHistoryAsync())
         {
             return false;
         }
@@ -263,6 +280,8 @@ public static class TelegramServiceActivityExtension
                 new BotUpdate()
                 {
                     BotName = telegramService.BotUsername,
+                    ChatId = chatId,
+                    UserId = telegramService.FromId,
                     Update = telegramService.Update,
                     CreatedAt = DateTime.UtcNow
                 }

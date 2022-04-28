@@ -14,6 +14,12 @@ public class BotUpdate
     [Map("bot_name")]
     public string BotName { get; set; }
 
+    [Map("chat_id")]
+    public long ChatId { get; set; }
+
+    [Map("user_id")]
+    public long UserId { get; set; }
+
     [PropertyHandler(typeof(UpdatePropertyHandler))]
     public Update Update { get; set; }
 

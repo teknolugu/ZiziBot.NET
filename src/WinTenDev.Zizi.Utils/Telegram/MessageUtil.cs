@@ -71,6 +71,8 @@ public static class MessageUtil
         bool withoutCmd = true
     )
     {
+        if (message == null) return null;
+
         var partsMsg = message.Split(' ');
         var text = message;
 

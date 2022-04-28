@@ -19,7 +19,7 @@ public class ActionCallback
     {
         _telegramService = telegramService;
         _privilegeService = privilegeService;
-        _callbackQuery = telegramService.Context.Update.CallbackQuery;
+        _callbackQuery = telegramService.CallbackQuery;
     }
 
     public async Task<bool> ExecuteAsync()

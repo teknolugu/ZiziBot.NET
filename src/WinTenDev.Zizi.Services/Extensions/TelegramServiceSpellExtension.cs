@@ -123,7 +123,7 @@ public static class TelegramServiceSpellExtension
         await telegramService.SendTextMessageAsync(
             sendText: htmlMessage.ToString(),
             scheduleDeleteAt: DateTime.UtcNow.AddDays(3),
-            preventDuplicateSend: true,
+            preventDuplicateSend: telegramService.EditedMessage != null,
             disableWebPreview: true
         );
     }

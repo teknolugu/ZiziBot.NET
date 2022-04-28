@@ -191,6 +191,24 @@ public static class UrlUtil
         return Url.IsValid(urlPath);
     }
 
+    public static async Task<bool> IsExistUrl(this string url)
+    {
+        try
+        {
+            var head = await url
+                .AllowAnyHttpStatus()
+                .HeadAsync();
+
+            var isExist = head.StatusCode is >= 200 and < 500;
+
+            return isExist;
+        }
+        catch (Exception e)
+        {
+            return false;
+        }
+    }
+
     public static bool IsUrlRedirected(this string url)
     {
         var req = (HttpWebRequest) HttpWebRequest.Create(url);

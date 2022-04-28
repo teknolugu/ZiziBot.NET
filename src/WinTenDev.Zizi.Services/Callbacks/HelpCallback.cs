@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using Serilog;
+using Telegram.Bot.Types;
 using WinTenDev.Zizi.Services.Telegram;
 using WinTenDev.Zizi.Utils;
 using WinTenDev.Zizi.Utils.Telegram;
@@ -9,18 +10,18 @@ namespace WinTenDev.Zizi.Services.Callbacks;
 
 public class HelpCallback
 {
-    private readonly string _callBackData;
+    private readonly CallbackQuery _callBackData;
     private readonly TelegramService _telegramService;
 
     public HelpCallback(TelegramService telegramService)
     {
         _telegramService = telegramService;
-        _callBackData = telegramService.CallbackQuery.Data;
+        _callBackData = telegramService.CallbackQuery;
     }
 
     public async Task<bool> ExecuteAsync()
     {
-        var partsCallback = _callBackData.SplitText(" ");
+        var partsCallback = _callBackData.Data.SplitText(" ");
         var sendText = await partsCallback[1].LoadInBotDocs();
         Log.Information("Docs: {SendText}", sendText);
         var subPartsCallback = partsCallback[1].SplitText("/");
