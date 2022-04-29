@@ -209,8 +209,9 @@ public static class TelegramServiceMessageExtension
         var chatId = telegramService.ChatId;
         var fromId = telegramService.FromId;
 
-        if (!telegramService.IsPublicGroup ||
-            telegramService.IsChannel)
+        if (telegramService.IsPrivateGroup ||
+            telegramService.IsChannel ||
+            telegramService.IsGlobalIgnored())
         {
             Log.Debug("Check Update History not available for ChatId: {ChatId}", chatId);
             return false;
