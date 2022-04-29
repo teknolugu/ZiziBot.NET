@@ -71,6 +71,7 @@ public class TelegramService
     public bool IsPrivateChat { get; set; }
     public bool IsGroupChat { get; set; }
     public bool IsPublicGroup { get; set; }
+    public bool IsPrivateGroup { get; set; }
     public bool IsChannel { get; set; }
     public bool IsChatRestricted { get; set; }
 
@@ -244,6 +245,7 @@ public class TelegramService
         IsPrivateChat = CheckIsPrivateChat();
         IsGroupChat = CheckIsGroupChat();
         IsPublicGroup = Chat.Username != null && Chat.Type is ChatType.Group or ChatType.Supergroup;
+        IsPrivateGroup = !IsPublicGroup;
         IsChannel = Chat.Type is ChatType.Channel;
 
         BotUsername = Context.Bot.Username;
