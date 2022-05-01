@@ -246,7 +246,12 @@ public static class TelegramServiceMessageExtension
             .Bold("Telegram UserId: ").CodeBr(fromId.ToString())
             .Text("Telah mengirimkan link atau mention untuk pesan pertamanya, silakan pertimbangkan untuk memblokir pengguna");
 
-        await telegramService.SendTextMessageAsync(htmlMessage.ToString());
+        await telegramService.SendTextMessageAsync(
+            sendText: htmlMessage.ToString(),
+            scheduleDeleteAt: DateTime.UtcNow.AddDays(1),
+            preventDuplicateSend: true,
+            messageFlag: MessageFlag.SpamDetection
+        );
 
         return false;
     }

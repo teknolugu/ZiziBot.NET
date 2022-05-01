@@ -27,6 +27,7 @@ public enum MessageFlag
     SetCity,
     Shalat,
     SlowDown,
+    SpamDetection,
     Tag,
     Tags,
     Username,
