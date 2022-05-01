@@ -27,6 +27,10 @@ public static class MessageUtil
             case MessageType.Video:
                 fileId = message.Video?.FileId;
                 break;
+
+            case MessageType.Sticker:
+                fileId = message.Sticker?.FileId;
+                break;
         }
 
         return fileId;
