@@ -957,7 +957,7 @@ public class TelegramService
     )
     {
         Log.Information(
-            "Sending media: {MediaType}, fileId: {FileId} to {Id}",
+            messageTemplate: "Sending media: {MediaType}, fileId: {FileId} to {ChatId}",
             mediaType,
             fileId,
             ChatId
@@ -980,11 +980,11 @@ public class TelegramService
                 break;
 
             case MediaType.LocalDocument:
-                var fileName = Path.GetFileName(fileId);
+                var fileName = Path.GetFileName(path: fileId);
 
-                await using (var fs = File.OpenRead(fileId))
+                await using (var fs = File.OpenRead(path: fileId))
                 {
-                    var inputOnlineFile = new InputOnlineFile(fs, fileName);
+                    var inputOnlineFile = new InputOnlineFile(content: fs, fileName: fileName);
 
                     SentMessage = await Client.SendDocumentAsync(
                         chatId: ChatId,
@@ -1000,10 +1000,10 @@ public class TelegramService
 
             case MediaType.Photo:
                 SentMessage = await Client.SendPhotoAsync(
-                    ChatId,
-                    fileId,
+                    chatId: ChatId,
+                    photo: fileId,
                     caption: caption,
-                    ParseMode.Html,
+                    parseMode: ParseMode.Html,
                     replyMarkup: replyMarkup,
                     replyToMessageId: replyToMsgId
                 );
@@ -1011,7 +1011,7 @@ public class TelegramService
 
             case MediaType.Video:
                 SentMessage = await Client.SendVideoAsync(
-                    ChatId,
+                    chatId: ChatId,
                     video: fileId,
                     caption: caption,
                     parseMode: ParseMode.Html,
@@ -1020,23 +1020,33 @@ public class TelegramService
                 );
                 break;
 
+            case MediaType.Sticker:
+                SentMessage = await Client.SendStickerAsync(
+                    chatId: ChatId,
+                    sticker: fileId,
+                    replyMarkup: replyMarkup,
+                    replyToMessageId: replyToMsgId
+                );
+
+                break;
+
             default:
-                Log.Information("Media unknown: {MediaType}", mediaType);
+                Log.Information(messageTemplate: "Media unknown: {MediaType}", mediaType);
                 return null;
         }
 
-        Log.Information("SendMedia: {MessageId}", SentMessage?.MessageId);
+        Log.Information(messageTemplate: "SendMedia: {MessageId}", SentMessage?.MessageId);
 
         if (scheduleDeleteAt != default)
         {
             SaveToMessageHistory(
-                scheduleDeleteAt,
-                includeSenderMessage,
-                messageFlag
+                deleteAt: scheduleDeleteAt,
+                includeSender: includeSenderMessage,
+                flag: messageFlag
             );
         }
 
-        PreventDuplicateSend(preventDuplicateSend, messageFlag);
+        PreventDuplicateSend(preventDuplicateSend: preventDuplicateSend, flag: messageFlag);
 
         return SentMessage;
     }
