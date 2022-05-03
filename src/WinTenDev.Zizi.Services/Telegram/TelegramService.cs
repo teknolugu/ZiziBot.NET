@@ -386,9 +386,12 @@ public class TelegramService
         return await ChatService.GetChatMemberAsync(ChatId, userId);
     }
 
-    public async Task<ChatSetting> GetChatSetting()
+    public async Task<ChatSetting> GetChatSetting(long chatId = 0)
     {
-        var chatSetting = await SettingsService.GetSettingsByGroup(ChatId);
+        var chatIdTarget = ChatId;
+        if (chatId != 0) chatIdTarget = chatId;
+
+        var chatSetting = await SettingsService.GetSettingsByGroup(chatIdTarget);
 
         return chatSetting;
     }
