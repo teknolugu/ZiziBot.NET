@@ -7,6 +7,7 @@ using Telegram.Bot.Types.Enums;
 using WinTenDev.Zizi.Models.Dto;
 using WinTenDev.Zizi.Models.Enums;
 using WinTenDev.Zizi.Models.Tables;
+using WinTenDev.Zizi.Models.Types;
 using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Services.Telegram;
 using WinTenDev.Zizi.Utils;
@@ -319,6 +320,84 @@ public static class CallbackQueryExtension
         await telegramService.EditMessageCallback(editText, btnMarkup);
 
         await settingsService.UpdateCacheAsync(chatId);
+
+        return true;
+    }
+
+    public static async Task<bool> OnCallbackGlobalBanAsync(this TelegramService telegramService)
+    {
+        var chatId = telegramService.ChatId;
+        var fromId = telegramService.FromId;
+        var message = telegramService.CallbackMessage;
+        var callbackDatas = telegramService.CallbackQueryDatas;
+
+        if (!await telegramService.CheckFromAdminOrAnonymous())
+        {
+            Log.Debug(
+                "UserId: {UserId} is not admin at ChatId: {ChatId}",
+                fromId,
+                chatId
+            );
+
+            return false;
+        }
+
+        var globalBanService = telegramService.GetRequiredService<GlobalBanService>();
+        var eventLogService = telegramService.GetRequiredService<EventLogService>();
+
+        var action = callbackDatas.ElementAtOrDefault(1);
+        var userId = callbackDatas.ElementAtOrDefault(2).ToInt64();
+
+        var replyToMessageId = telegramService.ReplyToMessage?.MessageId ?? -1;
+
+        var answerCallback = string.Empty;
+
+        var messageLog = HtmlMessage.Empty
+            .TextBr("Global Ban di tambahkan baru")
+            .Bold("Ban By: ").CodeBr(fromId.ToString())
+            .Bold("UserId: ").CodeBr(userId.ToString());
+
+        switch (action)
+        {
+            case "add":
+                await globalBanService.SaveBanAsync(
+                    new GlobalBanItem
+                    {
+                        UserId = userId,
+                        ReasonBan = "@WinTenDev",
+                        BannedBy = fromId,
+                        BannedFrom = chatId,
+                        CreatedAt = DateTime.UtcNow
+                    }
+                );
+
+                await globalBanService.UpdateCache(userId);
+
+                await telegramService.KickMemberAsync(userId, untilDate: DateTime.Now.AddSeconds(30));
+
+                await eventLogService.SendEventLogAsync(
+                    chatId: chatId,
+                    message: message,
+                    text: messageLog.ToString(),
+                    forwardMessageId: replyToMessageId,
+                    deleteForwardedMessage: true,
+                    messageFlag: MessageFlag.GBan
+                );
+
+                answerCallback = "Berhasil Memblokir Pengguna!";
+
+                break;
+
+            case "del":
+                await globalBanService.DeleteBanAsync(userId);
+                await globalBanService.UpdateCache(userId);
+
+                answerCallback = "Terima kasih atas konfirmasinya!";
+
+                break;
+        }
+
+        await telegramService.AnswerCallbackQueryAsync(answerCallback, true);
 
         return true;
     }
