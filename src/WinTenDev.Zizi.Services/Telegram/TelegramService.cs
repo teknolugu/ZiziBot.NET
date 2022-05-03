@@ -862,7 +862,7 @@ public class TelegramService
         string sendText,
         IReplyMarkup replyMarkup = null,
         int replyToMsgId = -1,
-        long customChatId = -1,
+        ChatId customChatId = default,
         bool disableWebPreview = false,
         DateTime scheduleDeleteAt = default,
         bool includeSenderMessage = false,
@@ -879,8 +879,8 @@ public class TelegramService
             sendText += $"\n\n⏱ <code>{TimeInit} s</code> | ⌛️ <code>{TimeProc} s</code>";
         }
 
-        var chatTarget = Chat.Id;
-        if (customChatId < -1) chatTarget = customChatId;
+        var chatTarget = new ChatId(ChatId);
+        if (customChatId != default) chatTarget = customChatId;
 
         if (replyToMsgId == -1) replyToMsgId = AnyMessage?.MessageId ?? -1;
 
