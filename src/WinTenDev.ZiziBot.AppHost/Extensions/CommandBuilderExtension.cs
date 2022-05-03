@@ -78,6 +78,7 @@ public static class CommandBuilderExtension
                                         .UseCommand<CheckResiCommand>("resi")
                                         .UseCommand<CovidCommand>("covid")
                                         .UseCommand<DebugCommand>("dbg")
+                                        .UseCommand<DebugCommand>("json")
                                         .UseCommand<DeleteBanCommand>("ungban")
                                         .UseCommand<DeleteBanCommand>("dban")
                                         .UseCommand<DeleteKataCommand>("dkata")

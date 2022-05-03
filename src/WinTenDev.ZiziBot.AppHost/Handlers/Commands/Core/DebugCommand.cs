@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Telegram.Bot.Framework.Abstractions;
 using WinTenDev.Zizi.Services.Telegram;
 using WinTenDev.Zizi.Utils.Text;
@@ -23,13 +22,14 @@ public class DebugCommand : CommandBase
     {
         await _telegramService.AddUpdateContext(context);
 
-        var msg = _telegramService.AnyMessage;
-        var param1 = _telegramService.MessageTextParts.ElementAtOrDefault(1);
+        var cmd = _telegramService.GetCommand(withoutSlash: true);
 
-        var debug = param1 switch
+        var msg = _telegramService.Update;
+
+        var debug = cmd switch
         {
             "json" => msg.ToJson(true),
-            _ => msg.ToYaml().HtmlDecode()
+            _ => msg.ToYaml().HtmlEncode()
         };
 
         var sendText = $"Debug:\n" +
