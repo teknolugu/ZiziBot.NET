@@ -96,7 +96,9 @@ public class TelegramService
     public string AnyMessageText { get; set; }
     public string MessageOrEditedText { get; set; }
     public string MessageOrEditedCaption { get; set; }
+    public string CallbackQueryData { get; set; }
     public string[] MessageTextParts { get; set; }
+    public string[] CallbackQueryDatas { get; set; }
 
     public User From { get; set; }
     public Chat Chat { get; set; }
@@ -253,6 +255,9 @@ public class TelegramService
         AnyMessageText = AnyMessage?.Text;
         MessageOrEditedText = MessageOrEdited?.Text;
         MessageOrEditedCaption = MessageOrEdited?.Caption;
+
+        CallbackQueryData = CallbackQuery?.Data;
+        CallbackQueryDatas = CallbackQueryData?.Split(' ');
 
         MessageTextParts = MessageOrEditedText?.SplitText(" ")
             .Where(s => s.IsNotNullOrEmpty())
