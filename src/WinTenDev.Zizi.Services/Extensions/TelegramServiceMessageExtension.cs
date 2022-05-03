@@ -5,6 +5,7 @@ using MoreLinq;
 using Serilog;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.ReplyMarkups;
 using WinTenDev.Zizi.Models.Dto;
 using WinTenDev.Zizi.Models.Enums;
 using WinTenDev.Zizi.Models.Types;
@@ -209,10 +210,18 @@ public static class TelegramServiceMessageExtension
         var chatId = telegramService.ChatId;
         var fromId = telegramService.FromId;
 
-        if (!telegramService.IsPublicGroup ||
-            telegramService.IsChannel)
+        if (telegramService.IsPrivateGroup ||
+            telegramService.IsChannel ||
+            telegramService.IsGlobalIgnored())
         {
             Log.Debug("Check Update History not available for ChatId: {ChatId}", chatId);
+            return false;
+        }
+
+        var chatSettings = await telegramService.GetChatSetting();
+        if (chatSettings.EnablePrivacyMode)
+        {
+            Log.Debug("Check Update History disabled for ChatId: {ChatId} because Privacy Mode is enabled", chatId);
             return false;
         }
 
@@ -243,11 +252,28 @@ public static class TelegramServiceMessageExtension
         var htmlMessage = HtmlMessage.Empty
             .BoldBr("Anti-Spam detection")
             .Bold("Telegram UserId: ").CodeBr(fromId.ToString())
-            .Text("Telah mengirimkan link atau mention untuk pesan pertamanya, silakan pertimbangkan untuk memblokir pengguna");
+            .Text("Telah mengirimkan link atau mention untuk pesan pertamanya. Apakah ini Spam?");
 
-        await telegramService.SendTextMessageAsync(htmlMessage.ToString());
+        var inlineKeyboard = new InlineKeyboardMarkup(
+            new[]
+            {
+                new[]
+                {
+                    InlineKeyboardButton.WithCallbackData("Ya, ini Spam!", $"gban add {fromId}"),
+                    InlineKeyboardButton.WithCallbackData("Ini bukan Spam", $"gban del {fromId}")
+                }
+            }
+        );
 
-        return false;
+        await telegramService.SendTextMessageAsync(
+            sendText: htmlMessage.ToString(),
+            replyMarkup: inlineKeyboard,
+            scheduleDeleteAt: DateTime.UtcNow.AddDays(1),
+            preventDuplicateSend: true,
+            messageFlag: MessageFlag.SpamDetection
+        );
+
+        return true;
     }
 
     public static async Task DeleteMessageManyAsync(this TelegramService telegramService)

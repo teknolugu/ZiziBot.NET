@@ -71,6 +71,7 @@ public class TelegramService
     public bool IsPrivateChat { get; set; }
     public bool IsGroupChat { get; set; }
     public bool IsPublicGroup { get; set; }
+    public bool IsPrivateGroup { get; set; }
     public bool IsChannel { get; set; }
     public bool IsChatRestricted { get; set; }
 
@@ -95,7 +96,9 @@ public class TelegramService
     public string AnyMessageText { get; set; }
     public string MessageOrEditedText { get; set; }
     public string MessageOrEditedCaption { get; set; }
+    public string CallbackQueryData { get; set; }
     public string[] MessageTextParts { get; set; }
+    public string[] CallbackQueryDatas { get; set; }
 
     public User From { get; set; }
     public Chat Chat { get; set; }
@@ -244,6 +247,7 @@ public class TelegramService
         IsPrivateChat = CheckIsPrivateChat();
         IsGroupChat = CheckIsGroupChat();
         IsPublicGroup = Chat.Username != null && Chat.Type is ChatType.Group or ChatType.Supergroup;
+        IsPrivateGroup = !IsPublicGroup;
         IsChannel = Chat.Type is ChatType.Channel;
 
         BotUsername = Context.Bot.Username;
@@ -251,6 +255,9 @@ public class TelegramService
         AnyMessageText = AnyMessage?.Text;
         MessageOrEditedText = MessageOrEdited?.Text;
         MessageOrEditedCaption = MessageOrEdited?.Caption;
+
+        CallbackQueryData = CallbackQuery?.Data;
+        CallbackQueryDatas = CallbackQueryData?.Split(' ');
 
         MessageTextParts = MessageOrEditedText?.SplitText(" ")
             .Where(s => s.IsNotNullOrEmpty())
@@ -384,9 +391,12 @@ public class TelegramService
         return await ChatService.GetChatMemberAsync(ChatId, userId);
     }
 
-    public async Task<ChatSetting> GetChatSetting()
+    public async Task<ChatSetting> GetChatSetting(long chatId = 0)
     {
-        var chatSetting = await SettingsService.GetSettingsByGroup(ChatId);
+        var chatIdTarget = ChatId;
+        if (chatId != 0) chatIdTarget = chatId;
+
+        var chatSetting = await SettingsService.GetSettingsByGroup(chatIdTarget);
 
         return chatSetting;
     }
@@ -860,7 +870,7 @@ public class TelegramService
         string sendText,
         IReplyMarkup replyMarkup = null,
         int replyToMsgId = -1,
-        long customChatId = -1,
+        ChatId customChatId = default,
         bool disableWebPreview = false,
         DateTime scheduleDeleteAt = default,
         bool includeSenderMessage = false,
@@ -877,8 +887,8 @@ public class TelegramService
             sendText += $"\n\n⏱ <code>{TimeInit} s</code> | ⌛️ <code>{TimeProc} s</code>";
         }
 
-        var chatTarget = Chat.Id;
-        if (customChatId < -1) chatTarget = customChatId;
+        var chatTarget = new ChatId(ChatId);
+        if (customChatId != default) chatTarget = customChatId;
 
         if (replyToMsgId == -1) replyToMsgId = AnyMessage?.MessageId ?? -1;
 
@@ -955,7 +965,7 @@ public class TelegramService
     )
     {
         Log.Information(
-            "Sending media: {MediaType}, fileId: {FileId} to {Id}",
+            messageTemplate: "Sending media: {MediaType}, fileId: {FileId} to {ChatId}",
             mediaType,
             fileId,
             ChatId
@@ -978,11 +988,11 @@ public class TelegramService
                 break;
 
             case MediaType.LocalDocument:
-                var fileName = Path.GetFileName(fileId);
+                var fileName = Path.GetFileName(path: fileId);
 
-                await using (var fs = File.OpenRead(fileId))
+                await using (var fs = File.OpenRead(path: fileId))
                 {
-                    var inputOnlineFile = new InputOnlineFile(fs, fileName);
+                    var inputOnlineFile = new InputOnlineFile(content: fs, fileName: fileName);
 
                     SentMessage = await Client.SendDocumentAsync(
                         chatId: ChatId,
@@ -998,10 +1008,10 @@ public class TelegramService
 
             case MediaType.Photo:
                 SentMessage = await Client.SendPhotoAsync(
-                    ChatId,
-                    fileId,
+                    chatId: ChatId,
+                    photo: fileId,
                     caption: caption,
-                    ParseMode.Html,
+                    parseMode: ParseMode.Html,
                     replyMarkup: replyMarkup,
                     replyToMessageId: replyToMsgId
                 );
@@ -1009,7 +1019,7 @@ public class TelegramService
 
             case MediaType.Video:
                 SentMessage = await Client.SendVideoAsync(
-                    ChatId,
+                    chatId: ChatId,
                     video: fileId,
                     caption: caption,
                     parseMode: ParseMode.Html,
@@ -1018,23 +1028,33 @@ public class TelegramService
                 );
                 break;
 
+            case MediaType.Sticker:
+                SentMessage = await Client.SendStickerAsync(
+                    chatId: ChatId,
+                    sticker: fileId,
+                    replyMarkup: replyMarkup,
+                    replyToMessageId: replyToMsgId
+                );
+
+                break;
+
             default:
-                Log.Information("Media unknown: {MediaType}", mediaType);
+                Log.Information(messageTemplate: "Media unknown: {MediaType}", mediaType);
                 return null;
         }
 
-        Log.Information("SendMedia: {MessageId}", SentMessage?.MessageId);
+        Log.Information(messageTemplate: "SendMedia: {MessageId}", SentMessage?.MessageId);
 
         if (scheduleDeleteAt != default)
         {
             SaveToMessageHistory(
-                scheduleDeleteAt,
-                includeSenderMessage,
-                messageFlag
+                deleteAt: scheduleDeleteAt,
+                includeSender: includeSenderMessage,
+                flag: messageFlag
             );
         }
 
-        PreventDuplicateSend(preventDuplicateSend, messageFlag);
+        PreventDuplicateSend(preventDuplicateSend: preventDuplicateSend, flag: messageFlag);
 
         return SentMessage;
     }

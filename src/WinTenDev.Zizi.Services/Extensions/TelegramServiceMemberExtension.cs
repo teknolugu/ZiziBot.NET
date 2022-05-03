@@ -3,7 +3,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Humanizer;
+using MoreLinq;
 using Serilog;
+using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using WinTenDev.Zizi.Models.Enums;
@@ -388,6 +390,90 @@ public static class TelegramServiceMemberExtension
         }
 
         return false;
+    }
+
+    public static async Task EnsureReplyNotificationAsync(this TelegramService telegramService)
+    {
+        var chatId = telegramService.ChatId;
+        var fromId = telegramService.FromId;
+
+        var message = telegramService.MessageOrEdited;
+
+        if (message == null) return;
+
+        if (telegramService.ChannelOrEditedPost != null) return;
+
+        var allEntities = message?.Entities ?? message?.CaptionEntities;
+        var allEntityValues = message?.EntityValues ?? message?.CaptionEntityValues;
+        var mentionEntities = allEntities?.Where(
+                x =>
+                    x.Type is MessageEntityType.Mention or MessageEntityType.TextMention
+            )
+            .ToList();
+
+        var replyToMessage = telegramService.ReplyToMessage;
+
+        if (replyToMessage == null)
+        {
+            return;
+        }
+
+        var privateSetting = await telegramService.GetChatSetting(fromId);
+
+        if (!privateSetting.EnableReplyNotification)
+        {
+            return;
+        }
+
+        var groupSetting = await telegramService.GetChatSetting();
+
+        if (!groupSetting.EnableReplyNotification)
+        {
+            return;
+        }
+
+        var mentioner = message.From.GetNameLink();
+        var chatLink = message.Chat.GetChatNameLink();
+
+        var htmlMessage = HtmlMessage.Empty
+            .TextBr("Anda di Summon oleh")
+            .Bold("Oleh: ").TextBr(mentioner)
+            .Bold("Grup: ").TextBr(chatLink)
+            .Url(message.GetMessageLink(), "Ke pesan");
+
+        var toChatId = replyToMessage.From.Id;
+
+        telegramService.SendTextMessageAsync(
+            sendText: htmlMessage.ToString(),
+            customChatId: new ChatId(toChatId),
+            disableWebPreview: true
+        ).InBackground();
+
+        mentionEntities?.ForEach(
+            (
+                entity,
+                index
+            ) => {
+                try
+                {
+                    var targetChatId = allEntityValues?.ElementAtOrDefault(index) ?? "";
+
+                    telegramService.SendTextMessageAsync(
+                        sendText: htmlMessage.ToString(),
+                        customChatId: new ChatId(targetChatId),
+                        disableWebPreview: true
+                    ).InBackground();
+                }
+                catch (Exception e)
+                {
+                    Log.Error(
+                        e,
+                        "Error when send reply notification at ChatId: {ChatId}",
+                        chatId
+                    );
+                }
+            }
+        );
     }
 
     public static async Task AddGlobalBanUserAsync(this TelegramService telegramService)

@@ -203,4 +203,18 @@ public static class TelegramServiceAdditionalExtension
                 path.Contains(telegramService.ReducedChatId.ToString())
         );
     }
+
+    public static async Task WarningCompressImageWhenPossibleAsync(this TelegramService telegramService)
+    {
+        var message = telegramService.MessageOrEdited;
+
+        if (message?.Document == null) return;
+
+        var document = message.Document;
+
+        if (document.MimeType?.StartsWith("image") ?? false)
+        {
+            await telegramService.SendTextMessageAsync("Kirim gambar dengan kompres, bantu selamatkan bumi");
+        }
+    }
 }
