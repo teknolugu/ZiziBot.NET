@@ -217,6 +217,13 @@ public static class TelegramServiceMessageExtension
             return false;
         }
 
+        var chatSettings = await telegramService.GetChatSetting();
+        if (chatSettings.EnablePrivacyMode)
+        {
+            Log.Debug("Check Update History disabled for ChatId: {ChatId} because Privacy Mode is enabled", chatId);
+            return false;
+        }
+
         var message = telegramService.MessageOrEdited;
         var messageEntities = message?.Entities ?? message?.CaptionEntities;
 
