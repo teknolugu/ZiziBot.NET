@@ -96,6 +96,7 @@ public class ChatSetting
     public bool EnableFloodCheck { get; set; }
     public bool EnableForceSubscription { get; set; }
     public bool EnablePrivacyMode { get; set; }
+    public bool EnableReplyNotification { get; set; }
     public bool EnableSpellCheck { get; set; }
 
     [Column("enable_word_filter_group")]
