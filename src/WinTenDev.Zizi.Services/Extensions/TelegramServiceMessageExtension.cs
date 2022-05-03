@@ -249,10 +249,13 @@ public static class TelegramServiceMessageExtension
 
         if (!(filteredEntities?.Count > 0) || isRecentUpdateExist) return false;
 
+        var mentionAdmin = await telegramService.GetMentionAdminsStr();
+
         var htmlMessage = HtmlMessage.Empty
             .BoldBr("Anti-Spam detection")
             .Bold("Telegram UserId: ").CodeBr(fromId.ToString())
-            .Text("Telah mengirimkan link atau mention untuk pesan pertamanya. Apakah ini Spam?");
+            .Text("Telah mengirimkan link atau mention untuk pesan pertamanya. Apakah ini Spam?")
+            .Text(mentionAdmin);
 
         var inlineKeyboard = new InlineKeyboardMarkup(
             new[]
