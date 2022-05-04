@@ -384,6 +384,8 @@ public static class CallbackQueryExtension
                     messageFlag: MessageFlag.GBan
                 );
 
+                await telegramService.DeleteMessageManyAsync(customUserId: userId);
+
                 answerCallback = "Berhasil Memblokir Pengguna!";
 
                 break;

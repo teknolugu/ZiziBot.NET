@@ -279,11 +279,14 @@ public static class TelegramServiceMessageExtension
         return true;
     }
 
-    public static async Task DeleteMessageManyAsync(this TelegramService telegramService)
+    public static async Task DeleteMessageManyAsync(
+        this TelegramService telegramService,
+        long customUserId = -1
+    )
     {
         var wTelegramService = telegramService.GetRequiredService<WTelegramApiService>();
         var chatId = telegramService.ChatId;
-        var userId = telegramService.FromId;
+        var userId = customUserId == -1 ? telegramService.FromId : customUserId;
         var messageId = telegramService.MessageOrEdited.MessageId;
 
         var messageIds = await wTelegramService.GetMessagesIdByUserId(
