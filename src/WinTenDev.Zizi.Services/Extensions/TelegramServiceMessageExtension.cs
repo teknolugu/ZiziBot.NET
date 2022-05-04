@@ -287,7 +287,7 @@ public static class TelegramServiceMessageExtension
         var wTelegramService = telegramService.GetRequiredService<WTelegramApiService>();
         var chatId = telegramService.ChatId;
         var userId = customUserId == -1 ? telegramService.FromId : customUserId;
-        var messageId = telegramService.MessageOrEdited.MessageId;
+        var messageId = telegramService.AnyMessage.MessageId;
 
         var messageIds = await wTelegramService.GetMessagesIdByUserId(
             chatId: chatId,
