@@ -1251,6 +1251,12 @@ public class TelegramService
         await DeleteAsync(messageId);
     }
 
+    public async Task DeleteCurrentCallbackMessageAsync()
+    {
+        var messageId = CallbackMessage.MessageId;
+        await DeleteAsync(messageId);
+    }
+
     public async Task DeleteAsync(
         int messageId = -1,
         int delay = 0
