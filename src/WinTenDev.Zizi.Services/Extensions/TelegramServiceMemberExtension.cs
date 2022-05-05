@@ -398,25 +398,10 @@ public static class TelegramServiceMemberExtension
         var fromId = telegramService.FromId;
 
         var message = telegramService.MessageOrEdited;
-
+        if (telegramService.IsChannel) return;
         if (message == null) return;
 
-        if (telegramService.ChannelOrEditedPost != null) return;
-
-        var allEntities = message?.Entities ?? message?.CaptionEntities;
-        var allEntityValues = message?.EntityValues ?? message?.CaptionEntityValues;
-        var mentionEntities = allEntities?.Where(
-                x =>
-                    x.Type is MessageEntityType.Mention or MessageEntityType.TextMention
-            )
-            .ToList();
-
         var replyToMessage = telegramService.ReplyToMessage;
-
-        if (replyToMessage == null)
-        {
-            return;
-        }
 
         var privateSetting = await telegramService.GetChatSetting(fromId);
 
@@ -432,42 +417,64 @@ public static class TelegramServiceMemberExtension
             return;
         }
 
-        var mentioner = message.From.GetNameLink();
-        var chatLink = message.Chat.GetChatNameLink();
+        var fromNameLink = message.From.GetNameLink();
+        var chatNameLink = message.Chat.GetChatNameLink();
 
         var htmlMessage = HtmlMessage.Empty
             .TextBr("Anda di Summon oleh")
-            .Bold("Oleh: ").TextBr(mentioner)
-            .Bold("Grup: ").TextBr(chatLink)
+            .Bold("Oleh: ").TextBr(fromNameLink)
+            .Bold("Grup: ").TextBr(chatNameLink)
             .Url(message.GetMessageLink(), "Ke pesan");
 
-        var toChatId = replyToMessage.From.Id;
+        if (replyToMessage != null)
+        {
+            var toChatId = replyToMessage.From.Id;
 
-        telegramService.SendTextMessageAsync(
-            sendText: htmlMessage.ToString(),
-            customChatId: new ChatId(toChatId),
-            disableWebPreview: true
-        ).InBackground();
+            await telegramService.SendTextMessageAsync(
+                sendText: htmlMessage.ToString(),
+                customChatId: new ChatId(toChatId),
+                disableWebPreview: true
+            );
+
+            return;
+        }
+
+        var allEntities = message?.Entities ?? message?.CaptionEntities;
+        var allEntityValues = message?.EntityValues ?? message?.CaptionEntityValues;
+        var mentionEntities = allEntities?.Where(
+                x =>
+                    x.Type is MessageEntityType.Mention or MessageEntityType.TextMention
+            )
+            .ToList();
+
+        var wTelegramApiService = telegramService.GetRequiredService<WTelegramApiService>();
 
         mentionEntities?.ForEach(
-            (
+            async (
                 entity,
                 index
             ) => {
                 try
                 {
                     var targetChatId = allEntityValues?.ElementAtOrDefault(index) ?? "";
+                    var resolvedPeer = await wTelegramApiService.FindPeerByUsername(targetChatId);
 
-                    telegramService.SendTextMessageAsync(
+                    if (resolvedPeer.User == null)
+                    {
+                        Log.Debug("Send reply notification skip because Username: {Username} is non-User", targetChatId);
+                        return;
+                    }
+
+                    await telegramService.SendTextMessageAsync(
                         sendText: htmlMessage.ToString(),
-                        customChatId: new ChatId(targetChatId),
+                        customChatId: resolvedPeer.User.ID,
                         disableWebPreview: true
-                    ).InBackground();
+                    );
                 }
-                catch (Exception e)
+                catch (Exception exception)
                 {
                     Log.Error(
-                        e,
+                        exception,
                         "Error when send reply notification at ChatId: {ChatId}",
                         chatId
                     );
