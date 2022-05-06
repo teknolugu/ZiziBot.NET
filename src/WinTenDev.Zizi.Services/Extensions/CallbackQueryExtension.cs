@@ -345,6 +345,7 @@ public static class CallbackQueryExtension
         var globalBanService = telegramService.GetRequiredService<GlobalBanService>();
         var eventLogService = telegramService.GetRequiredService<EventLogService>();
 
+        var currentMessageId = message.MessageId;
         var action = callbackDatas.ElementAtOrDefault(1);
         var userId = callbackDatas.ElementAtOrDefault(2).ToInt64();
 
@@ -384,6 +385,8 @@ public static class CallbackQueryExtension
                     messageFlag: MessageFlag.GBan
                 );
 
+                await telegramService.DeleteMessageManyAsync(customUserId: userId);
+
                 answerCallback = "Berhasil Memblokir Pengguna!";
 
                 break;
@@ -398,6 +401,7 @@ public static class CallbackQueryExtension
         }
 
         await telegramService.AnswerCallbackQueryAsync(answerCallback, true);
+        await telegramService.DeleteCurrentCallbackMessageAsync();
 
         return true;
     }

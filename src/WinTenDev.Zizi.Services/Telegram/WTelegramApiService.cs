@@ -193,4 +193,20 @@ public class WTelegramApiService : IWTelegramApiService
             );
         }
     }
+
+    public async Task<Contacts_ResolvedPeer> FindPeerByUsername(string username)
+    {
+        var fixedUsername = username.TrimStart('@');
+
+        var resolvedPeer = await _cacheService.GetOrSetAsync(
+            cacheKey: "resolved_peer-" + fixedUsername,
+            action: async () => {
+                var resolvedPeer = await _client.Contacts_ResolveUsername(fixedUsername);
+
+                return resolvedPeer;
+            }
+        );
+
+        return resolvedPeer;
+    }
 }

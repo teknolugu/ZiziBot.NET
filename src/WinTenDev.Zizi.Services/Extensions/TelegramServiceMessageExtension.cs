@@ -249,10 +249,13 @@ public static class TelegramServiceMessageExtension
 
         if (!(filteredEntities?.Count > 0) || isRecentUpdateExist) return false;
 
+        var mentionAdmin = await telegramService.GetMentionAdminsStr();
+
         var htmlMessage = HtmlMessage.Empty
             .BoldBr("Anti-Spam detection")
             .Bold("Telegram UserId: ").CodeBr(fromId.ToString())
-            .Text("Telah mengirimkan link atau mention untuk pesan pertamanya. Apakah ini Spam?");
+            .Text("Telah mengirimkan link atau mention untuk pesan pertamanya. Apakah ini Spam?")
+            .Text(mentionAdmin);
 
         var inlineKeyboard = new InlineKeyboardMarkup(
             new[]
@@ -276,12 +279,15 @@ public static class TelegramServiceMessageExtension
         return true;
     }
 
-    public static async Task DeleteMessageManyAsync(this TelegramService telegramService)
+    public static async Task DeleteMessageManyAsync(
+        this TelegramService telegramService,
+        long customUserId = -1
+    )
     {
         var wTelegramService = telegramService.GetRequiredService<WTelegramApiService>();
         var chatId = telegramService.ChatId;
-        var userId = telegramService.FromId;
-        var messageId = telegramService.MessageOrEdited.MessageId;
+        var userId = customUserId == -1 ? telegramService.FromId : customUserId;
+        var messageId = telegramService.AnyMessage.MessageId;
 
         var messageIds = await wTelegramService.GetMessagesIdByUserId(
             chatId: chatId,
