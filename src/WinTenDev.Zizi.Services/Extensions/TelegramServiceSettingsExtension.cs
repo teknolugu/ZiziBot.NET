@@ -124,7 +124,7 @@ public static class TelegramServiceSettingsExtension
     {
         var defaultScheduleDelete = DateTime.UtcNow.AddMinutes(10);
 
-        if (!await telegramService.CheckFromAdminOrAnonymous())
+        if (!await telegramService.CheckUserPermission())
         {
             await telegramService.SendTextMessageAsync(
                 sendText: "Hanya admin yang dapat menggunakan perintah ini",
