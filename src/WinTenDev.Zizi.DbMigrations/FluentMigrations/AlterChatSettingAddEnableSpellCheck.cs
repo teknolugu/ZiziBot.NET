@@ -4,7 +4,7 @@ using WinTenDev.Zizi.DbMigrations.Extensions;
 
 namespace WinTenDev.Zizi.DbMigrations.FluentMigrations;
 
-[Migration(20220412181901)]
+[Migration(220220412181901)]
 [UsedImplicitly]
 public class AlterChatSettingAddEnableSpellCheck : Migration
 {

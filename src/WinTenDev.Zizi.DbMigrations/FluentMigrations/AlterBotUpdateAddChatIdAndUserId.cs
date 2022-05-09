@@ -4,7 +4,7 @@ using WinTenDev.Zizi.DbMigrations.Extensions;
 
 namespace WinTenDev.Zizi.DbMigrations.FluentMigrations;
 
-[Migration(120220421133501)]
+[Migration(220220421133501)]
 [UsedImplicitly]
 public class AlterBotUpdateAddChatIdAndUserId : Migration
 {
