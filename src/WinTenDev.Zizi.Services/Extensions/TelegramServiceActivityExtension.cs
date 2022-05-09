@@ -150,7 +150,7 @@ public static class TelegramServiceActivityExtension
             telegramService.EnsureForceSubscriptionAsync(),
             telegramService.EnsureChatAdminAsync(),
             telegramService.EnsureReplyNotificationAsync(),
-            telegramService.NotifyBotSlowdown(),
+            telegramService.BotSlowdownNotification(),
             telegramService.RunSpellingAsync(),
             telegramService.SaveUpdateAsync(),
             telegramService.WarningCompressImageWhenPossibleAsync()
