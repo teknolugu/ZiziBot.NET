@@ -12,6 +12,7 @@ using WinTenDev.Zizi.Models.Types;
 using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Services.Telegram;
 using WinTenDev.Zizi.Utils;
+using WinTenDev.Zizi.Utils.Telegram;
 
 namespace WinTenDev.Zizi.Services.Extensions;
 
@@ -250,10 +251,12 @@ public static class TelegramServiceMessageExtension
         if (!(filteredEntities?.Count > 0) || isRecentUpdateExist) return false;
 
         var mentionAdmin = await telegramService.GetMentionAdminsStr();
+        var fullName = telegramService.From.GetFullName();
 
         var htmlMessage = HtmlMessage.Empty
-            .BoldBr("Anti-Spam detection")
-            .Bold("Telegram UserId: ").CodeBr(fromId.ToString())
+            .BoldBr("Anti-Spam detection Beta")
+            .Bold("UserId: ").CodeBr(fromId.ToString())
+            .Bold("Name: ").CodeBr(fullName)
             .Text("Telah mengirimkan link atau mention untuk pesan pertamanya. Apakah ini Spam?")
             .Text(mentionAdmin);
 
