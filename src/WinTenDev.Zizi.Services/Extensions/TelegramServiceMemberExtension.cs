@@ -303,6 +303,92 @@ public static class TelegramServiceMemberExtension
         }
     }
 
+    public static async Task InactiveKickMemberAsync(this TelegramService telegramService)
+    {
+        if (!await telegramService.CheckFromAdminOrAnonymous())
+        {
+            await telegramService.SendTextMessageAsync(
+                "Kamu tidak mempunyai akses ke fitur ini.",
+                scheduleDeleteAt: DateTime.UtcNow.AddMinutes(1),
+                includeSenderMessage: true
+            );
+
+            return;
+        }
+        var wTelegramApiService = telegramService.GetRequiredService<WTelegramApiService>();
+
+        var chatId = telegramService.ChatId;
+        var param1 = telegramService.GetCommandParam(0);
+
+        if (param1.IsNullOrEmpty())
+        {
+            await telegramService.SendTextMessageAsync(
+                "Tentukan berapa lama durasi tidak aktif, misal 3d.",
+                scheduleDeleteAt: DateTime.UtcNow.AddMinutes(10),
+                includeSenderMessage: true
+            );
+            return;
+        }
+
+        try
+        {
+            var timeOffset = param1.ToTimeSpan();
+
+            if (timeOffset < TimeSpan.FromDays(1))
+            {
+                await telegramService.SendTextMessageAsync(
+                    "Terlalu banyak Anggota yang bakal ditendang, silakan tentukan waktu yang lebih lama, misal 3d.",
+                    scheduleDeleteAt: DateTime.UtcNow.AddMinutes(10),
+                    includeSenderMessage: true
+                );
+                return;
+            }
+
+            var channelsChannelParticipants = await wTelegramApiService.GetAllParticipants(chatId, evictAfter: true);
+            var allParticipants = channelsChannelParticipants.users;
+            var inactiveParticipants = allParticipants.Values
+                .Where(
+                    user =>
+                        user.LastSeenAgo > timeOffset &&
+                        user.bot_info_version == 0
+                )
+                .ToList();
+
+            var htmlMessage = HtmlMessage.Empty
+                .Bold("Inactive Kick Member").Br()
+                .Bold("Total: ").CodeBr(allParticipants.Count.ToString())
+                .Bold("Inactive: ").CodeBr(inactiveParticipants.Count.ToString());
+
+            await telegramService.AppendTextAsync(htmlMessage.ToString());
+
+            await inactiveParticipants.AsyncParallelForEach(
+                maxDegreeOfParallelism: 20,
+                body: async user => {
+                    await telegramService.KickMemberAsync(user.ID, unban: true);
+                }
+            );
+
+            await telegramService.AppendTextAsync(
+                "Selesai.",
+                scheduleDeleteAt: DateTime.UtcNow.AddMinutes(1),
+                includeSenderMessage: true
+            );
+        }
+        catch (Exception exception)
+        {
+            await telegramService.SendTextMessageAsync(
+                "Suatu kesalah telah terjadi." +
+                "\nError: " +
+                exception.Message
+            );
+            Log.Error(
+                exception,
+                "Error Inactive Kick Member at {ChatId}",
+                chatId
+            );
+        }
+    }
+
     public static async Task<bool> EnsureForceSubscriptionAsync(this TelegramService telegramService)
     {
         var fromId = telegramService.FromId;

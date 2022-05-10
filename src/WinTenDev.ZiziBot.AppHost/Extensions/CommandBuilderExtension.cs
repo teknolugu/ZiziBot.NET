@@ -101,6 +101,7 @@ public static class CommandBuilderExtension
                                         .UseCommand<ImportGBanCommand>("import_gban")
                                         .UseCommand<ImportLearnCommand>("importlearn")
                                         .UseCommand<ImportRssCommand>("importrss")
+                                        .UseCommand<InactiveKickCommand>("inkick")
                                         .UseCommand<KataSyncCommand>("ksync")
                                         .UseCommand<KickCommand>("kick")
                                         .UseCommand<LearnCommand>("learn")
