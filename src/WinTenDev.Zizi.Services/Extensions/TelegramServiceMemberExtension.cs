@@ -5,9 +5,9 @@ using System.Threading.Tasks;
 using Humanizer;
 using MoreLinq;
 using Serilog;
-using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
+using TL;
 using WinTenDev.Zizi.Models.Enums;
 using WinTenDev.Zizi.Models.Tables;
 using WinTenDev.Zizi.Models.Types;
@@ -387,6 +387,68 @@ public static class TelegramServiceMemberExtension
                 chatId
             );
         }
+    }
+
+    public static async Task InsightStatusMemberAsync(this TelegramService telegramService)
+    {
+        var chatId = telegramService.ChatId;
+
+        if (telegramService.IsPrivateGroup)
+        {
+            await telegramService.SendTextMessageAsync(
+                "Perintah ini hanya tersedia untuk Grup Publik",
+                scheduleDeleteAt: DateTime.UtcNow.AddMinutes(1),
+                includeSenderMessage: true
+            );
+
+            return;
+        }
+
+        if (!await telegramService.CheckFromAdminOrAnonymous())
+        {
+            await telegramService.DeleteSenderMessageAsync();
+            return;
+        }
+
+        var wTelegramApiService = telegramService.GetRequiredService<WTelegramApiService>();
+
+        await telegramService.SendTextMessageAsync("Sedang mengambil informasi..");
+
+        var chatLink = telegramService.Chat.GetChatLink();
+        var chatTitle = telegramService.Chat.GetChatTitle();
+
+        var participant = await wTelegramApiService.GetAllParticipants(chatId, disableCache: true);
+        var users = participant.users.Select(pair => pair.Value).ToList();
+
+        var noUsernameUsers = users.Where(user => user.username == null).ToList();
+        var lastRecently = users.Where(user => user.status == new UserStatusRecently()).ToList();
+        var lastActiveWeek = users.Where(user => user.status == new UserStatusLastWeek()).ToList();
+        var lastActiveMonth = users.Where(user => user.status == new UserStatusLastMonth()).ToList();
+        var lastActiveOnline = users.Where(user => user.status == new UserStatusOnline()).ToList();
+        var lastActiveOffline = users.Where(user => user.status == new UserStatusOffline()).ToList();
+        var deletedUsers = users.Where(user => !user.IsActive).ToList();
+
+        var bots = users.Where(user => user.bot_info_version != 0).ToList();
+
+        var htmlMessage = HtmlMessage.Empty
+            .Bold("Status Member").Br()
+            .Bold("Chat: ").Url(chatLink, chatTitle).Br()
+            .Bold("Id: ").CodeBr(chatId.ToString())
+            .Bold("Total: ").CodeBr(users.Count.ToString())
+            .Bold("No Username: ").CodeBr(noUsernameUsers.Count.ToString())
+            .Bold("Recent Offline: ").CodeBr(lastActiveOffline.Count.ToString())
+            .Bold("Recent Online: ").CodeBr(lastActiveOnline.Count.ToString())
+            .Bold("Active recent: ").CodeBr(lastRecently.Count.ToString())
+            .Bold("Last week: ").CodeBr(lastActiveWeek.Count.ToString())
+            .Bold("Last month: ").CodeBr(lastActiveMonth.Count.ToString())
+            .Bold("Deleted accounts: ").CodeBr(deletedUsers.Count.ToString())
+            .Bold("Bots: ").CodeBr(bots.Count.ToString());
+
+        await telegramService.EditMessageTextAsync(
+            sendText: htmlMessage.ToString(),
+            scheduleDeleteAt: DateTime.UtcNow.AddMinutes(10),
+            includeSenderMessage: true
+        );
     }
 
     public static async Task<bool> EnsureForceSubscriptionAsync(this TelegramService telegramService)

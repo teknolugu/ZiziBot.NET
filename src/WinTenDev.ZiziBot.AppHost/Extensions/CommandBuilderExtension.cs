@@ -102,6 +102,7 @@ public static class CommandBuilderExtension
                                         .UseCommand<ImportLearnCommand>("importlearn")
                                         .UseCommand<ImportRssCommand>("importrss")
                                         .UseCommand<InactiveKickCommand>("inkick")
+                                        .UseCommand<InsightStatusCommand>("instatus")
                                         .UseCommand<InfoCommand>("info")
                                         .UseCommand<KataSyncCommand>("ksync")
                                         .UseCommand<KickCommand>("kick")
