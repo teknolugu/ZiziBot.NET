@@ -5,9 +5,9 @@ using System.Threading.Tasks;
 using Humanizer;
 using MoreLinq;
 using Serilog;
-using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
+using TL;
 using WinTenDev.Zizi.Models.Enums;
 using WinTenDev.Zizi.Models.Tables;
 using WinTenDev.Zizi.Models.Types;
@@ -303,6 +303,206 @@ public static class TelegramServiceMemberExtension
         }
     }
 
+    public static async Task InactiveKickMemberAsync(this TelegramService telegramService)
+    {
+        if (!await telegramService.CheckFromAdminOrAnonymous())
+        {
+            await telegramService.SendTextMessageAsync(
+                "Kamu tidak mempunyai akses ke fitur ini.",
+                scheduleDeleteAt: DateTime.UtcNow.AddMinutes(1),
+                includeSenderMessage: true
+            );
+
+            return;
+        }
+        var wTelegramApiService = telegramService.GetRequiredService<WTelegramApiService>();
+
+        var chatId = telegramService.ChatId;
+        var param1 = telegramService.GetCommandParam(0);
+
+        if (param1.IsNullOrEmpty())
+        {
+            await telegramService.SendTextMessageAsync(
+                "Tentukan berapa lama durasi tidak aktif, misal 3d.",
+                scheduleDeleteAt: DateTime.UtcNow.AddMinutes(10),
+                includeSenderMessage: true
+            );
+            return;
+        }
+
+        try
+        {
+            var timeOffset = param1.ToTimeSpan();
+
+            if (timeOffset < TimeSpan.FromDays(1))
+            {
+                await telegramService.SendTextMessageAsync(
+                    "Terlalu banyak Anggota yang bakal ditendang, silakan tentukan waktu yang lebih lama, misal 3d.",
+                    scheduleDeleteAt: DateTime.UtcNow.AddMinutes(10),
+                    includeSenderMessage: true
+                );
+                return;
+            }
+
+            var channelsChannelParticipants = await wTelegramApiService.GetAllParticipants(chatId, evictAfter: true);
+            var allParticipants = channelsChannelParticipants.users;
+            var inactiveParticipants = allParticipants.Values
+                .Where(
+                    user =>
+                        user.LastSeenAgo > timeOffset &&
+                        user.bot_info_version == 0
+                )
+                .ToList();
+
+            var htmlMessage = HtmlMessage.Empty
+                .Bold("Inactive Kick Member").Br()
+                .Bold("Total: ").CodeBr(allParticipants.Count.ToString())
+                .Bold("Inactive: ").CodeBr(inactiveParticipants.Count.ToString());
+
+            await telegramService.AppendTextAsync(htmlMessage.ToString());
+
+            await inactiveParticipants.AsyncParallelForEach(
+                maxDegreeOfParallelism: 20,
+                body: async user => {
+                    await telegramService.KickMemberAsync(user.ID, unban: true);
+                }
+            );
+
+            await telegramService.AppendTextAsync(
+                "Selesai.",
+                scheduleDeleteAt: DateTime.UtcNow.AddMinutes(1),
+                includeSenderMessage: true
+            );
+        }
+        catch (Exception exception)
+        {
+            await telegramService.SendTextMessageAsync(
+                "Suatu kesalah telah terjadi." +
+                "\nError: " +
+                exception.Message
+            );
+            Log.Error(
+                exception,
+                "Error Inactive Kick Member at {ChatId}",
+                chatId
+            );
+        }
+    }
+
+    public static async Task NoUsernameKickMemberAsync(this TelegramService telegramService)
+    {
+        var chatId = telegramService.ChatId;
+
+        if (telegramService.IsPrivateGroup)
+        {
+            await telegramService.SendTextMessageAsync(
+                "Perintah ini hanya tersedia untuk Grup Publik",
+                scheduleDeleteAt: DateTime.UtcNow.AddMinutes(1),
+                includeSenderMessage: true
+            );
+
+            return;
+        }
+
+        if (!await telegramService.CheckFromAdminOrAnonymous())
+        {
+            await telegramService.DeleteSenderMessageAsync();
+            return;
+        }
+
+        var wTelegramApiService = telegramService.GetRequiredService<WTelegramApiService>();
+
+        var chatTitleLink = telegramService.Chat.GetChatNameLink();
+
+        var participant = await wTelegramApiService.GetAllParticipants(chatId, disableCache: true);
+        var allUsers = participant.users.Select(pair => pair.Value).ToList();
+
+        var noUsernameUsers = allUsers.Where(user => user.username == null).ToList();
+
+        var htmlMessage = HtmlMessage.Empty
+            .Bold("No Username Kick Member").Br()
+            .Bold("Chat: ").TextBr(chatTitleLink)
+            .Bold("Total: ").CodeBr(allUsers.Count.ToString())
+            .Bold("No Username: ").CodeBr(noUsernameUsers.Count.ToString());
+
+        await telegramService.AppendTextAsync(htmlMessage.ToString());
+
+        await noUsernameUsers.AsyncParallelForEach(
+            maxDegreeOfParallelism: 20,
+            body: async user => {
+                await telegramService.KickMemberAsync(user.ID, unban: true);
+            }
+        );
+
+        await telegramService.AppendTextAsync(
+            "Proses selesai.",
+            scheduleDeleteAt: DateTime.UtcNow.AddMinutes(1),
+            includeSenderMessage: true
+        );
+    }
+
+    public static async Task InsightStatusMemberAsync(this TelegramService telegramService)
+    {
+        var chatId = telegramService.ChatId;
+
+        if (telegramService.IsPrivateGroup)
+        {
+            await telegramService.SendTextMessageAsync(
+                "Perintah ini hanya tersedia untuk Grup Publik",
+                scheduleDeleteAt: DateTime.UtcNow.AddMinutes(1),
+                includeSenderMessage: true
+            );
+
+            return;
+        }
+
+        if (!await telegramService.CheckFromAdminOrAnonymous())
+        {
+            await telegramService.DeleteSenderMessageAsync();
+            return;
+        }
+
+        var wTelegramApiService = telegramService.GetRequiredService<WTelegramApiService>();
+
+        await telegramService.SendTextMessageAsync("Sedang mengambil informasi..");
+
+        var chatLink = telegramService.Chat.GetChatLink();
+        var chatTitle = telegramService.Chat.GetChatTitle();
+
+        var participant = await wTelegramApiService.GetAllParticipants(chatId, disableCache: true);
+        var users = participant.users.Select(pair => pair.Value).ToList();
+
+        var noUsernameUsers = users.Where(user => user.username == null).ToList();
+        var lastRecently = users.Where(user => user.status == new UserStatusRecently()).ToList();
+        var lastActiveWeek = users.Where(user => user.status == new UserStatusLastWeek()).ToList();
+        var lastActiveMonth = users.Where(user => user.status == new UserStatusLastMonth()).ToList();
+        var lastActiveOnline = users.Where(user => user.status == new UserStatusOnline()).ToList();
+        var lastActiveOffline = users.Where(user => user.status == new UserStatusOffline()).ToList();
+        var deletedUsers = users.Where(user => !user.IsActive).ToList();
+
+        var bots = users.Where(user => user.bot_info_version != 0).ToList();
+
+        var htmlMessage = HtmlMessage.Empty
+            .Bold("Status Member").Br()
+            .Bold("Chat: ").Url(chatLink, chatTitle).Br()
+            .Bold("Id: ").CodeBr(chatId.ToString())
+            .Bold("Total: ").CodeBr(users.Count.ToString())
+            .Bold("No Username: ").CodeBr(noUsernameUsers.Count.ToString())
+            .Bold("Recent Offline: ").CodeBr(lastActiveOffline.Count.ToString())
+            .Bold("Recent Online: ").CodeBr(lastActiveOnline.Count.ToString())
+            .Bold("Active recent: ").CodeBr(lastRecently.Count.ToString())
+            .Bold("Last week: ").CodeBr(lastActiveWeek.Count.ToString())
+            .Bold("Last month: ").CodeBr(lastActiveMonth.Count.ToString())
+            .Bold("Deleted accounts: ").CodeBr(deletedUsers.Count.ToString())
+            .Bold("Bots: ").CodeBr(bots.Count.ToString());
+
+        await telegramService.EditMessageTextAsync(
+            sendText: htmlMessage.ToString(),
+            scheduleDeleteAt: DateTime.UtcNow.AddMinutes(10),
+            includeSenderMessage: true
+        );
+    }
+
     public static async Task<bool> EnsureForceSubscriptionAsync(this TelegramService telegramService)
     {
         var fromId = telegramService.FromId;
@@ -419,12 +619,13 @@ public static class TelegramServiceMemberExtension
 
         var fromNameLink = message.From.GetNameLink();
         var chatNameLink = message.Chat.GetChatNameLink();
+        var messageLink = message.GetMessageLink();
 
         var htmlMessage = HtmlMessage.Empty
             .TextBr("Anda di Summon oleh")
             .Bold("Oleh: ").TextBr(fromNameLink)
             .Bold("Grup: ").TextBr(chatNameLink)
-            .Url(message.GetMessageLink(), "Ke pesan");
+            .Url(messageLink, "Ke pesan");
 
         if (replyToMessage != null)
         {
@@ -432,7 +633,7 @@ public static class TelegramServiceMemberExtension
 
             await telegramService.SendTextMessageAsync(
                 sendText: htmlMessage.ToString(),
-                customChatId: new ChatId(toChatId),
+                customChatId: toChatId,
                 disableWebPreview: true
             );
 

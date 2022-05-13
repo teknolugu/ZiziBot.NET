@@ -119,6 +119,8 @@ public static class TelegramServiceMessageExtension
 
         try
         {
+            if (telegramService.IsGlobalIgnored()) return false;
+
             var message = telegramService.MessageOrEdited;
             var eventLogService = telegramService.GetRequiredService<EventLogService>();
             var wordFilterService = telegramService.GetRequiredService<WordFilterService>();

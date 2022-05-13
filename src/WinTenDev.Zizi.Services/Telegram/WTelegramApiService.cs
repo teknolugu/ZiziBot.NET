@@ -5,7 +5,6 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using TL;
-using WinTenDev.Zizi.Models.Interfaces;
 using WinTenDev.Zizi.Models.Telegram;
 using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Utils;
@@ -14,7 +13,7 @@ using WTelegram;
 
 namespace WinTenDev.Zizi.Services.Telegram;
 
-public class WTelegramApiService : IWTelegramApiService
+public class WTelegramApiService
 {
     private readonly ILogger<WTelegramApiService> _logger;
     private readonly CacheService _cacheService;
@@ -49,7 +48,9 @@ public class WTelegramApiService : IWTelegramApiService
 
     public async Task<Channels_ChannelParticipants> GetAllParticipants(
         long chatId,
-        ChannelParticipantsFilter channelParticipantsFilter = null
+        ChannelParticipantsFilter channelParticipantsFilter = null,
+        bool evictAfter = false,
+        bool disableCache = false
     )
     {
         var channelId = chatId.ReduceChatId();
@@ -58,6 +59,8 @@ public class WTelegramApiService : IWTelegramApiService
 
         var channelParticipants = await _cacheService.GetOrSetAsync(
             cacheKey: cacheKey,
+            evictAfter: evictAfter,
+            disableCache: disableCache,
             action: async () => {
                 var chats = await _client.Messages_GetAllChats(null);
                 // var channel = (Channel) chats.chats[1234567890];// the channel we want

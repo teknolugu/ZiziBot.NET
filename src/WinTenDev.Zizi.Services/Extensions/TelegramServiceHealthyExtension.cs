@@ -92,51 +92,64 @@ public static class TelegramServiceHealthyExtension
     }
 
     [SuppressMessage("ReSharper", "SpecifyACultureInStringConversionExplicitly")]
-    public static async Task NotifyBotSlowdown(this TelegramService telegramService)
+    public static async Task BotSlowdownNotification(this TelegramService telegramService)
     {
-        var eventLogService = telegramService.GetRequiredService<EventLogService>();
-        var healthConfig = telegramService.GetRequiredService<IOptionsSnapshot<HealthConfig>>().Value;
+        var chatId = telegramService.ChatId;
 
-        if (telegramService.ChannelOrEditedPost != null) return;
-        if (telegramService.CallbackQuery != null) return;
-
-        var timeInit = telegramService.TimeInit.ToDouble();
-        var timeProc = telegramService.TimeProc.ToDouble();
-
-        if (timeInit >= healthConfig.SlowdownOffset ||
-            timeProc >= healthConfig.SlowdownOffset)
+        try
         {
-            Log.Information(
-                "Bot slowdown detected. Time Init: {TimeInit}, TimeProc: {TimeProc}",
-                timeInit,
-                timeProc
-            );
+            var eventLogService = telegramService.GetRequiredService<EventLogService>();
+            var healthConfig = telegramService.GetRequiredService<IOptionsSnapshot<HealthConfig>>().Value;
 
-            var memberCount = await telegramService.GetMemberCount();
+            if (telegramService.ChannelOrEditedPost != null) return;
+            if (telegramService.CallbackQuery != null) return;
 
-            var message = telegramService.Message;
+            var timeInit = telegramService.TimeInit.ToDouble();
+            var timeProc = telegramService.TimeProc.ToDouble();
 
-            if (message == null) return;
+            if (timeInit >= healthConfig.SlowdownOffset ||
+                timeProc >= healthConfig.SlowdownOffset)
+            {
+                Log.Information(
+                    "Bot slowdown detected. Time Init: {TimeInit}, TimeProc: {TimeProc}",
+                    timeInit,
+                    timeProc
+                );
 
-            var htmlMessage = HtmlMessage.Empty
-                .TextBr("Uh Oh, Saya melambat!")
-                .Bold("Response: ").CodeBr(timeInit.ToString())
-                .Bold("Eksekusi: ").CodeBr(timeProc.ToString())
-                .Bold("Jumlah Anggota: ").CodeBr(memberCount.ToString());
+                var memberCount = await telegramService.GetMemberCount();
 
-            await eventLogService.SendEventLogAsync(
-                text: htmlMessage.ToString(),
-                message: message,
-                sendGlobalOnly: true,
-                messageFlag: MessageFlag.SlowDown
-            );
+                var message = telegramService.Message;
+
+                if (message == null) return;
+
+                var htmlMessage = HtmlMessage.Empty
+                    .TextBr("Uh Oh, Saya melambat!")
+                    .Bold("Response: ").CodeBr(timeInit.ToString())
+                    .Bold("Eksekusi: ").CodeBr(timeProc.ToString())
+                    .Bold("Jumlah Anggota: ").CodeBr(memberCount.ToString());
+
+                await eventLogService.SendEventLogAsync(
+                    text: htmlMessage.ToString(),
+                    message: message,
+                    sendGlobalOnly: true,
+                    messageFlag: MessageFlag.SlowDown
+                );
+            }
+            else
+            {
+                Log.Information(
+                    "Slowdown Offset not be reached! Time Init: {TimeInit}, TimeProc: {TimeProc}",
+                    timeInit,
+                    timeProc
+                );
+            }
         }
-        else
+        catch (Exception exception)
         {
-            Log.Information(
-                "Slowdown Offset not be reached! Time Init: {TimeInit}, TimeProc: {TimeProc}",
-                timeInit,
-                timeProc
+            Log.Error(
+                exception,
+                "Error on send slowdown notification from ChatId: {ChatId}",
+                chatId
             );
         }
     }

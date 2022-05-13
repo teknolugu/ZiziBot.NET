@@ -1,7 +1,13 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
+using System.Net;
+using System.Reflection;
 using System.Threading.Tasks;
+using Humanizer;
+using Humanizer.Localisation;
 using Microsoft.Extensions.DependencyInjection;
+using MoreLinq;
 using Serilog;
 using SerilogTimings;
 using Telegram.Bot;
@@ -297,5 +303,32 @@ public static class TelegramServiceCoreExtension
                 scheduleDeleteAt: DateTime.UtcNow.AddDays(3)
             );
         }
+    }
+
+    public static async Task GetInsightAsync(this TelegramService telegramService)
+    {
+        var featureConfig = await telegramService.GetFeatureConfig();
+
+        var hostName = Dns.GetHostName();
+        var processUptime = DateTime.UtcNow - Process.GetCurrentProcess().StartTime.ToUniversalTime();
+
+        var htmlMessage = HtmlMessage.Empty
+            .Bold("Host Information").Br()
+            .Bold("Name: ").CodeBr(hostName)
+            .Bold("OS: ").CodeBr(Environment.OSVersion.Platform.ToString())
+            .Bold("Version: ").CodeBr(Environment.OSVersion.Version.ToString())
+            .Bold("Uptime: ").CodeBr(TimeSpan.FromMilliseconds(Environment.TickCount64).Humanize(precision: 10, minUnit: TimeUnit.Second))
+            .Bold("Runtime: ").CodeBr(System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription)
+            .Br()
+            .Bold("App Information").Br()
+            .Bold("Name: ").CodeBr(Assembly.GetEntryAssembly().GetName().Name)
+            .Bold("Version: ").CodeBr(Assembly.GetEntryAssembly().GetName().Version.ToString())
+            .Bold("Uptime: ").CodeBr(TimeSpan.FromMilliseconds(processUptime.TotalMilliseconds).Humanize(precision: 10, minUnit: TimeUnit.Second));
+
+        await telegramService.SendTextMessageAsync(
+            sendText: htmlMessage.ToString(),
+            includeSenderMessage: true,
+            scheduleDeleteAt: DateTime.UtcNow.AddMinutes(10)
+        );
     }
 }
