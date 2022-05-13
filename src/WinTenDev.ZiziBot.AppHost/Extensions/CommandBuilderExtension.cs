@@ -108,6 +108,7 @@ public static class CommandBuilderExtension
                                         .UseCommand<KickCommand>("kick")
                                         .UseCommand<LearnCommand>("learn")
                                         .UseCommand<MediaFilterCommand>("mfil")
+                                        .UseCommand<NoUsernameKickCommand>("nukick")
                                         .UseCommand<NudityCommand>("nudity")
                                         .UseCommand<OcrCommand>("ocr")
                                         .UseCommand<OutCommand>("out")

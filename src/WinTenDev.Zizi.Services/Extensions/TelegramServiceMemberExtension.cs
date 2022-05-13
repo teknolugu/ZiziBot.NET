@@ -389,6 +389,58 @@ public static class TelegramServiceMemberExtension
         }
     }
 
+    public static async Task NoUsernameKickMemberAsync(this TelegramService telegramService)
+    {
+        var chatId = telegramService.ChatId;
+
+        if (telegramService.IsPrivateGroup)
+        {
+            await telegramService.SendTextMessageAsync(
+                "Perintah ini hanya tersedia untuk Grup Publik",
+                scheduleDeleteAt: DateTime.UtcNow.AddMinutes(1),
+                includeSenderMessage: true
+            );
+
+            return;
+        }
+
+        if (!await telegramService.CheckFromAdminOrAnonymous())
+        {
+            await telegramService.DeleteSenderMessageAsync();
+            return;
+        }
+
+        var wTelegramApiService = telegramService.GetRequiredService<WTelegramApiService>();
+
+        var chatTitleLink = telegramService.Chat.GetChatNameLink();
+
+        var participant = await wTelegramApiService.GetAllParticipants(chatId, disableCache: true);
+        var allUsers = participant.users.Select(pair => pair.Value).ToList();
+
+        var noUsernameUsers = allUsers.Where(user => user.username == null).ToList();
+
+        var htmlMessage = HtmlMessage.Empty
+            .Bold("No Username Kick Member").Br()
+            .Bold("Chat: ").TextBr(chatTitleLink)
+            .Bold("Total: ").CodeBr(allUsers.Count.ToString())
+            .Bold("No Username: ").CodeBr(noUsernameUsers.Count.ToString());
+
+        await telegramService.AppendTextAsync(htmlMessage.ToString());
+
+        await noUsernameUsers.AsyncParallelForEach(
+            maxDegreeOfParallelism: 20,
+            body: async user => {
+                await telegramService.KickMemberAsync(user.ID, unban: true);
+            }
+        );
+
+        await telegramService.AppendTextAsync(
+            "Proses selesai.",
+            scheduleDeleteAt: DateTime.UtcNow.AddMinutes(1),
+            includeSenderMessage: true
+        );
+    }
+
     public static async Task InsightStatusMemberAsync(this TelegramService telegramService)
     {
         var chatId = telegramService.ChatId;
