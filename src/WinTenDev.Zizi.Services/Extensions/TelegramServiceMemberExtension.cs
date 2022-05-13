@@ -567,12 +567,13 @@ public static class TelegramServiceMemberExtension
 
         var fromNameLink = message.From.GetNameLink();
         var chatNameLink = message.Chat.GetChatNameLink();
+        var messageLink = message.GetMessageLink();
 
         var htmlMessage = HtmlMessage.Empty
             .TextBr("Anda di Summon oleh")
             .Bold("Oleh: ").TextBr(fromNameLink)
             .Bold("Grup: ").TextBr(chatNameLink)
-            .Url(message.GetMessageLink(), "Ke pesan");
+            .Url(messageLink, "Ke pesan");
 
         if (replyToMessage != null)
         {
@@ -580,7 +581,7 @@ public static class TelegramServiceMemberExtension
 
             await telegramService.SendTextMessageAsync(
                 sendText: htmlMessage.ToString(),
-                customChatId: new ChatId(toChatId),
+                customChatId: toChatId,
                 disableWebPreview: true
             );
 
