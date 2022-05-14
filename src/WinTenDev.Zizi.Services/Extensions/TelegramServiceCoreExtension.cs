@@ -309,6 +309,11 @@ public static class TelegramServiceCoreExtension
     {
         var featureConfig = await telegramService.GetFeatureConfig();
 
+        if (!featureConfig.NextHandler)
+        {
+            return;
+        }
+
         var hostName = Dns.GetHostName();
         var processUptime = DateTime.UtcNow - Process.GetCurrentProcess().StartTime.ToUniversalTime();
 
