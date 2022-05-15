@@ -125,9 +125,9 @@ public class ChatService
         }
     }
 
-    public async Task<Chat> GetChatAsync(long chatId)
+    public async Task<Chat> GetChatAsync(ChatId chatId)
     {
-        var cacheKey = "chat_" + chatId.ReduceChatId();
+        var cacheKey = "chat_" + chatId;
 
         var data = await _cacheService.GetOrSetAsync(
             cacheKey,
@@ -159,12 +159,12 @@ public class ChatService
     }
 
     public async Task<ChatMember> GetChatMemberAsync(
-        long chatId,
+        ChatId chatId,
         long userId,
         bool evictAfter = false
     )
     {
-        var cacheKey = "chat-member_" + chatId.ReduceChatId() + $"_{userId}";
+        var cacheKey = "chat-member_" + chatId + $"_{userId}";
 
         var data = await _cacheService.GetOrSetAsync(
             cacheKey,
