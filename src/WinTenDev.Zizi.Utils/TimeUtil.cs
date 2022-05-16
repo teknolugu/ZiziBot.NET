@@ -13,12 +13,22 @@ public static class TimeUtil
 {
     public static string GetDelay(this DateTime time)
     {
-        var date1 = DateTime.Now.ToUniversalTime();
+        var date1 = DateTime.UtcNow;
         var date2 = time;
 
         var timeSpan = (date1 - date2);
 
         return timeSpan.ToString(@"s\,fff");
+    }
+
+    public static TimeSpan GetDelaySpan(this DateTime time)
+    {
+        var date1 = DateTime.UtcNow;
+        var date2 = time;
+
+        var timeSpan = (date1 - date2);
+
+        return timeSpan;
     }
 
     public static string ToHumanDuration(
