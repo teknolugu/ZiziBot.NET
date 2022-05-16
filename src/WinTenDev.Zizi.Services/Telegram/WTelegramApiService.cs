@@ -62,9 +62,8 @@ public class WTelegramApiService
             evictAfter: evictAfter,
             disableCache: disableCache,
             action: async () => {
-                var chats = await _client.Messages_GetAllChats(null);
-                // var channel = (Channel) chats.chats[1234567890];// the channel we want
-                var channel = (Channel) chats.chats.Values.First(chat => chat.ID == channelId);
+                var channel = await GetChannel(chatId);
+
                 var allParticipants = await _client.Channels_GetAllParticipants(channel);
 
                 return allParticipants;
@@ -76,12 +75,10 @@ public class WTelegramApiService
 
     public async Task<Channels_ChannelParticipants> GetAllParticipantsCore(long chatId)
     {
-        var channelId = chatId.ReduceChatId();
-
-        var chats = await _client.Messages_GetAllChats(null);
-        var channel = (Channel) chats.chats.Values.FirstOrDefault(chat => chat.ID == channelId);
+        var channel = await GetChannel(chatId);
 
         var allParticipants = await _client.Channels_GetAllParticipants(channel);
+
         return allParticipants;
     }
 
