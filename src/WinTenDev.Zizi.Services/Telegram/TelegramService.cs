@@ -232,8 +232,11 @@ public class TelegramService
         Chat = ChannelOrEditedPost?.Chat ?? MyChatMember?.Chat ?? CallbackQuery?.Message?.Chat ?? MessageOrEdited?.Chat;
         SenderChat = MessageOrEdited?.SenderChat;
         MessageDate = MyChatMember?.Date ?? CallbackQuery?.Message?.Date ?? MessageOrEdited?.Date ?? DateTime.Now;
+        MessageEditDate = MessageOrEdited?.EditDate;
+        MessageDateOrEditDate = MessageEditDate ?? MessageDate;
 
         TimeInit = MessageDate.GetDelay();
+        TimeInitSpan = MessageDate.GetDelaySpan();
 
         FromId = From?.Id ?? 0;
         ChatId = Chat?.Id ?? 0;
@@ -296,6 +299,8 @@ public class TelegramService
         Chat = ChannelOrEditedPost?.Chat ?? MyChatMember?.Chat ?? CallbackQuery?.Message?.Chat ?? MessageOrEdited?.Chat;
         SenderChat = MessageOrEdited?.SenderChat;
         MessageDate = MyChatMember?.Date ?? CallbackQuery?.Message?.Date ?? MessageOrEdited?.Date ?? DateTime.Now;
+        MessageEditDate = MessageOrEdited?.EditDate;
+        MessageDateOrEditDate = MessageEditDate ?? MessageDate;
 
         TimeInit = MessageDate.GetDelay();
 
@@ -310,6 +315,10 @@ public class TelegramService
         IsFromSudo = CheckFromSudoer();
         IsPrivateChat = CheckIsPrivateChat();
         IsGroupChat = CheckIsGroupChat();
+
+        IsPublicGroup = Chat.Username != null && Chat.Type is ChatType.Group or ChatType.Supergroup;
+        IsPrivateGroup = !IsPublicGroup;
+        IsChannel = Chat.Type is ChatType.Channel;
 
         AnyMessageText = AnyMessage?.Text;
         MessageOrEditedText = MessageOrEdited?.Text;
@@ -878,7 +887,8 @@ public class TelegramService
         bool preventDuplicateSend = false
     )
     {
-        TimeProc = MessageDate.GetDelay();
+        TimeProc = MessageDateOrEditDate.GetDelay();
+        TimeProcSpan = MessageDateOrEditDate.GetDelaySpan();
 
         if (sendText.IsNotNullOrEmpty() &&
             CallbackQuery == null)
@@ -972,6 +982,8 @@ public class TelegramService
         );
 
         TimeProc = MessageDate.GetDelay();
+        TimeProcSpan = MessageDateOrEditDate.GetDelaySpan();
+
         if (caption.IsNotNullOrEmpty()) caption += $"\n\n⏱ <code>{TimeInit} s</code> | ⌛️ <code>{TimeProc} s</code>";
 
         switch (mediaType)
@@ -1103,7 +1115,8 @@ public class TelegramService
         bool preventDuplicateSend = false
     )
     {
-        TimeProc = MessageDate.GetDelay();
+        TimeProc = MessageDateOrEditDate.GetDelay();
+        TimeProcSpan = MessageDateOrEditDate.GetDelaySpan();
 
         if (sendText.IsNotNullOrEmpty()) sendText += $"\n\n⏱ <code>{TimeInit} s</code> | ⌛️ <code>{TimeProc} s</code>";
 
