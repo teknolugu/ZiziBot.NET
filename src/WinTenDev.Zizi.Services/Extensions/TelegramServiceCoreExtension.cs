@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using Humanizer;
 using Humanizer.Localisation;
 using Microsoft.Extensions.DependencyInjection;
-using MoreLinq;
 using Serilog;
 using SerilogTimings;
 using Telegram.Bot;
@@ -37,6 +36,7 @@ public static class TelegramServiceCoreExtension
         var enginesConfig = telegramService.EnginesConfig;
         var rulesProcessor = telegramService.GetRequiredService<RulesProcessor>();
         var usernameProcessor = telegramService.GetRequiredService<UsernameProcessor>();
+        var botService = telegramService.GetRequiredService<BotService>();
 
         var msg = telegramService.Message;
         var partText = msg.Text.SplitText(" ").ToArray();
@@ -46,25 +46,18 @@ public static class TelegramServiceCoreExtension
 
         Log.Debug("Start Args: {StartArgs}", startArgs);
 
-        var getMe = await telegramService.BotService.GetMeAsync();
+        var featureConfig = await telegramService.GetFeatureConfig();
+
+        var getMe = await botService.GetMeAsync();
+        var urlAddTo = await botService.GetUrlStart("startgroup=new");
         var aboutHeader = getMe.GetAboutHeader();
-        var urlStart = await telegramService.BotService.GetUrlStart("start=help");
-        var urlAddTo = await telegramService.BotService.GetUrlStart("startgroup=new");
+        var botDescription = enginesConfig.Description;
 
-        var botName = getMe.GetFullName();
-        var botVer = enginesConfig.Version;
-        var botCompany = enginesConfig.Company;
+        var startHeader = $"🤖 {aboutHeader}" +
+                          $"\n{botDescription}." +
+                          $"\n\n";
 
-        var winTenDev = botCompany.MkUrl("https://t.me/WinTenDev");
-        var ziziDocs = "https://docs.zizibot.winten.my.id";
-        var levelStandardUrl = $"{ziziDocs}/glosarium/admin-dengan-level-standard";
-        var levelStandard = @"Level standard".MkUrl(levelStandardUrl);
-
-        var sendText = $"🤖 {aboutHeader}" +
-                       $"\nby {winTenDev}." +
-                       $"\n\nAdalah bot debugging dan manajemen grup yang di lengkapi dengan alat keamanan. " +
-                       $"Agar saya bekerja dengan fitur penuh di sebuah Grup, jadikan saya admin dengan {levelStandard}. " +
-                       $"\n\nSaran dan fitur bisa di ajukan di @WinTenDevSupport atau @TgBotID.";
+        var sendText = $"Adalah bot debugging dan manajemen grup yang di lengkapi dengan alat keamanan.";
 
         var result = startCmd switch
         {
@@ -83,25 +76,21 @@ public static class TelegramServiceCoreExtension
 
             return;
         }
+        var caption = startHeader + (featureConfig.Caption ?? sendText);
 
-        var keyboard = new InlineKeyboardMarkup
-        (
+        var replyMarkup = featureConfig.KeyboardButton;
+
+        replyMarkup.Add(
             new[]
             {
-                new[]
-                {
-                    InlineKeyboardButton.WithUrl("Bantuan", ziziDocs),
-                    InlineKeyboardButton.WithUrl("Pasang Username", "https://t.me/WinTenDev/29")
-                },
-                new[]
-                {
-                    InlineKeyboardButton.WithUrl("Tambahkan ke Grup", urlAddTo)
-                }
+                InlineKeyboardButton.WithUrl("Tambahkan ke Grup", urlAddTo)
             }
         );
 
+        var keyboard = replyMarkup.ToButtonMarkup();
+
         await telegramService.SendTextMessageAsync(
-            sendText: sendText,
+            sendText: caption,
             replyMarkup: keyboard,
             disableWebPreview: true
         );
@@ -308,6 +297,11 @@ public static class TelegramServiceCoreExtension
     public static async Task GetInsightAsync(this TelegramService telegramService)
     {
         var featureConfig = await telegramService.GetFeatureConfig();
+
+        if (!featureConfig.NextHandler)
+        {
+            return;
+        }
 
         var hostName = Dns.GetHostName();
         var processUptime = DateTime.UtcNow - Process.GetCurrentProcess().StartTime.ToUniversalTime();

@@ -36,4 +36,5 @@ public class ButtonParsed
     public List<string>? ExceptsAt { get; set; }
     public string Caption { get; set; }
     public InlineKeyboardMarkup Markup { get; set; }
+    public List<IEnumerable<InlineKeyboardButton>> KeyboardButton { get; set; } = new();
 }

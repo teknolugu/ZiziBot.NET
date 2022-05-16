@@ -660,7 +660,7 @@ public static class TelegramServiceMemberExtension
                     var targetChatId = allEntityValues?.ElementAtOrDefault(index) ?? "";
                     var resolvedPeer = await wTelegramApiService.FindPeerByUsername(targetChatId);
 
-                    if (resolvedPeer.User == null)
+                    if (resolvedPeer?.User == null)
                     {
                         Log.Debug("Send reply notification skip because Username: {Username} is non-User", targetChatId);
                         return;

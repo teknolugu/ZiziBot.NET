@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -59,18 +60,20 @@ public class FeatureService
             .Select(caption => caption.Sections.JoinStr(" "))
             .JoinStr("\n\n");
 
-        if (config?.Buttons != null)
+        List<IEnumerable<InlineKeyboardButton>> button = null;
+
+        if (config.Buttons != null)
         {
-            buttonMarkup = new InlineKeyboardMarkup
-            (
-                config
-                    .Buttons
-                    .Select
-                    (
-                        x => x
-                            .Select(y => InlineKeyboardButton.WithUrl(y.Text, y.Url.ToString()))
-                    )
-            );
+            button = config
+                .Buttons
+                .Select
+                (
+                    x => x
+                        .Select(y => InlineKeyboardButton.WithUrl(y.Text, y.Url.ToString()))
+                )
+                .ToList();
+
+            buttonMarkup = new InlineKeyboardMarkup(button);
         }
 
         buttonParsed.IsEnabled = config.IsEnabled;
@@ -78,6 +81,7 @@ public class FeatureService
         buttonParsed.ExceptsAt = config.ExceptsAt;
         buttonParsed.Caption = mergedCaption;
         buttonParsed.Markup = buttonMarkup;
+        buttonParsed.KeyboardButton = button;
 
         return buttonParsed;
     }
