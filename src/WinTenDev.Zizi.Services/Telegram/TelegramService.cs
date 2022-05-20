@@ -1384,6 +1384,12 @@ public class TelegramService
         TimeInit = msgDate.GetDelay();
     }
 
+    public T GetCallbackDataAt<T>(int index)
+    {
+        dynamic messageId = CallbackQueryDatas.ElementAtOrDefault(index) as object;
+        return Convert.ChangeType(messageId, typeof(T));
+    }
+
     #endregion Message
 
     #region Member
