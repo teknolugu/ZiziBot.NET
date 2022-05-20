@@ -284,6 +284,65 @@ public static class TelegramServiceMessageExtension
         return true;
     }
 
+    public static async Task PinMessageAsync(this TelegramService telegramService)
+    {
+        var client = telegramService.Client;
+        var message = telegramService.MessageOrEdited;
+        var chatId = telegramService.ChatId;
+
+        await telegramService.DeleteSenderMessageAsync();
+
+        if (!await telegramService.CheckFromAdminOrAnonymous())
+        {
+            Log.Warning("Pin message only for Admin on Current Chat");
+            return;
+        }
+
+        if (message.ReplyToMessage == null)
+        {
+            // var messageId = message.ReplyToMessage.MessageId;
+            //
+            // await client.UnpinChatMessageAsync(chatId, messageId);
+            // await client.PinChatMessageAsync(chatId, messageId);
+
+            await telegramService.SendTextMessageAsync(
+                sendText: "Balas pesan yang akan di pin",
+                replyToMsgId: message.MessageId,
+                scheduleDeleteAt: DateTime.UtcNow.AddMinutes(5),
+                preventDuplicateSend: true
+            );
+
+            return;
+        }
+
+        var replyToMessage = telegramService.ReplyToMessage;
+        var replyToMessageId = replyToMessage.MessageId;
+
+        var inlineKeyboard = new InlineKeyboardMarkup(
+            new[]
+            {
+                new[]
+                {
+                    InlineKeyboardButton.WithCallbackData("🔔 Beri tahu", $"pin-message {replyToMessageId} notify"),
+                    InlineKeyboardButton.WithCallbackData("🔕 Senyap", $"pin-message {replyToMessageId} silent")
+                },
+                new[]
+                {
+                    InlineKeyboardButton.WithCallbackData("❌ Tutup", $"delete-message current-message")
+                }
+            }
+        );
+
+        const string sendText = "Apakah Anda ingin beri tahu Anggota saat menyematkan pesan ini?";
+        await telegramService.SendTextMessageAsync(
+            sendText,
+            replyToMsgId: message.MessageId,
+            replyMarkup: inlineKeyboard,
+            scheduleDeleteAt: DateTime.UtcNow.AddMinutes(5),
+            preventDuplicateSend: true
+        );
+    }
+
     public static async Task DeleteMessageManyAsync(
         this TelegramService telegramService,
         long customUserId = -1

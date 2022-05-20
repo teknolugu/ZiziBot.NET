@@ -41,6 +41,7 @@ public static class TelegramServiceActivityExtension
             "pong" => await telegramService.OnCallbackPingAsync(),
             "gban" => await telegramService.OnCallbackGlobalBanAsync(),
             "verify" => await telegramService.OnCallbackVerifyAsync(),
+            "pin-message" => await telegramService.OnCallbackPinMessageAsync(),
             "rssctl" => await telegramService.OnCallbackRssCtlAsync(),
             "setting" => await telegramService.OnCallbackSettingAsync(),
             _ => false

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Serilog;
+using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
 using WinTenDev.Zizi.Models.Dto;
 using WinTenDev.Zizi.Models.Enums;
@@ -401,6 +402,35 @@ public static class CallbackQueryExtension
         }
 
         await telegramService.AnswerCallbackQueryAsync(answerCallback, true);
+        await telegramService.DeleteCurrentCallbackMessageAsync();
+
+        return true;
+    }
+
+    public static async Task<bool> OnCallbackPinMessageAsync(this TelegramService telegramService)
+    {
+        var chatId = telegramService.ChatId;
+
+        if (!await telegramService.CheckFromAdminOrAnonymous())
+        {
+            await telegramService.AnswerCallbackQueryAsync("Kamu tidak memiliki izin untuk melakukan tidakan!", true);
+
+            return true;
+        }
+
+        var messageId = telegramService.GetCallbackDataAt<int>(1);
+        var pinMode = telegramService.GetCallbackDataAt<string>(2);
+        var disableNotification = pinMode == "silent";
+
+        var client = telegramService.Client;
+
+        await client.UnpinChatMessageAsync(chatId, messageId);
+        await client.PinChatMessageAsync(
+            chatId: chatId,
+            messageId: messageId,
+            disableNotification: disableNotification
+        );
+
         await telegramService.DeleteCurrentCallbackMessageAsync();
 
         return true;
