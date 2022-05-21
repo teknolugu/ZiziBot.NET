@@ -594,14 +594,48 @@ public class TelegramService
 
     public async Task<ButtonParsed> GetFeatureConfig(string feature = null)
     {
-        var command = feature ?? GetCommand();
-        var featureConfig = await _featureService.GetFeatureConfig(command);
+        var featureName = feature ?? GetCommand();
+        var featureConfig = await _featureService.GetFeatureConfig(featureName);
 
         if (featureConfig.IsEnabled)
         {
             var hasAllowed = featureConfig.AllowsAt?.Any(s => s.Contains(ChatId.ToString())) ?? false;
 
             featureConfig.NextHandler = hasAllowed;
+
+            if (featureConfig.IsApplyRateLimit)
+            {
+                var nextAvailable = featureConfig.NextAvailable;
+
+                var isNeedCooldown = _featureService.CheckCooldown(
+                    new FeatureCooldown()
+                    {
+                        ChatId = ChatId,
+                        UserId = FromId,
+                        FeatureName = GetCommand(),
+                        LastUsed = DateTime.UtcNow,
+                        NextAvailable = nextAvailable
+                    }
+                );
+
+                if (isNeedCooldown)
+                {
+                    featureConfig.NextHandler = false;
+
+                    var nextAvailableDate = nextAvailable.ToLocalTime();
+
+                    await SendTextMessageAsync(
+                        sendText: $"Perintah '{featureName}' membutuhkan Cooldown sebelum dapat digunakan kembali. Silakan coba lagi setelah {nextAvailableDate}",
+                        replyToMsgId: 0,
+                        scheduleDeleteAt: DateTime.UtcNow.AddMinutes(10),
+                        includeSenderMessage: true
+                    );
+
+                    return featureConfig;
+                }
+
+                featureConfig.NextHandler = true;
+            }
 
             if (!featureConfig.NextHandler)
             {

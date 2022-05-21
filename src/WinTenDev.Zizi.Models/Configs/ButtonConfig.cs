@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Telegram.Bot.Types.ReplyMarkups;
 using WinTenDev.Zizi.Models.Enums;
 using WinTenDev.Zizi.Models.Types;
@@ -32,8 +33,14 @@ public class ButtonParsed
 {
     public bool IsEnabled { get; set; }
     public bool NextHandler { get; set; }
+    public bool ShouldNext { get; set; }
+    public bool AlwaysNext { get; set; }
+    public bool IsApplyRateLimit { get; set; }
+    public TimeSpan RateLimitTimeSpan { get; set; }
+    public DateTime NextAvailable { get; set; }
     public List<string>? AllowsAt { get; set; }
     public List<string>? ExceptsAt { get; set; }
+    public string FeatureName { get; set; }
     public string Caption { get; set; }
     public InlineKeyboardMarkup Markup { get; set; }
     public List<IEnumerable<InlineKeyboardButton>> KeyboardButton { get; set; } = new();
