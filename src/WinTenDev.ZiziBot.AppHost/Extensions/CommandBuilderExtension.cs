@@ -72,6 +72,7 @@ public static class CommandBuilderExtension
                                         .UseCommand<BackupDbCommand>("backup_db")
                                         .UseCommand<BanCommand>("ban")
                                         .UseCommand<BotCommand>("bot")
+                                        .UseCommand<BotListCommand>("botlist")
                                         .UseCommand<CatCommand>("cat")
                                         .UseCommand<CatCommand>("cats")
                                         .UseCommand<ChatCommand>("chat")
