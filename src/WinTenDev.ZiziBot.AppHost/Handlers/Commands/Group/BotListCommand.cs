@@ -5,11 +5,11 @@ using WinTenDev.Zizi.Services.Telegram;
 
 namespace WinTenDev.ZiziBot.AppHost.Handlers.Commands.Group;
 
-public class PinCommand : CommandBase
+public class BotListCommand : CommandBase
 {
     private readonly TelegramService _telegramService;
 
-    public PinCommand(TelegramService telegramService)
+    public BotListCommand(TelegramService telegramService)
     {
         _telegramService = telegramService;
     }
@@ -22,6 +22,6 @@ public class PinCommand : CommandBase
     {
         await _telegramService.AddUpdateContext(context);
 
-        await _telegramService.PinMessageAsync();
+        await _telegramService.GetBotListAsync();
     }
 }

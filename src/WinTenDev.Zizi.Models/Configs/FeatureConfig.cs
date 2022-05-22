@@ -15,6 +15,9 @@ public partial class Item
     public string Key { get; set; }
     public bool IsEnabled { get; set; }
     public UserPrivilegeLevel MinimumPrivilege { get; set; }
+    public bool ShouldNext { get; set; }
+    public bool AlwaysNext { get; set; }
+    public string RateLimitSpan { get; set; }
     public List<string> AllowsAt { get; set; }
     public List<string> ExceptsAt { get; set; }
     public List<Caption> Captions { get; set; }

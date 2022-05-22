@@ -17,15 +17,19 @@ public static class GoogleTranslateUtil
     {
         var url = "https://clients5.google.com/translate_a/single";
 
-        Log.Debug("Translating text from '{SL} to '{TL}'", sourceLanguage, translationLanguage);
+        Log.Debug(
+            "Translating text from '{SL} to '{TL}'",
+            sourceLanguage,
+            translationLanguage
+        );
 
         var res = await url
             .SetQueryParam("sl", sourceLanguage)
             .SetQueryParam("tl", translationLanguage)
             .SetQueryParam("dj", "1")
-            .SetQueryParam
-            (
-                "dt", new[]
+            .SetQueryParam(
+                "dt",
+                new[]
                     { "at", "bd", "ex", "ld", "md", "qca", "rw", "rm", "ss", "t", "sp" }
             )
             .SetQueryParam("client", "dict-chrome-ex")
@@ -54,6 +58,6 @@ public static class GoogleTranslateUtil
             sb.Append(sentence.Trans);
         }
 
-        return sb.ToTrimmedString();
+        return sb.ToTrimmedString().HtmlEncode();
     }
 }

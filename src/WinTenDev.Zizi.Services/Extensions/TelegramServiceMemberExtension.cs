@@ -441,6 +441,54 @@ public static class TelegramServiceMemberExtension
         );
     }
 
+    public static async Task GetBotListAsync(this TelegramService telegramService)
+    {
+        var chatId = telegramService.ChatId;
+
+        if (telegramService.IsPrivateGroup)
+        {
+            await telegramService.SendTextMessageAsync(
+                "Perintah ini hanya tersedia untuk Grup Publik",
+                scheduleDeleteAt: DateTime.UtcNow.AddMinutes(1),
+                includeSenderMessage: true
+            );
+
+            return;
+        }
+
+        var wTelegramApiService = telegramService.GetRequiredService<WTelegramApiService>();
+
+        var chatTitleLink = telegramService.Chat.GetChatNameLink();
+
+        var participant = await wTelegramApiService.GetAllParticipants(chatId);
+        var allUsers = participant.users.Select(pair => pair.Value).ToList();
+        var listBots = allUsers
+            .Where(user => user.bot_info_version != 0)
+            .OrderBy(user => user.first_name)
+            .ToList();
+
+        var htmlMessage = HtmlMessage.Empty
+            .Bold($"Daftar Bot di ").TextBr(chatTitleLink)
+            .Br();
+
+        listBots.ForEach(
+            (
+                user,
+                index
+            ) => {
+                var botId = user.id;
+                htmlMessage.Text(index + 1 + ". ").Code(botId.ToString()).Text("\t ").User(botId, user.first_name).Br();
+            }
+        );
+
+        await telegramService.SendTextMessageAsync(
+            sendText: htmlMessage.ToString(),
+            scheduleDeleteAt: DateTime.UtcNow.AddMinutes(1),
+            includeSenderMessage: true,
+            disableWebPreview: true
+        );
+    }
+
     public static async Task InsightStatusMemberAsync(this TelegramService telegramService)
     {
         var chatId = telegramService.ChatId;
