@@ -46,6 +46,39 @@ public class WTelegramApiService
         return channel;
     }
 
+    public async Task<Users_UserFull> GetMeAsync()
+    {
+        var fullUser = await _cacheService.GetOrSetAsync(
+            cacheKey: "get-me-probe",
+            action: async () => {
+                var fullUser = await _client.Users_GetFullUser(new InputUserSelf());
+
+                return fullUser;
+            }
+        );
+
+        return fullUser;
+    }
+
+    public async Task<bool> IsProbeAdminAsync(long chatId)
+    {
+        var getMe = await GetMeAsync();
+        var meId = getMe.full_user.id;
+
+        var adminList = await GetChatAdministratorsCore(chatId);
+        var isCreator = adminList.ParticipantCreator.users.Any(pair => pair.Value.id == meId);
+        var isAdmin = adminList.ParticipantAdmin.users.Any(pair => pair.Value.id == meId);
+        var isCreatorOrAdmin = isCreator || isAdmin;
+
+        _logger.LogDebug(
+            "User Probe is Admin at {ChatId}? {IsAdmin}",
+            chatId,
+            isCreatorOrAdmin
+        );
+
+        return isCreatorOrAdmin;
+    }
+
     public async Task<Channels_ChannelParticipants> GetAllParticipants(
         long chatId,
         ChannelParticipantsFilter channelParticipantsFilter = null,
@@ -57,6 +90,8 @@ public class WTelegramApiService
 
         var cacheKey = MethodBase.GetCurrentMethod().CreateCacheKey(channelId);
 
+        var isProbeAdmin = await IsProbeAdminAsync(chatId);
+
         var channelParticipants = await _cacheService.GetOrSetAsync(
             cacheKey: cacheKey,
             evictAfter: evictAfter,
@@ -64,7 +99,7 @@ public class WTelegramApiService
             action: async () => {
                 var channel = await GetChannel(chatId);
 
-                var allParticipants = await _client.Channels_GetAllParticipants(channel);
+                var allParticipants = await _client.Channels_GetAllParticipants(channel: channel, includeKickBan: isProbeAdmin);
 
                 return allParticipants;
             }
