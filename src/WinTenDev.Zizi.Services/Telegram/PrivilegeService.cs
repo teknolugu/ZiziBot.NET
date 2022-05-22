@@ -208,7 +208,9 @@ public class PrivilegeService
         );
 
         var messageBuilder = new StringBuilder();
-        messageBuilder.Append("Jadwal ganti petugas, silakan promote kembali jika di perlukan").AppendLine().AppendLine();
+        messageBuilder.Append("Jadwal ganti petugas, silakan /promote kembali jika di perlukan")
+            .AppendLine()
+            .AppendLine();
 
         if (!demoted.Any()) return;
 
