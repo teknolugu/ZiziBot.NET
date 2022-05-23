@@ -260,10 +260,20 @@ public static class HangfireUtil
         return storage;
     }
 
-    [SuppressMessage("Minor Code Smell", "S3220:Method calls should not resolve ambiguously to overloads with \"params\"")]
+    public static ConnectionMultiplexer GetRedisConnectionMultiplexer(string connStr)
+    {
+        return ConnectionMultiplexer.Connect(GetRedisConnectionString(connStr));
+    }
+
     public static RedisStorage GetRedisStorage(string connStr)
     {
-        var redisConnectionStr = connStr;
+        return new RedisStorage(connStr);
+    }
+
+    [SuppressMessage("Minor Code Smell", "S3220:Method calls should not resolve ambiguously to overloads with \"params\"")]
+    private static string GetRedisConnectionString(string redisConnStr)
+    {
+        var redisConnectionStr = redisConnStr;
         var redisUrl = Environment.GetEnvironmentVariable("REDIS_URL");
         if (redisUrl != null)
         {
@@ -280,7 +290,6 @@ public static class HangfireUtil
 
         Log.Information("Hangfire Redis: {ConnStr}", redisConnectionStr);
 
-        var storage = new RedisStorage(redisConnectionStr);
-        return storage;
+        return redisConnectionStr;
     }
 }
