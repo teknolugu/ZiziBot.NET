@@ -51,7 +51,8 @@ public static class HangfireServiceExtension
                         break;
 
                     case HangfireDataStore.Redis:
-                        config.UseStorage(HangfireUtil.GetRedisStorage(hangfireConfig.Redis));
+                        // config.UseStorage(HangfireUtil.GetRedisStorage(hangfireConfig.Redis));
+                        config.UseRedisStorage(HangfireUtil.GetRedisConnectionMultiplexer(hangfireConfig.Redis));
                         break;
 
                     case HangfireDataStore.Memory:

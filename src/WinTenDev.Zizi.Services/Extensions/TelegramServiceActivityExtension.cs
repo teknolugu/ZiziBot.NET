@@ -89,10 +89,6 @@ public static class TelegramServiceActivityExtension
 
         if (telegramService.IsUpdateTooOld()) return false;
 
-        var floodCheck = await telegramService.FloodCheckAsync();
-        if (floodCheck.IsFlood)
-            return false;
-
         var hasRestricted = await telegramService.CheckChatRestriction();
 
         if (hasRestricted)
@@ -100,36 +96,55 @@ public static class TelegramServiceActivityExtension
             return false;
         }
 
+        var floodCheck = await telegramService.FloodCheckAsync();
+        if (floodCheck.IsFlood)
+            return false;
+
+        var featureConfig = await telegramService.GetFeatureConfig();
+        if (!featureConfig.NextHandler)
+        {
+            return false;
+        }
+
         await telegramService.FireAnalyzer();
 
-        var hasSpam = await telegramService.AntiSpamCheckAsync();
+        var checkUpdateHistory = await telegramService.CheckUpdateHistoryAsync();
 
-        if (hasSpam.IsAnyBanned)
+        if (checkUpdateHistory)
         {
             return false;
         }
 
-        var shouldDelete = await telegramService.ScanMessageAsync();
-        var hasUsername = await telegramService.RunCheckUserUsername();
+        var checkAntiSpamTask = telegramService.AntiSpamCheckAsync();
+        var checkScanMessageTask = telegramService.ScanMessageAsync();
+        var userUsernameTask = telegramService.RunCheckUserUsername();
+        var checkUserProfilePhotoTask = telegramService.RunCheckUserProfilePhoto();
 
-        if (!hasUsername)
+        await Task.WhenAll(
+            checkAntiSpamTask,
+            checkScanMessageTask,
+            userUsernameTask,
+            checkUserProfilePhotoTask
+        );
+
+        var checkAntiSpamResult = await checkAntiSpamTask;
+
+        if (checkAntiSpamResult.IsAnyBanned)
         {
             return false;
         }
 
-        var hasPhotoProfile = await telegramService.RunCheckUserProfilePhoto();
-
-        if (!hasPhotoProfile)
+        if (!await userUsernameTask)
         {
             return false;
         }
 
-        if (await telegramService.CheckUpdateHistoryAsync())
+        if (!await checkUserProfilePhotoTask)
         {
             return false;
         }
 
-        if (shouldDelete)
+        if (await checkScanMessageTask)
         {
             return false;
         }
