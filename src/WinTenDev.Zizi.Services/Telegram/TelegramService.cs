@@ -122,6 +122,7 @@ public class TelegramService
     public Message EditedChannelPost { get; set; }
     public Message ChannelOrEditedPost { get; set; }
 
+    public InlineQuery InlineQuery { get; set; }
     public CallbackQuery CallbackQuery { get; set; }
     public IUpdateContext Context { get; private set; }
     public Update Update { get; private set; }
@@ -213,6 +214,7 @@ public class TelegramService
         Client = updateContext.Bot.Client;
 
         CallbackQuery = Update.CallbackQuery;
+        InlineQuery = Update.InlineQuery;
         MyChatMember = Update.MyChatMember;
         Message = Update.Message;
         EditedMessage = Update.EditedMessage;
@@ -228,7 +230,7 @@ public class TelegramService
 
         ReplyFromId = ReplyToMessage?.From?.Id ?? 0;
 
-        From = ChannelOrEditedPost?.From ?? MyChatMember?.From ?? CallbackQuery?.From ?? MessageOrEdited?.From;
+        From = ChannelOrEditedPost?.From ?? MyChatMember?.From ?? CallbackQuery?.From ?? InlineQuery?.From ?? MessageOrEdited?.From;
         Chat = ChannelOrEditedPost?.Chat ?? MyChatMember?.Chat ?? CallbackQuery?.Message?.Chat ?? MessageOrEdited?.Chat;
         SenderChat = MessageOrEdited?.SenderChat;
         MessageDate = MyChatMember?.Date ?? CallbackQuery?.Message?.Date ?? MessageOrEdited?.Date ?? DateTime.Now;
@@ -249,9 +251,9 @@ public class TelegramService
         IsFromSudo = CheckFromSudoer();
         IsPrivateChat = CheckIsPrivateChat();
         IsGroupChat = CheckIsGroupChat();
-        IsPublicGroup = Chat.Username != null && Chat.Type is ChatType.Group or ChatType.Supergroup;
+        IsPublicGroup = Chat?.Username != null && Chat?.Type is ChatType.Group or ChatType.Supergroup;
         IsPrivateGroup = !IsPublicGroup;
-        IsChannel = Chat.Type is ChatType.Channel;
+        IsChannel = Chat?.Type is ChatType.Channel;
 
         BotUsername = Context.Bot.Username;
 
@@ -316,7 +318,7 @@ public class TelegramService
         IsPrivateChat = CheckIsPrivateChat();
         IsGroupChat = CheckIsGroupChat();
 
-        IsPublicGroup = Chat.Username != null && Chat.Type is ChatType.Group or ChatType.Supergroup;
+        IsPublicGroup = Chat?.Username != null && Chat?.Type is ChatType.Group or ChatType.Supergroup;
         IsPrivateGroup = !IsPublicGroup;
         IsChannel = Chat.Type is ChatType.Channel;
 
@@ -341,7 +343,8 @@ public class TelegramService
 
     public async Task<bool> CheckChatRestriction()
     {
-        if (IsPrivateChat) return false;
+        if (IsPrivateChat ||
+            InlineQuery != null) return false;
 
         var isShouldLeave = ChatService.CheckChatRestriction(ChatId);
 
@@ -551,7 +554,7 @@ public class TelegramService
 
     private bool CheckIsPrivateChat()
     {
-        var isPrivate = Chat.Type == ChatType.Private;
+        var isPrivate = Chat?.Type == ChatType.Private;
 
         Log.Debug(
             "Chat ID '{ChatId}' IsPrivateChat => {IsPrivate}",
@@ -563,7 +566,7 @@ public class TelegramService
 
     public bool CheckIsGroupChat()
     {
-        var isGroupChat = Chat.Type == ChatType.Group || Chat.Type == ChatType.Supergroup;
+        var isGroupChat = Chat?.Type is ChatType.Group or ChatType.Supergroup;
 
         Log.Debug(
             "Chat ID '{ChatId}' IsGroupChat? {IsGroupChat}",
@@ -1423,6 +1426,13 @@ public class TelegramService
     {
         dynamic messageId = CallbackQueryDatas.ElementAtOrDefault(index) as object;
         return Convert.ChangeType(messageId, typeof(T));
+    }
+
+    public T GetInlineQueryAt<T>(int index)
+    {
+        dynamic query = InlineQuery.Query.Split("|").ElementAtOrDefault(index);
+
+        return Convert.ChangeType(query, typeof(T));
     }
 
     #endregion Message

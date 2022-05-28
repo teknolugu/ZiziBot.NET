@@ -29,6 +29,7 @@ public static class CommandBuilderExtension
         return new BotBuilder()
                 .Use<ExceptionHandler>()
                 .UseWhen<WebhookLogger>(When.WebHook)
+                .UseWhen<InlineQueryHandler>(When.InlineQuery)
                 // .Use<CheckChatPhotoHandler>()
                 .Use<NewUpdateHandler>()
                 // .Use<CustomUpdateLogger>()

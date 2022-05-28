@@ -88,4 +88,7 @@ public static class When
 
     public static bool CallbackQuery(IUpdateContext context) =>
         context.Update.CallbackQuery != null;
+
+    public static bool InlineQuery(IUpdateContext context) =>
+        context.Update.InlineQuery != null;
 }
