@@ -625,10 +625,11 @@ public class TelegramService
                     var nextAvailableDate = nextAvailable.ToLocalTime();
 
                     await SendTextMessageAsync(
-                        sendText: $"Perintah '{featureName}' membutuhkan Cooldown sebelum dapat digunakan kembali. Silakan coba lagi setelah {nextAvailableDate}",
+                        sendText: $"Fitur '{featureName}' membutuhkan Cooldown sebelum dapat digunakan kembali. Silakan coba lagi setelah {nextAvailableDate}",
                         replyToMsgId: 0,
                         scheduleDeleteAt: DateTime.UtcNow.AddMinutes(10),
-                        includeSenderMessage: true
+                        includeSenderMessage: true,
+                        preventDuplicateSend: true
                     );
 
                     return featureConfig;
