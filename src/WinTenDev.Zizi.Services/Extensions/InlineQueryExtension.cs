@@ -1,10 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Serilog;
 using Telegram.Bot;
 using Telegram.Bot.Types.InlineQueryResults;
 using WinTenDev.Zizi.Models.Types;
 using WinTenDev.Zizi.Services.Telegram;
+using WinTenDev.Zizi.Utils.Telegram;
 
 namespace WinTenDev.Zizi.Services.Extensions;
 
@@ -29,11 +32,12 @@ public static class InlineQueryExtension
         var inlineQuery = telegramService.InlineQuery;
         Log.Debug("InlineQuery: {@Obj}", inlineQuery);
 
-        var inlineQueryCmd = telegramService.GetInlineQueryAt<string>(0);
+        var inlineQueryCmd = telegramService.GetInlineQueryAt<string>(0).Trim();
 
         var inlineQueryExecutionResult = inlineQueryCmd switch
         {
             "ping" => await telegramService.OnInlineQueryPingAsync(),
+            "message" => await telegramService.OnInlineQueryMessageAsync(),
             _ => await telegramService.OnInlineQueryGuideAsync()
         };
 
@@ -86,5 +90,59 @@ public static class InlineQueryExtension
         inlineResult.IsSuccess = true;
 
         return inlineResult;
+    }
+
+    private static async Task<InlineQueryExecutionResult> OnInlineQueryMessageAsync(this TelegramService telegramService)
+    {
+        var executionResult = new InlineQueryExecutionResult();
+
+        var inlineQuery = telegramService.InlineQuery.Query;
+        var parseMessage = inlineQuery
+            .Split(new[] { '(', ')' }, StringSplitOptions.RemoveEmptyEntries)
+            .Where(s => s.Contains('='))
+            .ToDictionary(
+                s => s.Split('=')[0],
+                s => s.Split('=')[1]
+            );
+
+        if (parseMessage.Count == 0)
+        {
+            var learnMore = "Pelajari cara membuat tombol dengan InlineQuery";
+            var urlArticle = "https://docs.zizibot.winten.my.id/features/inline-query/pesan-dengan-tombol";
+
+            await telegramService.AnswerInlineQueryAsync(
+                new List<InlineQueryResult>()
+                {
+                    new InlineQueryResultArticle(
+                        "iq-learn-mode",
+                        learnMore,
+                        new InputTextMessageContent(learnMore + $"\n{urlArticle}")
+                    )
+                }
+            );
+
+            return executionResult;
+        }
+
+        var caption = parseMessage.GetValueOrDefault("caption", string.Empty);
+        var replyMarkup = parseMessage.GetValueOrDefault("button").ToInlineKeyboardButton().ToButtonMarkup();
+
+        await telegramService.AnswerInlineQueryAsync(
+            new List<InlineQueryResult>()
+            {
+                new InlineQueryResultArticle(
+                    "123",
+                    caption,
+                    new InputTextMessageContent(caption)
+                )
+                {
+                    ReplyMarkup = replyMarkup
+                }
+            }
+        );
+
+        executionResult.IsSuccess = true;
+
+        return executionResult;
     }
 }

@@ -1430,7 +1430,7 @@ public class TelegramService
 
     public T GetInlineQueryAt<T>(int index)
     {
-        dynamic query = InlineQuery.Query.Split("|").ElementAtOrDefault(index);
+        dynamic query = InlineQuery.Query.Split(" ").ElementAtOrDefault(index);
 
         return Convert.ChangeType(query, typeof(T));
     }
