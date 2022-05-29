@@ -412,4 +412,22 @@ public static class StringUtil
 
         return parseCallback;
     }
+
+    public static string NewGuid()
+    {
+        return Guid.NewGuid().ToString();
+    }
+
+    public static string RegexReplace(
+        this string input,
+        string pattern,
+        string replacement
+    )
+    {
+        return Regex.Replace(
+            input: input,
+            pattern: pattern,
+            replacement: replacement
+        );
+    }
 }

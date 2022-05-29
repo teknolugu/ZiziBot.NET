@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Serilog;
 using Telegram.Bot;
+using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InlineQueryResults;
 using Telegram.Bot.Types.ReplyMarkups;
 using WinTenDev.Zizi.Models.Types;
@@ -173,21 +174,34 @@ public static class InlineQueryExtension
 
         var subsceneService = telegramService.GetRequiredService<SubsceneService>();
         var searchByTitle = await subsceneService.SearchByTitle(queryValue);
+
+        Log.Information(
+            "Found about {AllCount} title with query: '{QueryValue}'",
+            searchByTitle.Count,
+            queryValue
+        );
+
         if (searchByTitle.Count == 0)
         {
+            var title = "Tidak di temukan hasil, silakan cari judul yang lain";
+            if (queryValue.IsNullOrEmpty())
+            {
+                title = "Silakan masukkan judul yang ingin dicari";
+            }
+
             await telegramService.AnswerInlineQueryAsync(
                 new List<InlineQueryResult>()
                 {
                     new InlineQueryResultArticle(
-                        id: Guid.NewGuid().ToString(),
-                        title: "Tidak di temukan hasil, silakan cari judul yang lain",
+                        id: StringUtil.NewGuid(),
+                        title: title,
                         inputMessageContent: new InputTextMessageContent("Tekan tombol dibawah ini untuk memulai pencarian")
                     )
                     {
                         ReplyMarkup = new InlineKeyboardMarkup(
                             new[]
                             {
-                                InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Pencarian baru", "subscene")
+                                InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Pencarian baru", "subscene ")
                             }
                         )
                     }
@@ -204,7 +218,7 @@ public static class InlineQueryExtension
                 var slug = element.PathName.Split("/").LastOrDefault();
 
                 var article = new InlineQueryResultArticle(
-                    id: Guid.NewGuid().ToString(),
+                    id: StringUtil.NewGuid(),
                     title: element.Text,
                     inputMessageContent: new InputTextMessageContent(element.Text)
                 )
@@ -212,8 +226,8 @@ public static class InlineQueryExtension
                     ReplyMarkup = new InlineKeyboardMarkup(
                         new[]
                         {
-                            InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Mulai unduh", "subscene-dl " + slug),
-                            InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Pencarian baru", "subscene")
+                            InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Mulai unduh", $"subscene-dl {slug} "),
+                            InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Pencarian baru", "subscene ")
                         }
                     )
                 };
@@ -238,16 +252,23 @@ public static class InlineQueryExtension
 
         var subsceneService = telegramService.GetRequiredService<SubsceneService>();
         var searchBySlug = await subsceneService.SearchBySlug(query1);
+        Log.Information(
+            "Found about {AllCount} subtitle by slug: '{QueryValue}'",
+            searchBySlug.Count,
+            query1
+        );
+
         var filteredSearch = searchBySlug.Where(
             element => {
-                Log.Debug("Subtitle list element: {@A}", element);
-                var rowText = element.Text.ToLower().Replace("\t", " ");
-                return rowText.Contains(query2);
+                if (query2.IsNullOrEmpty()) return true;
+
+                var rowText = element.Text?.ToLower().Replace("\t", " ");
+                return rowText?.Contains(query2) ?? false;
             }
         ).ToList();
 
         Log.Information(
-            "Found {FilteredCount} of {AllCount} subtitle with title: '{QueryValue}'",
+            "Found about {FilteredCount} of {AllCount} subtitle with title: '{QueryValue}'",
             filteredSearch.Count,
             searchBySlug.Count,
             query2
@@ -259,7 +280,7 @@ public static class InlineQueryExtension
                 new List<InlineQueryResult>()
                 {
                     new InlineQueryResultArticle(
-                        id: Guid.NewGuid().ToString(),
+                        id: StringUtil.NewGuid(),
                         title: "Tidak di temukan hasil, silakan cari bahasa/judul yang lain",
                         inputMessageContent: new InputTextMessageContent("Tekan tombol dibawah ini untuk memulai pencarian")
                     )
@@ -267,7 +288,7 @@ public static class InlineQueryExtension
                         ReplyMarkup = new InlineKeyboardMarkup(
                             new[]
                             {
-                                InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Pencarian baru", "subscene")
+                                InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Pencarian baru", "subscene ")
                             }
                         )
                     }
@@ -281,21 +302,40 @@ public static class InlineQueryExtension
         var result = filteredSearch.Select(
             element => {
                 Log.Debug("Appending Movie: '{0}'", element.Text);
-                var title = element.Text.Replace("\t", " ").Replace("\n", "");
-                var content = element.Text.Replace("\t", " ");
+                var title = element.Text.RegexReplace(@"\t|\n", " ").RegexReplace(@"\s+", " ").Trim();
+                var titleParted = title.Split(" ", StringSplitOptions.RemoveEmptyEntries);
+                var languageSub = titleParted.FirstOrDefault("Language");
+                var movieName = titleParted.Skip(1).JoinStr(" ");
                 var slug = element.PathName.Split("/").Skip(2).JoinStr("/");
 
+                var content = HtmlMessage.Empty
+                    .Bold("Name: ").TextBr(movieName)
+                    .Bold("Language: ").TextBr(languageSub)
+                    .Bold("Url: ").Url($"https://subscene.com{element.PathName}", "Subscene Link");
+
                 var article = new InlineQueryResultArticle(
-                    id: Guid.NewGuid().ToString(),
-                    title: title,
-                    inputMessageContent: new InputTextMessageContent(content)
+                    id: StringUtil.NewGuid(),
+                    title: titleParted.FirstOrDefault("Language"),
+                    inputMessageContent: new InputTextMessageContent(content.ToString())
+                    {
+                        ParseMode = ParseMode.Html,
+                        DisableWebPagePreview = true
+                    }
                 )
                 {
+                    Description = movieName,
                     ReplyMarkup = new InlineKeyboardMarkup(
                         new[]
                         {
-                            InlineKeyboardButton.WithCallbackData("Mulai unduh file", "subscene-dl"),
-                            InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Pencarian baru", "subscene")
+                            new[]
+                            {
+                                InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Ulang pencarian", $"subscene-dl {query1} "),
+                                InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Pencarian baru", "subscene ")
+                            },
+                            new[]
+                            {
+                                InlineKeyboardButton.WithCallbackData("Mulai unduh file", $"subscene-dl")
+                            }
                         }
                     )
                 };
