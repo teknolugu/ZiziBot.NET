@@ -5,8 +5,11 @@ using System.Threading.Tasks;
 using Serilog;
 using Telegram.Bot;
 using Telegram.Bot.Types.InlineQueryResults;
+using Telegram.Bot.Types.ReplyMarkups;
 using WinTenDev.Zizi.Models.Types;
+using WinTenDev.Zizi.Services.Externals;
 using WinTenDev.Zizi.Services.Telegram;
+using WinTenDev.Zizi.Utils;
 using WinTenDev.Zizi.Utils.Telegram;
 
 namespace WinTenDev.Zizi.Services.Extensions;
@@ -21,10 +24,23 @@ public static class InlineQueryExtension
         var inlineQuery = telegramService.InlineQuery;
         var inlineQueryId = inlineQuery.Id;
 
-        await telegramService.Client.AnswerInlineQueryAsync(
-            inlineQueryId: inlineQueryId,
-            results: inlineQueryResults
-        );
+        var reducedResult = inlineQueryResults.Take(50);
+
+        try
+        {
+            await telegramService.Client.AnswerInlineQueryAsync(
+                inlineQueryId: inlineQueryId,
+                results: reducedResult
+            );
+        }
+        catch (Exception exception)
+        {
+            Log.Error(
+                exception,
+                "Error when answering inline query: {Id}",
+                inlineQueryId
+            );
+        }
     }
 
     public static async Task OnInlineQueryAsync(this TelegramService telegramService)
