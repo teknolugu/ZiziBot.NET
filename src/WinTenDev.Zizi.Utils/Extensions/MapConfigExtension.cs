@@ -101,6 +101,7 @@ public static class MapConfigExtension
         services.Configure<OptiicDevConfig>(config.GetSection(nameof(OptiicDevConfig)));
         services.Configure<RssFeedConfig>(config.GetSection(nameof(RssFeedConfig)));
         services.Configure<SentryConfig>(config.GetSection(nameof(SentryConfig)));
+        services.Configure<SubsceneConfig>(config.GetSection(nameof(SubsceneConfig)));
         services.Configure<TdLibConfig>(config.GetSection(nameof(TdLibConfig)));
         services.Configure<TgBotConfig>(config.GetSection(nameof(TgBotConfig)));
         services.Configure<SpamWatchConfig>(config.GetSection(nameof(SpamWatchConfig)));

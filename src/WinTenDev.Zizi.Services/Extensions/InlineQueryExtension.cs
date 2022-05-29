@@ -54,6 +54,8 @@ public static class InlineQueryExtension
         {
             "ping" => await telegramService.OnInlineQueryPingAsync(),
             "message" => await telegramService.OnInlineQueryMessageAsync(),
+            "subscene" => await telegramService.OnInlineQuerySubsceneSearchAsync(),
+            "subscene-dl" => await telegramService.OnInlineQuerySubsceneDownloadAsync(),
             _ => await telegramService.OnInlineQueryGuideAsync()
         };
 
@@ -161,4 +163,152 @@ public static class InlineQueryExtension
 
         return executionResult;
     }
+
+    private static async Task<InlineQueryExecutionResult> OnInlineQuerySubsceneSearchAsync(this TelegramService telegramService)
+    {
+        var executionResult = new InlineQueryExecutionResult();
+        var queryCmd = telegramService.GetInlineQueryAt<string>(0);
+        var queryValue = telegramService.InlineQuery.Query.Replace(queryCmd, "").Trim();
+        Log.Information("Starting find Subtitle with title: '{QueryValue}'", queryValue);
+
+        var subsceneService = telegramService.GetRequiredService<SubsceneService>();
+        var searchByTitle = await subsceneService.SearchByTitle(queryValue);
+        if (searchByTitle.Count == 0)
+        {
+            await telegramService.AnswerInlineQueryAsync(
+                new List<InlineQueryResult>()
+                {
+                    new InlineQueryResultArticle(
+                        id: Guid.NewGuid().ToString(),
+                        title: "Tidak di temukan hasil, silakan cari judul yang lain",
+                        inputMessageContent: new InputTextMessageContent("Tekan tombol dibawah ini untuk memulai pencarian")
+                    )
+                    {
+                        ReplyMarkup = new InlineKeyboardMarkup(
+                            new[]
+                            {
+                                InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Pencarian baru", "subscene")
+                            }
+                        )
+                    }
+                }
+            );
+            executionResult.IsSuccess = false;
+
+            return executionResult;
+        }
+
+        var result = searchByTitle.Select(
+            element => {
+                Log.Debug("Appending Movie: '{0}'", element.Text);
+                var slug = element.PathName.Split("/").LastOrDefault();
+
+                var article = new InlineQueryResultArticle(
+                    id: Guid.NewGuid().ToString(),
+                    title: element.Text,
+                    inputMessageContent: new InputTextMessageContent(element.Text)
+                )
+                {
+                    ReplyMarkup = new InlineKeyboardMarkup(
+                        new[]
+                        {
+                            InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Mulai unduh", "subscene-dl " + slug),
+                            InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Pencarian baru", "subscene")
+                        }
+                    )
+                };
+
+                return article;
+            }
+        );
+
+        await telegramService.AnswerInlineQueryAsync(result);
+        executionResult.IsSuccess = true;
+
+        return executionResult;
+    }
+
+    private static async Task<InlineQueryExecutionResult> OnInlineQuerySubsceneDownloadAsync(this TelegramService telegramService)
+    {
+        var executionResult = new InlineQueryExecutionResult();
+        var queryCmd = telegramService.GetInlineQueryAt<string>(0);
+        var query1 = telegramService.GetInlineQueryAt<string>(1);
+        var query2 = telegramService.GetInlineQueryAt<string>(2);
+        Log.Information("Starting find Subtitle file with title: '{QueryValue}'", query1);
+
+        var subsceneService = telegramService.GetRequiredService<SubsceneService>();
+        var searchBySlug = await subsceneService.SearchBySlug(query1);
+        var filteredSearch = searchBySlug.Where(
+            element => {
+                Log.Debug("Subtitle list element: {@A}", element);
+                var rowText = element.Text.ToLower().Replace("\t", " ");
+                return rowText.Contains(query2);
+            }
+        ).ToList();
+
+        Log.Information(
+            "Found {FilteredCount} of {AllCount} subtitle with title: '{QueryValue}'",
+            filteredSearch.Count,
+            searchBySlug.Count,
+            query2
+        );
+
+        if (filteredSearch.Count == 0)
+        {
+            await telegramService.AnswerInlineQueryAsync(
+                new List<InlineQueryResult>()
+                {
+                    new InlineQueryResultArticle(
+                        id: Guid.NewGuid().ToString(),
+                        title: "Tidak di temukan hasil, silakan cari bahasa/judul yang lain",
+                        inputMessageContent: new InputTextMessageContent("Tekan tombol dibawah ini untuk memulai pencarian")
+                    )
+                    {
+                        ReplyMarkup = new InlineKeyboardMarkup(
+                            new[]
+                            {
+                                InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Pencarian baru", "subscene")
+                            }
+                        )
+                    }
+                }
+            );
+            executionResult.IsSuccess = false;
+
+            return executionResult;
+        }
+
+        var result = filteredSearch.Select(
+            element => {
+                Log.Debug("Appending Movie: '{0}'", element.Text);
+                var title = element.Text.Replace("\t", " ").Replace("\n", "");
+                var content = element.Text.Replace("\t", " ");
+                var slug = element.PathName.Split("/").Skip(2).JoinStr("/");
+
+                var article = new InlineQueryResultArticle(
+                    id: Guid.NewGuid().ToString(),
+                    title: title,
+                    inputMessageContent: new InputTextMessageContent(content)
+                )
+                {
+                    ReplyMarkup = new InlineKeyboardMarkup(
+                        new[]
+                        {
+                            InlineKeyboardButton.WithCallbackData("Mulai unduh file", "subscene-dl"),
+                            InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Pencarian baru", "subscene")
+                        }
+                    )
+                };
+
+                return article;
+            }
+        );
+
+        await telegramService.AnswerInlineQueryAsync(result);
+
+        executionResult.IsSuccess = true;
+
+        return executionResult;
+    }
+
 }
