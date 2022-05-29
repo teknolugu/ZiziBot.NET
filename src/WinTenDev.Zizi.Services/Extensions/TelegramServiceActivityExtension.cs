@@ -279,6 +279,12 @@ public static class TelegramServiceActivityExtension
         var botUpdateService = telegramService.GetRequiredService<BotUpdateService>();
         var chatSettings = await telegramService.GetChatSetting();
 
+        if (telegramService.InlineQuery != null)
+        {
+            Log.Debug("Check Bot Admin disabled because Update is '{UpdateType}'", telegramService.Update.Type);
+            return;
+        }
+
         if (chatSettings.EnablePrivacyMode)
         {
             Log.Debug("Privacy Mode is enabled for ChatId {ChatId}", chatId);
@@ -286,8 +292,8 @@ public static class TelegramServiceActivityExtension
             return;
         }
 
-        if (telegramService.Chat.Username == null ||
-            telegramService.Chat.Type == ChatType.Private)
+        if (telegramService.Chat?.Username == null ||
+            telegramService.Chat?.Type == ChatType.Private)
         {
             Log.Debug("Save update only for Public group/channel!");
             return;

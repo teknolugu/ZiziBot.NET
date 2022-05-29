@@ -24,7 +24,8 @@ public static class TelegramServiceHealthyExtension
         var messageDate = telegramService.MessageDate;
         var defaultFloodCheck = new FloodCheckResult();
 
-        if (channelOrEditedPost != null) return defaultFloodCheck;
+        if (channelOrEditedPost != null ||
+            telegramService.InlineQuery != null) return defaultFloodCheck;
 
         var chatSettings = await telegramService.GetChatSetting();
 
@@ -101,8 +102,12 @@ public static class TelegramServiceHealthyExtension
             var eventLogService = telegramService.GetRequiredService<EventLogService>();
             var healthConfig = telegramService.GetRequiredService<IOptionsSnapshot<HealthConfig>>().Value;
 
-            if (telegramService.ChannelOrEditedPost != null) return;
-            if (telegramService.CallbackQuery != null) return;
+            if (telegramService.ChannelOrEditedPost != null ||
+                telegramService.CallbackQuery != null ||
+                telegramService.InlineQuery != null)
+            {
+                return;
+            }
 
             var timeInit = telegramService.TimeInit.ToDouble();
             var timeProc = telegramService.TimeProc.ToDouble();
