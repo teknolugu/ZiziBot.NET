@@ -12,6 +12,7 @@ using WinTenDev.Zizi.Services.Externals;
 using WinTenDev.Zizi.Services.Telegram;
 using WinTenDev.Zizi.Utils;
 using WinTenDev.Zizi.Utils.Telegram;
+using WinTenDev.Zizi.Utils.Text;
 
 namespace WinTenDev.Zizi.Services.Extensions;
 
@@ -31,7 +32,8 @@ public static class InlineQueryExtension
         {
             await telegramService.Client.AnswerInlineQueryAsync(
                 inlineQueryId: inlineQueryId,
-                results: reducedResult
+                results: reducedResult,
+                cacheTime: 10
             );
         }
         catch (Exception exception)
@@ -214,13 +216,25 @@ public static class InlineQueryExtension
 
         var result = searchByTitle.Select(
             element => {
-                Log.Debug("Appending Movie: '{0}'", element.Text);
-                var slug = element.PathName.Split("/").LastOrDefault();
+                var pathName = element.PathName;
+                Log.Debug(
+                    "Appending MovieId: '{0}' => {1}",
+                    pathName,
+                    element.Text
+                );
+                var slug = element.PathName.Split("/").LastOrDefault("subscene-slug" + StringUtil.GenerateUniqueId());
+                var titleHtml = HtmlMessage.Empty
+                    .Bold("Title: ").CodeBr(element.Text)
+                    .Bold("Url: ").Url($"https://subscene.com{element.PathName}", "Subscene Link");
 
                 var article = new InlineQueryResultArticle(
                     id: StringUtil.NewGuid(),
                     title: element.Text,
-                    inputMessageContent: new InputTextMessageContent(element.Text)
+                    inputMessageContent: new InputTextMessageContent(titleHtml.ToString())
+                    {
+                        ParseMode = ParseMode.Html,
+                        DisableWebPagePreview = true
+                    }
                 )
                 {
                     ReplyMarkup = new InlineKeyboardMarkup(
@@ -299,19 +313,27 @@ public static class InlineQueryExtension
             return executionResult;
         }
 
+        var urlStart = await telegramService.GetUrlStart("");
+
         var result = filteredSearch.Select(
             element => {
-                Log.Debug("Appending Movie: '{0}'", element.Text);
                 var title = element.Text.RegexReplace(@"\t|\n", " ").RegexReplace(@"\s+", " ").Trim();
                 var titleParted = title.Split(" ", StringSplitOptions.RemoveEmptyEntries);
                 var languageSub = titleParted.FirstOrDefault("Language");
-                var movieName = titleParted.Skip(1).JoinStr(" ");
+                var movieName = titleParted.Skip(1).JoinStr(" ").HtmlEncode();
                 var slug = element.PathName.Split("/").Skip(2).JoinStr("/");
+                Log.Debug(
+                    "Appending Movie with slug: '{0}' => {1}",
+                    slug,
+                    title
+                );
 
                 var content = HtmlMessage.Empty
                     .Bold("Name: ").TextBr(movieName)
                     .Bold("Language: ").TextBr(languageSub)
                     .Bold("Url: ").Url($"https://subscene.com{element.PathName}", "Subscene Link");
+
+                var startDownloadUrl = urlStart + "start=sub-dl_" + slug.Replace("/", "=");
 
                 var article = new InlineQueryResultArticle(
                     id: StringUtil.NewGuid(),
@@ -334,7 +356,7 @@ public static class InlineQueryExtension
                             },
                             new[]
                             {
-                                InlineKeyboardButton.WithCallbackData("Mulai unduh file", $"subscene-dl")
+                                InlineKeyboardButton.WithUrl("Mulai unduh file", startDownloadUrl)
                             }
                         }
                     )

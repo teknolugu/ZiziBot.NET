@@ -8,6 +8,7 @@ using Microsoft.Extensions.Options;
 using Serilog;
 using WinTenDev.Zizi.Models.Configs;
 using WinTenDev.Zizi.Services.Internals;
+using WinTenDev.Zizi.Utils;
 using WinTenDev.Zizi.Utils.Parsers;
 
 namespace WinTenDev.Zizi.Services.Externals;
@@ -66,5 +67,20 @@ public class SubsceneService
         );
 
         return htmlAnchorElements;
+    }
+
+    public async Task<string> GetSubtitleFileAsync(string slug)
+    {
+        var address = $"https://sub.pirated.my.id/subtitles/{slug}";
+        var document = await AnglesharpUtil.DefaultContext.OpenAsync(address);
+        var querySelectorAll = document.QuerySelectorAll<IHtmlAnchorElement>("a[href ^= '/subtitles']").FirstOrDefault();
+        var subtitleUrl = querySelectorAll!.Href;
+
+        var localPath = "subtitles/" + slug;
+        var fileName = slug.Replace("/", "_") + ".zip";
+
+        var filePath = await subtitleUrl.MultiThreadDownloadFileAsync(localPath, fileName: fileName);
+
+        return filePath;
     }
 }
