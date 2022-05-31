@@ -32,8 +32,7 @@ public static class InlineQueryExtension
         {
             await telegramService.Client.AnswerInlineQueryAsync(
                 inlineQueryId: inlineQueryId,
-                results: reducedResult,
-                cacheTime: 10
+                results: reducedResult
             );
         }
         catch (Exception exception)
