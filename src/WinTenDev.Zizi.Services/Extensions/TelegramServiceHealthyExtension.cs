@@ -25,7 +25,13 @@ public static class TelegramServiceHealthyExtension
         var defaultFloodCheck = new FloodCheckResult();
 
         if (channelOrEditedPost != null ||
-            telegramService.InlineQuery != null) return defaultFloodCheck;
+            telegramService.InlineQuery != null ||
+            telegramService.ChosenInlineResult != null ||
+            chat == null)
+
+        {
+            return defaultFloodCheck;
+        }
 
         var chatSettings = await telegramService.GetChatSetting();
 

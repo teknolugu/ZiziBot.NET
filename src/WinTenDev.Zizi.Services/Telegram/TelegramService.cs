@@ -122,6 +122,7 @@ public class TelegramService
     public Message EditedChannelPost { get; set; }
     public Message ChannelOrEditedPost { get; set; }
 
+    public ChosenInlineResult ChosenInlineResult { get; set; }
     public InlineQuery InlineQuery { get; set; }
     public CallbackQuery CallbackQuery { get; set; }
     public IUpdateContext Context { get; private set; }
@@ -282,6 +283,9 @@ public class TelegramService
         var op = Operation.Begin("Adding Update: '{UpdateId}'", update.Id);
 
         CallbackQuery = Update.CallbackQuery;
+        InlineQuery = Update.InlineQuery;
+        ChosenInlineResult = update.ChosenInlineResult;
+
         MyChatMember = Update.MyChatMember;
         Message = Update.Message;
         EditedMessage = Update.EditedMessage;
@@ -297,7 +301,7 @@ public class TelegramService
 
         ReplyFromId = ReplyToMessage?.From?.Id ?? 0;
 
-        From = ChannelOrEditedPost?.From ?? MyChatMember?.From ?? CallbackQuery?.From ?? MessageOrEdited?.From;
+        From = ChannelOrEditedPost?.From ?? MyChatMember?.From ?? ChosenInlineResult?.From ?? CallbackQuery?.From ?? MessageOrEdited?.From;
         Chat = ChannelOrEditedPost?.Chat ?? MyChatMember?.Chat ?? CallbackQuery?.Message?.Chat ?? MessageOrEdited?.Chat;
         SenderChat = MessageOrEdited?.SenderChat;
         MessageDate = MyChatMember?.Date ?? CallbackQuery?.Message?.Date ?? MessageOrEdited?.Date ?? DateTime.Now;
@@ -309,8 +313,8 @@ public class TelegramService
         FromId = From?.Id ?? 0;
         ChatId = Chat?.Id ?? 0;
         ReducedChatId = ChatId.ReduceChatId();
-        ChatTitle = Chat?.Title ?? From.GetFullName();
-        FromNameLink = From.GetNameLink();
+        ChatTitle = Chat?.Title ?? From?.GetFullName();
+        FromNameLink = From?.GetNameLink();
 
         IsNoUsername = CheckUsername();
         HasUsername = !CheckUsername();
@@ -318,13 +322,16 @@ public class TelegramService
         IsPrivateChat = CheckIsPrivateChat();
         IsGroupChat = CheckIsGroupChat();
 
-        IsPublicGroup = Chat?.Username != null && Chat?.Type is ChatType.Group or ChatType.Supergroup;
+        IsPublicGroup = Chat is { Username: {}, Type: ChatType.Group or ChatType.Supergroup };
         IsPrivateGroup = !IsPublicGroup;
-        IsChannel = Chat.Type is ChatType.Channel;
+        IsChannel = Chat?.Type is ChatType.Channel;
 
         AnyMessageText = AnyMessage?.Text;
         MessageOrEditedText = MessageOrEdited?.Text;
         MessageOrEditedCaption = MessageOrEdited?.Caption;
+
+        CallbackQueryData = CallbackQuery?.Data;
+        CallbackQueryDatas = CallbackQueryData?.Split(' ');
 
         MessageTextParts = MessageOrEditedText?.SplitText(" ")
             .Where(s => s.IsNotNullOrEmpty())
@@ -344,7 +351,9 @@ public class TelegramService
     public async Task<bool> CheckChatRestriction()
     {
         if (IsPrivateChat ||
-            InlineQuery != null) return false;
+            CallbackQuery != null ||
+            InlineQuery != null ||
+            ChosenInlineResult != null) return false;
 
         var isShouldLeave = ChatService.CheckChatRestriction(ChatId);
 
@@ -467,6 +476,13 @@ public class TelegramService
         return cmd;
     }
 
+    public T GetCommandParamAt<T>(int index)
+    {
+        dynamic value = MessageTextParts.Skip(1).ElementAtOrDefault(index);
+
+        return Convert.ChangeType(value, typeof(T));
+    }
+
     public string GetCommandParam(int index)
     {
         var value = MessageTextParts.Skip(1).ElementAtOrDefault(index);
@@ -503,6 +519,12 @@ public class TelegramService
 
     public async Task<bool> CheckBotAdmin()
     {
+        if (InlineQuery != null)
+        {
+            Log.Debug("Check Bot Admin disabled because Update is '{UpdateType}'", Update.Type);
+            return false;
+        }
+
         Log.Debug("Starting check is Bot Admin");
 
         if (IsPrivateChat) return false;
@@ -1889,6 +1911,12 @@ public class TelegramService
 
     public async Task EnsureChatSettingsAsync()
     {
+        if (InlineQuery != null)
+        {
+            Log.Debug("Ensure Chat Admin disabled because update type is {UpdateType}", Update.Type);
+            return;
+        }
+
         var op = Operation.Begin("Ensure Chat Settings for ChatId: '{ChatId}'", ChatId);
 
         try
