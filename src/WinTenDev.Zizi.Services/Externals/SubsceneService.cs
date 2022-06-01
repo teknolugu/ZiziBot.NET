@@ -73,8 +73,9 @@ public class SubsceneService
     {
         var address = $"https://sub.pirated.my.id/subtitles/{slug}";
         var document = await AnglesharpUtil.DefaultContext.OpenAsync(address);
-        var querySelectorAll = document.QuerySelectorAll<IHtmlAnchorElement>("a[href ^= '/subtitles']").FirstOrDefault();
-        var subtitleUrl = querySelectorAll!.Href;
+        var querySelectorAll = document.QuerySelectorAll<IHtmlAnchorElement>("a[href ^= '/subtitles']");
+        var subtitleSelector = querySelectorAll.FirstOrDefault(element => element.Href.Contains("text"));
+        var subtitleUrl = subtitleSelector!.Href;
 
         var localPath = "subtitles/" + slug;
         var fileName = slug.Replace("/", "_") + ".zip";
