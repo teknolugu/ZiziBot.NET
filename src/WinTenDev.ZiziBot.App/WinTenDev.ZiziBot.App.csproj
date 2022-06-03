@@ -10,7 +10,7 @@
     <ItemGroup>
         <PackageReference Include="AleXr64.BotFramework" Version="0.6.0-g3acd012c7b" IncludePrerelease="true"/>
         <PackageReference Include="DotNurse.Injector" Version="2.5.2"/>
-        <PackageReference Include="FluentValidation" Version="11.0.1"/>
+        <PackageReference Include="FluentValidation" Version="11.0.2"/>
         <PackageReference Include="Google.Cloud.Vision.V1" Version="2.5.0"/>
         <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="6.0.0">
             <PrivateAssets>all</PrivateAssets>
@@ -18,17 +18,17 @@
         </PackageReference>
         <PackageReference Include="morelinq" Version="3.3.2"/>
         <PackageReference Include="Nito.AsyncEx" Version="5.1.2"/>
-        <PackageReference Include="Roslynator.Analyzers" Version="4.1.0">
+        <PackageReference Include="Roslynator.Analyzers" Version="4.1.1">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="Serilog" Version="2.11.0"/>
-        <PackageReference Include="Serilog.AspNetCore" Version="5.0.0" />
-        <PackageReference Include="Serilog.Extensions.Hosting" Version="4.2.0" />
-        <PackageReference Include="Serilog.Settings.Configuration" Version="3.3.0" />
+        <PackageReference Include="Serilog.AspNetCore" Version="5.0.0"/>
+        <PackageReference Include="Serilog.Extensions.Hosting" Version="4.2.0"/>
+        <PackageReference Include="Serilog.Settings.Configuration" Version="3.3.0"/>
         <PackageReference Include="Serilog.Sinks.Grafana.Loki" Version="7.1.1"/>
-        <PackageReference Include="SerilogTimings" Version="2.3.0" />
-        <PackageReference Include="SonarAnalyzer.CSharp" Version="8.39.0.47922">
+        <PackageReference Include="SerilogTimings" Version="2.3.0"/>
+        <PackageReference Include="SonarAnalyzer.CSharp" Version="8.40.0.48530">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
