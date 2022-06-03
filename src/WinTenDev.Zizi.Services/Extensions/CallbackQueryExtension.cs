@@ -386,7 +386,7 @@ public static class CallbackQueryExtension
                     messageFlag: MessageFlag.GBan
                 );
 
-                await telegramService.DeleteMessageManyAsync(customUserId: userId);
+                telegramService.DeleteMessageManyAsync(customUserId: userId).InBackground();
 
                 answerCallback = "Berhasil Memblokir Pengguna!";
 
