@@ -63,6 +63,7 @@ public static class TelegramServiceCoreExtension
         {
             "rules" => await rulesProcessor.Execute(startArgs.ElementAtOrDefault(1)),
             "set-username" => usernameProcessor.Execute(startArgs.ElementAtOrDefault(1)),
+            "sub-dl" => await telegramService.OnStartSubsceneDownloadAsync(startArgs.ElementAtOrDefault(1)),
             _ => null
         };
 

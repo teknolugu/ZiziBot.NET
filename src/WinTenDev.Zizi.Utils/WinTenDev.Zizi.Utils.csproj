@@ -11,6 +11,7 @@
         <PackageReference Include="AngleSharp.Css" Version="0.16.4"/>
         <PackageReference Include="AngleSharp.Js" Version="0.15.0"/>
         <PackageReference Include="AsyncAwaitBestPractices" Version="6.0.4"/>
+        <PackageReference Include="Ben.Demystifier" Version="0.4.1"/>
         <PackageReference Include="CacheTower" Version="0.11.6"/>
         <PackageReference Include="CacheTower.Providers.FileSystem.Json" Version="0.11.6"/>
         <PackageReference Include="CacheTower.Providers.Redis" Version="0.11.6"/>
@@ -28,15 +29,15 @@
         <PackageReference Include="EasyCaching.Serialization.SystemTextJson" Version="1.6.0"/>
         <PackageReference Include="EasyCaching.SQLite" Version="1.6.0"/>
         <PackageReference Include="EasyEncrypt" Version="2.2.1"/>
-        <PackageReference Include="Exceptionless" Version="4.6.2"/>
-        <PackageReference Include="FluentValidation" Version="11.0.1"/>
-        <PackageReference Include="Flurl.Http" Version="3.2.3"/>
+        <PackageReference Include="Exceptionless" Version="4.8.0"/>
+        <PackageReference Include="FluentValidation" Version="11.0.2"/>
+        <PackageReference Include="Flurl.Http" Version="3.2.4"/>
         <PackageReference Include="Google.Apis.Drive.v3" Version="1.57.0.2684"/>
         <PackageReference Include="Google.Cloud.VideoIntelligence.V1" Version="2.3.0"/>
         <PackageReference Include="Google.Cloud.Vision.V1" Version="2.5.0"/>
         <PackageReference Include="GoogleTranslateFreeApi" Version="1.1.1"/>
-        <PackageReference Include="Hangfire.AspNetCore" Version="1.7.28"/>
-        <PackageReference Include="Hangfire.Core" Version="1.7.28"/>
+        <PackageReference Include="Hangfire.AspNetCore" Version="1.7.29"/>
+        <PackageReference Include="Hangfire.Core" Version="1.7.29"/>
         <PackageReference Include="Hangfire.Dashboard.Basic.Authentication" Version="5.0.0"/>
         <PackageReference Include="Hangfire.Dashboard.Dark" Version="2.0.4"/>
         <PackageReference Include="Hangfire.Heartbeat" Version="0.5.1"/>
@@ -44,10 +45,10 @@
         <PackageReference Include="Hangfire.MemoryStorage" Version="1.7.0"/>
         <PackageReference Include="Hangfire.MySqlStorage" Version="2.0.3"/>
         <PackageReference Include="Hangfire.Redis.StackExchange" Version="1.8.5"/>
-        <PackageReference Include="Hangfire.Storage.SQLite" Version="0.3.1"/>
+        <PackageReference Include="Hangfire.Storage.SQLite" Version="0.3.2"/>
         <PackageReference Include="JetBrains.Annotations" Version="2022.1.0"/>
-        <PackageReference Include="JsonFlatFileDataStore" Version="2.2.3"/>
-        <PackageReference Include="linq2db" Version="3.7.0"/>
+        <PackageReference Include="JsonFlatFileDataStore" Version="2.3.0"/>
+        <PackageReference Include="linq2db" Version="4.0.1"/>
         <PackageReference Include="LiteDB.Async" Version="0.1.0"/>
         <PackageReference Include="Localtunnel" Version="1.0.4"/>
         <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="6.0.5"/>
@@ -74,7 +75,7 @@
         <PackageReference Include="Octokit" Version="0.51.0"/>
         <PackageReference Include="QRCodeDecoder" Version="0.1.0"/>
         <PackageReference Include="RepoDb.MySqlConnector" Version="1.1.5"/>
-        <PackageReference Include="Roslynator.Analyzers" Version="4.1.0">
+        <PackageReference Include="Roslynator.Analyzers" Version="4.1.1">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
@@ -91,18 +92,18 @@
         <PackageReference Include="Serilog.Sinks.TelegramBot" Version="1.0.8"/>
         <PackageReference Include="SerilogAnalyzer" Version="0.15.0"/>
         <PackageReference Include="Slapper.AutoMapper" Version="2.0.5"/>
-        <PackageReference Include="SonarAnalyzer.CSharp" Version="8.39.0.47922">
+        <PackageReference Include="SonarAnalyzer.CSharp" Version="8.40.0.48530">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="SqlKata.Execution" Version="2.3.7"/>
-        <PackageReference Include="SSH.NET" Version="2020.0.1"/>
-        <PackageReference Include="System.Data.SQLite.Core" Version="1.0.115.5"/>
+        <PackageReference Include="SSH.NET" Version="2020.0.2"/>
+        <PackageReference Include="System.Data.SQLite.Core" Version="1.0.116"/>
         <PackageReference Include="Telegram.Bot" Version="17.0.0"/>
         <PackageReference Include="TgBotFramework" Version="0.5.2"/>
         <PackageReference Include="TimeSpanParserUtil" Version="1.2.0"/>
         <PackageReference Include="WordPressPCL" Version="2.0.0"/>
-        <PackageReference Include="WTelegramClient" Version="2.3.2"/>
+        <PackageReference Include="WTelegramClient" Version="2.4.1"/>
         <PackageReference Include="YamlConvert" Version="2.1.1"/>
         <PackageReference Include="YamlDotNet" Version="11.2.1"/>
         <PackageReference Include="YoutubeExplode" Version="6.1.2"/>

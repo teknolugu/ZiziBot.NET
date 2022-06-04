@@ -64,24 +64,38 @@ public static class UrlUtil
 
     public static async Task<string> MultiThreadDownloadFileAsync(
         this string url,
-        string tempDir
+        string tempDir,
+        string fileName = ""
     )
     {
         var throttleDispatcher = new ThrottleDispatcher(2000);
 
-        var fileName = Path.GetFileName(url);
+        var pathFileName = Path.GetFileName(url);
+        if (fileName.IsNotNullOrEmpty()) pathFileName = fileName;
 
         var paths = Path.Combine(
             "Storage/Caches/",
             tempDir,
-            fileName
+            pathFileName
         );
 
         var downloadOpt = new DownloadConfiguration()
         {
             ChunkCount = 8,
             ParallelDownload = true,
-            OnTheFlyDownload = false
+            MaxTryAgainOnFailover = 10,
+            OnTheFlyDownload = false,
+            RequestConfiguration = // config and customize request headers
+            {
+                Accept = "*/*",
+                AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate,
+                CookieContainer = new CookieContainer(),// Add your cookies
+                Headers = new WebHeaderCollection(),// Add your custom headers
+                KeepAlive = false,// default value is false
+                ProtocolVersion = HttpVersion.Version11,// Default value is HTTP 1.1
+                UseDefaultCredentials = false,
+                UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.64 Safari/537.36 Edg/101.0.1210.53"
+            }
         };
 
         var downloader = new DownloadService(downloadOpt);

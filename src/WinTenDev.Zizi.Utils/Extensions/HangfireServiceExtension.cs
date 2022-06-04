@@ -39,7 +39,10 @@ public static class HangfireServiceExtension
                 switch (hangfireConfig.DataStore)
                 {
                     case HangfireDataStore.MySql:
-                        config.UseStorage(HangfireUtil.GetMysqlStorage(connStrings.MySql));
+                        var hangfireMysql = hangfireConfig.MysqlConnection;
+                        if (hangfireMysql.IsNullOrEmpty()) hangfireMysql = connStrings.MySql;
+
+                        config.UseStorage(HangfireUtil.GetMysqlStorage(hangfireMysql));
                         break;
 
                     case HangfireDataStore.Sqlite:
