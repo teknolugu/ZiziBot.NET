@@ -7,6 +7,7 @@ using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using WinTenDev.Zizi.Models.Enums;
 using WinTenDev.Zizi.Models.Enums.Languages;
+using WinTenDev.Zizi.Models.Types;
 using WinTenDev.Zizi.Services.Telegram;
 using WinTenDev.Zizi.Utils;
 using WinTenDev.Zizi.Utils.IO;
@@ -55,10 +56,13 @@ public static class TelegramServiceAdditionalExtension
         }
         catch (FlurlHttpException exception)
         {
-            await telegramService.EditMessageTextAsync(
-                "Terjadi kesalahan saat memproses gambar." +
-                $"\nError Kode: {exception.StatusCode}"
-            );
+            var messages = exception.Message.Split(": ");
+
+            var htmlMessage = HtmlMessage.Empty
+                .Text("Terjadi kesalahan saat menjalankan OCR.").Br()
+                .Bold("Message: ").TextBr(messages.FirstOrDefault());
+
+            await telegramService.EditMessageTextAsync(htmlMessage.ToString());
         }
         catch (Exception exception)
         {
