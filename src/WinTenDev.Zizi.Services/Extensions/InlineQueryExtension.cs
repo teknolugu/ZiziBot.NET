@@ -261,11 +261,12 @@ public static class InlineQueryExtension
                 item => {
                     var movieTitle = item.MovieName;
                     var pathName = item.MovieUrl;
+                    var moviePath = pathName.Split("/").Take(3).JoinStr("/");
                     var slug = pathName.Split("/").ElementAtOrDefault(2);
 
                     var titleHtml = HtmlMessage.Empty
                         .Bold("Title: ").CodeBr(movieTitle)
-                        .Bold("Url: ").Url($"https://subscene.com{pathName}", "Subscene Link");
+                        .Bold("Url: ").Url($"https://subscene.com{moviePath}", "Subscene Link");
 
                     var article = new InlineQueryResultArticle(
                         id: StringUtil.NewGuid(),
