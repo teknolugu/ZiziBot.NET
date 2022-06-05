@@ -169,85 +169,127 @@ public static class InlineQueryExtension
     private static async Task<InlineQueryExecutionResult> OnInlineQuerySubsceneSearchAsync(this TelegramService telegramService)
     {
         var executionResult = new InlineQueryExecutionResult();
+        IEnumerable<InlineQueryResultArticle> result = null;
         var queryCmd = telegramService.GetInlineQueryAt<string>(0);
         var queryValue = telegramService.InlineQuery.Query.Replace(queryCmd, "").Trim();
         Log.Information("Starting find Subtitle with title: '{QueryValue}'", queryValue);
 
         var subsceneService = telegramService.GetRequiredService<SubsceneService>();
-        var searchByTitle = await subsceneService.SearchByTitle(queryValue);
 
-        Log.Information(
-            "Found about {AllCount} title with query: '{QueryValue}'",
-            searchByTitle.Count,
-            queryValue
-        );
-
-        if (searchByTitle.Count == 0)
+        if (queryValue.IsNotNullOrEmpty())
         {
-            var title = "Tidak di temukan hasil, silakan cari judul yang lain";
-            if (queryValue.IsNullOrEmpty())
+            var searchByTitle = await subsceneService.FeedMovieByTitle(queryValue);
+
+            Log.Information(
+                "Found about {AllCount} title with query: '{QueryValue}'",
+                searchByTitle.Count,
+                queryValue
+            );
+
+            if (searchByTitle.Count == 0)
             {
-                title = "Silakan masukkan judul yang ingin dicari";
+                var title = "Tidak di temukan hasil, silakan cari judul yang lain";
+                if (queryValue.IsNullOrEmpty())
+                {
+                    title = "Silakan masukkan judul yang ingin dicari";
+                }
+
+                await subsceneService.FeedPopularTitles();
+                await telegramService.AnswerInlineQueryAsync(
+                    new List<InlineQueryResult>()
+                    {
+                        new InlineQueryResultArticle(
+                            id: StringUtil.NewGuid(),
+                            title: title,
+                            inputMessageContent: new InputTextMessageContent("Tekan tombol dibawah ini untuk memulai pencarian")
+                        )
+                        {
+                            ReplyMarkup = new InlineKeyboardMarkup(
+                                new[]
+                                {
+                                    InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Pencarian baru", "subscene ")
+                                }
+                            )
+                        }
+                    }
+                );
+                executionResult.IsSuccess = false;
+
+                return executionResult;
             }
 
-            await telegramService.AnswerInlineQueryAsync(
-                new List<InlineQueryResult>()
-                {
-                    new InlineQueryResultArticle(
+            result = searchByTitle.Select(
+                element => {
+                    var pathName = element.PathName;
+                    Log.Debug(
+                        "Appending MovieId: '{0}' => {1}",
+                        pathName,
+                        element.Text
+                    );
+                    var slug = element.PathName.Split("/").LastOrDefault("subscene-slug" + StringUtil.GenerateUniqueId());
+                    var titleHtml = HtmlMessage.Empty
+                        .Bold("Title: ").CodeBr(element.Text)
+                        .Bold("Url: ").Url($"https://subscene.com{element.PathName}", "Subscene Link");
+
+                    var article = new InlineQueryResultArticle(
                         id: StringUtil.NewGuid(),
-                        title: title,
-                        inputMessageContent: new InputTextMessageContent("Tekan tombol dibawah ini untuk memulai pencarian")
+                        title: element.Text,
+                        inputMessageContent: new InputTextMessageContent(titleHtml.ToString())
+                        {
+                            ParseMode = ParseMode.Html,
+                            DisableWebPagePreview = true
+                        }
                     )
                     {
                         ReplyMarkup = new InlineKeyboardMarkup(
                             new[]
                             {
+                                InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Mulai unduh", $"subscene-dl {slug} "),
                                 InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Pencarian baru", "subscene ")
                             }
                         )
-                    }
+                    };
+
+                    return article;
                 }
             );
-            executionResult.IsSuccess = false;
-
-            return executionResult;
         }
+        else
+        {
+            var popularTitles = await subsceneService.GetPopularMovieByTitle();
+            result = popularTitles.Select(
+                item => {
+                    var movieTitle = item.MovieName;
+                    var pathName = item.MovieUrl;
+                    var slug = pathName.Split("/").ElementAtOrDefault(2);
 
-        var result = searchByTitle.Select(
-            element => {
-                var pathName = element.PathName;
-                Log.Debug(
-                    "Appending MovieId: '{0}' => {1}",
-                    pathName,
-                    element.Text
-                );
-                var slug = element.PathName.Split("/").LastOrDefault("subscene-slug" + StringUtil.GenerateUniqueId());
-                var titleHtml = HtmlMessage.Empty
-                    .Bold("Title: ").CodeBr(element.Text)
-                    .Bold("Url: ").Url($"https://subscene.com{element.PathName}", "Subscene Link");
+                    var titleHtml = HtmlMessage.Empty
+                        .Bold("Title: ").CodeBr(movieTitle)
+                        .Bold("Url: ").Url($"https://subscene.com{pathName}", "Subscene Link");
 
-                var article = new InlineQueryResultArticle(
-                    id: StringUtil.NewGuid(),
-                    title: element.Text,
-                    inputMessageContent: new InputTextMessageContent(titleHtml.ToString())
-                    {
-                        ParseMode = ParseMode.Html,
-                        DisableWebPagePreview = true
-                    }
-                )
-                {
-                    ReplyMarkup = new InlineKeyboardMarkup(
-                        new[]
+                    var article = new InlineQueryResultArticle(
+                        id: StringUtil.NewGuid(),
+                        title: movieTitle,
+                        inputMessageContent: new InputTextMessageContent(titleHtml.ToString())
                         {
-                            InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Mulai unduh", $"subscene-dl {slug} "),
-                            InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Pencarian baru", "subscene ")
+                            ParseMode = ParseMode.Html,
+                            DisableWebPagePreview = true
                         }
                     )
-                };
+                    {
+                        ReplyMarkup = new InlineKeyboardMarkup(
+                            new[]
+                            {
+                                InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Mulai unduh", $"subscene-dl {slug} "),
+                                InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Pencarian baru", "subscene ")
+                            }
+                        )
+                    };
 
-                return article;
-            }
-        );
+                    return article;
+                }
+            );
+        }
 
         await telegramService.AnswerInlineQueryAsync(result);
         executionResult.IsSuccess = true;
@@ -264,7 +306,7 @@ public static class InlineQueryExtension
         Log.Information("Starting find Subtitle file with title: '{QueryValue}'", query1);
 
         var subsceneService = telegramService.GetRequiredService<SubsceneService>();
-        var searchBySlug = await subsceneService.SearchBySlug(query1);
+        var searchBySlug = await subsceneService.FeedSubtitleBySlug(query1);
         Log.Information(
             "Found about {AllCount} subtitle by slug: '{QueryValue}'",
             searchBySlug.Count,
