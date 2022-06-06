@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using AngleSharp;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
+using Humanizer;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
@@ -106,6 +107,8 @@ public class SubsceneService
 
         try
         {
+            if (movieResult == null) return default;
+
             _logger.LogDebug("Saving Subtitle Search to database. {rows} item(s)", movieResult.Count);
             await _databaseService.MongoDbOpen("shared");
             await movieResult.InsertAsync();
@@ -165,25 +168,52 @@ public class SubsceneService
         return movieList;
     }
 
-    public async Task<string> GetSubtitleFileAsync(string slug)
+    public async Task<SubsceneMovieDetail> GetSubtitleFileAsync(string slug)
     {
         _logger.LogInformation("Preparing download subtitle file {Slug}", slug);
 
         var address = $"{_subsceneConfig.SearchSubtitleUrl}/{slug}";
         var document = await AnglesharpUtil.DefaultContext.OpenAsync(address);
-        var querySelectorAll = document.QuerySelectorAll<IHtmlAnchorElement>("a[href ^= '/subtitles']");
-        var subtitleSelector = querySelectorAll.FirstOrDefault(element => element.Href.Contains("text"));
-        var subtitleUrl = subtitleSelector!.Href;
+        var all = document.All
+            .Where(element => element.ClassName == "top left")
+            .OfType<IHtmlDivElement>()
+            .FirstOrDefault();
 
-        var localPath = "subtitles/" + slug;
-        var fileName = slug.Replace("/", "_") + ".zip";
+        var subtitleListUrl = "/subtitles/" + slug;
+        var language = slug.Split("/").ElementAtOrDefault(1);
+        var posterElement = (all?.QuerySelector<IHtmlAnchorElement>("a[href]")?.Children.FirstOrDefault() as IHtmlImageElement)?.Source;
+        var headerElement = all?.QuerySelector<IHtmlDivElement>("div.header");
+        var movieTitle = ((headerElement?.Children.FirstOrDefault() as IHtmlHeadingElement)?.Children.FirstOrDefault() as IHtmlSpanElement)?.TextContent.Trim();
+        var releaseInfo = headerElement?.QuerySelector<IHtmlListItemElement>("li.release")?.Children.OfType<IHtmlDivElement>()
+            .Select(element => element.TextContent.Trim()).ToList();
+        var authorElement = headerElement?.QuerySelector<IHtmlAnchorElement>("a[href ^= '/u']");
+        var comment = headerElement?.QuerySelector<IHtmlDivElement>("div.comment");
+        var subtitleUrl = document.QuerySelectorAll<IHtmlAnchorElement>("a[href ^= '/subtitles']")
+            .FirstOrDefault(element => element.Href.Contains("text"))?.Href;
 
-        _logger.LogDebug("Downloading subtitle file. Save to  {Slug}", slug);
-        var filePath = await subtitleUrl.MultiThreadDownloadFileAsync(localPath, fileName: fileName);
+        var movieDetail = new SubsceneMovieDetail()
+        {
+            SubtitleMovieUrl = subtitleListUrl,
+            MovieName = movieTitle,
+            Language = language.Titleize(),
+            CommentaryUrl = authorElement?.PathName,
+            CommentaryUser = authorElement?.TextContent.Trim(),
+            PosterUrl = posterElement,
+            ReleaseInfo = releaseInfo.JoinStr("\n"),
+            ReleaseInfos = releaseInfo,
+            Comment = comment?.TextContent.Trim(),
+            SubtitleDownloadUrl = subtitleUrl
+        };
 
-        _logger.LogInformation("Subtitle file downloaded {Slug}", slug);
+        // var localPath = "subtitles/" + slug;
+        // var fileName = releaseInfo?.FirstOrDefault() + ".zip";
+        //
+        // _logger.LogDebug("Downloading subtitle file. Save to  {Slug}", slug);
+        // var filePath = await subtitleUrl.MultiThreadDownloadFileAsync(localPath, fileName: fileName);
+        //
+        // movieDetail.LocalFilePath = filePath;
 
-        return filePath;
+        return movieDetail;
     }
 
     public async Task SaveSearchTitle(List<IHtmlAnchorElement> searchByTitles)

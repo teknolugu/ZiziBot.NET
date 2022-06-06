@@ -12,7 +12,6 @@ using WinTenDev.Zizi.Services.Externals;
 using WinTenDev.Zizi.Services.Telegram;
 using WinTenDev.Zizi.Utils;
 using WinTenDev.Zizi.Utils.Telegram;
-using WinTenDev.Zizi.Utils.Text;
 
 namespace WinTenDev.Zizi.Services.Extensions;
 
@@ -381,7 +380,7 @@ public static class InlineQueryExtension
                 var titleResult = $"{languageSub} | {ownerSub}";
 
                 var content = HtmlMessage.Empty
-                    .Bold("Name: ").TextBr(movieName)
+                    .Bold("Name: ").TextBr(movieName, true)
                     .Bold("Language: ").TextBr(languageSub)
                     .Bold("Url: ").Url($"https://subscene.com{movieUrl}", "Subscene Link");
 
