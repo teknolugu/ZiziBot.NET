@@ -73,29 +73,49 @@ public class SubsceneService
         return insert;
     }
 
-    public async Task<List<IHtmlAnchorElement>> FeedMovieByTitle(string title)
+    public async Task<List<SubsceneMovieSearch>> FeedMovieByTitle(string title)
     {
         var searchUrl = _subsceneConfig.SearchTitleUrl;
         Log.Information("Preparing parse {Url}", searchUrl);
         Log.Debug("Loading web {Url}", searchUrl);
         var searchUrlQuery = searchUrl + "?query=" + title;
 
-        var htmlAnchorElements = await _cacheService.GetOrSetAsync(
-            cacheKey: searchUrlQuery,
-            staleAfter: "30m",
-            action: async () => {
-                var document = await AnglesharpUtil.DefaultContext.OpenAsync(searchUrlQuery);
-                var querySelectorAll = document.QuerySelectorAll<IHtmlAnchorElement>("a[href ^= '/sub']");
+        var document = await AnglesharpUtil.DefaultContext.OpenAsync(searchUrlQuery);
+        var list = document.All
+            .FirstOrDefault(element => element.ClassName == "search-result")?.Children
+            .Where(element => element.LocalName == "ul")
+            .SelectMany(element => element.Children)
+            .OfType<IHtmlListItemElement>();
 
-                Log.Debug("Finding download button..");
+        _logger.LogDebug("Extracting data from {Url}", searchUrlQuery);
+        var movieResult = list?.Select(
+            element => {
+                var movieName = element.TextContent.Split("\n", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+                var movieUrl = element.QuerySelector<IHtmlAnchorElement>("a[href ^= '/subtitles']")?.PathName;
 
-                return querySelectorAll.ToList();
+                var movie = new SubsceneMovieSearch()
+                {
+                    MovieName = movieName.FirstOrDefault(),
+                    SubtitleCount = movieName.LastOrDefault(),
+                    MovieUrl = movieUrl
+                };
+
+                return movie;
             }
-        );
+        ).ToList();
 
-        await SaveSearchTitle(htmlAnchorElements);
+        try
+        {
+            _logger.LogDebug("Saving Subtitle Search to database..");
+            await _databaseService.MongoDbOpen("shared");
+            await movieResult.InsertAsync();
+        }
+        catch (Exception exception)
+        {
+            _logger.LogWarning(exception, "Error while inserting movie result");
+        }
 
-        return htmlAnchorElements;
+        return movieResult;
     }
 
     public async Task<List<IHtmlAnchorElement>> FeedSubtitleBySlug(string slug)
@@ -171,12 +191,12 @@ public class SubsceneService
         }
     }
 
-    public async Task<List<SubsceneMovieItem>> GetMovieByTitle(string title)
+    public async Task<List<SubsceneMovieSearch>> GetMovieByTitle(string title)
     {
-        var movies = await DB.Find<SubsceneMovieItem>().ManyAsync(
+        var movies = await DB.Find<SubsceneMovieSearch>().ManyAsync(
             item =>
-                item.MovieName.Contains(title, StringComparison.CurrentCultureIgnoreCase) ||
-                item.MovieUrl.Contains(title, StringComparison.CurrentCultureIgnoreCase)
+                item.MovieName.Contains(title) ||
+                item.MovieUrl.Contains(title)
         );
 
         return movies;
@@ -207,5 +227,21 @@ public class SubsceneService
         op.Complete();
 
         return popular;
+    }
+
+    public async Task<List<SubsceneMovieSearch>> GetOrFeedMovieByTitle(string title)
+    {
+        var getMovieByTitle = await GetMovieByTitle(title);
+
+        if (getMovieByTitle.Count > 0)
+        {
+            await FeedMovieByTitle(title);
+
+            return getMovieByTitle;
+        }
+
+        var feedMovieByTitle = await FeedMovieByTitle(title);
+
+        return feedMovieByTitle;
     }
 }

@@ -178,15 +178,9 @@ public static class InlineQueryExtension
 
         if (queryValue.IsNotNullOrEmpty())
         {
-            var searchByTitle = await subsceneService.FeedMovieByTitle(queryValue);
+            var searchByTitle = await subsceneService.GetOrFeedMovieByTitle(queryValue);
 
-            Log.Information(
-                "Found about {AllCount} title with query: '{QueryValue}'",
-                searchByTitle.Count,
-                queryValue
-            );
-
-            if (searchByTitle.Count == 0)
+            if (searchByTitle == null)
             {
                 var title = "Tidak di temukan hasil, silakan cari judul yang lain";
                 if (queryValue.IsNullOrEmpty())
@@ -218,22 +212,33 @@ public static class InlineQueryExtension
                 return executionResult;
             }
 
+            Log.Information(
+                "Found about {AllCount} title with query: '{QueryValue}'",
+                searchByTitle.Count,
+                queryValue
+            );
+
             result = searchByTitle.Select(
                 element => {
-                    var pathName = element.PathName;
+                    var movieTitle = element.MovieName;
+                    var movieUrl = element.MovieUrl;
+                    var subtitleCount = element.SubtitleCount;
+
                     Log.Debug(
                         "Appending MovieId: '{0}' => {1}",
-                        pathName,
-                        element.Text
+                        movieUrl,
+                        movieTitle
                     );
-                    var slug = element.PathName.Split("/").LastOrDefault("subscene-slug" + StringUtil.GenerateUniqueId());
+
+                    var slug = movieUrl.Split("/").LastOrDefault("subscene-slug" + StringUtil.GenerateUniqueId());
                     var titleHtml = HtmlMessage.Empty
-                        .Bold("Title: ").CodeBr(element.Text)
-                        .Bold("Url: ").Url($"https://subscene.com{element.PathName}", "Subscene Link");
+                        .Bold("Title: ").CodeBr(movieTitle)
+                        .Bold("Availability: ").CodeBr(subtitleCount)
+                        .Bold("Url: ").Url($"https://subscene.com{movieUrl}", "Subscene Link");
 
                     var article = new InlineQueryResultArticle(
                         id: StringUtil.NewGuid(),
-                        title: element.Text,
+                        title: movieTitle,
                         inputMessageContent: new InputTextMessageContent(titleHtml.ToString())
                         {
                             ParseMode = ParseMode.Html,
@@ -241,6 +246,7 @@ public static class InlineQueryExtension
                         }
                     )
                     {
+                        Description = $"Available subtitle: {subtitleCount}",
                         ReplyMarkup = new InlineKeyboardMarkup(
                             new[]
                             {
