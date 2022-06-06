@@ -248,6 +248,11 @@ public class DatabaseService
             )
             .CreateAsync();
 
+        await DB.Index<SubsceneSubtitleItem>()
+            .Key(item => item.MovieUrl, KeyType.Ascending)
+            .Option(options => options.Unique = true)
+            .CreateAsync();
+
         _logger.LogInformation("Creating MongoDb Index complete");
     }
 }

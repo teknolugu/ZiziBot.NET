@@ -313,7 +313,7 @@ public static class InlineQueryExtension
         Log.Information("Starting find Subtitle file with title: '{QueryValue}'", query1);
 
         var subsceneService = telegramService.GetRequiredService<SubsceneService>();
-        var searchBySlug = await subsceneService.FeedSubtitleBySlug(query1);
+        var searchBySlug = await subsceneService.GetOrFeedSubtitleBySlug(query1);
         Log.Information(
             "Found about {AllCount} subtitle by slug: '{QueryValue}'",
             searchBySlug.Count,
@@ -324,8 +324,9 @@ public static class InlineQueryExtension
             element => {
                 if (query2.IsNullOrEmpty()) return true;
 
-                var rowText = element.Text?.ToLower().Replace("\t", " ");
-                return rowText?.Contains(query2) ?? false;
+                return element.Language.Contains(query2, StringComparison.CurrentCultureIgnoreCase) ||
+                       element.MovieName.Contains(query2, StringComparison.CurrentCultureIgnoreCase) ||
+                       element.Owner.Contains(query2, StringComparison.CurrentCultureIgnoreCase);
             }
         ).ToList();
 
@@ -365,27 +366,30 @@ public static class InlineQueryExtension
 
         var result = filteredSearch.Select(
             element => {
-                var title = element.Text.RegexReplace(@"\t|\n", " ").RegexReplace(@"\s+", " ").Trim();
-                var titleParted = title.Split(" ", StringSplitOptions.RemoveEmptyEntries);
-                var languageSub = titleParted.FirstOrDefault("Language");
-                var movieName = titleParted.Skip(1).JoinStr(" ").HtmlEncode();
-                var slug = element.PathName.Split("/").Skip(2).JoinStr("/");
+                var languageSub = element.Language;
+                var movieName = element.MovieName;
+                var movieUrl = element.MovieUrl;
+                var ownerSub = element.Owner;
+                var slug = element.MovieUrl?.Split("/").Skip(2).JoinStr("/");
+
                 Log.Debug(
                     "Appending Movie with slug: '{0}' => {1}",
                     slug,
-                    title
+                    movieName
                 );
+
+                var titleResult = $"{languageSub} | {ownerSub}";
 
                 var content = HtmlMessage.Empty
                     .Bold("Name: ").TextBr(movieName)
                     .Bold("Language: ").TextBr(languageSub)
-                    .Bold("Url: ").Url($"https://subscene.com{element.PathName}", "Subscene Link");
+                    .Bold("Url: ").Url($"https://subscene.com{movieUrl}", "Subscene Link");
 
                 var startDownloadUrl = urlStart + "start=sub-dl_" + slug.Replace("/", "=");
 
                 var article = new InlineQueryResultArticle(
                     id: StringUtil.NewGuid(),
-                    title: titleParted.FirstOrDefault("Language"),
+                    title: titleResult,
                     inputMessageContent: new InputTextMessageContent(content.ToString())
                     {
                         ParseMode = ParseMode.Html,
@@ -420,5 +424,4 @@ public static class InlineQueryExtension
 
         return executionResult;
     }
-
 }

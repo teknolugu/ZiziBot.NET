@@ -106,7 +106,7 @@ public class SubsceneService
 
         try
         {
-            _logger.LogDebug("Saving Subtitle Search to database..");
+            _logger.LogDebug("Saving Subtitle Search to database. {rows} item(s)", movieResult.Count);
             await _databaseService.MongoDbOpen("shared");
             await movieResult.InsertAsync();
         }
@@ -118,23 +118,51 @@ public class SubsceneService
         return movieResult;
     }
 
-    public async Task<List<IHtmlAnchorElement>> FeedSubtitleBySlug(string slug)
+    public async Task<List<SubsceneSubtitleItem>> FeedSubtitleBySlug(string slug)
     {
         var searchSubtitleFileUrl = $"{_subsceneConfig.SearchSubtitleUrl}/{slug}";
 
-        var htmlAnchorElements = await _cacheService.GetOrSetAsync(
-            cacheKey: searchSubtitleFileUrl,
-            staleAfter: "30m",
-            action: async () => {
-                var document = await AnglesharpUtil.DefaultContext.OpenAsync(searchSubtitleFileUrl);
+        var document = await AnglesharpUtil.DefaultContext.OpenAsync(searchSubtitleFileUrl);
+        var list = document.All
+            .Where(element => element.LocalName == "tr")
+            .Skip(2)
+            .OfType<IHtmlTableRowElement>();
 
-                var querySelectorAll = document.QuerySelectorAll<IHtmlAnchorElement>("a[href ^= '/sub']");
+        var movieList = list.Select(
+                element => {
+                    var movieLangAndName = element.Children.FirstOrDefault();
+                    var movieNameContents = movieLangAndName?.TextContent.Split("\n", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+                    var ownerSubsElement = element.Children.ElementAtOrDefault(3);
+                    var commentElement = element.Children.ElementAtOrDefault(4);
 
-                return querySelectorAll.ToList();
-            }
-        );
+                    var item = new SubsceneSubtitleItem()
+                    {
+                        Language = movieNameContents?.FirstOrDefault(),
+                        MovieName = movieNameContents?.LastOrDefault(),
+                        MovieUrl = element.QuerySelector<IHtmlAnchorElement>("a[href ^= '/subtitles']")?.PathName,
+                        Owner = ownerSubsElement?.TextContent.Trim(),
+                        Comment = commentElement?.TextContent.Trim()
+                    };
 
-        return htmlAnchorElements;
+                    return item;
+                }
+            )
+            .Where(item => item.Language != null)
+            .ToList();
+
+        try
+        {
+            _logger.LogDebug("Saving Subtitle language item Search to database. {rows} item(s)", movieList.Count);
+            await _databaseService.MongoDbOpen("shared");
+            var insertResult = await movieList.InsertAsync();
+            _logger.LogDebug("Insert subtitle lang. Result: {rows}", insertResult);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogWarning(exception, "Error while inserting movie result");
+        }
+
+        return movieList;
     }
 
     public async Task<string> GetSubtitleFileAsync(string slug)
@@ -229,6 +257,20 @@ public class SubsceneService
         return popular;
     }
 
+    public async Task<List<SubsceneSubtitleItem>> GetSubtitleBySlug(string slug)
+    {
+        var subtitles = await DB.Find<SubsceneSubtitleItem>()
+            .ManyAsync(
+                item =>
+                    new ExpressionFilterDefinition<SubsceneSubtitleItem>(
+                        subtitleItem =>
+                            subtitleItem.MovieUrl.Contains(slug)
+                    )
+            );
+
+        return subtitles;
+    }
+
     public async Task<List<SubsceneMovieSearch>> GetOrFeedMovieByTitle(string title)
     {
         var getMovieByTitle = await GetMovieByTitle(title);
@@ -243,5 +285,21 @@ public class SubsceneService
         var feedMovieByTitle = await FeedMovieByTitle(title);
 
         return feedMovieByTitle;
+    }
+
+    public async Task<List<SubsceneSubtitleItem>> GetOrFeedSubtitleBySlug(string slug)
+    {
+        var movieBySlug = await GetSubtitleBySlug(slug);
+
+        if (movieBySlug.Count > 0)
+        {
+            await FeedSubtitleBySlug(slug);
+
+            return movieBySlug;
+        }
+
+        var feedSubtitleBySlug = await FeedSubtitleBySlug(slug);
+
+        return feedSubtitleBySlug;
     }
 }
