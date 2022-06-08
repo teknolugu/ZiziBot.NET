@@ -1,6 +1,9 @@
-﻿using System.Threading.Tasks;
+﻿using System.Linq;
+using System.Threading.Tasks;
+using Telegram.Bot.Types.Enums;
 using WinTenDev.Zizi.Models.Dto;
 using WinTenDev.Zizi.Models.Enums;
+using WinTenDev.Zizi.Models.Types;
 using WinTenDev.Zizi.Services.Externals;
 using WinTenDev.Zizi.Services.Telegram;
 
@@ -18,20 +21,37 @@ internal static class StartCommandExtension
         var subsceneService = telegramService.GetRequiredService<SubsceneService>();
         var fixedSlug = subtitleSlug.Replace("=", "/");
 
-        await telegramService.SendTextMessageAsync(
-            "Subtitle sedang didownload." +
-            "\nSilahkan tunggu beberapa saat.."
-        );
+        await telegramService.SendTextMessageAsync("Subtitle sedang diproses, mohon tunggu...");
 
-        var subtitleFileAsync = await subsceneService.GetSubtitleFileAsync(fixedSlug);
-        var fromId = telegramService.FromId;
+        await telegramService.SendChatActionAsync(ChatAction.UploadDocument);
+
+        var movieDetail = await subsceneService.GetSubtitleFileAsync(fixedSlug);
+
+        var subsceneUrl = "https://subscene.com" + movieDetail.SubtitleMovieUrl;
+        var commentaryUrl = "https://subscene.com" + movieDetail.CommentaryUrl;
+        var fileName = movieDetail.ReleaseInfos?
+                           .OrderBy(s => s.Length).FirstOrDefault(movieDetail.MovieName)?
+                           .Replace(".", " ") ??
+                       movieDetail.MovieName;
+
+        var subtitleInfo = HtmlMessage.Empty
+                .Bold("Movie: ").TextBr(movieDetail.MovieName, true)
+                .Bold("Language: ").TextBr(movieDetail.Language)
+                .Bold("Url: ").Url(subsceneUrl, "Subscene URL").Br()
+                .Bold("Author: ").Url(commentaryUrl, movieDetail.CommentaryUser).Br()
+                .BoldBr("Release info")
+                .TextBr(movieDetail.ReleaseInfo, true)
+                .Br()
+                .Text(movieDetail.Comment)
+            ;
 
         await telegramService.DeleteSentMessageAsync();
 
         await telegramService.SendMediaAsync(
-            fileId: subtitleFileAsync,
-            mediaType: MediaType.LocalDocument,
-            caption: "Subtitle"
+            fileId: movieDetail.SubtitleDownloadUrl,
+            mediaType: MediaType.Document,
+            caption: subtitleInfo.ToString(),
+            customFileName: fileName + ".zip"
         );
 
         return response;

@@ -3,10 +3,15 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using MongoDB.Driver;
+using MongoDB.Entities;
 using MoreLinq;
 using MySqlConnector;
 using SerilogTimings;
 using SqlKata.Execution;
+using WinTenDev.Zizi.Models.Configs;
+using WinTenDev.Zizi.Models.Entities.MongoDb;
 using WinTenDev.Zizi.Models.Tables;
 using WinTenDev.Zizi.Models.Types;
 using WinTenDev.Zizi.Utils;
@@ -21,19 +26,17 @@ public class DatabaseService
 {
     private const string DataDir = "Storage/Data/";
     private readonly ILogger<DatabaseService> _logger;
+    private readonly ConnectionStrings _connectionStrings;
     private readonly QueryService _queryService;
 
-    /// <summary>
-    /// Constructor of DataBackupService
-    /// </summary>
-    /// <param name="logger"></param>
-    /// <param name="queryService"></param>
     public DatabaseService(
         ILogger<DatabaseService> logger,
+        IOptions<ConnectionStrings> connectionStrings,
         QueryService queryService
     )
     {
         _logger = logger;
+        _connectionStrings = connectionStrings.Value;
         _queryService = queryService;
     }
 
@@ -215,5 +218,41 @@ public class DatabaseService
         );
 
         op.Complete();
+    }
+
+    public async Task MongoDbOpen(string databaseName)
+    {
+        var connectionString = _connectionStrings.MongoDb;
+
+        await DB.InitAsync(databaseName, MongoClientSettings.FromConnectionString(connectionString));
+    }
+
+    public async Task MongoDbEnsureCollectionIndex()
+    {
+        _logger.LogInformation("Creating MongoDb Index..");
+
+        await MongoDbOpen("shared");
+        await DB.Index<SubsceneMovieItem>()
+            .Key(item => item.MovieUrl, KeyType.Ascending)
+            .Option(
+                options =>
+                    options.Unique = true
+            )
+            .CreateAsync();
+
+        await DB.Index<SubsceneMovieSearch>()
+            .Key(search => search.MovieUrl, KeyType.Ascending)
+            .Option(
+                options =>
+                    options.Unique = true
+            )
+            .CreateAsync();
+
+        await DB.Index<SubsceneSubtitleItem>()
+            .Key(item => item.MovieUrl, KeyType.Ascending)
+            .Option(options => options.Unique = true)
+            .CreateAsync();
+
+        _logger.LogInformation("Creating MongoDb Index complete");
     }
 }

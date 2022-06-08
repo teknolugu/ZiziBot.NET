@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Flurl.Http;
 using Hangfire;
 using Humanizer;
 using Microsoft.Extensions.Options;
@@ -444,6 +445,17 @@ public class TelegramService
             var adminListStr = adminList.ToAdminListStr();
             return adminListStr;
         }
+    }
+
+    public async Task SendChatActionAsync(ChatAction action)
+    {
+        Log.Information(
+            "Sending chat Action: '{Action}' to ChatId: '{ChatId}'",
+            action,
+            ChatId
+        );
+
+        await Client.SendChatActionAsync(ChatId, action);
     }
 
     [Obsolete("Please use separated method IsAdminAsync() and property IsPrivateChat instead of this method")]
@@ -1028,17 +1040,20 @@ public class TelegramService
         string caption = "",
         IReplyMarkup replyMarkup = null,
         int replyToMsgId = -1,
+        long customChatId = -1,
+        string customFileName = "",
         DateTime scheduleDeleteAt = default,
         bool includeSenderMessage = false,
         MessageFlag messageFlag = default,
         bool preventDuplicateSend = false
     )
     {
+        var targetChatId = customChatId == -1 ? ChatId : customChatId;
         Log.Information(
             messageTemplate: "Sending media: {MediaType}, fileId: {FileId} to {ChatId}",
             mediaType,
             fileId,
-            ChatId
+            targetChatId
         );
 
         TimeProc = MessageDate.GetDelay();
@@ -1049,9 +1064,18 @@ public class TelegramService
         switch (mediaType)
         {
             case MediaType.Document:
+                var inputFile = new InputOnlineFile(fileId);
+
+                if (fileId.IsValidUrl())
+                {
+                    Log.Information("Converting URL: '{Url}' to stream", fileId);
+                    var stream = await fileId.GetStreamAsync();
+                    inputFile = new InputOnlineFile(stream, customFileName);
+                }
+
                 SentMessage = await Client.SendDocumentAsync(
-                    chatId: ChatId,
-                    document: fileId,
+                    chatId: targetChatId,
+                    document: inputFile,
                     caption: caption,
                     parseMode: ParseMode.Html,
                     replyMarkup: replyMarkup,
@@ -1067,7 +1091,7 @@ public class TelegramService
                     var inputOnlineFile = new InputOnlineFile(content: fs, fileName: fileName);
 
                     SentMessage = await Client.SendDocumentAsync(
-                        chatId: ChatId,
+                        chatId: targetChatId,
                         document: inputOnlineFile,
                         caption: caption,
                         parseMode: ParseMode.Html,
@@ -1080,7 +1104,7 @@ public class TelegramService
 
             case MediaType.Photo:
                 SentMessage = await Client.SendPhotoAsync(
-                    chatId: ChatId,
+                    chatId: targetChatId,
                     photo: fileId,
                     caption: caption,
                     parseMode: ParseMode.Html,
@@ -1091,7 +1115,7 @@ public class TelegramService
 
             case MediaType.Video:
                 SentMessage = await Client.SendVideoAsync(
-                    chatId: ChatId,
+                    chatId: targetChatId,
                     video: fileId,
                     caption: caption,
                     parseMode: ParseMode.Html,
@@ -1102,7 +1126,7 @@ public class TelegramService
 
             case MediaType.Sticker:
                 SentMessage = await Client.SendStickerAsync(
-                    chatId: ChatId,
+                    chatId: targetChatId,
                     sticker: fileId,
                     replyMarkup: replyMarkup,
                     replyToMessageId: replyToMsgId

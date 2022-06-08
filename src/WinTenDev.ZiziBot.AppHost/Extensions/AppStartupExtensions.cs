@@ -16,6 +16,7 @@ using Telegram.Bot.Framework.Extensions;
 using WinTenDev.Zizi.Models.Bots.Options;
 using WinTenDev.Zizi.Models.Configs;
 using WinTenDev.Zizi.Models.Enums;
+using WinTenDev.Zizi.Services.Extensions;
 using WinTenDev.Zizi.Services.Externals;
 using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Services.Telegram;
@@ -170,6 +171,8 @@ internal static class AppStartupExtensions
         app.GetRequiredService<DatabaseService>().FixTableCollation().WaitAndUnwrapException();
 
         botService.EnsureCommandRegistration().WaitAndUnwrapException();
+
+        app.RunMongoDbPreparation();
 
         ChangeToken.OnChange(
             () => config.GetReloadToken(),
