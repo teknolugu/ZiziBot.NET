@@ -29,10 +29,10 @@ internal static class StartCommandExtension
 
         var subsceneUrl = "https://subscene.com" + movieDetail.SubtitleMovieUrl;
         var commentaryUrl = "https://subscene.com" + movieDetail.CommentaryUrl;
-        var zipFileName = movieDetail.ReleaseInfos?
-                              .OrderBy(s => s.Length).FirstOrDefault(movieDetail.MovieName)?
-                              .Replace(".", " ") ??
-                          movieDetail.MovieName + ".zip";
+        var fileName = movieDetail.ReleaseInfos?
+                           .OrderBy(s => s.Length).FirstOrDefault(movieDetail.MovieName)?
+                           .Replace(".", " ") ??
+                       movieDetail.MovieName;
 
         var subtitleInfo = HtmlMessage.Empty
                 .Bold("Movie: ").TextBr(movieDetail.MovieName, true)
@@ -51,7 +51,7 @@ internal static class StartCommandExtension
             fileId: movieDetail.SubtitleDownloadUrl,
             mediaType: MediaType.Document,
             caption: subtitleInfo.ToString(),
-            customFileName: zipFileName
+            customFileName: fileName + ".zip"
         );
 
         return response;
