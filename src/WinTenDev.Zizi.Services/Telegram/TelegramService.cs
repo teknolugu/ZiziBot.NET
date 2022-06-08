@@ -447,6 +447,17 @@ public class TelegramService
         }
     }
 
+    public async Task SendChatActionAsync(ChatAction action)
+    {
+        Log.Information(
+            "Sending chat Action: '{Action}' to ChatId: '{ChatId}'",
+            action,
+            ChatId
+        );
+
+        await Client.SendChatActionAsync(ChatId, action);
+    }
+
     [Obsolete("Please use separated method IsAdminAsync() and property IsPrivateChat instead of this method")]
     public async Task<bool> IsAdminOrPrivateChat()
     {

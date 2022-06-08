@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
+using Telegram.Bot.Types.Enums;
 using WinTenDev.Zizi.Models.Dto;
 using WinTenDev.Zizi.Models.Enums;
 using WinTenDev.Zizi.Models.Types;
@@ -20,18 +21,18 @@ internal static class StartCommandExtension
         var subsceneService = telegramService.GetRequiredService<SubsceneService>();
         var fixedSlug = subtitleSlug.Replace("=", "/");
 
-        await telegramService.SendTextMessageAsync(
-            "Subtitle sedang didownload." +
-            "\nSilahkan tunggu beberapa saat.."
-        );
+        await telegramService.SendTextMessageAsync("Subtitle sedang diproses, mohon tunggu...");
+
+        await telegramService.SendChatActionAsync(ChatAction.UploadDocument);
 
         var movieDetail = await subsceneService.GetSubtitleFileAsync(fixedSlug);
 
-        await telegramService.DeleteSentMessageAsync();
-
         var subsceneUrl = "https://subscene.com" + movieDetail.SubtitleMovieUrl;
         var commentaryUrl = "https://subscene.com" + movieDetail.CommentaryUrl;
-        var zipFileName = movieDetail.ReleaseInfos.MinBy(s => s.Length)?.Replace(".", " ") + ".zip";
+        var zipFileName = movieDetail.ReleaseInfos?
+                              .OrderBy(s => s.Length).FirstOrDefault(movieDetail.MovieName)?
+                              .Replace(".", " ") ??
+                          movieDetail.MovieName + ".zip";
 
         var subtitleInfo = HtmlMessage.Empty
                 .Bold("Movie: ").TextBr(movieDetail.MovieName, true)
@@ -43,6 +44,8 @@ internal static class StartCommandExtension
                 .Br()
                 .Text(movieDetail.Comment)
             ;
+
+        await telegramService.DeleteSentMessageAsync();
 
         await telegramService.SendMediaAsync(
             fileId: movieDetail.SubtitleDownloadUrl,

@@ -199,7 +199,7 @@ public class SubsceneService
             CommentaryUrl = authorElement?.PathName,
             CommentaryUser = authorElement?.TextContent.Trim(),
             PosterUrl = posterElement,
-            ReleaseInfo = releaseInfo.JoinStr("\n"),
+            ReleaseInfo = releaseInfo?.JoinStr("\n"),
             ReleaseInfos = releaseInfo,
             Comment = comment?.TextContent.Trim(),
             SubtitleDownloadUrl = subtitleUrl
