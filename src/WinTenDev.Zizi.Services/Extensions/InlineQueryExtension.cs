@@ -70,19 +70,53 @@ public static class InlineQueryExtension
         var learnMore = "https://docs.zizibot.winten.my.id/features/inline-query";
         var inlineResult = new InlineQueryExecutionResult();
 
+        var learnMoreContent = $"Silakan pelajari selengkapnya" +
+                               $"\n{learnMore}" +
+                               $"\n\nAtau tekan salah satu tombol dibawah ini";
+
+        var replyMarkup = new InlineKeyboardMarkup(
+            new[]
+            {
+                new[]
+                {
+                    InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Ping", $"ping")
+                },
+                new[]
+                {
+                    InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Buat pesan dengan tombol", $"message")
+                },
+                new[]
+                {
+                    InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Cari subtitle", "subscene ")
+                }
+            }
+        );
+
         await telegramService.AnswerInlineQueryAsync(
             new List<InlineQueryResult>()
             {
                 new InlineQueryResultArticle(
                     id: "guide-1",
                     title: "Bagaimana cara menggunakannya?",
-                    inputMessageContent: new InputTextMessageContent($"Silakan pelajari selengkapnya\n{learnMore}")
-                ),
+                    inputMessageContent: new InputTextMessageContent(learnMoreContent)
+                    {
+                        DisableWebPagePreview = true
+                    }
+                )
+                {
+                    ReplyMarkup = replyMarkup
+                },
                 new InlineQueryResultArticle(
                     id: "guide-2",
                     title: "Cobalah ketikkan 'ping'",
-                    inputMessageContent: new InputTextMessageContent($"Silakan pelajari selengkapnya\n{learnMore}")
+                    inputMessageContent: new InputTextMessageContent(learnMoreContent)
+                    {
+                        DisableWebPagePreview = true
+                    }
                 )
+                {
+                    ReplyMarkup = replyMarkup
+                }
             }
         );
 
@@ -135,8 +169,22 @@ public static class InlineQueryExtension
                     new InlineQueryResultArticle(
                         "iq-learn-mode",
                         learnMore,
-                        new InputTextMessageContent(learnMore + $"\n{urlArticle}")
+                        new InputTextMessageContent(learnMore)
+                        {
+                            DisableWebPagePreview = true
+                        }
                     )
+                    {
+                        ReplyMarkup = new InlineKeyboardMarkup(
+                            new[]
+                            {
+                                new[]
+                                {
+                                    InlineKeyboardButton.WithUrl("Pelajari selengkapnya..", urlArticle)
+                                }
+                            }
+                        )
+                    }
                 }
             );
 
