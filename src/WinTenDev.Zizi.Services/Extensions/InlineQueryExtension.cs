@@ -7,6 +7,7 @@ using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InlineQueryResults;
 using Telegram.Bot.Types.ReplyMarkups;
+using WinTenDev.Zizi.Models.Entities.MongoDb;
 using WinTenDev.Zizi.Models.Types;
 using WinTenDev.Zizi.Services.Externals;
 using WinTenDev.Zizi.Services.Telegram;
