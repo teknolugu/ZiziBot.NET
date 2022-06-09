@@ -215,60 +215,9 @@ public class TelegramService
         Update = updateContext.Update;
         Client = updateContext.Bot.Client;
 
-        CallbackQuery = Update.CallbackQuery;
-        InlineQuery = Update.InlineQuery;
-        MyChatMember = Update.MyChatMember;
-        Message = Update.Message;
-        EditedMessage = Update.EditedMessage;
-        ChannelPost = Update.ChannelPost;
-        EditedChannelPost = Update.EditedChannelPost;
-
-        MessageOrEdited = Message ?? EditedMessage;
-        ChannelOrEditedPost = ChannelPost ?? EditedChannelPost;
-        CallbackMessage = CallbackQuery?.Message;
-
-        ReplyToMessage = MessageOrEdited?.ReplyToMessage;
-        AnyMessage = CallbackMessage ?? Message ?? EditedMessage;
-
-        ReplyFromId = ReplyToMessage?.From?.Id ?? 0;
-
-        From = ChannelOrEditedPost?.From ?? MyChatMember?.From ?? CallbackQuery?.From ?? InlineQuery?.From ?? MessageOrEdited?.From;
-        Chat = ChannelOrEditedPost?.Chat ?? MyChatMember?.Chat ?? CallbackQuery?.Message?.Chat ?? MessageOrEdited?.Chat;
-        SenderChat = MessageOrEdited?.SenderChat;
-        MessageDate = MyChatMember?.Date ?? CallbackQuery?.Message?.Date ?? MessageOrEdited?.Date ?? DateTime.Now;
-        MessageEditDate = MessageOrEdited?.EditDate;
-        MessageDateOrEditDate = MessageEditDate ?? MessageDate;
-
-        TimeInit = MessageDate.GetDelay();
-        TimeInitSpan = MessageDate.GetDelaySpan();
-
-        FromId = From?.Id ?? 0;
-        ChatId = Chat?.Id ?? 0;
-        ReducedChatId = ChatId.ReduceChatId();
-        ChatTitle = Chat?.Title ?? From.GetFullName();
-        FromNameLink = From.GetNameLink();
-
-        IsNoUsername = CheckUsername();
-        HasUsername = !CheckUsername();
-        IsFromSudo = CheckFromSudoer();
-        IsPrivateChat = CheckIsPrivateChat();
-        IsGroupChat = CheckIsGroupChat();
-        IsPublicGroup = Chat?.Username != null && Chat?.Type is ChatType.Group or ChatType.Supergroup;
-        IsPrivateGroup = !IsPublicGroup;
-        IsChannel = Chat?.Type is ChatType.Channel;
-
         BotUsername = Context.Bot.Username;
 
-        AnyMessageText = AnyMessage?.Text;
-        MessageOrEditedText = MessageOrEdited?.Text;
-        MessageOrEditedCaption = MessageOrEdited?.Caption;
-
-        CallbackQueryData = CallbackQuery?.Data;
-        CallbackQueryDatas = CallbackQueryData?.Split(' ');
-
-        MessageTextParts = MessageOrEditedText?.SplitText(" ")
-            .Where(s => s.IsNotNullOrEmpty())
-            .ToArray();
+        AddUpdate(Update);
 
         KickTimeOffset = TimeSpan.FromMinutes(1);
 
@@ -302,7 +251,7 @@ public class TelegramService
 
         ReplyFromId = ReplyToMessage?.From?.Id ?? 0;
 
-        From = ChannelOrEditedPost?.From ?? MyChatMember?.From ?? ChosenInlineResult?.From ?? CallbackQuery?.From ?? MessageOrEdited?.From;
+        From = ChannelOrEditedPost?.From ?? MyChatMember?.From ?? ChosenInlineResult?.From ?? InlineQuery?.From ?? CallbackQuery?.From ?? MessageOrEdited?.From;
         Chat = ChannelOrEditedPost?.Chat ?? MyChatMember?.Chat ?? CallbackQuery?.Message?.Chat ?? MessageOrEdited?.Chat;
         SenderChat = MessageOrEdited?.SenderChat;
         MessageDate = MyChatMember?.Date ?? CallbackQuery?.Message?.Date ?? MessageOrEdited?.Date ?? DateTime.Now;
