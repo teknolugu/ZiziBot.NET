@@ -101,6 +101,10 @@ public class TelegramService
     public string[] MessageTextParts { get; set; }
     public string[] CallbackQueryDatas { get; set; }
 
+    internal string InlineQueryCmd { get; set; }
+    internal string InlineQueryValue { get; set; }
+    internal List<string> InlineQueryValues { get; set; }
+
     public User From { get; set; }
     public Chat Chat { get; set; }
     public Chat SenderChat { get; set; }
@@ -282,6 +286,10 @@ public class TelegramService
 
         CallbackQueryData = CallbackQuery?.Data;
         CallbackQueryDatas = CallbackQueryData?.Split(' ');
+
+        InlineQueryValues = InlineQuery?.Query.Split(" ", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries).ToList();
+        InlineQueryCmd = InlineQueryValues?.FirstOrDefault();
+        InlineQueryValue = InlineQueryValues?.Skip(1).JoinStr(" ");
 
         MessageTextParts = MessageOrEditedText?.SplitText(" ")
             .Where(s => s.IsNotNullOrEmpty())

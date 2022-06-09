@@ -219,8 +219,8 @@ public static class InlineQueryExtension
         var executionResult = new InlineQueryExecutionResult();
         List<SubsceneMovieSearch> subsceneMovieSearches;
 
-        var queryCmd = telegramService.GetInlineQueryAt<string>(0);
-        var queryValue = telegramService.InlineQuery.Query.Replace(queryCmd, "").Trim();
+        var queryCmd = telegramService.InlineQueryCmd;
+        var queryValue = telegramService.InlineQueryValue;
         Log.Information("Starting find Subtitle with title: '{QueryValue}'", queryValue);
 
         var subsceneService = telegramService.GetRequiredService<SubsceneService>();
@@ -306,8 +306,12 @@ public static class InlineQueryExtension
                                 },
                                 new[]
                                 {
-                                    InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Mulai unduh", $"subscene-dl {slug} "),
+                                    InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Pencarian lanjut", $"subscene {queryValue} "),
                                     InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Pencarian baru", "subscene ")
+                                },
+                                new[]
+                                {
+                                    InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Mulai unduh", $"subscene-dl {slug} "),
                                 }
                             }
                         )
@@ -330,6 +334,7 @@ public static class InlineQueryExtension
         var queryCmd = telegramService.GetInlineQueryAt<string>(0);
         var query1 = telegramService.GetInlineQueryAt<string>(1);
         var query2 = telegramService.GetInlineQueryAt<string>(2);
+        var queryValue = telegramService.InlineQueryValue;
         Log.Information("Starting find Subtitle file with title: '{QueryValue}'", query1);
 
         var subsceneService = telegramService.GetRequiredService<SubsceneService>();
@@ -424,16 +429,17 @@ public static class InlineQueryExtension
                         {
                             new[]
                             {
-                                InlineKeyboardButton.WithUrl("Tautan subjudul", subtitleUrl)
+                                InlineKeyboardButton.WithUrl("Tautan subtitle", subtitleUrl)
                             },
                             new[]
                             {
+                                InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Pencarian lanjut", $"subscene-dl {queryValue} "),
                                 InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Ulang pencarian", $"subscene-dl {query1} "),
-                                InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Pencarian baru", "subscene ")
                             },
                             new[]
                             {
-                                InlineKeyboardButton.WithUrl("Mulai unduh file", startDownloadUrl)
+                                InlineKeyboardButton.WithUrl("Unduh subtitle", startDownloadUrl),
+                                InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Pencarian baru", "subscene ")
                             }
                         }
                     )
