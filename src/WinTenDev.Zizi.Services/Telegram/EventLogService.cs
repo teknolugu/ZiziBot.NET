@@ -137,24 +137,41 @@ public class EventLogService
                     }
                 }
             }
-            catch (Exception exception)
+            catch (Exception forwardMessageException)
             {
                 Log.Warning(
                     "Fail forward MessageId: {MessageId} at ChatId: {ChatId}. Message: {Message}",
                     forwardMessageId,
                     chatId,
-                    exception.Message
+                    forwardMessageException.Message
                 );
             }
 
-            await _botClient.SendTextMessageAsync(
-                chatId: eventLogTarget,
-                text: sendText,
-                allowSendingWithoutReply: true,
-                disableWebPagePreview: disableWebPreview,
-                replyToMessageId: replyToMessageId,
-                parseMode: ParseMode.Html
-            );
+            try
+            {
+                var sentEventLog = await _botClient.SendTextMessageAsync(
+                    chatId: eventLogTarget,
+                    text: sendText,
+                    allowSendingWithoutReply: true,
+                    disableWebPagePreview: disableWebPreview,
+                    replyToMessageId: replyToMessageId,
+                    parseMode: ParseMode.Html
+                );
+
+                Log.Information(
+                    "Send EventLog Successfully to ChatId: {ChatId}, Sent MessageId: {MessageId}",
+                    eventLogTarget,
+                    sentEventLog.MessageId
+                );
+            }
+            catch (Exception sendEventLogException)
+            {
+                Log.Error(
+                    sendEventLogException,
+                    "Fail send EventLog to ChatId: {ChatId}",
+                    eventLogTarget
+                );
+            }
         }
     }
 }
