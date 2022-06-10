@@ -161,7 +161,7 @@ public static class InlineQueryExtension
 
         if (parseMessage.Count == 0)
         {
-            var learnMore = "Pelajari cara membuat tombol dengan InlineQuery";
+            var learnMore = "Pelajari cara membuat Pesan dengan Tombol via InlineQuery";
             var urlArticle = "https://docs.zizibot.winten.my.id/features/inline-query/pesan-dengan-tombol";
 
             await telegramService.AnswerInlineQueryAsync(
@@ -169,16 +169,21 @@ public static class InlineQueryExtension
                 {
                     new InlineQueryResultArticle(
                         "iq-learn-mode",
-                        learnMore,
+                        "Pesan dengan tombol via InlineQuery",
                         new InputTextMessageContent(learnMore)
                         {
                             DisableWebPagePreview = true
                         }
                     )
                     {
+                        Description = learnMore,
                         ReplyMarkup = new InlineKeyboardMarkup(
                             new[]
                             {
+                                new[]
+                                {
+                                    InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Mulai membuat", "message ")
+                                },
                                 new[]
                                 {
                                     InlineKeyboardButton.WithUrl("Pelajari selengkapnya..", urlArticle)
