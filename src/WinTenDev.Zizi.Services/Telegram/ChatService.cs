@@ -319,10 +319,11 @@ public class ChatService
                 }
                 catch (Exception exception)
                 {
-                    if (exception.Contains("message to delete not found"))
+                    if (exception.Contains("message to delete not found") ||
+                        exception.Contains("message can't be deleted"))
                     {
                         _logger.LogInformation(
-                            "MessageId '{MessageId}' at ChatId '{ChatId}' is not found, it's maybe has been deleted",
+                            "Error delete message with Id '{MessageId}' at ChatId '{ChatId}'",
                             messageId,
                             chatId
                         );
