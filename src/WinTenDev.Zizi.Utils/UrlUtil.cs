@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using DebounceThrottle;
@@ -409,5 +410,16 @@ public static class UrlUtil
 
         var uri = new Uri(url);
         return uri.Host.Contains("mega.nz");
+    }
+
+    public static async Task<string> GetServerFileName(this string url)
+    {
+        var response = await url.GetAsync();
+        var filename = response.Headers
+            .FirstOrDefault("content-disposition").Replace("\"", "")
+            .Split(";").LastOrDefault()?
+            .Split("=").LastOrDefault();
+
+        return filename;
     }
 }

@@ -6,6 +6,8 @@ using WinTenDev.Zizi.Models.Enums;
 using WinTenDev.Zizi.Models.Types;
 using WinTenDev.Zizi.Services.Externals;
 using WinTenDev.Zizi.Services.Telegram;
+using WinTenDev.Zizi.Utils;
+using WinTenDev.Zizi.Utils.IO;
 
 namespace WinTenDev.Zizi.Services.Extensions;
 
@@ -29,10 +31,12 @@ internal static class StartCommandExtension
 
         var subsceneUrl = "https://subscene.com" + movieDetail.SubtitleMovieUrl;
         var commentaryUrl = "https://subscene.com" + movieDetail.CommentaryUrl;
+        var serverFileName = await movieDetail.SubtitleDownloadUrl.GetServerFileName();
         var fileName = movieDetail.ReleaseInfos?
                            .OrderBy(s => s.Length).FirstOrDefault(movieDetail.MovieName)?
                            .Replace(".", " ") ??
                        movieDetail.MovieName;
+        var fileNameWithExt = fileName + serverFileName.GetFileExtension();
 
         var subtitleInfo = HtmlMessage.Empty
                 .Bold("Movie: ").TextBr(movieDetail.MovieName, true)
@@ -51,7 +55,7 @@ internal static class StartCommandExtension
             fileId: movieDetail.SubtitleDownloadUrl,
             mediaType: MediaType.Document,
             caption: subtitleInfo.ToString(),
-            customFileName: fileName + ".zip"
+            customFileName: fileNameWithExt
         );
 
         return response;
