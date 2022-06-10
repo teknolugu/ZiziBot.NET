@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Serilog;
 
@@ -21,7 +22,11 @@ public static class FileUtil
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Error Deleting file {FilePath}", filePath);
+            Log.Error(
+                ex,
+                "Error Deleting file {FilePath}",
+                filePath
+            );
         }
     }
 
@@ -102,14 +107,24 @@ public static class FileUtil
         bool recursive = false
     )
     {
-        var files = Directory.EnumerateFiles
-        (
-            path, searchPattern, new EnumerationOptions
+        var files = Directory.EnumerateFiles(
+            path,
+            searchPattern,
+            new EnumerationOptions
             {
                 RecurseSubdirectories = recursive
             }
         );
 
         return files;
+    }
+
+    public static string GetFileExtension(
+        this string filePath,
+        string prefix = "."
+    )
+    {
+        var ext = filePath.Split(".").LastOrDefault();
+        return prefix + ext;
     }
 }
