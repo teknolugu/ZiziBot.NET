@@ -89,6 +89,7 @@
         <PackageReference Include="Serilog.Sinks.File" Version="5.0.0"/>
         <PackageReference Include="Serilog.Sinks.Grafana.Loki" Version="7.1.1"/>
         <PackageReference Include="Serilog.Sinks.NewRelic.Logs" Version="1.2.0"/>
+        <PackageReference Include="Serilog.Sinks.Telegram.Alternative" Version="1.1.8"/>
         <PackageReference Include="Serilog.Sinks.TelegramBot" Version="1.0.8"/>
         <PackageReference Include="SerilogAnalyzer" Version="0.15.0"/>
         <PackageReference Include="Slapper.AutoMapper" Version="2.0.5"/>
