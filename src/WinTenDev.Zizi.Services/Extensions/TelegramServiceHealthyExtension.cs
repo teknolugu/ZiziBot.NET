@@ -105,15 +105,21 @@ public static class TelegramServiceHealthyExtension
 
         try
         {
-            var eventLogService = telegramService.GetRequiredService<EventLogService>();
-            var healthConfig = telegramService.GetRequiredService<IOptionsSnapshot<HealthConfig>>().Value;
-
             if (telegramService.ChannelOrEditedPost != null ||
                 telegramService.CallbackQuery != null ||
-                telegramService.InlineQuery != null)
+                telegramService.InlineQuery != null ||
+                telegramService.ChosenInlineResult != null
+               )
             {
-                return;
+                Log.Information(
+                    "Slow down notification skipped for ChatId {ChatId} because UpdateType: {Type}",
+                    chatId,
+                    telegramService.Update.Type
+                );
             }
+
+            var eventLogService = telegramService.GetRequiredService<EventLogService>();
+            var healthConfig = telegramService.GetRequiredService<IOptionsSnapshot<HealthConfig>>().Value;
 
             var timeInit = telegramService.TimeInit.ToDouble();
             var timeProc = telegramService.TimeProc.ToDouble();
