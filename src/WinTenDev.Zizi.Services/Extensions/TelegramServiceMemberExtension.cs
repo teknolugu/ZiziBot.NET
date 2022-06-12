@@ -493,17 +493,7 @@ public static class TelegramServiceMemberExtension
     public static async Task InsightStatusMemberAsync(this TelegramService telegramService)
     {
         var chatId = telegramService.ChatId;
-
-        if (telegramService.IsPrivateGroup)
-        {
-            await telegramService.SendTextMessageAsync(
-                "Perintah ini hanya tersedia untuk Grup Publik",
-                scheduleDeleteAt: DateTime.UtcNow.AddMinutes(1),
-                includeSenderMessage: true
-            );
-
-            return;
-        }
+        var wTelegramApiService = telegramService.GetRequiredService<WTelegramApiService>();
 
         if (!await telegramService.CheckFromAdminOrAnonymous())
         {
@@ -511,7 +501,30 @@ public static class TelegramServiceMemberExtension
             return;
         }
 
-        var wTelegramApiService = telegramService.GetRequiredService<WTelegramApiService>();
+        if (telegramService.IsPrivateGroup)
+        {
+            var isProbeHere = await wTelegramApiService.IsProbeHereAsync(chatId);
+            if (!isProbeHere)
+            {
+                var probeInfo = await wTelegramApiService.GetMeAsync();
+                var userId = probeInfo.full_user.id;
+                var userName = probeInfo.users.FirstOrDefault(user => user.Key == userId).Value;
+
+                var htmlMessage = HtmlMessage.Empty
+                    .Text("Karena ini bukan Grup Publik, ZiziBot membutuhkan Probe sebagai pembantu ZiziBot dalam menjalankan fitur tertentu.")
+                    .Text("Adapun Probe untuk ZiziBot adalah ")
+                    .User(userId, userName.GetFullName()).Text(". ")
+                    .Text("Silakan tambahkan Pengguna ini ke Grup Anda.");
+
+                await telegramService.SendTextMessageAsync(
+                    sendText: htmlMessage.ToString(),
+                    scheduleDeleteAt: DateTime.UtcNow.AddMinutes(1),
+                    includeSenderMessage: true
+                );
+
+                return;
+            }
+        }
 
         await telegramService.SendTextMessageAsync("Sedang mengambil informasi..");
 
