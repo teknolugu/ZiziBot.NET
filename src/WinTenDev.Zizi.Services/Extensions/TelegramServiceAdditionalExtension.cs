@@ -212,13 +212,13 @@ public static class TelegramServiceAdditionalExtension
     {
         var message = telegramService.MessageOrEdited;
 
-        if (message.Document == null ||
-            message.MediaGroupId != null)
+        if (message?.Document == null ||
+            message?.MediaGroupId != null)
         {
             Log.Information(
                 "Compress Warning skipped because shouldn't warned. ChatId: {ChatId}, MessageId: {MessageId}",
                 telegramService.ChatId,
-                message.MessageId
+                message?.MessageId
             );
             return;
         }
