@@ -8,6 +8,7 @@ using Serilog;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using TL;
+using WinTenDev.Zizi.Exceptions;
 using WinTenDev.Zizi.Models.Enums;
 using WinTenDev.Zizi.Models.Tables;
 using WinTenDev.Zizi.Models.Types;
@@ -492,17 +493,7 @@ public static class TelegramServiceMemberExtension
     public static async Task InsightStatusMemberAsync(this TelegramService telegramService)
     {
         var chatId = telegramService.ChatId;
-
-        if (telegramService.IsPrivateGroup)
-        {
-            await telegramService.SendTextMessageAsync(
-                "Perintah ini hanya tersedia untuk Grup Publik",
-                scheduleDeleteAt: DateTime.UtcNow.AddMinutes(1),
-                includeSenderMessage: true
-            );
-
-            return;
-        }
+        var wTelegramApiService = telegramService.GetRequiredService<WTelegramApiService>();
 
         if (!await telegramService.CheckFromAdminOrAnonymous())
         {
@@ -510,45 +501,83 @@ public static class TelegramServiceMemberExtension
             return;
         }
 
-        var wTelegramApiService = telegramService.GetRequiredService<WTelegramApiService>();
+        if (telegramService.IsPrivateGroup)
+        {
+            var isProbeHere = await wTelegramApiService.IsProbeHereAsync(chatId);
+            if (!isProbeHere)
+            {
+                var probeInfo = await wTelegramApiService.GetMeAsync();
+                var userId = probeInfo.full_user.id;
+                var userName = probeInfo.users.FirstOrDefault(user => user.Key == userId).Value;
+
+                var htmlMessage = HtmlMessage.Empty
+                    .Text("Karena ini bukan Grup Publik, ZiziBot membutuhkan Probe sebagai pembantu ZiziBot dalam menjalankan fitur tertentu.")
+                    .Text("Adapun Probe untuk ZiziBot adalah ")
+                    .User(userId, userName.GetFullName()).Text(". ")
+                    .Text("Silakan tambahkan Pengguna ini ke Grup Anda.");
+
+                await telegramService.SendTextMessageAsync(
+                    sendText: htmlMessage.ToString(),
+                    scheduleDeleteAt: DateTime.UtcNow.AddMinutes(1),
+                    includeSenderMessage: true
+                );
+
+                return;
+            }
+        }
 
         await telegramService.SendTextMessageAsync("Sedang mengambil informasi..");
 
-        var chatLink = telegramService.Chat.GetChatLink();
-        var chatTitle = telegramService.Chat.GetChatTitle();
+        try
+        {
+            var chatLink = telegramService.Chat.GetChatLink();
+            var chatTitle = telegramService.Chat.GetChatTitle();
 
-        var participant = await wTelegramApiService.GetAllParticipants(chatId, disableCache: true);
-        var users = participant.users.Select(pair => pair.Value).ToList();
+            var participant = await wTelegramApiService.GetAllParticipants(chatId, disableCache: false);
+            var allParticipants = participant.participants;
+            var allUsers = participant.users.Select(pair => pair.Value).ToList();
 
-        var noUsernameUsers = users.Where(user => user.username == null).ToList();
-        var lastRecently = users.Where(user => user.status == new UserStatusRecently()).ToList();
-        var lastActiveWeek = users.Where(user => user.status == new UserStatusLastWeek()).ToList();
-        var lastActiveMonth = users.Where(user => user.status == new UserStatusLastMonth()).ToList();
-        var lastActiveOnline = users.Where(user => user.status == new UserStatusOnline()).ToList();
-        var lastActiveOffline = users.Where(user => user.status == new UserStatusOffline()).ToList();
-        var deletedUsers = users.Where(user => !user.IsActive).ToList();
+            var groupByStatus = allUsers.GroupBy(user => user.status?.GetType()).Where(users => users.Key != null);
+            var noUsernameUsers = allUsers.Where(user => user.username == null).ToListOrEmpty();
+            var lastRecently = groupByStatus.FirstOrDefault(users => users.Key == typeof(UserStatusRecently)).ToListOrEmpty();
+            var lastActiveWeek = groupByStatus.FirstOrDefault(users => users.Key == typeof(UserStatusLastWeek)).ToListOrEmpty();
+            var lastActiveMonth = groupByStatus.FirstOrDefault(users => users.Key == typeof(UserStatusLastMonth)).ToListOrEmpty();
+            var lastActiveOnline = groupByStatus.FirstOrDefault(users => users.Key == typeof(UserStatusOnline)).ToListOrEmpty();
+            var lastActiveOffline = groupByStatus.FirstOrDefault(users => users.Key == typeof(UserStatusOffline)).ToListOrEmpty();
+            var deletedUsers = allUsers.Where(user => !user.IsActive).ToListOrEmpty();
+            var bannedUsers = allParticipants.OfType<ChannelParticipantBanned>().ToListOrEmpty();
 
-        var bots = users.Where(user => user.bot_info_version != 0).ToList();
+            var allBots = allUsers.Where(user => user.bot_info_version != 0).ToList();
 
-        var htmlMessage = HtmlMessage.Empty
-            .Bold("Status Member").Br()
-            .Bold("Chat: ").Url(chatLink, chatTitle).Br()
-            .Bold("Id: ").CodeBr(chatId.ToString())
-            .Bold("Total: ").CodeBr(users.Count.ToString())
-            .Bold("No Username: ").CodeBr(noUsernameUsers.Count.ToString())
-            .Bold("Recent Offline: ").CodeBr(lastActiveOffline.Count.ToString())
-            .Bold("Recent Online: ").CodeBr(lastActiveOnline.Count.ToString())
-            .Bold("Active recent: ").CodeBr(lastRecently.Count.ToString())
-            .Bold("Last week: ").CodeBr(lastActiveWeek.Count.ToString())
-            .Bold("Last month: ").CodeBr(lastActiveMonth.Count.ToString())
-            .Bold("Deleted accounts: ").CodeBr(deletedUsers.Count.ToString())
-            .Bold("Bots: ").CodeBr(bots.Count.ToString());
+            var htmlMessage = HtmlMessage.Empty
+                .Bold("Status Member").Br()
+                .Bold("Chat: ").Url(chatLink, chatTitle).Br()
+                .Bold("Id: ").CodeBr(chatId.ToString())
+                .Bold("Total: ").CodeBr(allUsers.Count.ToString())
+                .Bold("No Username: ").CodeBr(noUsernameUsers.Count.ToString())
+                .Bold("Recent Offline: ").CodeBr(lastActiveOffline.Count.ToString())
+                .Bold("Recent Online: ").CodeBr(lastActiveOnline.Count.ToString())
+                .Bold("Active recent: ").CodeBr(lastRecently.Count.ToString())
+                .Bold("Last week: ").CodeBr(lastActiveWeek.Count.ToString())
+                .Bold("Last month: ").CodeBr(lastActiveMonth.Count().ToString())
+                .Bold("Deleted accounts: ").CodeBr(deletedUsers.CountOrZero().ToString())
+                .Bold("Bots: ").CodeBr(allBots.Count.ToString())
+                .Bold("Banned: ").CodeBr(bannedUsers.Count.ToString());
 
-        await telegramService.EditMessageTextAsync(
-            sendText: htmlMessage.ToString(),
-            scheduleDeleteAt: DateTime.UtcNow.AddMinutes(10),
-            includeSenderMessage: true
-        );
+            await telegramService.EditMessageTextAsync(
+                sendText: htmlMessage.ToString(),
+                scheduleDeleteAt: DateTime.UtcNow.AddMinutes(10),
+                includeSenderMessage: true
+            );
+        }
+        catch (Exception exception)
+        {
+            await telegramService.EditMessageTextAsync(
+                sendText: "Suatu kesalahan telah terjadi. Silahkan coba lagi nanti.\n" + exception.Message,
+                scheduleDeleteAt: DateTime.UtcNow.AddMinutes(1),
+                includeSenderMessage: true
+            );
+        }
     }
 
     public static async Task<bool> EnsureForceSubscriptionAsync(this TelegramService telegramService)
@@ -873,7 +902,17 @@ public static class TelegramServiceMemberExtension
     public static async Task EnsureChatAdminAsync(this TelegramService telegramService)
     {
         var chatId = telegramService.ChatId;
-        var chatAdminRepository = telegramService.GetRequiredService<ChatAdminService>();
+
+        if (telegramService.ChosenInlineResult != null ||
+            telegramService.InlineQuery != null)
+        {
+            Log.Information("Ensure chat Admin skip because Update type is: {UpdateType}}", telegramService.Update.Type);
+            return;
+        }
+
+        try
+        {
+            var chatAdminRepository = telegramService.GetRequiredService<ChatAdminService>();
 
         if (telegramService.IsPrivateChat)
         {
@@ -883,17 +922,22 @@ public static class TelegramServiceMemberExtension
 
         var admins = await telegramService.GetChatAdmin();
 
-        await chatAdminRepository.SaveAll(
-            admins.Select(
-                member =>
-                    new ChatAdmin()
-                    {
-                        UserId = member.User.Id,
-                        ChatId = telegramService.ChatId,
-                        Role = member.Status,
-                        CreatedAt = DateTime.UtcNow
-                    }
-            )
-        );
+            await chatAdminRepository.SaveAll(
+                admins.Select(
+                    member =>
+                        new ChatAdmin()
+                        {
+                            UserId = member.User.Id,
+                            ChatId = telegramService.ChatId,
+                            Role = member.Status,
+                            CreatedAt = DateTime.UtcNow
+                        }
+                )
+            );
+        }
+        catch (Exception exception)
+        {
+            throw new AdvancedApiRequestException($"Ensure Chat Admin failed. ChatId: {chatId}", exception);
+        }
     }
 }

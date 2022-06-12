@@ -212,13 +212,25 @@ public static class TelegramServiceAdditionalExtension
     {
         var message = telegramService.MessageOrEdited;
 
-        if (message?.Document == null) return;
+        if (message.Document == null ||
+            message.MediaGroupId != null)
+        {
+            Log.Information(
+                "Compress Warning skipped because shouldn't warned. ChatId: {ChatId}, MessageId: {MessageId}",
+                telegramService.ChatId,
+                message.MessageId
+            );
+            return;
+        }
 
         var document = message.Document;
 
         if (document.MimeType?.StartsWith("image") ?? false)
         {
-            await telegramService.SendTextMessageAsync("Kirim gambar dengan kompres, bantu selamatkan bumi");
+            await telegramService.SendTextMessageAsync(
+                sendText: "Kirim gambar dengan kompres, bantu selamatkan bumi",
+                scheduleDeleteAt: DateTime.UtcNow.AddHours(1)
+            );
         }
     }
 }

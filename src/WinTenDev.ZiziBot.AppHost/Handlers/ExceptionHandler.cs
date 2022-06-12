@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Diagnostics;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Serilog;
 using Telegram.Bot.Framework.Abstractions;
+using WinTenDev.Zizi.Models.Types;
 using WinTenDev.Zizi.Services.Telegram;
-using WinTenDev.Zizi.Utils;
 using WinTenDev.Zizi.Utils.Text;
 
 namespace WinTenDev.ZiziBot.AppHost.Handlers;
@@ -14,10 +11,15 @@ namespace WinTenDev.ZiziBot.AppHost.Handlers;
 public class ExceptionHandler : IUpdateHandler
 {
     private readonly TelegramService _telegramService;
+    private readonly EventLogService _eventLogService;
 
-    public ExceptionHandler(TelegramService telegramService)
+    public ExceptionHandler(
+        TelegramService telegramService,
+        EventLogService eventLogService
+    )
     {
         _telegramService = telegramService;
+        _eventLogService = eventLogService;
     }
 
     public async Task HandleAsync(
@@ -35,22 +37,14 @@ public class ExceptionHandler : IUpdateHandler
         {
             await next(context, cancellationToken);
         }
-        catch (Exception e)
+        catch (Exception exception)
         {
-            Log.Error(
-                e.Demystify(),
-                "Exception handler at ChatId: {ChatId}",
-                chatId
-            );
+            var htmlMessage = HtmlMessage.Empty
+                .Bold("🗒 Message: ").CodeBr(exception.Message).Br()
+                .BoldBr("🔄 Update: ").CodeBr(update.ToJson(true)).Br()
+                .BoldBr("🛑 Exception: ").CodeBr(exception.ToString()).Br();
 
-            var eventBuilder = new StringBuilder()
-                .Append("<b>Message: </b>").AppendLine(e.Message)
-                .AppendLine()
-                .Append("<code>")
-                .Append(update.ToJson(true).HtmlEncode())
-                .Append("</code>");
-
-            await _telegramService.SendEventLogRawAsync(eventBuilder.ToTrimmedString());
+            await _eventLogService.SendEventLogCoreAsync(htmlMessage.ToString());
         }
     }
 }

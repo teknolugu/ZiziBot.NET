@@ -16,7 +16,6 @@ using Serilog.Events;
 using Serilog.Sinks.Datadog.Logs;
 using Serilog.Sinks.Grafana.Loki;
 using Serilog.Sinks.SystemConsole.Themes;
-using Serilog.Sinks.TelegramBot;
 using WinTenDev.Zizi.Models.Configs;
 
 namespace WinTenDev.Zizi.Utils.Extensions;
@@ -304,12 +303,19 @@ public static class SerilogServiceExtension
 
         botToken ??= tgBotConfig.ApiToken;
 
-        logger.WriteTo.TelegramBot(
-            token: botToken,
+        logger.WriteTo.Telegram(
+            botToken: botToken,
             chatId: channelId.ToString(),
-            restrictedToMinimumLevel: LogEventLevel.Error,
-            parseMode: ParseMode.HTML
+            applicationName: config.AppName,
+            restrictedToMinimumLevel: LogEventLevel.Error
         );
+
+        // logger.WriteTo.TelegramBot(
+        //     token: botToken,
+        //     chatId: channelId.ToString(),
+        //     restrictedToMinimumLevel: LogEventLevel.Error,
+        //     parseMode: ParseMode.HTML
+        // );
 
         return logger;
     }

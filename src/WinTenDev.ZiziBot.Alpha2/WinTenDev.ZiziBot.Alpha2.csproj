@@ -22,4 +22,14 @@
         <ProjectReference Include="..\WinTenDev.Zizi.Utils\WinTenDev.Zizi.Utils.csproj"/>
     </ItemGroup>
 
+    <ItemGroup>
+        <Content Include="..\..\Resources\Language\**\*" LinkBase="Storage\Language">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+
+        <None Update="Storage\**">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
 </Project>

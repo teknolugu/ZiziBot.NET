@@ -312,16 +312,20 @@ public class ChatService
                         new MessageHistoryFindDto()
                         {
                             MessageFlag = history.MessageFlag,
+                            ChatId = history.ChatId,
                             MessageId = history.MessageId
                         }
                     );
                 }
                 catch (Exception exception)
                 {
-                    if (exception.Contains("message to delete not found"))
+                    if (exception.Contains("message to delete not found") ||
+                        exception.Contains("message can't be deleted") ||
+                        exception.Contains("bot was kicked")
+                       )
                     {
                         _logger.LogInformation(
-                            "MessageId {MessageId} at ChatId {ChatId} is not found, it's maybe has been deleted",
+                            "Error delete message with Id '{MessageId}' at ChatId '{ChatId}'",
                             messageId,
                             chatId
                         );
@@ -338,7 +342,7 @@ public class ChatService
                     {
                         _logger.LogError(
                             exception,
-                            "Error while deleting message history with messageId {MessageId} at chatId {ChatId}",
+                            "Error when deleting message history with messageId '{MessageId}' at chatId '{ChatId}'",
                             messageId,
                             chatId
                         );

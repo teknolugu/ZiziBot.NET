@@ -14,7 +14,9 @@ using Serilog;
 using SerilogTimings;
 using WinTenDev.Zizi.Models.Configs;
 using WinTenDev.Zizi.Models.Entities.MongoDb;
+using WinTenDev.Zizi.Models.Types;
 using WinTenDev.Zizi.Services.Internals;
+using WinTenDev.Zizi.Services.Telegram;
 using WinTenDev.Zizi.Utils;
 using WinTenDev.Zizi.Utils.Parsers;
 
@@ -25,6 +27,8 @@ public class SubsceneService
     private readonly SubsceneConfig _subsceneConfig;
     private readonly ILogger<SubsceneService> _logger;
     private readonly CacheService _cacheService;
+    private readonly EventLogService _eventLogService;
+    private readonly QueryService _queryService;
     private readonly DatabaseService _databaseService;
     private bool CanUseFeature => _subsceneConfig.IsEnabled;
 
@@ -32,16 +36,20 @@ public class SubsceneService
         IOptionsSnapshot<SubsceneConfig> subsceneConfig,
         ILogger<SubsceneService> logger,
         CacheService cacheService,
+        EventLogService eventLogService,
+        QueryService queryService,
         DatabaseService databaseService
     )
     {
         _subsceneConfig = subsceneConfig.Value;
         _logger = logger;
         _cacheService = cacheService;
+        _eventLogService = eventLogService;
+        _queryService = queryService;
         _databaseService = databaseService;
     }
 
-    public async Task<BulkWriteResult<SubsceneMovieItem>> FeedPopularTitles()
+    public async Task<List<SubsceneMovieItem>> FeedPopularTitles()
     {
         var document = await AnglesharpUtil.DefaultContext.OpenAsync(_subsceneConfig.PopularTitleUrl);
         var htmlTableRows = document.All
@@ -49,7 +57,7 @@ public class SubsceneService
             .Skip(1)
             .OfType<IHtmlTableRowElement>();
 
-        var parsedMovie = htmlTableRows.Select(
+        var movieResult = htmlTableRows.Select(
             element => {
                 var innerText = element.TextContent.Split("\n", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
 
@@ -66,12 +74,27 @@ public class SubsceneService
 
                 return item;
             }
-        );
+        ).ToList();
 
-        await _databaseService.MongoDbOpen("shared");
-        var insert = await parsedMovie.InsertAsync();
+        try
+        {
+            await _queryService.MongoDbOpen("shared");
 
-        return insert;
+            await DB.DeleteAsync<SubsceneMovieItem>(item => item.CreatedOn < DateTime.Now.AddDays(-3));
+            var insert = await movieResult.SaveAsync();
+
+            _logger.LogInformation("Inserted {Inserted}", insert.InsertedCount);
+        }
+        catch (MongoBulkWriteException<SubsceneMovieItem> bulkWriteException)
+        {
+            _logger.LogError(bulkWriteException, "Error while save Popular movie");
+        }
+        catch (Exception exception)
+        {
+            _logger.LogWarning(exception, "Error while save Popular movie");
+        }
+
+        return movieResult;
     }
 
     public async Task<List<SubsceneMovieSearch>> FeedMovieByTitle(string title)
@@ -105,13 +128,27 @@ public class SubsceneService
             }
         ).ToList();
 
+        BulkWriteResult<SubsceneMovieSearch> insert;
+
         try
         {
-            if (movieResult == null) return default;
+            if (!movieResult.AnyOrNotNull()) return default;
 
             _logger.LogDebug("Saving Subtitle Search to database. {rows} item(s)", movieResult.Count);
-            await _databaseService.MongoDbOpen("shared");
-            await movieResult.InsertAsync();
+            await _queryService.MongoDbOpen("shared");
+            insert = await movieResult.SaveAsync();
+
+            _logger.LogInformation("Inserted {Inserted}", insert.InsertedCount);
+
+            var logMessage = HtmlMessage.Empty
+                .BoldBr("Indexing Movie Item")
+                .TextBr($"Sekitar {insert.InsertedCount} judul ditambahkan");
+
+            await _eventLogService.SendEventLogCoreAsync(logMessage.ToString());
+        }
+        catch (MongoBulkWriteException bulkWriteException)
+        {
+            _logger.LogWarning(bulkWriteException, "Error while Mongo BulkWrite Search");
         }
         catch (Exception exception)
         {
@@ -153,12 +190,21 @@ public class SubsceneService
             .Where(item => item.Language != null)
             .ToList();
 
+        BulkWriteResult<SubsceneSubtitleItem> insert;
+
         try
         {
             _logger.LogDebug("Saving Subtitle language item Search to database. {rows} item(s)", movieList.Count);
-            await _databaseService.MongoDbOpen("shared");
-            var insertResult = await movieList.InsertAsync();
-            _logger.LogDebug("Insert subtitle lang. Result: {rows}", insertResult);
+            await _queryService.MongoDbOpen("shared");
+            insert = await movieList.SaveAsync();
+
+            _logger.LogInformation("Inserted {Inserted}", insert.InsertedCount);
+
+            var logMessage = HtmlMessage.Empty
+                .BoldBr("Indexing Subtitle Item")
+                .TextBr($"Sekitar {insert.InsertedCount} subjudul ditambahkan");
+
+            await _eventLogService.SendEventLogCoreAsync(logMessage.ToString());
         }
         catch (Exception exception)
         {
@@ -168,19 +214,22 @@ public class SubsceneService
         return movieList;
     }
 
-    public async Task<SubsceneMovieDetail> GetSubtitleFileAsync(string slug)
+    public async Task<SubsceneMovieDetail> GetSubtitleFileAsync(string subtitleId)
     {
-        _logger.LogInformation("Preparing download subtitle file {Slug}", slug);
+        _logger.LogInformation("Preparing download subtitle file {Slug}", subtitleId);
 
-        var address = $"{_subsceneConfig.SearchSubtitleUrl}/{slug}";
+        var subtitleItem = await DB.Find<SubsceneSubtitleItem>().OneAsync(subtitleId);
+        var moviePath = subtitleItem.MovieUrl.Split("/").Skip(2).JoinStr("/");
+
+        var address = $"{_subsceneConfig.SearchSubtitleUrl}/{moviePath}";
         var document = await AnglesharpUtil.DefaultContext.OpenAsync(address);
         var all = document.All
             .Where(element => element.ClassName == "top left")
             .OfType<IHtmlDivElement>()
             .FirstOrDefault();
 
-        var subtitleListUrl = "/subtitles/" + slug;
-        var language = slug.Split("/").ElementAtOrDefault(1);
+        var subtitleListUrl = subtitleItem.MovieUrl;
+        var language = moviePath.Split("/").ElementAtOrDefault(1);
         var posterElement = (all?.QuerySelector<IHtmlAnchorElement>("a[href]")?.Children.FirstOrDefault() as IHtmlImageElement)?.Source;
         var headerElement = all?.QuerySelector<IHtmlDivElement>("div.header");
         var movieTitle = ((headerElement?.Children.FirstOrDefault() as IHtmlHeadingElement)?.Children.FirstOrDefault() as IHtmlSpanElement)?.TextContent.Trim();
@@ -205,10 +254,10 @@ public class SubsceneService
             SubtitleDownloadUrl = subtitleUrl
         };
 
-        // var localPath = "subtitles/" + slug;
+        // var localPath = "subtitles/" + subtitleId;
         // var fileName = releaseInfo?.FirstOrDefault() + ".zip";
         //
-        // _logger.LogDebug("Downloading subtitle file. Save to  {Slug}", slug);
+        // _logger.LogDebug("Downloading subtitle file. Save to  {Slug}", subtitleId);
         // var filePath = await subtitleUrl.MultiThreadDownloadFileAsync(localPath, fileName: fileName);
         //
         // movieDetail.LocalFilePath = filePath;
@@ -222,7 +271,7 @@ public class SubsceneService
 
         try
         {
-            await _databaseService.MongoDbOpen("shared");
+            await _queryService.MongoDbOpen("shared");
             if (searchByTitles.Count == 0)
             {
                 _logger.LogInformation("No title to save");
@@ -301,13 +350,29 @@ public class SubsceneService
         return subtitles;
     }
 
+    public async Task<List<SubsceneMovieItem>> GetOrFeedPopularMovie()
+    {
+        var getMovie = await GetPopularMovieByTitle();
+
+        if (getMovie.Count > 0)
+        {
+            await FeedPopularTitles();
+
+            return getMovie;
+        }
+
+        var feedMovie = await FeedPopularTitles();
+
+        return feedMovie;
+    }
+
     public async Task<List<SubsceneMovieSearch>> GetOrFeedMovieByTitle(string title)
     {
         var getMovieByTitle = await GetMovieByTitle(title);
 
         if (getMovieByTitle.Count > 0)
         {
-            await FeedMovieByTitle(title);
+            FeedMovieByTitle(title).InBackground();
 
             return getMovieByTitle;
         }
@@ -323,7 +388,7 @@ public class SubsceneService
 
         if (movieBySlug.Count > 0)
         {
-            await FeedSubtitleBySlug(slug);
+            FeedSubtitleBySlug(slug).InBackground();
 
             return movieBySlug;
         }

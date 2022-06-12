@@ -72,7 +72,7 @@ public class CacheService
         var cacheSettings = new CacheSettings(expireAfterSpan, staleAfterSpan);
 
         var cache = await _cacheStack.GetOrSetAsync<T>(
-            cacheKey: cacheKey,
+            cacheKey: cacheKey.Trim(),
             getter: async (_) => await action(),
             settings: cacheSettings
         );

@@ -1,13 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using TL;
 using WinTenDev.Zizi.Models.Telegram;
 using WinTenDev.Zizi.Services.Internals;
-using WinTenDev.Zizi.Utils;
 using WinTenDev.Zizi.Utils.Telegram;
 using WTelegram;
 
@@ -40,8 +38,16 @@ public class WTelegramApiService
     {
         var channelId = chatId.ReduceChatId();
 
-        var chats = await _client.Messages_GetAllChats(null);
-        var channel = (Channel) chats.chats.Values.FirstOrDefault(chat => chat.ID == channelId);
+        var channel = await _cacheService.GetOrSetAsync(
+            cacheKey: "tdlib-get-channel-" + channelId,
+            staleAfter: "1m",
+            action: async () => {
+                var chats = await _client.Messages_GetAllChats(null);
+                var channel = (Channel) chats.chats.Values.FirstOrDefault(chat => chat.ID == channelId);
+
+                return channel;
+            }
+        );
 
         return channel;
     }
@@ -49,7 +55,8 @@ public class WTelegramApiService
     public async Task<Users_UserFull> GetMeAsync()
     {
         var fullUser = await _cacheService.GetOrSetAsync(
-            cacheKey: "get-me-probe",
+            cacheKey: "tdlib-get-me-probe",
+            staleAfter: "5m",
             action: async () => {
                 var fullUser = await _client.Users_GetFullUser(new InputUserSelf());
 
@@ -58,6 +65,21 @@ public class WTelegramApiService
         );
 
         return fullUser;
+    }
+
+    public async Task<bool> IsProbeHereAsync(long chatId)
+    {
+        var channel = await GetChannel(chatId);
+
+        var isProbeHere = channel != null;
+
+        _logger.LogDebug(
+            "Is User Probe added to {ChatId}? {IsAdmin}",
+            chatId,
+            isProbeHere
+        );
+
+        return isProbeHere;
     }
 
     public async Task<bool> IsProbeAdminAsync(long chatId)
@@ -88,14 +110,13 @@ public class WTelegramApiService
     {
         var channelId = chatId.ReduceChatId();
 
-        var cacheKey = MethodBase.GetCurrentMethod().CreateCacheKey(channelId);
-
         var isProbeAdmin = await IsProbeAdminAsync(chatId);
 
         var channelParticipants = await _cacheService.GetOrSetAsync(
-            cacheKey: cacheKey,
+            cacheKey: "tdlib-channel-participants-" + channelId,
             evictAfter: evictAfter,
             disableCache: disableCache,
+            staleAfter: "5m",
             action: async () => {
                 var channel = await GetChannel(chatId);
 
@@ -117,49 +138,64 @@ public class WTelegramApiService
         return allParticipants;
     }
 
-    public async Task<ChannelParticipants> GetChatAdministratorsCore(long chatId)
+    public async Task<ChannelParticipants> GetChatAdministratorsCore(
+        long chatId,
+        bool disableCache = false,
+        bool evictAfter = false
+    )
     {
+        var channelId = chatId.ReduceChatId();
         var channel = await GetChannel(chatId);
 
-        var channelsParticipants = await _client.Channels_GetParticipants(
-            channel: channel,
-            filter: new ChannelParticipantsAdmins(),
-            offset: 0,
-            limit: 0,
-            hash: 0
+        var channelParticipants = await _cacheService.GetOrSetAsync(
+            cacheKey: "tdlib-channel-adminsistrator-" + channelId,
+            evictAfter: evictAfter,
+            disableCache: disableCache,
+            staleAfter: "5m",
+            action: async () => {
+                var channelsParticipants = await _client.Channels_GetParticipants(
+                    channel: channel,
+                    filter: new ChannelParticipantsAdmins(),
+                    offset: 0,
+                    limit: 0,
+                    hash: 0
+                );
+
+                var participantCreator = channelsParticipants.participants
+                    .Where(x => x.GetType() == typeof(ChannelParticipantCreator))
+                    .Select(x => x as ChannelParticipantCreator);
+
+                var participantAdmins = channelsParticipants.participants
+                    .Where
+                    (
+                        x =>
+                            x.GetType() == typeof(ChannelParticipantAdmin) ||
+                            x.UserID != participantCreator.FirstOrDefault().UserID
+                    )
+                    .Select(x => x as ChannelParticipantAdmin);
+
+                var participants = new ChannelParticipants()
+                {
+                    ParticipantCreator = new Channels_ChannelParticipants()
+                    {
+                        participants = participantCreator.ToArray(),
+                        users = channelsParticipants.users.Where(x => x.Value.ID == participantCreator.FirstOrDefault()?.UserID)
+                            .ToDictionary(x => x.Key, x => x.Value)
+                    },
+                    ParticipantAdmin = new Channels_ChannelParticipants()
+                    {
+                        participants = participantAdmins.ToArray(),
+                        users = channelsParticipants.users.Where(x => x.Value.ID != participantCreator.FirstOrDefault()?.UserID)
+                            .Where(x => participantAdmins.Any(y => y.UserID == x.Value.ID))
+                            .ToDictionary(x => x.Key, x => x.Value)
+                    }
+                };
+
+                return participants;
+            }
         );
 
-        var participantCreator = channelsParticipants.participants
-            .Where(x => x.GetType() == typeof(ChannelParticipantCreator))
-            .Select(x => x as ChannelParticipantCreator);
-
-        var participantAdmins = channelsParticipants.participants
-            .Where
-            (
-                x =>
-                    x.GetType() == typeof(ChannelParticipantAdmin) ||
-                    x.UserID != participantCreator.FirstOrDefault().UserID
-            )
-            .Select(x => x as ChannelParticipantAdmin);
-
-        var participants = new ChannelParticipants()
-        {
-            ParticipantCreator = new Channels_ChannelParticipants()
-            {
-                participants = participantCreator.ToArray(),
-                users = channelsParticipants.users.Where(x => x.Value.ID == participantCreator.FirstOrDefault()?.UserID)
-                    .ToDictionary(x => x.Key, x => x.Value)
-            },
-            ParticipantAdmin = new Channels_ChannelParticipants()
-            {
-                participants = participantAdmins.ToArray(),
-                users = channelsParticipants.users.Where(x => x.Value.ID != participantCreator.FirstOrDefault()?.UserID)
-                    .Where(x => participantAdmins.Any(y => y.UserID == x.Value.ID))
-                    .ToDictionary(x => x.Key, x => x.Value)
-            }
-        };
-
-        return participants;
+        return channelParticipants;
     }
 
     public async Task<List<int>> GetMessagesIdByUserId(
@@ -169,28 +205,35 @@ public class WTelegramApiService
     )
     {
         _logger.LogInformation(
-            "Deleting messages from UserId {UserId} in ChatId {ChatId}",
+            "Getting list messageId from UserId {UserId} in ChatId {ChatId}",
             userId,
             chatId
         );
 
-        var offset = 200;
-        var channel = await GetChannel(chatId);
+        var messageIds = await _cacheService.GetOrSetAsync(
+            cacheKey: "tdlib-list-message-id_" + chatId + "_" + userId,
+            action: async () => {
+                var offset = 200;
+                var channel = await GetChannel(chatId);
 
-        var messageRanges = Enumerable
-            .Range(lastMessageId - offset, offset)
-            .Reverse()
-            .Select(id => new InputMessageID() { id = id })
-            .Cast<InputMessage>()
-            .ToArray();
+                var messageRanges = Enumerable
+                    .Range(lastMessageId - offset, offset)
+                    .Reverse()
+                    .Select(id => new InputMessageID() { id = id })
+                    .Cast<InputMessage>()
+                    .ToArray();
 
-        var allMessages = await _client.Channels_GetMessages(channel, messageRanges);
-        var filteredMessage = allMessages.Messages
-            .Where(messageBase => messageBase.GetType() == typeof(Message))
-            .Where(messageBase => messageBase.From.ID == userId);
-        var messageIds = filteredMessage.Select(messageBase => messageBase.ID);
+                var allMessages = await _client.Channels_GetMessages(channel, messageRanges);
+                var filteredMessage = allMessages.Messages
+                    .Where(messageBase => messageBase.GetType() == typeof(Message))
+                    .Where(messageBase => messageBase.From.ID == userId);
+                var messageIds = filteredMessage.Select(messageBase => messageBase.ID);
 
-        return messageIds.ToList();
+                return messageIds.ToList();
+            }
+        );
+
+        return messageIds;
     }
 
     public async Task DeleteMessageByUserId(
@@ -231,17 +274,30 @@ public class WTelegramApiService
 
     public async Task<Contacts_ResolvedPeer> FindPeerByUsername(string username)
     {
-        var fixedUsername = username.TrimStart('@');
+        try
+        {
+            var fixedUsername = username.TrimStart('@');
 
-        var resolvedPeer = await _cacheService.GetOrSetAsync(
-            cacheKey: "resolved_peer-" + fixedUsername,
-            action: async () => {
-                var resolvedPeer = await _client.Contacts_ResolveUsername(fixedUsername);
+            var resolvedPeer = await _cacheService.GetOrSetAsync(
+                cacheKey: "tdlib-resolved_peer-" + fixedUsername,
+                action: async () => {
+                    var resolvedPeer = await _client.Contacts_ResolveUsername(fixedUsername);
 
-                return resolvedPeer;
-            }
-        );
+                    return resolvedPeer;
+                }
+            );
 
-        return resolvedPeer;
+            return resolvedPeer;
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(
+                exception,
+                "Error finding peer by username {Username}",
+                username
+            );
+
+            return default;
+        }
     }
 }

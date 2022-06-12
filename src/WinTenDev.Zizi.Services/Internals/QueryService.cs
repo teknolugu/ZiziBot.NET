@@ -1,39 +1,41 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Humanizer;
 using JsonFlatFileDataStore;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using MongoDB.Driver;
+using MongoDB.Entities;
 using MySqlConnector;
 using Realms;
 using Serilog;
 using SqlKata.Compilers;
 using SqlKata.Execution;
 using WinTenDev.Zizi.Models.Configs;
+using WinTenDev.Zizi.Services.Telegram;
 using WinTenDev.Zizi.Utils;
 using WinTenDev.Zizi.Utils.IO;
 
 namespace WinTenDev.Zizi.Services.Internals;
 
-/// <summary>
-/// This is class of Query Service
-/// </summary>
 public class QueryService
 {
+    private readonly ILogger<QueryService> _logger;
+    private readonly BotService _botService;
     private readonly ConnectionStrings _connectionStrings;
 
-    /// <summary>
-    /// Instantiate Query Service
-    /// </summary>
-    /// <param name="connectionStrings"></param>
-    public QueryService(IOptionsSnapshot<ConnectionStrings> connectionStrings)
+    public QueryService(
+        IOptionsSnapshot<ConnectionStrings> connectionStrings,
+        ILogger<QueryService> logger,
+        BotService botService
+    )
     {
+        _logger = logger;
+        _botService = botService;
         _connectionStrings = connectionStrings.Value;
     }
 
-    /// <summary>
-    /// Create MySQL query factory
-    /// </summary>
-    /// <returns></returns>
     public QueryFactory CreateMySqlFactory()
     {
         var mysqlConn = _connectionStrings.MySql;
@@ -123,4 +125,30 @@ public class QueryService
     }
 
     #endregion
+
+    public async Task MongoDbOpen(string databaseName)
+    {
+        var connectionString = _connectionStrings.MongoDb;
+
+        await DB.InitAsync(databaseName, MongoClientSettings.FromConnectionString(connectionString));
+    }
+
+    private async Task<string> MongoDbGetDbName(bool sharedDb)
+    {
+        if (sharedDb) return "shared";
+
+        var bot = await _botService.GetMeAsync();
+        return bot.Username.Underscore().ToLower();
+    }
+
+    public async Task MongoDbInsertAsync<TEntity>(
+        TEntity entity,
+        bool sharedDb = true
+    ) where TEntity : IEntity
+    {
+        var dbName = await MongoDbGetDbName(sharedDb);
+
+        await MongoDbOpen(dbName);
+        await DB.InsertAsync(entity);
+    }
 }
