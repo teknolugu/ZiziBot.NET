@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
 using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.ReplyMarkups;
 using WinTenDev.Zizi.Models.Dto;
 using WinTenDev.Zizi.Models.Enums;
 using WinTenDev.Zizi.Models.Types;
@@ -39,15 +40,35 @@ internal static class StartCommandExtension
         var fileNameWithExt = fileName + serverFileName.GetFileExtension();
 
         var subtitleInfo = HtmlMessage.Empty
-                .Bold("Movie: ").TextBr(movieDetail.MovieName, true)
-                .Bold("Language: ").TextBr(movieDetail.Language)
-                .Bold("Url: ").Url(subsceneUrl, "Subscene URL").Br()
-                .Bold("Author: ").Url(commentaryUrl, movieDetail.CommentaryUser).Br()
-                .BoldBr("Release info")
-                .TextBr(movieDetail.ReleaseInfo, true)
-                .Br()
-                .Text(movieDetail.Comment)
-            ;
+            .Bold("Movie: ").TextBr(movieDetail.MovieName, true)
+            .Bold("Language: ").TextBr(movieDetail.Language)
+            .Bold("Author: ").Url(commentaryUrl, movieDetail.CommentaryUser).Br();
+
+        if (movieDetail.ReleaseInfo.IsNotNullOrEmpty())
+        {
+            subtitleInfo.BoldBr("Release info")
+                .TextBr(movieDetail.ReleaseInfo, true);
+        }
+
+        if (movieDetail.Comment.IsNotNullOrEmpty())
+        {
+            subtitleInfo.Br()
+                .Text(movieDetail.Comment);
+        }
+
+        var buttonMarkup = new[]
+        {
+            new[]
+            {
+                InlineKeyboardButton.WithUrl("Tautan Subscene", subsceneUrl),
+            },
+            new[]
+            {
+                InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Pencarian baru", "subscene ")
+            }
+        };
+
+        var replyMarkup = new InlineKeyboardMarkup(buttonMarkup);
 
         await telegramService.DeleteSentMessageAsync();
 
@@ -55,7 +76,8 @@ internal static class StartCommandExtension
             fileId: movieDetail.SubtitleDownloadUrl,
             mediaType: MediaType.Document,
             caption: subtitleInfo.ToString(),
-            customFileName: fileNameWithExt
+            customFileName: fileNameWithExt,
+            replyMarkup: replyMarkup
         );
 
         return response;

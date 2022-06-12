@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using MongoDB.Driver;
 using MongoDB.Entities;
 using MoreLinq;
 using MySqlConnector;
@@ -220,18 +219,11 @@ public class DatabaseService
         op.Complete();
     }
 
-    public async Task MongoDbOpen(string databaseName)
-    {
-        var connectionString = _connectionStrings.MongoDb;
-
-        await DB.InitAsync(databaseName, MongoClientSettings.FromConnectionString(connectionString));
-    }
-
     public async Task MongoDbEnsureCollectionIndex()
     {
         _logger.LogInformation("Creating MongoDb Index..");
 
-        await MongoDbOpen("shared");
+        await _queryService.MongoDbOpen("shared");
         await DB.Index<SubsceneMovieItem>()
             .Key(item => item.MovieUrl, KeyType.Ascending)
             .Option(

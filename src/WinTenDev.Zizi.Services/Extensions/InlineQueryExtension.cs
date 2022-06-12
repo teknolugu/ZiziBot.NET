@@ -292,7 +292,7 @@ public static class InlineQueryExtension
                         .Bold("Tersedia : ").CodeBr(subtitleCount);
 
                     var article = new InlineQueryResultArticle(
-                        id: StringUtil.NewGuid(),
+                        id: item.ID,
                         title: movieTitle,
                         inputMessageContent: new InputTextMessageContent(titleHtml.ToString())
                         {
@@ -396,6 +396,7 @@ public static class InlineQueryExtension
 
         var result = filteredSearch.Select(
             element => {
+                var documentId = element.ID;
                 var languageSub = element.Language;
                 var movieName = element.MovieName;
                 var movieUrl = element.MovieUrl;
@@ -416,10 +417,11 @@ public static class InlineQueryExtension
                     .Bold("Bahasa: ").CodeBr(languageSub)
                     .Bold("Pemilik: ").Text(element.Owner);
 
-                var startDownloadUrl = urlStart + "start=sub-dl_" + slug.Replace("/", "=");
+                // var startDownloadUrl = urlStart + "start=sub-dl_" + slug.Replace("/", "=");
+                var startDownloadUrl = urlStart + "start=sub-dl_" + documentId;
 
                 var article = new InlineQueryResultArticle(
-                    id: StringUtil.NewGuid(),
+                    id: documentId,
                     title: titleResult,
                     inputMessageContent: new InputTextMessageContent(content.ToString())
                     {
