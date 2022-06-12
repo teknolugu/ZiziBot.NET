@@ -1239,14 +1239,33 @@ public class TelegramService
                 disableWebPagePreview: disableWebPreview
             );
         }
-        catch (Exception e)
+        catch (Exception exception)
         {
-            Log.Error(
-                e,
-                "Error Edit Message Callback at ChatId: {ChatId}, MessageId: {CallBackMessageId}",
-                ChatId,
-                CallBackMessageId
-            );
+            var answerMessage = exception.Message switch
+            {
+                {} a when a.Contains("too many request") => "Pergunakan tombol Callback secukupnya!",
+                {} a when a.Contains("message is not modified") => "Tolong tidak menekan tombol terlalu Ceffat!",
+                _ => string.Empty
+            };
+
+            if (answerMessage.IsNotNullOrEmpty())
+            {
+                await DeleteCurrentCallbackMessageAsync();
+
+                await SendTextMessageAsync(
+                    answerMessage,
+                    scheduleDeleteAt: DateTime.UtcNow.AddMinutes(1)
+                );
+            }
+            else
+            {
+                Log.Error(
+                    exception,
+                    "Error Edit Message Callback at ChatId: {ChatId}, MessageId: {CallBackMessageId}",
+                    ChatId,
+                    CallBackMessageId
+                );
+            }
         }
     }
 
