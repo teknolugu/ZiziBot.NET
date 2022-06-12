@@ -889,7 +889,17 @@ public static class TelegramServiceMemberExtension
     public static async Task EnsureChatAdminAsync(this TelegramService telegramService)
     {
         var chatId = telegramService.ChatId;
-        var chatAdminRepository = telegramService.GetRequiredService<ChatAdminService>();
+
+        if (telegramService.ChosenInlineResult != null ||
+            telegramService.InlineQuery != null)
+        {
+            Log.Information("Ensure chat Admin skip because Update type is: {UpdateType}}", telegramService.Update.Type);
+            return;
+        }
+
+        try
+        {
+            var chatAdminRepository = telegramService.GetRequiredService<ChatAdminService>();
 
         if (telegramService.IsPrivateChat)
         {
@@ -899,17 +909,22 @@ public static class TelegramServiceMemberExtension
 
         var admins = await telegramService.GetChatAdmin();
 
-        await chatAdminRepository.SaveAll(
-            admins.Select(
-                member =>
-                    new ChatAdmin()
-                    {
-                        UserId = member.User.Id,
-                        ChatId = telegramService.ChatId,
-                        Role = member.Status,
-                        CreatedAt = DateTime.UtcNow
-                    }
-            )
-        );
+            await chatAdminRepository.SaveAll(
+                admins.Select(
+                    member =>
+                        new ChatAdmin()
+                        {
+                            UserId = member.User.Id,
+                            ChatId = telegramService.ChatId,
+                            Role = member.Status,
+                            CreatedAt = DateTime.UtcNow
+                        }
+                )
+            );
+        }
+        catch (Exception exception)
+        {
+            throw new AdvancedApiRequestException($"Ensure Chat Admin failed. ChatId: {chatId}", exception);
+        }
     }
 }
