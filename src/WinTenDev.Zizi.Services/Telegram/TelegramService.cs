@@ -135,6 +135,9 @@ public class TelegramService
     public ITelegramBotClient Client { get; private set; }
     public ChatMemberUpdated MyChatMember { get; set; }
 
+    internal bool HasChatJoinRequest => ChatJoinRequest != null;
+    internal ChatJoinRequest ChatJoinRequest { get; set; }
+
     public TelegramService(
         IBackgroundJobClient backgroundJob,
         IOptionsSnapshot<EnginesConfig> engOptions,
@@ -240,6 +243,8 @@ public class TelegramService
         InlineQuery = Update.InlineQuery;
         ChosenInlineResult = update.ChosenInlineResult;
 
+        ChatJoinRequest = Update.ChatJoinRequest;
+
         MyChatMember = Update.MyChatMember;
         Message = Update.Message;
         EditedMessage = Update.EditedMessage;
@@ -255,8 +260,9 @@ public class TelegramService
 
         ReplyFromId = ReplyToMessage?.From?.Id ?? 0;
 
-        From = ChannelOrEditedPost?.From ?? MyChatMember?.From ?? ChosenInlineResult?.From ?? InlineQuery?.From ?? CallbackQuery?.From ?? MessageOrEdited?.From;
-        Chat = ChannelOrEditedPost?.Chat ?? MyChatMember?.Chat ?? CallbackQuery?.Message?.Chat ?? MessageOrEdited?.Chat;
+        From = ChannelOrEditedPost?.From ??
+               MyChatMember?.From ?? ChosenInlineResult?.From ?? InlineQuery?.From ?? CallbackQuery?.From ?? ChatJoinRequest?.From ?? MessageOrEdited?.From;
+        Chat = ChannelOrEditedPost?.Chat ?? MyChatMember?.Chat ?? CallbackQuery?.Message?.Chat ?? ChatJoinRequest?.Chat ?? MessageOrEdited?.Chat;
         SenderChat = MessageOrEdited?.SenderChat;
         MessageDate = MyChatMember?.Date ?? CallbackQuery?.Message?.Date ?? MessageOrEdited?.Date ?? DateTime.Now;
         MessageEditDate = MessageOrEdited?.EditDate;
