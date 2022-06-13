@@ -40,8 +40,8 @@ jobs:
         with:
           name: zizibot-linux64-fd-build
           path: |
-            src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/linux-x64/publish/*.zip
-            src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/win-x64/publish/*.zip
+            src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/linux-x64/*.zip
+            src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/win-x64/*.zip
 
 
   zizibot-sf-build:
@@ -77,8 +77,8 @@ jobs:
         with:
           name: zizibot-linux64-sf-build
           path: |
-            src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/linux-x64/publish/*.zip
-            src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/win-x64/publish/*.zip
+            src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/linux-x64/*.zip
+            src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/win-x64/*.zip
 
 #  zizibot-win64-fd-build:
 #    runs-on: ubuntu-latest
