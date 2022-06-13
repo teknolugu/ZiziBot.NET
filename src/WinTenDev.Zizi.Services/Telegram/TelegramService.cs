@@ -1827,30 +1827,11 @@ public class TelegramService
             disableWebPreview: true,
             replyToMsgId: 0,
             scheduleDeleteAt: KickTimeOffset.ToDateTime().ToUniversalTime(),
-            messageFlag: messageFlag
+            messageFlag: messageFlag,
+            preventDuplicateSend: true
         );
 
-        ChatService.DeleteMessageHistory(
-                history =>
-                    history.ChatId == ChatId &&
-                    history.MessageFlag == messageFlag
-            )
-            .InBackground();
-
-        var stepHistory = await _stepHistoriesService.GetStepHistoryCore
-        (
-            new StepHistory()
-            {
-                ChatId = ChatId,
-                UserId = FromId,
-                Name = name
-            }
-        );
-
-        if (stepHistory != null)
-        {
-            await DeleteAsync(stepHistory.LastWarnMessageId);
-        }
+        await ScheduleKickJob(name);
     }
 
     public async Task<StringAnalyzer> FireAnalyzer()
