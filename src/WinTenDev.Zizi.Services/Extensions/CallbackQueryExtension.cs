@@ -34,6 +34,43 @@ public static class CallbackQueryExtension
         return true;
     }
 
+    public static async Task<bool> OnCallbackDeleteAsync(this TelegramService telegramService)
+    {
+        var chatId = telegramService.ChatId;
+        var fromId = telegramService.FromId;
+        var messageTarget = telegramService.GetCallbackDataAt<string>(1);
+
+        Log.Information(
+            "Callback delete message at ChatId: {ChatId}. Target: {MessageTarget}",
+            chatId,
+            messageTarget
+        );
+
+        if (!await telegramService.CheckUserPermission())
+        {
+            Log.Information(
+                "UserId: '{UserId}' at ChatId: '{ChatId}' has no permission to delete message",
+                fromId,
+                chatId
+            );
+
+            await telegramService.AnswerCallbackQueryAsync("Kamu tidak mempunyai akses melakukan tindakan ini!", true);
+            return true;
+        }
+
+        if (messageTarget == "current-message")
+        {
+            await telegramService.DeleteCurrentCallbackMessageAsync();
+        }
+        else
+        {
+            var messageId = telegramService.GetCallbackDataAt<int>(1);
+            await telegramService.DeleteAsync(messageId);
+        }
+
+        return true;
+    }
+
     public static async Task<bool> OnCallbackVerifyAsync(this TelegramService telegramService)
     {
         Log.Information("Executing Verify Callback");

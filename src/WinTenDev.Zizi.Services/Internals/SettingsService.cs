@@ -233,6 +233,8 @@ public class SettingsService
             );
         }
 
+        listBtn.Add(new CallBackButton { Text = "❌ Tutup", Data = "delete-message current-message" });
+
         Log.Verbose("ListBtn: {Btn}", listBtn.ToJson(true));
 
         return listBtn;
