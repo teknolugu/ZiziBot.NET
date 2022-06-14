@@ -28,6 +28,7 @@ public static class HangfireJobsExtension
         jobService.RegisterJobDeleteOldStep();
         jobService.RegisterJobDeleteOldRssHistory();
         jobService.RegisterJobDeleteOldMessageHistory();
+        jobService.RegisterJobRunMysqlBackup();
 
         var botService = app.GetRequiredService<BotService>();
         var botEnvironment = botService.CurrentEnvironment()

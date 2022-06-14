@@ -206,6 +206,15 @@ public class JobsService
         );
     }
 
+    public void RegisterJobRunMysqlBackup()
+    {
+        _recurringJobManager.AddOrUpdate<DatabaseService>(
+            "mysql-backup",
+            service => service.AutomaticMysqlBackup(),
+            Cron.Daily
+        );
+    }
+
     public void RegisterJobAdminCleanUp()
     {
         var adminCleanUp = _restrictionConfig.AdminCleanUp;
@@ -312,7 +321,7 @@ public class JobsService
     public void ClearPendingJobs()
     {
         _logger.LogInformation("Starting clear pending Jobs..");
-        
+
         var monitor = JobStorage.Current.GetMonitoringApi();
         var queues = monitor.Queues();
 

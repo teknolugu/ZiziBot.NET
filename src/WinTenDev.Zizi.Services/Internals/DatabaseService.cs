@@ -134,7 +134,7 @@ public class DatabaseService
         );
         mb.ExportToFile(fullName);
 
-        var zipFileName = fullName.CreateZip(false);
+        var zipFileName = fullName.CreateZip(compressionMethod: CompressionMethod.BZip2);
         _logger.LogDebug(
             "Database: {DbName} exported to file: {SqlZip}",
             dbName,
@@ -172,6 +172,34 @@ public class DatabaseService
             .Where((s) => s.Contains(".sql"));
 
         listFile.ForEach(filePath => filePath.DeleteFile());
+    }
+
+    [JobDisplayName("MySQL AutoBackup")]
+    public async Task AutomaticMysqlBackup()
+    {
+        var dataBackupInfo = await BackupMySqlDatabase();
+        var fullNameZip = dataBackupInfo.FullNameZip;
+        var fileNameZip = dataBackupInfo.FileNameZip;
+        var channelTarget = _eventLogConfig.ChannelId;
+
+        var caption = HtmlMessage.Empty
+            .Bold("File Size: ").CodeBr($"{dataBackupInfo.FileSizeSql}")
+            .Bold("Zip Size: ").CodeBr($"{dataBackupInfo.FileSizeSqlZip}")
+            .Text("#mysql #auto #backup");
+
+        await using var fileStream = File.OpenRead(fullNameZip);
+
+        var media = new InputOnlineFile(fileStream, fileNameZip)
+        {
+            FileName = fileNameZip
+        };
+
+        await _botClient.SendDocumentAsync(
+            chatId: channelTarget,
+            document: media,
+            caption: caption.ToString(),
+            parseMode: ParseMode.Html
+        );
     }
 
     public async Task FixTableCollation()
