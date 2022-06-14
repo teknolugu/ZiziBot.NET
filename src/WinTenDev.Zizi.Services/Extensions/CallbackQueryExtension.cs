@@ -366,6 +366,7 @@ public static class CallbackQueryExtension
     {
         var chatId = telegramService.ChatId;
         var fromId = telegramService.FromId;
+        var chatUsername = telegramService.Chat.Username;
         var message = telegramService.CallbackMessage;
         var callbackDatas = telegramService.CallbackQueryDatas;
 
@@ -383,9 +384,8 @@ public static class CallbackQueryExtension
         var globalBanService = telegramService.GetRequiredService<GlobalBanService>();
         var eventLogService = telegramService.GetRequiredService<EventLogService>();
 
-        var currentMessageId = message.MessageId;
-        var action = callbackDatas.ElementAtOrDefault(1);
-        var userId = callbackDatas.ElementAtOrDefault(2).ToInt64();
+        var action = telegramService.GetCallbackDataAt<string>(1);
+        var userId = telegramService.GetCallbackDataAt<long>(2);
 
         var replyToMessageId = telegramService.ReplyToMessage?.MessageId ?? -1;
 
@@ -403,7 +403,7 @@ public static class CallbackQueryExtension
                     new GlobalBanItem
                     {
                         UserId = userId,
-                        ReasonBan = "@WinTenDev",
+                        ReasonBan = "@" + chatUsername,
                         BannedBy = fromId,
                         BannedFrom = chatId,
                         CreatedAt = DateTime.UtcNow
