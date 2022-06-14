@@ -11,6 +11,7 @@ public static class DatasourceServiceExtension
     {
         var databaseService = app.GetRequiredService<DatabaseService>();
 
+        databaseService.MongoDbDatabaseMapping().WaitAndUnwrapException();
         databaseService.MongoDbEnsureCollectionIndex().WaitAndUnwrapException();
 
         return app;
