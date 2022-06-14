@@ -1769,37 +1769,55 @@ public class TelegramService
 
     public async Task<bool> RunCheckUserProfilePhoto()
     {
-        var op = Operation.Begin(
-            "Check Chat Photo on ChatId {ChatId} for UserId: {UserId}",
-            ChatId,
-            FromId
-        );
-
-        if (CallbackQuery != null ||
-            ChannelOrEditedPost != null)
+        try
         {
+            var op = Operation.Begin(
+                "Check Chat Photo on ChatId {ChatId} for UserId: {UserId}",
+                ChatId,
+                FromId
+            );
+
+            if (CallbackQuery != null ||
+                ChannelOrEditedPost != null ||
+                ChosenInlineResult != null ||
+                ChatJoinRequest != null
+               )
+            {
+                Log.Information("Check user profile photo skipped because Update type is '{UpdateType}'", Update.Type);
+                op.Complete();
+                return true;
+            }
+
+            if (await CheckPermission())
+            {
+                op.Complete();
+                return true;
+            }
+
+            var hasProfilePhoto = await _userProfilePhotoService.CheckUserProfilePhoto(ChatId, FromId);
+
+            if (hasProfilePhoto)
+            {
+                op.Complete();
+                return true;
+            }
+
             op.Complete();
+
+            await SendWarningStep(StepHistoryName.ChatMemberPhoto);
+            return false;
+        }
+        catch (Exception exception)
+        {
+            Log.Error(
+                exception,
+                "Error Check user profile photo at ChatId: {ChatId}, UserId: {UserId}",
+                ChatId,
+                FromId
+            );
+
             return true;
         }
-
-        if (await CheckPermission())
-        {
-            op.Complete();
-            return true;
-        }
-
-        var hasProfilePhoto = await _userProfilePhotoService.CheckUserProfilePhoto(ChatId, FromId);
-
-        if (hasProfilePhoto)
-        {
-            op.Complete();
-            return true;
-        }
-
-        op.Complete();
-
-        await SendWarningStep(StepHistoryName.ChatMemberPhoto);
-        return false;
     }
 
     public async Task SendWarningStep(StepHistoryName name)
