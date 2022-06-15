@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Hangfire;
 using Microsoft.Extensions.Logging;
 using MySqlConnector;
 using RepoDb;
@@ -48,5 +50,19 @@ public class BotUpdateService
         );
 
         return botUpdates.ToList();
+    }
+
+    [JobDisplayName("Delete Old Updates")]
+    public async Task DeleteOldUpdateAsync()
+    {
+        var oldOffset = DateTime.UtcNow.AddMonths(-2);
+        _logger.LogInformation("Deleting old updates. Older than {OldOffset}", oldOffset);
+        var delete = await DbConnection.DeleteAsync<BotUpdate>(
+            update =>
+                update.CreatedAt <= oldOffset,
+            trace: new DefaultTraceLog()
+        );
+
+        _logger.LogInformation("Deleted old Updates. Total {delete} item(s)", delete);
     }
 }

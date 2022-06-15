@@ -215,6 +215,15 @@ public class JobsService
         );
     }
 
+    public void RegisterJobRunDeleteOldUpdates()
+    {
+        _recurringJobManager.AddOrUpdate<BotUpdateService>(
+            "delete-old-updates",
+            service => service.DeleteOldUpdateAsync(),
+            Cron.Daily
+        );
+    }
+
     public void RegisterJobAdminCleanUp()
     {
         var adminCleanUp = _restrictionConfig.AdminCleanUp;
