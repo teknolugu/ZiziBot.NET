@@ -88,7 +88,6 @@ public class OctokitApiService
 
         htmlMessage
             .Url(latestRelease.HtmlUrl, latestRelease.Name).Br()
-            .Bold("Date: ").Text(latestRelease.PublishedAt?.ToString("yyyy-MM-dd HH:mm:ss")).Br()
             .Bold("Author: ").CodeBr(latestRelease.Author.Login).Br();
 
         if (allAssets.Count == 0) return htmlMessage;
