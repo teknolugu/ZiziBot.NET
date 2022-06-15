@@ -15,6 +15,7 @@ using WinTenDev.Zizi.Models.Types;
 using WinTenDev.Zizi.Models.Validators;
 using WinTenDev.Zizi.Services.Telegram;
 using WinTenDev.Zizi.Utils;
+using WinTenDev.Zizi.Utils.Telegram;
 
 namespace WinTenDev.Zizi.Services.Internals;
 
@@ -84,52 +85,55 @@ public class AntiSpamService
 
         _chatSetting = await _settingsService.GetSettingsByGroup(chatId);
 
-        var spamWatchTask = CheckSpamWatch(userId);
-        var casBanTask = CheckCasBan(userId);
-        var gBanTask = CheckEs2Ban(userId);
+        var getChatMemberTask = _chatService.GetChatMemberAsync(chatId, userId);
+        var checkSpamWatchTask = CheckSpamWatch(userId);
+        var checkCasBanTask = CheckCasBan(userId);
+        var checkEs2BanTask = CheckEs2Ban(userId);
 
         await Task.WhenAll(
-            spamWatchTask,
-            casBanTask,
-            gBanTask
+            checkSpamWatchTask,
+            checkCasBanTask,
+            checkEs2BanTask,
+            getChatMemberTask
         );
 
-        var swBan = spamWatchTask.Result;
-        var casBan = casBanTask.Result;
-        var es2Ban = gBanTask.Result;
+        var chatMember = getChatMemberTask.Result;
+        var swBan = checkSpamWatchTask.Result;
+        var casBan = checkCasBanTask.Result;
+        var es2Ban = checkEs2BanTask.Result;
         var anyBan = swBan || casBan || es2Ban;
 
         if (!anyBan)
         {
             Log.Information("UserId {UserId} is passed on all Fed Ban", userId);
+            return spamResult;
         }
-        else
-        {
-            var banMessage = _localizationService.GetLoc(
-                langCode: _chatSetting.LanguageCode,
-                enumPath: GlobalBan.BanMessage,
-                placeHolders: new List<(string placeholder, string value)>()
-                {
-                    ("UserId", userId.ToString())
-                }
-            );
 
-            var htmlMessage = HtmlMessage.Empty
-                .TextBr(banMessage);
-
-            if (es2Ban) htmlMessage.Url("https://t.me/WinTenDev", "- ES2 Global Ban").Br();
-            if (casBan) htmlMessage.Url($"https://cas.chat/query?u={userId}", "- CAS Fed").Br();
-            if (swBan) htmlMessage.Url("https://t.me/SpamWatchSupport", "- SpamWatch Fed");
-
-            spamResult = new AntiSpamResult()
+        var banMessage = _localizationService.GetLoc(
+            langCode: _chatSetting.LanguageCode,
+            enumPath: GlobalBan.BanMessage,
+            placeHolders: new List<(string placeholder, string value)>()
             {
-                MessageResult = htmlMessage.ToString(),
-                IsAnyBanned = anyBan,
-                IsEs2Banned = es2Ban,
-                IsCasBanned = casBan,
-                IsSpamWatched = swBan
-            };
-        }
+                ("UserId", userId.ToString()),
+                ("FullName", chatMember.User.GetNameLink())
+            }
+        );
+
+        var htmlMessage = HtmlMessage.Empty
+            .TextBr(banMessage);
+
+        if (es2Ban) htmlMessage.Url("https://t.me/WinTenDev", "- ES2 Global Ban").Br();
+        if (casBan) htmlMessage.Url($"https://cas.chat/query?u={userId}", "- CAS Fed").Br();
+        if (swBan) htmlMessage.Url("https://t.me/SpamWatchSupport", "- SpamWatch Fed");
+
+        spamResult = new AntiSpamResult()
+        {
+            MessageResult = htmlMessage.ToString(),
+            IsAnyBanned = anyBan,
+            IsEs2Banned = es2Ban,
+            IsCasBanned = casBan,
+            IsSpamWatched = swBan
+        };
 
         if (funcAntiSpamResult != null) await funcAntiSpamResult(spamResult);
 
