@@ -3,10 +3,12 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
+using MoreLinq;
 using Octokit;
 using Serilog;
 using Telegram.Bot.Types;
 using WinTenDev.Zizi.Models.Configs;
+using WinTenDev.Zizi.Models.Types;
 using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Utils;
 using FileMode=System.IO.FileMode;
@@ -57,6 +59,55 @@ public class OctokitApiService
         );
 
         return githubReleaseAll;
+    }
+
+    public async Task<HtmlMessage> GetLatestReleaseAssetsList(string url)
+    {
+        var releaseAll = await GetGithubReleaseAssets(url);
+        var latestRelease = releaseAll.FirstOrDefault();
+
+        if (latestRelease == null) return null;
+
+        var maxAttachmentSize = _rssFeedConfig.MaxAttachmentSize.ToeByteSize();
+
+        var allAssets = latestRelease.Assets;
+        var filteredAssets = allAssets
+            .Where(
+                releaseAsset =>
+                    releaseAsset.Size <= maxAttachmentSize.Bytes
+            ).ToList();
+
+        Log.Information(
+            "Found filtered assets {FilteredAssets} of {AllAssets} for URL: {Url}",
+            filteredAssets.Count,
+            allAssets.Count,
+            url
+        );
+
+        var htmlMessage = HtmlMessage.Empty;
+
+        htmlMessage
+            .Url(latestRelease.HtmlUrl, latestRelease.Name).Br()
+            .Bold("Date: ").Text(latestRelease.PublishedAt?.ToString("yyyy-MM-dd HH:mm:ss")).Br()
+            .Bold("Author: ").CodeBr(latestRelease.Author.Login).Br();
+
+        if (allAssets.Count == 0) return htmlMessage;
+
+        allAssets.ForEach(
+            (
+                asset,
+                index
+            ) => {
+                var urlDoc = asset.BrowserDownloadUrl;
+                var assetSize = asset.Size.ToInt64().SizeFormat();
+
+                htmlMessage.Text($"{index + 1}. ").Url(urlDoc, asset.Name)
+                    .Text($"\n└ ⬇ {assetSize} - {asset.DownloadCount} downloads")
+                    .Br();
+            }
+        );
+
+        return htmlMessage;
     }
 
     public async Task<List<IAlbumInputMedia>> GetLatestReleaseAssets(
