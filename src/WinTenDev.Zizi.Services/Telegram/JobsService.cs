@@ -11,6 +11,7 @@ using Microsoft.Extensions.Options;
 using MoreLinq;
 using RepoDb;
 using Serilog;
+using SerilogTimings;
 using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
 using WinTenDev.Zizi.Models.Configs;
@@ -260,6 +261,56 @@ public class JobsService
                 );
             }
         );
+    }
+
+    public void TriggerJobsByPrefix(string prefixId)
+    {
+        var op = Operation.Begin("Trigger Jobs by Prefix. Prefix: {PrefixId}", prefixId);
+
+        Log.Information("Loading Hangfire jobs..");
+        var connection = JobStorage.Current.GetConnection();
+
+        var recurringJobs = connection.GetRecurringJobs();
+        var filteredJobs = recurringJobs.Where(dto => dto.Id.StartsWith(prefixId)).ToList();
+        Log.Debug(
+            "Found {Count} of {Count1}",
+            filteredJobs.Count,
+            recurringJobs.Count
+        );
+
+        var numOfJobs = filteredJobs.Count;
+
+        Parallel.ForEach(
+            filteredJobs,
+            (
+                recurringJobDto,
+                parallelLoopState,
+                index
+            ) => {
+                var recurringJobId = recurringJobDto.Id;
+
+                Log.Debug(
+                    "Triggering jobId: {RecurringJobId}, Index: {Index}",
+                    recurringJobId,
+                    index
+                );
+
+                _recurringJobManager.Trigger(recurringJobId);
+
+                Log.Debug(
+                    "Trigger succeeded {RecurringJobId}, Index: {Index}",
+                    recurringJobId,
+                    index
+                );
+            }
+        );
+
+        Log.Information(
+            "Hangfire jobs successfully trigger. Total: {NumOfJobs}",
+            numOfJobs
+        );
+
+        op.Complete();
     }
 
     public List<RecurringJobDto> GetRecurringJobs()
