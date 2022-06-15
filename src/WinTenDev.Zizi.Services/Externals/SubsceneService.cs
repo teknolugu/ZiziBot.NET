@@ -78,8 +78,6 @@ public class SubsceneService
 
         try
         {
-            await _queryService.MongoDbOpen("shared");
-
             await DB.DeleteAsync<SubsceneMovieItem>(item => item.CreatedOn < DateTime.Now.AddDays(-3));
             var insert = await movieResult.SaveAsync();
 
@@ -133,7 +131,6 @@ public class SubsceneService
             if (!movieResult.AnyOrNotNull()) return default;
 
             _logger.LogDebug("Saving Subtitle Search to database. {rows} item(s)", movieResult?.Count);
-            await _queryService.MongoDbOpen("shared");
 
             await DB.DeleteAsync<SubsceneMovieSearch>(search => search.CreatedOn <= DateTime.UtcNow.AddDays(-3));
 
