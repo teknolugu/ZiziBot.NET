@@ -7,6 +7,7 @@ using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using WinTenDev.Zizi.Models.Enums;
 using WinTenDev.Zizi.Models.Enums.Languages;
+using WinTenDev.Zizi.Models.Exceptions;
 using WinTenDev.Zizi.Models.Types;
 using WinTenDev.Zizi.Services.Telegram;
 using WinTenDev.Zizi.Utils;
@@ -210,27 +211,37 @@ public static class TelegramServiceAdditionalExtension
 
     public static async Task WarningCompressImageWhenPossibleAsync(this TelegramService telegramService)
     {
-        var message = telegramService.MessageOrEdited;
+        var chatId = telegramService.ChatId;
 
-        if (message.Document == null ||
-            message.MediaGroupId != null)
+        try
         {
-            Log.Information(
-                "Compress Warning skipped because shouldn't warned. ChatId: {ChatId}, MessageId: {MessageId}",
-                telegramService.ChatId,
-                message.MessageId
-            );
-            return;
+            var message = telegramService.MessageOrEdited;
+
+            if (message?.Document == null ||
+                message?.MediaGroupId != null)
+            {
+                Log.Information(
+                    "Compress Warning skipped because shouldn't warned. ChatId: {ChatId}, MessageId: {MessageId}",
+                    chatId,
+                    message?.MessageId
+                );
+
+                return;
+            }
+
+            var document = message.Document;
+
+            if (document.MimeType?.StartsWith("image") ?? false)
+            {
+                await telegramService.SendTextMessageAsync(
+                    sendText: "Kirim gambar dengan kompres, bantu selamatkan Bumi",
+                    scheduleDeleteAt: DateTime.UtcNow.AddHours(1)
+                );
+            }
         }
-
-        var document = message.Document;
-
-        if (document.MimeType?.StartsWith("image") ?? false)
+        catch (Exception exception)
         {
-            await telegramService.SendTextMessageAsync(
-                sendText: "Kirim gambar dengan kompres, bantu selamatkan bumi",
-                scheduleDeleteAt: DateTime.UtcNow.AddHours(1)
-            );
+            throw new AdvancedApiRequestException($"Error when send Warning compress image at ChatId: {chatId}", exception);
         }
     }
 }

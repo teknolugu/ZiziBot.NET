@@ -11,19 +11,25 @@ public static class ZipUtil
 {
     public static string CreateZip(
         this string fileName,
-        string saveTo
+        string saveTo,
+        CompressionMethod compressionMethod = CompressionMethod.None
     )
     {
         Log.Information("Creating .zip from file {0}", fileName);
 
         using var zip = new ZipFile
         {
-            CompressionLevel = CompressionLevel.BestCompression
+            CompressionLevel = CompressionLevel.BestCompression,
+            CompressionMethod = compressionMethod
         };
 
         if (fileName.IsDirectory())
         {
-            var files = Directory.GetFiles(fileName, "*.*", SearchOption.AllDirectories)
+            var files = Directory.GetFiles(
+                    path: fileName,
+                    searchPattern: "*.*",
+                    searchOption: SearchOption.AllDirectories
+                )
                 .Where(x => !x.Contains(".stikerpacks"));
 
             // zip.AddFiles(files, String.Empty);
@@ -68,7 +74,8 @@ public static class ZipUtil
 
     public static string CreateZip(
         this string filePath,
-        bool replaceExt = true
+        bool replaceExt = false,
+        CompressionMethod compressionMethod = CompressionMethod.None
     )
     {
         var newFilePath = filePath + ".zip";
@@ -78,7 +85,7 @@ public static class ZipUtil
             newFilePath = filePath.ReplaceExt(".zip");
         }
 
-        var zipFile = filePath.CreateZip(newFilePath);
+        var zipFile = filePath.CreateZip(saveTo: newFilePath, compressionMethod: compressionMethod);
         return zipFile;
     }
 }

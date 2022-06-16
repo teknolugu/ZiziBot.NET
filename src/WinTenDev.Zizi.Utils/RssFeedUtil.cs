@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Net.Http;
+using System.ServiceModel.Syndication;
 using System.Threading.Tasks;
+using System.Xml;
 using CodeHollow.FeedReader;
 using Hangfire;
 using Serilog;
@@ -43,11 +46,32 @@ public static class RssFeedUtil
         }
         catch (Exception ex)
         {
-            Log.Error(ex.Demystify(), "Validating RSS Feed. Url: {Url}", url);
+            Log.Error(
+                ex.Demystify(),
+                "Validating RSS Feed. Url: {Url}",
+                url
+            );
         }
 
-        Log.Debug("{0} IsValidUrlFeed: {1}", url, isValid);
+        Log.Debug(
+            "{0} IsValidUrlFeed: {1}",
+            url,
+            isValid
+        );
 
         return isValid;
+    }
+
+    public static async Task<SyndicationFeed> OpenSyndicationFeed(string url)
+    {
+        Log.Information("Opening SyndicationFeed: {Url} ..", url);
+        var httpClient = new HttpClient();
+        httpClient.DefaultRequestHeaders.Add("User-Agent", "ZiziBot RSS Reader/1.0");
+        var stream = await httpClient.GetStreamAsync(url);
+        var feed = SyndicationFeed.Load(XmlReader.Create(stream));
+
+        Log.Debug("SyndicationFeed count {@Feed} item(s)", feed.Items.Count());
+
+        return feed;
     }
 }

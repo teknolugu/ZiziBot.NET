@@ -135,6 +135,9 @@ public class TelegramService
     public ITelegramBotClient Client { get; private set; }
     public ChatMemberUpdated MyChatMember { get; set; }
 
+    internal bool HasChatJoinRequest => ChatJoinRequest != null;
+    internal ChatJoinRequest ChatJoinRequest { get; set; }
+
     public TelegramService(
         IBackgroundJobClient backgroundJob,
         IOptionsSnapshot<EnginesConfig> engOptions,
@@ -240,6 +243,8 @@ public class TelegramService
         InlineQuery = Update.InlineQuery;
         ChosenInlineResult = update.ChosenInlineResult;
 
+        ChatJoinRequest = Update.ChatJoinRequest;
+
         MyChatMember = Update.MyChatMember;
         Message = Update.Message;
         EditedMessage = Update.EditedMessage;
@@ -255,8 +260,9 @@ public class TelegramService
 
         ReplyFromId = ReplyToMessage?.From?.Id ?? 0;
 
-        From = ChannelOrEditedPost?.From ?? MyChatMember?.From ?? ChosenInlineResult?.From ?? InlineQuery?.From ?? CallbackQuery?.From ?? MessageOrEdited?.From;
-        Chat = ChannelOrEditedPost?.Chat ?? MyChatMember?.Chat ?? CallbackQuery?.Message?.Chat ?? MessageOrEdited?.Chat;
+        From = ChannelOrEditedPost?.From ??
+               MyChatMember?.From ?? ChosenInlineResult?.From ?? InlineQuery?.From ?? CallbackQuery?.From ?? ChatJoinRequest?.From ?? MessageOrEdited?.From;
+        Chat = ChannelOrEditedPost?.Chat ?? MyChatMember?.Chat ?? CallbackQuery?.Message?.Chat ?? ChatJoinRequest?.Chat ?? MessageOrEdited?.Chat;
         SenderChat = MessageOrEdited?.SenderChat;
         MessageDate = MyChatMember?.Date ?? CallbackQuery?.Message?.Date ?? MessageOrEdited?.Date ?? DateTime.Now;
         MessageEditDate = MessageOrEdited?.EditDate;
@@ -1239,14 +1245,33 @@ public class TelegramService
                 disableWebPagePreview: disableWebPreview
             );
         }
-        catch (Exception e)
+        catch (Exception exception)
         {
-            Log.Error(
-                e,
-                "Error Edit Message Callback at ChatId: {ChatId}, MessageId: {CallBackMessageId}",
-                ChatId,
-                CallBackMessageId
-            );
+            var answerMessage = exception.Message switch
+            {
+                {} a when a.Contains("too many request") => "Pergunakan tombol Callback secukupnya!",
+                {} a when a.Contains("message is not modified") => "Tolong tidak menekan tombol terlalu Ceffat!",
+                _ => string.Empty
+            };
+
+            if (answerMessage.IsNotNullOrEmpty())
+            {
+                await DeleteCurrentCallbackMessageAsync();
+
+                await SendTextMessageAsync(
+                    answerMessage,
+                    scheduleDeleteAt: DateTime.UtcNow.AddMinutes(1)
+                );
+            }
+            else
+            {
+                Log.Error(
+                    exception,
+                    "Error Edit Message Callback at ChatId: {ChatId}, MessageId: {CallBackMessageId}",
+                    ChatId,
+                    CallBackMessageId
+                );
+            }
         }
     }
 
@@ -1744,37 +1769,55 @@ public class TelegramService
 
     public async Task<bool> RunCheckUserProfilePhoto()
     {
-        var op = Operation.Begin(
-            "Check Chat Photo on ChatId {ChatId} for UserId: {UserId}",
-            ChatId,
-            FromId
-        );
-
-        if (CallbackQuery != null ||
-            ChannelOrEditedPost != null)
+        try
         {
+            var op = Operation.Begin(
+                "Check Chat Photo on ChatId {ChatId} for UserId: {UserId}",
+                ChatId,
+                FromId
+            );
+
+            if (CallbackQuery != null ||
+                ChannelOrEditedPost != null ||
+                ChosenInlineResult != null ||
+                ChatJoinRequest != null
+               )
+            {
+                Log.Information("Check user profile photo skipped because Update type is '{UpdateType}'", Update.Type);
+                op.Complete();
+                return true;
+            }
+
+            if (await CheckPermission())
+            {
+                op.Complete();
+                return true;
+            }
+
+            var hasProfilePhoto = await _userProfilePhotoService.CheckUserProfilePhoto(ChatId, FromId);
+
+            if (hasProfilePhoto)
+            {
+                op.Complete();
+                return true;
+            }
+
             op.Complete();
+
+            await SendWarningStep(StepHistoryName.ChatMemberPhoto);
+            return false;
+        }
+        catch (Exception exception)
+        {
+            Log.Error(
+                exception,
+                "Error Check user profile photo at ChatId: {ChatId}, UserId: {UserId}",
+                ChatId,
+                FromId
+            );
+
             return true;
         }
-
-        if (await CheckPermission())
-        {
-            op.Complete();
-            return true;
-        }
-
-        var hasProfilePhoto = await _userProfilePhotoService.CheckUserProfilePhoto(ChatId, FromId);
-
-        if (hasProfilePhoto)
-        {
-            op.Complete();
-            return true;
-        }
-
-        op.Complete();
-
-        await SendWarningStep(StepHistoryName.ChatMemberPhoto);
-        return false;
     }
 
     public async Task SendWarningStep(StepHistoryName name)
@@ -1802,30 +1845,11 @@ public class TelegramService
             disableWebPreview: true,
             replyToMsgId: 0,
             scheduleDeleteAt: KickTimeOffset.ToDateTime().ToUniversalTime(),
-            messageFlag: messageFlag
+            messageFlag: messageFlag,
+            preventDuplicateSend: true
         );
 
-        ChatService.DeleteMessageHistory(
-                history =>
-                    history.ChatId == ChatId &&
-                    history.MessageFlag == messageFlag
-            )
-            .InBackground();
-
-        var stepHistory = await _stepHistoriesService.GetStepHistoryCore
-        (
-            new StepHistory()
-            {
-                ChatId = ChatId,
-                UserId = FromId,
-                Name = name
-            }
-        );
-
-        if (stepHistory != null)
-        {
-            await DeleteAsync(stepHistory.LastWarnMessageId);
-        }
+        await ScheduleKickJob(name);
     }
 
     public async Task<StringAnalyzer> FireAnalyzer()

@@ -321,14 +321,17 @@ public class ChatService
                 {
                     if (exception.Contains("message to delete not found") ||
                         exception.Contains("message can't be deleted") ||
-                        exception.Contains("bot was kicked")
+                        exception.Contains("bot was kicked") ||
+                        exception.Contains("not a member") ||
+                        exception.Contains("chat was upgraded")
                        )
                     {
                         _logger.LogInformation(
-                            "Error delete message with Id '{MessageId}' at ChatId '{ChatId}'",
+                            "Error delete message History with Id: '{MessageId}' at ChatId: '{ChatId}'",
                             messageId,
                             chatId
                         );
+
                         await _messageHistoryService.DeleteMessageHistoryAsync(
                             new MessageHistoryFindDto()
                             {
@@ -342,7 +345,7 @@ public class ChatService
                     {
                         _logger.LogError(
                             exception,
-                            "Error when deleting message history with messageId '{MessageId}' at chatId '{ChatId}'",
+                            "Error delete message History with Id: '{MessageId}' at ChatId: '{ChatId}'",
                             messageId,
                             chatId
                         );

@@ -34,6 +34,43 @@ public static class CallbackQueryExtension
         return true;
     }
 
+    public static async Task<bool> OnCallbackDeleteAsync(this TelegramService telegramService)
+    {
+        var chatId = telegramService.ChatId;
+        var fromId = telegramService.FromId;
+        var messageTarget = telegramService.GetCallbackDataAt<string>(1);
+
+        Log.Information(
+            "Callback delete message at ChatId: {ChatId}. Target: {MessageTarget}",
+            chatId,
+            messageTarget
+        );
+
+        if (!await telegramService.CheckUserPermission())
+        {
+            Log.Information(
+                "UserId: '{UserId}' at ChatId: '{ChatId}' has no permission to delete message",
+                fromId,
+                chatId
+            );
+
+            await telegramService.AnswerCallbackQueryAsync("Kamu tidak mempunyai akses melakukan tindakan ini!", true);
+            return true;
+        }
+
+        if (messageTarget == "current-message")
+        {
+            await telegramService.DeleteCurrentCallbackMessageAsync();
+        }
+        else
+        {
+            var messageId = telegramService.GetCallbackDataAt<int>(1);
+            await telegramService.DeleteAsync(messageId);
+        }
+
+        return true;
+    }
+
     public static async Task<bool> OnCallbackVerifyAsync(this TelegramService telegramService)
     {
         Log.Information("Executing Verify Callback");
@@ -329,6 +366,7 @@ public static class CallbackQueryExtension
     {
         var chatId = telegramService.ChatId;
         var fromId = telegramService.FromId;
+        var chatUsername = telegramService.Chat.Username;
         var message = telegramService.CallbackMessage;
         var callbackDatas = telegramService.CallbackQueryDatas;
 
@@ -346,9 +384,8 @@ public static class CallbackQueryExtension
         var globalBanService = telegramService.GetRequiredService<GlobalBanService>();
         var eventLogService = telegramService.GetRequiredService<EventLogService>();
 
-        var currentMessageId = message.MessageId;
-        var action = callbackDatas.ElementAtOrDefault(1);
-        var userId = callbackDatas.ElementAtOrDefault(2).ToInt64();
+        var action = telegramService.GetCallbackDataAt<string>(1);
+        var userId = telegramService.GetCallbackDataAt<long>(2);
 
         var replyToMessageId = telegramService.ReplyToMessage?.MessageId ?? -1;
 
@@ -366,7 +403,7 @@ public static class CallbackQueryExtension
                     new GlobalBanItem
                     {
                         UserId = userId,
-                        ReasonBan = "@WinTenDev",
+                        ReasonBan = "@" + chatUsername,
                         BannedBy = fromId,
                         BannedFrom = chatId,
                         CreatedAt = DateTime.UtcNow

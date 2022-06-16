@@ -58,12 +58,20 @@ public class DefaultTraceLog : ITrace
 
     public void BeforeDelete(CancellableTraceLog log)
     {
-        throw new System.NotImplementedException();
+        Log.Debug(
+            "RepoDB Delete with SessionId: {SessionId}, SQL: {@Log}",
+            log.SessionId,
+            log.Statement
+        );
     }
 
     public void AfterDelete(TraceLog log)
     {
-        throw new System.NotImplementedException();
+        Log.Debug(
+            "RepoDB Delete with SessionId: {SessionId}, Execution: {ExecutionTime}",
+            log.SessionId,
+            log.ExecutionTime
+        );
     }
 
     public void BeforeDeleteAll(CancellableTraceLog log)

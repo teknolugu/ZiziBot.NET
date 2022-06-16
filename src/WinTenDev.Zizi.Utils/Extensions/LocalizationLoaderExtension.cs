@@ -1,9 +1,10 @@
 ﻿using System;
-using System.IO;
 using CodingSeb.Localization.Loaders;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Options;
 using WinTenDev.Zizi.Models.Configs;
+using WinTenDev.Zizi.Models.Exceptions;
+using WinTenDev.Zizi.Models.Factories;
 
 namespace WinTenDev.Zizi.Utils.Extensions;
 
@@ -13,17 +14,16 @@ public static class LocalizationLoaderExtension
     {
         var localizationConfig = app.GetRequiredService<IOptionsSnapshot<LocalizationConfig>>().Value;
 
-        LocalizationLoader.Instance.FileLanguageLoaders.Add(new JsonFileLoader());
+        LocalizationLoader.Instance.FileLanguageLoaders.Add(new AdvancedJsonLocalizationFileLoaderFactory());
         var jsonLocalizationPath = localizationConfig.LangSourcePath;
 
         try
         {
             LocalizationLoader.Instance.AddDirectory(jsonLocalizationPath);
         }
-        catch (Exception e)
+        catch (Exception exception)
         {
-            // Log.Warning(e, "Error loading localization files");
-            throw new InvalidDataException("Error loading localization files", e);
+            throw new InvalidJsonLocalizationException(exception);
         }
     }
 }

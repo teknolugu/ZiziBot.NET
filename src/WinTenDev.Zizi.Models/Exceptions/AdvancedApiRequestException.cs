@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.Serialization;
 
-namespace WinTenDev.Zizi.Exceptions;
+namespace WinTenDev.Zizi.Models.Exceptions;
 
 [Serializable()]
 public class AdvancedApiRequestException : Exception

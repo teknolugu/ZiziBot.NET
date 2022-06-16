@@ -28,7 +28,7 @@ public class RssHistory
 
     [JsonProperty("publish_date")]
     [Column("publish_date")]
-    public DateTime? PublishDate { get; set; }
+    public DateTimeOffset PublishDate { get; set; }
 
     [JsonProperty("author")]
     [Column("author")]

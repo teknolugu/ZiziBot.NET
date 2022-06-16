@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Serilog;
 using Telegram.Bot.Framework.Abstractions;
 using WinTenDev.Zizi.Services.Internals;
@@ -37,8 +38,11 @@ public class SettingsCommand : CommandBase
 
         if (!await _telegramService.CheckUserPermission())
         {
-            Log.Warning("UserId: {UserId} on ChatId: {ChatId} not have permission to modify Settings",
-                fromId, chatId);
+            Log.Warning(
+                "UserId: {UserId} on ChatId: {ChatId} not have permission to modify Settings",
+                fromId,
+                chatId
+            );
             return;
         }
 
@@ -48,6 +52,10 @@ public class SettingsCommand : CommandBase
         var btnMarkup = await settings.ToJson().JsonToButton(chunk: 2);
         Log.Debug("Settings: {Count}", settings.Count);
 
-        await _telegramService.EditMessageTextAsync("Settings Toggles", btnMarkup);
+        await _telegramService.EditMessageTextAsync(
+            sendText: "Pengaturan Obrolan",
+            btnMarkup,
+            scheduleDeleteAt: DateTime.UtcNow.AddMinutes(10)
+        );
     }
 }

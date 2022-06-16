@@ -3,16 +3,15 @@ using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Entities;
 
-namespace WinTenDev.Zizi.Models.Entities.MongoDb;
+namespace WinTenDev.Zizi.Models.Entities.MongoDb.Internal;
 
-[Collection("SubsceneSubtitleSearch")]
-public class SubsceneMovieSearch : IEntity, ICreatedOn, IModifiedOn
+public class ForceSubscription : IEntity, ICreatedOn, IModifiedOn
 {
     [ObjectId, BsonId]
     public string ID { get; set; }
-    public string MovieUrl { get; set; }
-    public string MovieName { get; set; }
-    public string SubtitleCount { get; set; }
+    public long ChatId { get; set; }
+    public long UserId { get; set; }
+    public long ChannelId { get; set; }
     public DateTime CreatedOn { get; set; }
     public DateTime ModifiedOn { get; set; }
 

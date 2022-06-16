@@ -116,6 +116,8 @@ public static class TelegramServiceHealthyExtension
                     chatId,
                     telegramService.Update.Type
                 );
+
+                return;
             }
 
             var eventLogService = telegramService.GetRequiredService<EventLogService>();

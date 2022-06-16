@@ -5,7 +5,7 @@ using System.Text;
 using JetBrains.Annotations;
 using Serilog;
 using TimeSpanParserUtil;
-using WinTenDev.Zizi.Exceptions;
+using WinTenDev.Zizi.Models.Exceptions;
 
 namespace WinTenDev.Zizi.Utils;
 

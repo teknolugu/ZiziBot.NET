@@ -1,22 +1,19 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using CodeHollow.FeedReader;
 using Hangfire;
 using Hangfire.Storage;
 using MoreLinq;
 using Serilog;
 using SerilogTimings;
 using Telegram.Bot;
-using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using WinTenDev.Zizi.Models.Tables;
+using WinTenDev.Zizi.Models.Types;
 using WinTenDev.Zizi.Services.Externals;
 using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Utils;
-using WinTenDev.Zizi.Utils.IO;
 using WinTenDev.Zizi.Utils.Parsers;
 using WinTenDev.Zizi.Utils.Telegram;
 
@@ -81,7 +78,7 @@ public class RssFeedService
 
         _recurringJobManager.AddOrUpdate<RssFeedService>(
             recurringJobId: recurringId,
-            cronExpression: CronUtil.InMinute(3),
+            cronExpression: CronUtil.InMinute(1),
             methodCall: service =>
                 service.ExecuteUrlAsync(chatId, urlFeed)
         );
@@ -101,10 +98,19 @@ public class RssFeedService
             rssUrl
         );
 
-        var rssFeeds = await FeedReader.ReadAsync(rssUrl);
+        // var rssFeeds = await FeedReader.ReadAsync(rssUrl, autoRedirect: false);
+        var rssFeeds = await RssFeedUtil.OpenSyndicationFeed(rssUrl);
 
-        var rssTitle = rssFeeds.Title;
+        // var rssTitle = rssFeeds.Title;
+
+        var rssTitle = rssFeeds.Title.Text;
         var rssFeed = rssFeeds.Items.FirstOrDefault();
+
+        var rssFeedTitle = rssFeed.Title.Text.Trim();
+        var rssPublishDate = rssFeed.PublishDate.Year.Equals(0001) ? rssFeed.LastUpdatedTime : rssFeed.PublishDate;
+        var rssPublishDateStr = rssPublishDate.ToString("yyyy-MM-dd HH:mm:ss");
+        var rssFeedAuthor = rssFeed.Authors.FirstOrDefault()?.Name;
+        var rssFeedLink = rssFeed.Links.FirstOrDefault()?.Uri.ToString();
 
         Log.Debug(
             "Getting last history for {ChatId} url {RssUrl}",
@@ -112,18 +118,10 @@ public class RssFeedService
             rssUrl
         );
 
-        if (rssFeed == null) return;
-
-        Log.Debug("CurrentArticleDate: {Date}", rssFeed.PublishingDate);
+        Log.Debug("CurrentArticleDate: {Date}", rssPublishDate);
         Log.Debug("Prepare sending article to ChatId {ChatId}", chatId);
 
-        // var titleLink = $"{rssTitle} - {rssFeed.Title}".MkUrl(rssFeed.Link);
-        var category = rssFeed.Categories.MkJoin(", ");
-        var sendText = $"{rssTitle} - {rssFeed.Title}" +
-                       $"\n{rssFeed.Link}" +
-                       $"\nTags: {category}";
-
-        var isExist = await _rssService.IsHistoryExist(chatId, rssFeed.Link);
+        var isExist = await _rssService.IsHistoryExist(chatId, rssFeedLink);
 
         if (isExist)
         {
@@ -142,38 +140,49 @@ public class RssFeedService
             chatId
         );
 
-        var tempDir = GetTempDirectory(rssUrl, chatId);
+        var category = rssFeed.Categories.Select(syndicationCategory => syndicationCategory.Name).ToList().MkJoin(", ");
+        var htmlMessage = HtmlMessage.Empty;
 
-        var listAlbum = new List<IAlbumInputMedia>();
+        var disableWebPagePreview = false;
 
-        var rssSettings = await _rssService.GetRssSettingsAsync(chatId);
-        var urlSetting = rssSettings.FirstOrDefault(setting => setting.UrlFeed == rssUrl);
-
-        if (rssUrl.IsGithubReleaseUrl() &&
-            (urlSetting?.IncludeAttachment ?? false))
+        if (rssUrl.IsGithubReleaseUrl())
         {
-            listAlbum = await _octokitApiService.GetLatestReleaseAssets(rssUrl, tempDir);
+            var listUrlAssetsList = await _octokitApiService.GetLatestReleaseAssetsList(rssUrl);
+
+            if (listUrlAssetsList != null)
+            {
+                htmlMessage.Br()
+                    .Append(listUrlAssetsList)
+                    .Br()
+                    .Br();
+            }
+            else
+            {
+                htmlMessage.Br();
+            }
+
+            htmlMessage.Text("#github #release");
+
+            disableWebPagePreview = true;
+        }
+        else
+        {
+            htmlMessage.TextBr($"{rssTitle} - {rssFeedTitle}");
+
+            htmlMessage.TextBr($"{rssFeedLink}");
+
+            if (category.IsNotNullOrEmpty())
+                htmlMessage.Text($"\nTags: {category}");
         }
 
         try
         {
-            if (listAlbum.Any())
-            {
-                await _botClient.SendMediaGroupAsync(
-                    chatId: chatId,
-                    media: listAlbum
-                );
-
-                tempDir.DeleteCachesSubDir();
-            }
-            else
-            {
-                await _botClient.SendTextMessageAsync(
-                    chatId: chatId,
-                    text: sendText,
-                    parseMode: ParseMode.Html
-                );
-            }
+            await _botClient.SendTextMessageAsync(
+                chatId: chatId,
+                text: htmlMessage.ToString(),
+                disableWebPagePreview: disableWebPagePreview,
+                parseMode: ParseMode.Html
+            );
 
             Log.Debug(
                 "Writing to RSS History for ChatId: {ChatId}, Rss: {UrlFeed}",
@@ -184,12 +193,12 @@ public class RssFeedService
             await _rssService.SaveRssHistoryAsync(
                 new RssHistory
                 {
-                    Url = rssFeed.Link,
+                    Url = rssFeedLink,
                     RssSource = rssUrl,
                     ChatId = chatId,
-                    Title = rssFeed.Title,
-                    PublishDate = rssFeed.PublishingDate ?? DateTime.Now,
-                    Author = rssFeed.Author ?? "N/A",
+                    Title = rssFeedTitle,
+                    PublishDate = rssPublishDate,
+                    Author = rssFeedAuthor ?? "N/A",
                     CreatedAt = DateTime.Now
                 }
             );

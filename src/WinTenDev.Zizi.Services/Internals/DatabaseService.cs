@@ -2,17 +2,26 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Hangfire;
+using Humanizer;
+using Ionic.Zip;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using MongoDB.Driver;
 using MongoDB.Entities;
 using MoreLinq;
 using MySqlConnector;
 using SerilogTimings;
 using SqlKata.Execution;
+using Telegram.Bot;
+using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.InputFiles;
 using WinTenDev.Zizi.Models.Configs;
 using WinTenDev.Zizi.Models.Entities.MongoDb;
+using WinTenDev.Zizi.Models.Entities.MongoDb.Internal;
 using WinTenDev.Zizi.Models.Tables;
 using WinTenDev.Zizi.Models.Types;
+using WinTenDev.Zizi.Services.Telegram;
 using WinTenDev.Zizi.Utils;
 using WinTenDev.Zizi.Utils.IO;
 
@@ -25,16 +34,25 @@ public class DatabaseService
 {
     private const string DataDir = "Storage/Data/";
     private readonly ILogger<DatabaseService> _logger;
+    private readonly EventLogConfig _eventLogConfig;
+    private readonly ITelegramBotClient _botClient;
+    private readonly BotService _botService;
     private readonly ConnectionStrings _connectionStrings;
     private readonly QueryService _queryService;
 
     public DatabaseService(
         ILogger<DatabaseService> logger,
+        IOptionsSnapshot<EventLogConfig> eventLogConfig,
         IOptions<ConnectionStrings> connectionStrings,
+        ITelegramBotClient botClient,
+        BotService botService,
         QueryService queryService
     )
     {
         _logger = logger;
+        _eventLogConfig = eventLogConfig.Value;
+        _botClient = botClient;
+        _botService = botService;
         _connectionStrings = connectionStrings.Value;
         _queryService = queryService;
     }
@@ -116,7 +134,7 @@ public class DatabaseService
         );
         mb.ExportToFile(fullName);
 
-        var zipFileName = fullName.CreateZip(false);
+        var zipFileName = fullName.CreateZip(compressionMethod: CompressionMethod.BZip2);
         _logger.LogDebug(
             "Database: {DbName} exported to file: {SqlZip}",
             dbName,
@@ -154,6 +172,34 @@ public class DatabaseService
             .Where((s) => s.Contains(".sql"));
 
         listFile.ForEach(filePath => filePath.DeleteFile());
+    }
+
+    [JobDisplayName("MySQL AutoBackup")]
+    public async Task AutomaticMysqlBackup()
+    {
+        var dataBackupInfo = await BackupMySqlDatabase();
+        var fullNameZip = dataBackupInfo.FullNameZip;
+        var fileNameZip = dataBackupInfo.FileNameZip;
+        var channelTarget = _eventLogConfig.ChannelId;
+
+        var caption = HtmlMessage.Empty
+            .Bold("File Size: ").CodeBr($"{dataBackupInfo.FileSizeSql}")
+            .Bold("Zip Size: ").CodeBr($"{dataBackupInfo.FileSizeSqlZip}")
+            .Text("#mysql #auto #backup");
+
+        await using var fileStream = File.OpenRead(fullNameZip);
+
+        var media = new InputOnlineFile(fileStream, fileNameZip)
+        {
+            FileName = fileNameZip
+        };
+
+        await _botClient.SendDocumentAsync(
+            chatId: channelTarget,
+            document: media,
+            caption: caption.ToString(),
+            parseMode: ParseMode.Html
+        );
     }
 
     public async Task FixTableCollation()
@@ -219,11 +265,39 @@ public class DatabaseService
         op.Complete();
     }
 
+    public async Task MongoDbDatabaseMapping()
+    {
+        _logger.LogInformation("Mapping MongoDb Database..");
+
+        var meUser = await _botService.GetMeAsync();
+        var meUsername = meUser.FirstName.Underscore();
+
+        var connectionString = _connectionStrings.MongoDb;
+
+        await DB.InitAsync(meUsername, MongoClientSettings.FromConnectionString(connectionString));
+        await DB.InitAsync("shared", MongoClientSettings.FromConnectionString(connectionString));
+
+        DB.DatabaseFor<ForceSubscription>(meUsername);
+
+        DB.DatabaseFor<SubsceneMovieSearch>("shared");
+        DB.DatabaseFor<SubsceneMovieItem>("shared");
+        DB.DatabaseFor<SubsceneSubtitleItem>("shared");
+
+        _logger.LogInformation("Mapping MongoDb Database complete");
+    }
+
     public async Task MongoDbEnsureCollectionIndex()
     {
         _logger.LogInformation("Creating MongoDb Index..");
 
-        await _queryService.MongoDbOpen("shared");
+        await DB.Index<ForceSubscription>()
+            .Key(subscription => subscription.ChannelId, KeyType.Ascending)
+            .Option(
+                options =>
+                    options.Unique = true
+            )
+            .CreateAsync();
+
         await DB.Index<SubsceneMovieItem>()
             .Key(item => item.MovieUrl, KeyType.Ascending)
             .Option(

@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 jobs:
-  zizibot-linux64-fd-build:
+  zizibot-fd-build:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -19,18 +19,32 @@ jobs:
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: 6.0.x
+
+      - name: Preparing Environment
+        run:
+          dotnet tool install --global dotnet-zip &&
+          cd src/WinTenDev.ZiziBot.AppHost &&
+          dotnet zip install
+
       - name: Install dependencies
         run: dotnet restore WinTenDev.ZiziBot.sln
 
-      - name: Linux64 FD Build
-        run: dotnet publish src/WinTenDev.ZiziBot.AppHost -r linux-x64 -c Release --self-contained=false
-      - name: Upload Linux64 Artifacs
+      - name: Creating Linux-x64 package
+        run: dotnet publish src/WinTenDev.ZiziBot.AppHost -r linux-x64 -c Release --self-contained=false /t:CreateZip
+
+      - name: Creating Win-x64 package
+        run: dotnet publish src/WinTenDev.ZiziBot.AppHost -r win-x64 -c Release --self-contained=false /t:CreateZip
+
+      - name: Uploading Artifacs
         uses: actions/upload-artifact@v2
         with:
           name: zizibot-linux64-fd-build
-          path: src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/linux-x64/publish
+          path: |
+            src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/linux-x64/*.zip
+            src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/win-x64/*.zip
 
-  zizibot-linux64-sf-build:
+
+  zizibot-sf-build:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -42,58 +56,71 @@ jobs:
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: 6.0.x
+
+      - name: Preparing Environment
+        run:
+          dotnet tool install --global dotnet-zip &&
+          cd src/WinTenDev.ZiziBot.AppHost &&
+          dotnet zip install
+
       - name: Install dependencies
         run: dotnet restore WinTenDev.ZiziBot.sln
 
-      - name: Linux64 FD Single-File Build
-        run: dotnet publish src/WinTenDev.ZiziBot.AppHost -r linux-x64 -c Release --self-contained=false /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true
-      - name: Upload Linux64 Single-File Artifacs
+      - name: Creating Linux-x64 package
+        run: dotnet publish src/WinTenDev.ZiziBot.AppHost -r linux-x64 -c Release --self-contained=false /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true /t:CreateZip
+
+      - name: Creating Win-x64 package
+        run: dotnet publish src/WinTenDev.ZiziBot.AppHost -r win-x64 -c Release --self-contained=false /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true /t:CreateZip
+
+      - name: Uploading Artifacts
         uses: actions/upload-artifact@v2
         with:
           name: zizibot-linux64-sf-build
-          path: src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/linux-x64/publish
+          path: |
+            src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/linux-x64/*.zip
+            src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/win-x64/*.zip
 
-  zizibot-win64-fd-build:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: /home/runner/work/ZiziBot.NET/ZiziBot.NET
+#  zizibot-win64-fd-build:
+#    runs-on: ubuntu-latest
+#    defaults:
+#      run:
+#        working-directory: /home/runner/work/ZiziBot.NET/ZiziBot.NET
+#
+#    steps:
+#      - uses: actions/checkout@v2
+#      - name: Setup .NET
+#        uses: actions/setup-dotnet@v1
+#        with:
+#          dotnet-version: 6.0.x
+#      - name: Install dependencies
+#        run: dotnet restore WinTenDev.ZiziBot.sln
+#      - name: Win64 FD Build
+#        run: dotnet publish src/WinTenDev.ZiziBot.AppHost -r win-x64 -c Release --self-contained=false
+#      - name: Upload Win64 FD Artifacs
+#        uses: actions/upload-artifact@v2
+#        with:
+#          name: zizibot-win64-fd-build
+#          path: src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/win-x64/publish
 
-    steps:
-      - uses: actions/checkout@v2
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: 6.0.x
-      - name: Install dependencies
-        run: dotnet restore WinTenDev.ZiziBot.sln
-      - name: Win64 FD Build
-        run: dotnet publish src/WinTenDev.ZiziBot.AppHost -r win-x64 -c Release --self-contained=false
-      - name: Upload Win64 FD Artifacs
-        uses: actions/upload-artifact@v2
-        with:
-          name: zizibot-win64-fd-build
-          path: src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/win-x64/publish
-
-  zizibot-win64-sf-build:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: /home/runner/work/ZiziBot.NET/ZiziBot.NET
-
-    steps:
-      - uses: actions/checkout@v2
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: 6.0.x
-      - name: Install dependencies
-        run: dotnet restore WinTenDev.ZiziBot.sln
-
-      - name: Win64 FD Single-File Build
-        run: dotnet publish src/WinTenDev.ZiziBot.AppHost -r win-x64 -c Release --self-contained=false /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true
-      - name: Upload Win64 SF Artifacs
-        uses: actions/upload-artifact@v2
-        with:
-          name: zizibot-win64-sf-build
-          path: src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/win-x64/publish
+#  zizibot-win64-sf-build:
+#    runs-on: ubuntu-latest
+#    defaults:
+#      run:
+#        working-directory: /home/runner/work/ZiziBot.NET/ZiziBot.NET
+#
+#    steps:
+#      - uses: actions/checkout@v2
+#      - name: Setup .NET
+#        uses: actions/setup-dotnet@v1
+#        with:
+#          dotnet-version: 6.0.x
+#      - name: Install dependencies
+#        run: dotnet restore WinTenDev.ZiziBot.sln
+#
+#      - name: Win64 FD Single-File Build
+#        run: dotnet publish src/WinTenDev.ZiziBot.AppHost -r win-x64 -c Release --self-contained=false /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true
+#      - name: Upload Win64 SF Artifacs
+#        uses: actions/upload-artifact@v2
+#        with:
+#          name: zizibot-win64-sf-build
+#          path: src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/win-x64/publish
