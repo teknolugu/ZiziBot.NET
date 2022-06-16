@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.Serialization;
 
-namespace WinTenDev.Zizi.Exceptions;
+namespace WinTenDev.Zizi.Models.Exceptions;
 
 [Serializable()]
 public class ConnectionStringNullOrEmptyException : Exception
@@ -13,9 +13,7 @@ public class ConnectionStringNullOrEmptyException : Exception
     {
     }
 
-    public ConnectionStringNullOrEmptyException(
-        string message
-    ) : base($"{message} Connection string must be set!")
+    public ConnectionStringNullOrEmptyException(string message) : base($"{message} Connection string must be set!")
     {
     }
 

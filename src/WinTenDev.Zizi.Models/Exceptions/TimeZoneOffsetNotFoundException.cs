@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.Serialization;
 
-namespace WinTenDev.Zizi.Exceptions;
+namespace WinTenDev.Zizi.Models.Exceptions;
 
 [Serializable()]
 public class TimeZoneOffsetNotFoundException : Exception
@@ -18,7 +18,7 @@ public class TimeZoneOffsetNotFoundException : Exception
     }
 
     public TimeZoneOffsetNotFoundException(string message) :
-        base($"TimeZone dengan offset '{message}' tidak ditemukan")
+        base($"TimeZone with offset '{message}' not found")
     {
     }
 

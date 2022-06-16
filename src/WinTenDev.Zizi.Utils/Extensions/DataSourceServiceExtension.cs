@@ -8,8 +8,8 @@ using RepoDb;
 using Serilog;
 using SqlKata.Compilers;
 using SqlKata.Execution;
-using WinTenDev.Zizi.Exceptions;
 using WinTenDev.Zizi.Models.Configs;
+using WinTenDev.Zizi.Models.Exceptions;
 using WinTenDev.Zizi.Utils.IO;
 
 namespace WinTenDev.Zizi.Utils.Extensions;
