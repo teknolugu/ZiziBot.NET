@@ -295,7 +295,7 @@ public static class TelegramServiceCoreExtension
         }
     }
 
-    public static async Task GetInsightAsync(this TelegramService telegramService)
+    public static async Task GetAppHostInfoAsync(this TelegramService telegramService)
     {
         var featureConfig = await telegramService.GetFeatureConfig();
 
@@ -314,6 +314,7 @@ public static class TelegramServiceCoreExtension
             .Bold("Version: ").CodeBr(Environment.OSVersion.Version.ToString())
             .Bold("Uptime: ").CodeBr(TimeSpan.FromMilliseconds(Environment.TickCount64).Humanize(precision: 10, minUnit: TimeUnit.Second))
             .Bold("Runtime: ").CodeBr(System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription)
+            .Bold("DateTime: ").CodeBr(DateTime.Now.ToDetailDateTimeString())
             .Br()
             .Bold("App Information").Br()
             .Bold("Name: ").CodeBr(Assembly.GetEntryAssembly().GetName().Name)

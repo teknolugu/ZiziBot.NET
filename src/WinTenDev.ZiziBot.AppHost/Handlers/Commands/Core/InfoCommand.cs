@@ -9,9 +9,7 @@ public class InfoCommand : CommandBase
 {
     private readonly TelegramService _telegramService;
 
-    public InfoCommand(
-        TelegramService telegramService
-    )
+    public InfoCommand(TelegramService telegramService)
     {
         _telegramService = telegramService;
     }
@@ -22,6 +20,6 @@ public class InfoCommand : CommandBase
         string[] args
     )
     {
-        await _telegramService.GetInsightAsync();
+        await _telegramService.GetAppHostInfoAsync();
     }
 }
