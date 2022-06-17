@@ -455,7 +455,7 @@ public class TelegramService
     {
         dynamic value = MessageTextParts.Skip(1).ElementAtOrDefault(index);
 
-        return Convert.ChangeType(value, typeof(T));
+        return value is null ? default : (T) Convert.ChangeType(value, typeof(T));
     }
 
     public string GetCommandParam(int index)
