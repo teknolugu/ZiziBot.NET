@@ -116,24 +116,22 @@ public static class TelegramServiceActivityExtension
             return false;
         }
 
-        var checkAntiSpamTask = telegramService.AntiSpamCheckAsync();
-        var checkScanMessageTask = telegramService.ScanMessageAsync();
-        var userUsernameTask = telegramService.RunCheckUserUsername();
-        var checkUserProfilePhotoTask = telegramService.RunCheckUserProfilePhoto();
-
-        await Task.WhenAll(
-            checkAntiSpamTask,
-            checkScanMessageTask,
-            userUsernameTask,
-            checkUserProfilePhotoTask
-        );
-
-        var checkAntiSpamResult = await checkAntiSpamTask;
+        var checkAntiSpamResult = await telegramService.AntiSpamCheckAsync();
 
         if (checkAntiSpamResult.IsAnyBanned)
         {
             return false;
         }
+
+        var checkScanMessageTask = telegramService.ScanMessageAsync();
+        var userUsernameTask = telegramService.RunCheckUserUsername();
+        var checkUserProfilePhotoTask = telegramService.RunCheckUserProfilePhoto();
+
+        await Task.WhenAll(
+            checkScanMessageTask,
+            userUsernameTask,
+            checkUserProfilePhotoTask
+        );
 
         if (!await userUsernameTask)
         {
