@@ -491,6 +491,45 @@ public static class TelegramServiceMemberExtension
         );
     }
 
+    public static async Task GetUserInfoAsync(this TelegramService telegramService)
+    {
+        var chatId = telegramService.ChatId;
+        var fromId = telegramService.FromId;
+        var userIdParam = telegramService.GetCommandParamAt<long>(0);
+
+        var chatService = telegramService.GetRequiredService<ChatService>();
+        var userProfileService = telegramService.GetRequiredService<UserProfilePhotoService>();
+
+        if (telegramService.ReplyToMessage != null)
+        {
+            fromId = telegramService.ReplyToMessage.From.Id;
+        }
+        else if (userIdParam != 0)
+        {
+            fromId = userIdParam;
+        }
+
+        var chatMember = await chatService.GetChatMemberAsync(chatId, fromId);
+        var profilePhotos = await userProfileService.GetUserProfilePhotosAsync(fromId);
+
+        var htmlMessage = HtmlMessage.Empty
+            .BoldBr("👤 User Info")
+            .Bold("ID: ").CodeBr(fromId.ToString())
+            .Bold("Username: ").CodeBr(chatMember.User.Username ?? "")
+            .Bold("First Name: ").CodeBr(chatMember.User.FirstName)
+            .Bold("Last Name: ").CodeBr(chatMember.User.LastName)
+            .Bold("Language Code: ").CodeBr(chatMember.User.LanguageCode ?? "")
+            .Bold("Is Bot: ").CodeBr(chatMember.User.IsBot.ToString())
+            .Bold("Status: ").CodeBr(chatMember.Status.ToString())
+            .Bold("Photo Count: ").CodeBr(profilePhotos.TotalCount.ToString());
+
+        await telegramService.SendTextMessageAsync(
+            sendText: htmlMessage.ToString(),
+            scheduleDeleteAt: DateTime.UtcNow.AddMinutes(3),
+            includeSenderMessage: true
+        );
+    }
+
     public static async Task InsightStatusMemberAsync(this TelegramService telegramService)
     {
         var chatId = telegramService.ChatId;
