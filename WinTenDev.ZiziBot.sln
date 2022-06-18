@@ -24,7 +24,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinTenDev.DriveIndex.AppHos
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinTenDev.Zizi.Tests", "src\WinTenDev.Zizi.Tests\WinTenDev.Zizi.Tests.csproj", "{24307A30-787E-46AE-9F2B-9AE163745AE4}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinTenDev.ZiziBot.App", "src\WinTenDev.ZiziBot.App\WinTenDev.ZiziBot.App.csproj", "{96EB8EFC-BFA3-4780-B882-9039C501952C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinTenDev.ZiziBot.Alpha1", "src\WinTenDev.ZiziBot.Alpha1\WinTenDev.ZiziBot.Alpha1.csproj", "{96EB8EFC-BFA3-4780-B882-9039C501952C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinTenDev.Zizi.Exceptions", "src\WinTenDev.Zizi.Exceptions\WinTenDev.Zizi.Exceptions.csproj", "{AD909785-B18E-45CD-8C21-332BB7D61B81}"
 EndProject
