@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -979,5 +980,56 @@ public static class TelegramServiceMemberExtension
         {
             throw new AdvancedApiRequestException($"Ensure Chat Admin failed. ChatId: {chatId}", exception);
         }
+    }
+
+    internal static async Task<bool> AnswerChatJoinRequestAsync(this TelegramService telegramService)
+    {
+        if (!telegramService.HasChatJoinRequest) return true;
+
+        var chatId = telegramService.ChatId;
+        Log.Information("Answer Chat join request for ChatId: {ChatId}", chatId);
+
+        var needManualAccept = true;
+        var reasons = new List<string>();
+        var client = telegramService.Client;
+        var chatJoinRequest = telegramService.ChatJoinRequest;
+        var userChatJoinRequest = chatJoinRequest.From;
+
+        var chatSettings = await telegramService.GetChatSetting();
+
+        if (chatSettings.EnableWarnUsername &&
+            userChatJoinRequest.Username.IsNullOrEmpty())
+        {
+            reasons.Add("Belum menetapkan Username");
+            needManualAccept = false;
+        }
+
+        if (chatSettings.EnableCheckProfilePhoto)
+        {
+            var userProfilePhotoService = telegramService.GetRequiredService<UserProfilePhotoService>();
+            var userProfilePhotos = await userProfilePhotoService.GetUserProfilePhotosAsync(userId: userChatJoinRequest.Id, evictBefore: true);
+
+            if (userProfilePhotos.TotalCount == 0)
+            {
+                reasons.Add("Belum menetapkan/menyembunyikan Foto Profil");
+                needManualAccept = false;
+            }
+        }
+
+        if (needManualAccept) return true;
+
+        await client.DeclineChatJoinRequest(chatId, userChatJoinRequest.Id);
+
+        var message = HtmlMessage.Empty
+            .Bold("Chat join request ditolak").Br()
+            .Bold("ID: ").CodeBr(userChatJoinRequest.Id.ToString())
+            .Bold("Nama: ").TextBr(userChatJoinRequest.GetNameLink())
+            .Bold("Karena: ").Br();
+
+        reasons.ForEach(s => message.TextBr("└ " + s));
+
+        await telegramService.SendTextMessageAsync(message.ToString());
+
+        return false;
     }
 }

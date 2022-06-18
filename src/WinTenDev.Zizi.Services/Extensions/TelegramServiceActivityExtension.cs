@@ -116,6 +116,8 @@ public static class TelegramServiceActivityExtension
             return false;
         }
 
+        if (!await telegramService.AnswerChatJoinRequestAsync()) return false;
+
         var checkAntiSpamResult = await telegramService.AntiSpamCheckAsync();
 
         if (checkAntiSpamResult.IsAnyBanned)
