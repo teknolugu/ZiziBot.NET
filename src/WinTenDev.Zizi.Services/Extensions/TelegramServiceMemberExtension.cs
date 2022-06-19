@@ -724,11 +724,13 @@ public static class TelegramServiceMemberExtension
         if (message == null) return;
 
         var replyToMessage = telegramService.ReplyToMessage;
+        var replyFromId = replyToMessage?.From?.Id ?? 0;
 
-        var privateSetting = await telegramService.GetChatSetting(fromId);
+        var privateSetting = await telegramService.GetChatSetting(replyFromId);
 
         if (!privateSetting.EnableReplyNotification)
         {
+            Log.Debug("Reply Notification is disabled at ChatId: {ReplyFromId}", replyFromId);
             return;
         }
 
@@ -736,6 +738,7 @@ public static class TelegramServiceMemberExtension
 
         if (!groupSetting.EnableReplyNotification)
         {
+            Log.Debug("Reply Notification is disabled at ChatId: {ChatId}", chatId);
             return;
         }
 
@@ -751,11 +754,9 @@ public static class TelegramServiceMemberExtension
 
         if (replyToMessage != null)
         {
-            var toChatId = replyToMessage.From.Id;
-
             await telegramService.SendTextMessageAsync(
                 sendText: htmlMessage.ToString(),
-                customChatId: toChatId,
+                customChatId: replyFromId,
                 disableWebPreview: true
             );
 
@@ -955,13 +956,13 @@ public static class TelegramServiceMemberExtension
         {
             var chatAdminRepository = telegramService.GetRequiredService<ChatAdminService>();
 
-        if (telegramService.IsPrivateChat)
-        {
-            Log.Debug("No Chat Admin for private chat. ChatId: {ChatId}", chatId);
-            return;
-        }
+            if (telegramService.IsPrivateChat)
+            {
+                Log.Debug("No Chat Admin for private chat. ChatId: {ChatId}", chatId);
+                return;
+            }
 
-        var admins = await telegramService.GetChatAdmin();
+            var admins = await telegramService.GetChatAdmin();
 
             await chatAdminRepository.SaveAll(
                 admins.Select(
