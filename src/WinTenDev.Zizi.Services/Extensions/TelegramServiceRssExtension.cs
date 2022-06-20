@@ -105,61 +105,60 @@ public static class TelegramServiceRssExtension
         var chatId = telegramService.ChatId;
         var chatTitle = telegramService.ChatTitle;
 
-            await telegramService.DeleteSenderMessageAsync();
+        await telegramService.DeleteSenderMessageAsync();
 
-            if (!await telegramService.CheckUserPermission()) return;
+        if (!await telegramService.CheckUserPermission()) return;
 
-            await telegramService.SendTextMessageAsync("Sedang mengambil RSS..", replyToMsgId: 0);
+        await telegramService.SendTextMessageAsync("Sedang mengambil RSS..", replyToMsgId: 0);
 
-            var buttonMarkup = await telegramService.RssService.GetButtonMarkup(chatId);
+        var buttonMarkup = await telegramService.RssService.GetButtonMarkup(chatId);
 
-            var messageText = buttonMarkup == null
-                ? "Sepertinya tidak ada RSS di obrolan ini"
-                : $"RSS Control for {chatTitle}" +
-                  "\nHalaman 1";
+        var messageText = buttonMarkup == null
+            ? "Sepertinya tidak ada RSS di obrolan ini"
+            : $"RSS Control for {chatTitle}" +
+              "\nHalaman 1";
 
-            await telegramService.EditMessageTextAsync(
-                messageText,
-                buttonMarkup,
-                scheduleDeleteAt: DateTime.UtcNow.AddMinutes(10),
-                includeSenderMessage: true,
-                preventDuplicateSend: true
-            );
+        await telegramService.EditMessageTextAsync(
+            messageText,
+            buttonMarkup,
+            scheduleDeleteAt: DateTime.UtcNow.AddMinutes(10),
+            includeSenderMessage: true,
+            preventDuplicateSend: true
+        );
+    }
+
+    public static async Task RssPullAsync(this TelegramService telegramService)
+    {
+        var chatId = telegramService.ChatId;
+
+        var checkUserPermission = await telegramService.CheckUserPermission();
+        if (!checkUserPermission)
+        {
+            Log.Warning("You must Admin or Private chat");
+
+            return;
         }
 
-        public static async Task RssPullAsync(this TelegramService telegramService)
-        {
-            var chatId = telegramService.ChatId;
+        var jobsService = telegramService.GetRequiredService<JobsService>();
 
-            var checkUserPermission = await telegramService.CheckUserPermission();
-            if (!checkUserPermission)
-            {
-                Log.Warning("You must Admin or Private chat");
-
-                return;
-            }
-
-            var jobsService = telegramService.GetRequiredService<JobsService>();
-
-            Log.Information("Pulling RSS in {0}", chatId);
+        Log.Information("Pulling RSS in {0}", chatId);
 
  #pragma warning disable CS4014
-            Task.Run(
+        Task.Run(
  #pragma warning restore CS4014
-                async () => {
-                    await telegramService.SendTextMessageAsync("Sedang menjalankan Trigger RSS Job..");
+            async () => {
+                await telegramService.SendTextMessageAsync("Sedang menjalankan Trigger RSS Job..");
 
-                    var reducedChatId = telegramService.ReducedChatId;
-                    var recurringId = $"rss-{reducedChatId}";
-                    jobsService.TriggerJobsByPrefix(recurringId);
+                var reducedChatId = telegramService.ReducedChatId;
+                var recurringId = $"rss-{reducedChatId}";
+                jobsService.TriggerJobsByPrefix(recurringId);
 
-                    await telegramService.EditMessageTextAsync(
-                        sendText: "RSS Jobs untuk Obrolan ini berhasil dipicu, artikel baru akan segera masuk jika tersedia.",
-                        scheduleDeleteAt: DateTime.UtcNow.AddMinutes(2),
-                        includeSenderMessage: true
-                    );
-                }
-            );
-        }
+                await telegramService.EditMessageTextAsync(
+                    sendText: "RSS Jobs untuk Obrolan ini berhasil dipicu, artikel baru akan segera masuk jika tersedia.",
+                    scheduleDeleteAt: DateTime.UtcNow.AddMinutes(2),
+                    includeSenderMessage: true
+                );
+            }
+        );
     }
 }
