@@ -78,7 +78,6 @@
         <PackageReference Include="SystemInfoLibrary-devel" Version="1.5.0.25"/>
         <PackageReference Include="Telegram.Bot" Version="17.0.0"/>
         <PackageReference Include="WTelegramClient" Version="2.5.1"/>
-        <PackageReference Remove="Packaging.Targets"/>
     </ItemGroup>
 
     <ItemGroup>
