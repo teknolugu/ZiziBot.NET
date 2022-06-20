@@ -23,12 +23,12 @@ public static class TelegramServiceActivityExtension
         var callbackQuery = telegramService.CallbackQuery;
         telegramService.CallBackMessageId = callbackQuery.Message.MessageId;
 
-        var pingCallback = telegramService.GetRequiredService<PingCallback>();
-        var actionCallback = telegramService.GetRequiredService<ActionCallback>();
-        var helpCallback = telegramService.GetRequiredService<HelpCallback>();
-        var rssCtlCallback = telegramService.GetRequiredService<RssCtlCallback>();
-        var settingsCallback = telegramService.GetRequiredService<SettingsCallback>();
-        var verifyCallback = telegramService.GetRequiredService<VerifyCallback>();
+        // var pingCallback = telegramService.GetRequiredService<PingCallback>();
+        // var actionCallback = telegramService.GetRequiredService<ActionCallback>();
+        // var helpCallback = telegramService.GetRequiredService<HelpCallback>();
+        // var rssCtlCallback = telegramService.GetRequiredService<RssCtlCallback>();
+        // var settingsCallback = telegramService.GetRequiredService<SettingsCallback>();
+        // var verifyCallback = telegramService.GetRequiredService<VerifyCallback>();
 
         Log.Verbose("CallbackQuery: {Json}", callbackQuery.ToJson(true));
 
@@ -50,38 +50,38 @@ public static class TelegramServiceActivityExtension
 
         if (callbackResult) return;
 
-        switch (partsCallback.ElementAtOrDefault(0))// Level 0
-        {
-            case "pong":
-            case "PONG":
-                var pingResult = await pingCallback.ExecuteAsync();
-                Log.Information("PingResult: {0}", pingResult.ToJson(true));
-                break;
-
-            case "action":
-                var actionResult = await actionCallback.ExecuteAsync();
-                Log.Information("ActionResult: {V}", actionResult.ToJson(true));
-                break;
-
-            case "help":
-                var helpResult = await helpCallback.ExecuteAsync();
-                Log.Information("HelpResult: {V}", helpResult.ToJson(true));
-                break;
-
-            case "rssctl":
-                var result = await rssCtlCallback.ExecuteAsync();
-                break;
-
-            case "setting":
-                var settingResult = await settingsCallback.ExecuteToggleAsync();
-                Log.Information("SettingsResult: {V}", settingResult.ToJson(true));
-                break;
-
-            case "verify":
-                var verifyResult = await verifyCallback.ExecuteVerifyAsync();
-                Log.Information("VerifyResult: {V}", verifyResult.ToJson(true));
-                break;
-        }
+        // switch (partsCallback.ElementAtOrDefault(0))// Level 0
+        // {
+        //     case "pong":
+        //     case "PONG":
+        //         var pingResult = await pingCallback.ExecuteAsync();
+        //         Log.Information("PingResult: {0}", pingResult.ToJson(true));
+        //         break;
+        //
+        //     case "action":
+        //         var actionResult = await actionCallback.ExecuteAsync();
+        //         Log.Information("ActionResult: {V}", actionResult.ToJson(true));
+        //         break;
+        //
+        //     case "help":
+        //         var helpResult = await helpCallback.ExecuteAsync();
+        //         Log.Information("HelpResult: {V}", helpResult.ToJson(true));
+        //         break;
+        //
+        //     case "rssctl":
+        //         var result = await rssCtlCallback.ExecuteAsync();
+        //         break;
+        //
+        //     case "setting":
+        //         var settingResult = await settingsCallback.ExecuteToggleAsync();
+        //         Log.Information("SettingsResult: {V}", settingResult.ToJson(true));
+        //         break;
+        //
+        //     case "verify":
+        //         var verifyResult = await verifyCallback.ExecuteVerifyAsync();
+        //         Log.Information("VerifyResult: {V}", verifyResult.ToJson(true));
+        //         break;
+        // }
     }
 
     public static async Task<bool> OnUpdatePreTaskAsync(this TelegramService telegramService)
