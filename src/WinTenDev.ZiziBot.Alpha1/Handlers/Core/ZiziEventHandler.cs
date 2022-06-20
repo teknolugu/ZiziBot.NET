@@ -279,7 +279,7 @@ namespace WinTenDev.ZiziBot.Alpha1.Handlers.Core
                     canPostMessages: promote,
                     canEditMessages: promote,
                     canDeleteMessages: promote,
-                    canManageVoiceChats: promote
+                    canManageVideoChats: promote
                 );
 
                 result.IsSuccess = true;

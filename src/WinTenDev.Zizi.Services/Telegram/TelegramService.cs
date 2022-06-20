@@ -1559,7 +1559,7 @@ public class TelegramService
                 chatId: ChatId,
                 userId: userId,
                 canDeleteMessages: true,
-                canManageVoiceChats: true,
+                canManageVideoChats: true,
                 canRestrictMembers: true,
                 canPromoteMembers: true,
                 canInviteUsers: true,

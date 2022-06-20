@@ -1,101 +1,94 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
-
-    <Import Project="./../../config/VersionBuild.target.props"/>
-
-    <PropertyGroup>
-        <TargetFramework>net6.0</TargetFramework>
-        <LangVersion>latest</LangVersion>
-        <UserSecretsId>010b5b17-73a5-4711-ae53-71c2932988a3</UserSecretsId>
-    </PropertyGroup>
-
-    <ItemGroup>
-        <PackageReference Include="ArangoDBNetStandard" Version="1.1.0"/>
-        <PackageReference Include="CodeHollow.FeedReader" Version="1.2.4"/>
-        <PackageReference Include="CodingSeb.Localization" Version="1.2.0"/>
-        <PackageReference Include="CsvHelper" Version="27.2.1"/>
-        <PackageReference Include="Dapper" Version="2.0.123"/>
-        <PackageReference Include="Dapper.FluentMap" Version="2.0.0"/>
-        <PackageReference Include="DotNetZip" Version="1.16.0"/>
-        <PackageReference Include="EasyCaching.Disk" Version="1.6.0"/>
-        <PackageReference Include="EasyCaching.SQLite" Version="1.6.0"/>
-        <PackageReference Include="EasyEncrypt" Version="2.2.1"/>
-        <PackageReference Include="Exceptionless.AspNetCore" Version="4.8.0"/>
-        <PackageReference Include="Fedorus.Telegram.Bot.Framework" Version="1.0.4"/>
-        <PackageReference Include="FluentMigrator.Runner" Version="3.3.2"/>
-        <PackageReference Include="Flurl.Http" Version="3.2.4"/>
-        <PackageReference Include="GoogleTranslateFreeApi" Version="1.1.1"/>
-        <PackageReference Include="Hangfire.AspNetCore" Version="1.7.30"/>
-        <PackageReference Include="Hangfire.Dashboard.Basic.Authentication" Version="5.0.0"/>
-        <PackageReference Include="Hangfire.Dashboard.Dark" Version="2.0.4"/>
-        <PackageReference Include="Hangfire.Heartbeat" Version="0.5.1"/>
-        <PackageReference Include="Hangfire.LiteDB" Version="0.4.1"/>
-        <PackageReference Include="Hangfire.MySqlStorage" Version="2.0.3"/>
-        <PackageReference Include="Hangfire.Redis.StackExchange" Version="1.8.5"/>
-        <PackageReference Include="Hangfire.Storage.SQLite" Version="0.3.2"/>
-        <PackageReference Include="JetBrains.Annotations" Version="2022.1.0"/>
-        <PackageReference Include="JsonEnvVar" Version="1.0.0"/>
-        <PackageReference Include="LiteDB" Version="5.0.12"/>
-        <PackageReference Include="LiteDB.Async" Version="0.1.0"/>
-        <PackageReference Include="MegaApiClient" Version="1.10.2"/>
-        <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="6.0.0">
-            <PrivateAssets>all</PrivateAssets>
-            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        </PackageReference>
-        <PackageReference Include="Microsoft.ML" Version="1.7.1"/>
-        <PackageReference Include="MimeTypesMap" Version="1.0.8"/>
-        <PackageReference Include="Mindbox.Data.Linq" Version="5.0.0"/>
-        <PackageReference Include="MonkeyCache.FileStore" Version="1.6.3"/>
-        <PackageReference Include="MonoTorrent" Version="2.0.5"/>
-        <PackageReference Include="morelinq" Version="3.3.2"/>
-        <PackageReference Include="MySqlConnector.Logging.Serilog" Version="2.0.0"/>
-        <PackageReference Include="Newtonsoft.Json" Version="13.0.1"/>
-        <PackageReference Include="Nito.AsyncEx" Version="5.1.2"/>
-        <PackageReference Include="Roslynator.Analyzers" Version="4.1.1">
-            <PrivateAssets>all</PrivateAssets>
-            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        </PackageReference>
-        <PackageReference Include="Scrutor.LYKA" Version="1.0.0"/>
-        <PackageReference Include="Sentry.AspNetCore" Version="3.18.0"/>
-        <PackageReference Include="Sentry.Serilog" Version="3.18.0"/>
-        <PackageReference Include="Serilog" Version="2.11.0"/>
-        <PackageReference Include="Serilog.AspNetCore" Version="5.0.0"/>
-        <PackageReference Include="Serilog.Expressions" Version="3.4.0"/>
-        <PackageReference Include="Serilog.Extensions.Hosting" Version="4.2.0"/>
-        <PackageReference Include="Serilog.Settings.Configuration" Version="3.3.0"/>
-        <PackageReference Include="Serilog.Sinks.Async" Version="1.5.0"/>
-        <PackageReference Include="Serilog.Sinks.Console" Version="4.0.1"/>
-        <PackageReference Include="Serilog.Sinks.Datadog.Logs" Version="0.3.6"/>
-        <PackageReference Include="Serilog.Sinks.File" Version="5.0.0"/>
-        <PackageReference Include="Serilog.Sinks.Loggly" Version="5.4.0"/>
-        <PackageReference Include="SerilogAnalyzer" Version="0.15.0"/>
-        <PackageReference Include="SonarAnalyzer.CSharp" Version="8.40.0.48530">
-            <PrivateAssets>all</PrivateAssets>
-            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        </PackageReference>
-        <PackageReference Include="SqlKata.Execution" Version="2.3.7"/>
-        <PackageReference Include="System.Data.DataSetExtensions" Version="4.6.0-preview3.19128.7"/>
-        <PackageReference Include="System.Data.SQLite.Core" Version="1.0.116"/>
-        <PackageReference Include="SystemInfoLibrary-devel" Version="1.5.0.25"/>
-        <PackageReference Include="Telegram.Bot" Version="17.0.0"/>
-        <PackageReference Include="WTelegramClient" Version="2.5.1"/>
-    </ItemGroup>
-
-    <ItemGroup>
-        <ProjectReference Include="..\WinTenDev.Zizi.DbMigrations\WinTenDev.Zizi.DbMigrations.csproj"/>
-        <ProjectReference Include="..\WinTenDev.Zizi.Utils\WinTenDev.Zizi.Utils.csproj"/>
-        <ProjectReference Include="..\WinTenDev.Zizi.Models\WinTenDev.Zizi.Models.csproj"/>
-        <ProjectReference Include="..\WinTenDev.Zizi.Handlers\WinTenDev.Zizi.Handlers.csproj"/>
-        <ProjectReference Include="..\WinTenDev.Zizi.Services\WinTenDev.Zizi.Services.csproj"/>
-    </ItemGroup>
-
-    <ItemGroup>
-        <Content Include="..\..\Resources\Language\**\*" LinkBase="Storage\Language">
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-        </Content>
-
-        <None Update="Storage\**">
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-        </None>
-    </ItemGroup>
-
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <Import Project="./../../config/VersionBuild.target.props"/>
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <UserSecretsId>010b5b17-73a5-4711-ae53-71c2932988a3</UserSecretsId>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="ArangoDBNetStandard" Version="1.1.0"/>
+    <PackageReference Include="CodeHollow.FeedReader" Version="1.2.4"/>
+    <PackageReference Include="CodingSeb.Localization" Version="1.2.0"/>
+    <PackageReference Include="CsvHelper" Version="27.2.1"/>
+    <PackageReference Include="Dapper" Version="2.0.123"/>
+    <PackageReference Include="Dapper.FluentMap" Version="2.0.0"/>
+    <PackageReference Include="DotNetZip" Version="1.16.0"/>
+    <PackageReference Include="EasyCaching.Disk" Version="1.6.0"/>
+    <PackageReference Include="EasyCaching.SQLite" Version="1.6.0"/>
+    <PackageReference Include="EasyEncrypt" Version="2.2.1"/>
+    <PackageReference Include="Exceptionless.AspNetCore" Version="4.8.0"/>
+    <PackageReference Include="Fedorus.Telegram.Bot.Framework" Version="1.0.5"/>
+    <PackageReference Include="FluentMigrator.Runner" Version="3.3.2"/>
+    <PackageReference Include="Flurl.Http" Version="3.2.4"/>
+    <PackageReference Include="GoogleTranslateFreeApi" Version="1.1.1"/>
+    <PackageReference Include="Hangfire.AspNetCore" Version="1.7.30"/>
+    <PackageReference Include="Hangfire.Dashboard.Basic.Authentication" Version="5.0.0"/>
+    <PackageReference Include="Hangfire.Dashboard.Dark" Version="2.0.4"/>
+    <PackageReference Include="Hangfire.Heartbeat" Version="0.5.1"/>
+    <PackageReference Include="Hangfire.LiteDB" Version="0.4.1"/>
+    <PackageReference Include="Hangfire.MySqlStorage" Version="2.0.3"/>
+    <PackageReference Include="Hangfire.Redis.StackExchange" Version="1.8.5"/>
+    <PackageReference Include="Hangfire.Storage.SQLite" Version="0.3.2"/>
+    <PackageReference Include="JetBrains.Annotations" Version="2022.1.0"/>
+    <PackageReference Include="JsonEnvVar" Version="1.0.0"/>
+    <PackageReference Include="LiteDB" Version="5.0.12"/>
+    <PackageReference Include="LiteDB.Async" Version="0.1.0"/>
+    <PackageReference Include="MegaApiClient" Version="1.10.2"/>
+    <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="6.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.ML" Version="1.7.1"/>
+    <PackageReference Include="MimeTypesMap" Version="1.0.8"/>
+    <PackageReference Include="Mindbox.Data.Linq" Version="5.0.0"/>
+    <PackageReference Include="MonkeyCache.FileStore" Version="1.6.3"/>
+    <PackageReference Include="MonoTorrent" Version="2.0.5"/>
+    <PackageReference Include="morelinq" Version="3.3.2"/>
+    <PackageReference Include="MySqlConnector.Logging.Serilog" Version="2.0.0"/>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1"/>
+    <PackageReference Include="Nito.AsyncEx" Version="5.1.2"/>
+    <PackageReference Include="Roslynator.Analyzers" Version="4.1.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Scrutor.LYKA" Version="1.0.0"/>
+    <PackageReference Include="Sentry.AspNetCore" Version="3.18.0"/>
+    <PackageReference Include="Sentry.Serilog" Version="3.18.0"/>
+    <PackageReference Include="Serilog" Version="2.11.0"/>
+    <PackageReference Include="Serilog.AspNetCore" Version="5.0.0"/>
+    <PackageReference Include="Serilog.Expressions" Version="3.4.0"/>
+    <PackageReference Include="Serilog.Extensions.Hosting" Version="4.2.0"/>
+    <PackageReference Include="Serilog.Settings.Configuration" Version="3.3.0"/>
+    <PackageReference Include="Serilog.Sinks.Async" Version="1.5.0"/>
+    <PackageReference Include="Serilog.Sinks.Console" Version="4.0.1"/>
+    <PackageReference Include="Serilog.Sinks.Datadog.Logs" Version="0.3.6"/>
+    <PackageReference Include="Serilog.Sinks.File" Version="5.0.0"/>
+    <PackageReference Include="Serilog.Sinks.Loggly" Version="5.4.0"/>
+    <PackageReference Include="SerilogAnalyzer" Version="0.15.0"/>
+    <PackageReference Include="SonarAnalyzer.CSharp" Version="8.40.0.48530">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="SqlKata.Execution" Version="2.3.7"/>
+    <PackageReference Include="System.Data.DataSetExtensions" Version="4.6.0-preview3.19128.7"/>
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.116"/>
+    <PackageReference Include="SystemInfoLibrary-devel" Version="1.5.0.25"/>
+    <PackageReference Include="Telegram.Bot" Version="18.0.0"/>
+    <PackageReference Include="WTelegramClient" Version="2.5.1"/>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\WinTenDev.Zizi.DbMigrations\WinTenDev.Zizi.DbMigrations.csproj"/>
+    <ProjectReference Include="..\WinTenDev.Zizi.Utils\WinTenDev.Zizi.Utils.csproj"/>
+    <ProjectReference Include="..\WinTenDev.Zizi.Models\WinTenDev.Zizi.Models.csproj"/>
+    <ProjectReference Include="..\WinTenDev.Zizi.Handlers\WinTenDev.Zizi.Handlers.csproj"/>
+    <ProjectReference Include="..\WinTenDev.Zizi.Services\WinTenDev.Zizi.Services.csproj"/>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\..\Resources\Language\**\*" LinkBase="Storage\Language">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <None Update="Storage\**">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>
