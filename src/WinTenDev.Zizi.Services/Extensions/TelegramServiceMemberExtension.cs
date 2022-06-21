@@ -347,7 +347,7 @@ public static class TelegramServiceMemberExtension
                 return;
             }
 
-            var channelsChannelParticipants = await wTelegramApiService.GetAllParticipants(chatId, evictAfter: true);
+            var channelsChannelParticipants = await wTelegramApiService.GetAllParticipants(chatId, disableCache: true);
             var allParticipants = channelsChannelParticipants.users;
             var inactiveParticipants = allParticipants.Values
                 .Where(
@@ -574,7 +574,7 @@ public static class TelegramServiceMemberExtension
             var chatLink = telegramService.Chat.GetChatLink();
             var chatTitle = telegramService.Chat.GetChatTitle();
 
-            var participant = await wTelegramApiService.GetAllParticipants(chatId, disableCache: false);
+            var participant = await wTelegramApiService.GetAllParticipants(chatId, disableCache: true);
             var allParticipants = participant.participants;
             var allUsers = participant.users.Select(pair => pair.Value).ToList();
 
