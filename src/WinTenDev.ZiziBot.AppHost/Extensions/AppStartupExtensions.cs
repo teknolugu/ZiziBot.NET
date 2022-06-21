@@ -42,8 +42,10 @@ internal static class AppStartupExtensions
         {
             services.AddScoped<ITelegramBotClient>(
                 _ => new TelegramBotClient(
-                    token: tgBotConfig.ApiToken,
-                    baseUrl: tgBotConfig.CustomBotServer
+                    new TelegramBotClientOptions(
+                        token: tgBotConfig.ApiToken,
+                        baseUrl: tgBotConfig.CustomBotServer
+                    )
                 )
             );
         }
