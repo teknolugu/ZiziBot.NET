@@ -26,8 +26,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinTenDev.Zizi.Tests", "src
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinTenDev.ZiziBot.Alpha1", "src\WinTenDev.ZiziBot.Alpha1\WinTenDev.ZiziBot.Alpha1.csproj", "{96EB8EFC-BFA3-4780-B882-9039C501952C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinTenDev.Zizi.Exceptions", "src\WinTenDev.Zizi.Exceptions\WinTenDev.Zizi.Exceptions.csproj", "{AD909785-B18E-45CD-8C21-332BB7D61B81}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{93D0AC65-D0BE-4A72-998F-B6B491316DF0}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
@@ -101,10 +99,6 @@ Global
 		{96EB8EFC-BFA3-4780-B882-9039C501952C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{96EB8EFC-BFA3-4780-B882-9039C501952C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{96EB8EFC-BFA3-4780-B882-9039C501952C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{AD909785-B18E-45CD-8C21-332BB7D61B81}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{AD909785-B18E-45CD-8C21-332BB7D61B81}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{AD909785-B18E-45CD-8C21-332BB7D61B81}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{AD909785-B18E-45CD-8C21-332BB7D61B81}.Release|Any CPU.Build.0 = Release|Any CPU
 		{B3709FB9-9E14-426B-B964-D74FF5A3EEE4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{B3709FB9-9E14-426B-B964-D74FF5A3EEE4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B3709FB9-9E14-426B-B964-D74FF5A3EEE4}.Release|Any CPU.ActiveCfg = Release|Any CPU
