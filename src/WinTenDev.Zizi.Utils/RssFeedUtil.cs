@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq;
-using System.Net.Http;
 using System.ServiceModel.Syndication;
 using System.Threading.Tasks;
 using System.Xml;
 using CodeHollow.FeedReader;
+using Flurl.Http;
 using Hangfire;
 using Serilog;
+using WinTenDev.Zizi.Utils.Parsers;
 using WinTenDev.Zizi.Utils.Telegram;
 
 namespace WinTenDev.Zizi.Utils;
@@ -41,7 +42,7 @@ public static class RssFeedUtil
 
         try
         {
-            var feed = await FeedReader.ReadAsync(url);
+            var feed = await OpenSyndicationFeed(url);
             isValid = true;
         }
         catch (Exception ex)
@@ -65,13 +66,30 @@ public static class RssFeedUtil
     public static async Task<SyndicationFeed> OpenSyndicationFeed(string url)
     {
         Log.Information("Opening SyndicationFeed: {Url} ..", url);
-        var httpClient = new HttpClient();
-        httpClient.DefaultRequestHeaders.Add("User-Agent", "ZiziBot RSS Reader/1.0");
-        var stream = await httpClient.GetStreamAsync(url);
+        var stream = await url.OpenFlurlSession().GetStreamAsync();
         var feed = SyndicationFeed.Load(XmlReader.Create(stream));
 
         Log.Debug("SyndicationFeed count {@Feed} item(s)", feed.Items.Count());
 
         return feed;
+    }
+
+    public static string TryFixRssUrl(this string rssUrl)
+    {
+        var fixedUrl = rssUrl;
+
+        if (rssUrl.EndsWith("feed"))
+            fixedUrl = rssUrl + "/";
+
+        if ((rssUrl.IsGithubReleaseUrl() || rssUrl.IsGithubCommitsUrl()) &&
+            !rssUrl.EndsWith(".atom")) fixedUrl = rssUrl + ".atom";
+
+        Log.Debug(
+            "Try fix Rss URL: {Url}. After fix: {FixedUrl}",
+            rssUrl,
+            fixedUrl
+        );
+
+        return fixedUrl;
     }
 }

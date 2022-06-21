@@ -40,7 +40,11 @@ public class NewUpdateHandler : IUpdateHandler
 
         if (!preTaskResult)
         {
-            _logger.LogDebug("Next handler is ignored because pre-task is not success");
+            _logger.LogInformation(
+                "Next handler at ChatId: {ChatId} is ignored because pre-task is not success. UpdateType: {UpdateType}",
+                _telegramService.ChatId,
+                _telegramService.Update.Type
+            );
             return;
         }
 

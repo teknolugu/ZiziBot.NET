@@ -1,14 +1,11 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
-    <Import Project="./../../config/VersionBuild.target.props" />
-
+<Project Sdk="Microsoft.NET.Sdk">
+    <Import Project="./../../config/VersionBuild.target.props"/>
     <PropertyGroup>
         <TargetFramework>net6.0</TargetFramework>
         <LangVersion>latest</LangVersion>
     </PropertyGroup>
-
     <ItemGroup>
-        <PackageReference Include="AWSSDK.Rekognition" Version="3.7.8.23"/>
+        <PackageReference Include="AWSSDK.Rekognition" Version="3.7.8.25"/>
         <PackageReference Include="CacheTower" Version="0.11.6"/>
         <PackageReference Include="CodeHollow.FeedReader" Version="1.2.4"/>
         <PackageReference Include="CodingSeb.ExpressionEvaluator" Version="1.4.38"/>
@@ -16,7 +13,7 @@
         <PackageReference Include="CodingSeb.Localization.JsonFileLoader" Version="1.2.0"/>
         <PackageReference Include="DotNurse.Injector" Version="2.5.2"/>
         <PackageReference Include="EasyCaching.Core" Version="1.6.0"/>
-        <PackageReference Include="Fedorus.Telegram.Bot.Framework" Version="1.0.4"/>
+        <PackageReference Include="Fedorus.Telegram.Bot.Framework" Version="1.0.5"/>
         <PackageReference Include="FluentValidation" Version="11.0.3"/>
         <PackageReference Include="Flurl.Http" Version="3.2.4"/>
         <PackageReference Include="Google.Apis.Auth" Version="1.57.0"/>
@@ -28,7 +25,7 @@
         <PackageReference Include="Hangfire.MaximumConcurrentExecutions" Version="1.1.0"/>
         <PackageReference Include="LazyProxy" Version="1.0.2"/>
         <PackageReference Include="LazyProxy.ServiceProvider" Version="0.1.3"/>
-        <PackageReference Include="linq2db.MySqlConnector" Version="4.0.1"/>
+        <PackageReference Include="linq2db.MySqlConnector" Version="4.1.0"/>
         <PackageReference Include="LiteDB.Async" Version="0.1.0"/>
         <PackageReference Include="MegaApiClient" Version="1.10.2"/>
         <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="6.0.0">
@@ -58,7 +55,7 @@
         <PackageReference Include="SpamWatch" Version="1.1.2"/>
         <PackageReference Include="TDLib" Version="1.8.1"/>
         <PackageReference Include="Telega" Version="0.5.1"/>
-        <PackageReference Include="Telegram.Bot" Version="17.0.0"/>
+        <PackageReference Include="Telegram.Bot" Version="18.0.0"/>
         <PackageReference Include="TgBotFramework" Version="0.5.2"/>
         <PackageReference Include="TinyMapper" Version="3.0.3"/>
         <PackageReference Include="WTelegramClient" Version="2.5.1"/>

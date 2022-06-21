@@ -23,12 +23,12 @@ jobs:
         run: dotnet restore WinTenDev.ZiziBot.sln
 
       - name: Linux64 FD Build
-        run: dotnet publish src/WinTenDev.ZiziBot.App -r linux-x64 -c Release --self-contained=false
-      - name: Upload Linux64 Artifacs
+        run: dotnet publish src/WinTenDev.ZiziBot.Alpha1 -r linux-x64 -c Release --self-contained=false
+      - name: Upload Linux64 Artifacts
         uses: actions/upload-artifact@v2
         with:
           name: zizibot-linux64-fd-build
-          path: src/WinTenDev.ZiziBot.App/bin/Release/net6.0/linux-x64/publish
+          path: src/WinTenDev.ZiziBot.Alpha1/bin/Release/net6.0/linux-x64/publish
 
   zizibot-linux64-sf-build:
     runs-on: ubuntu-latest
@@ -46,12 +46,12 @@ jobs:
         run: dotnet restore WinTenDev.ZiziBot.sln
 
       - name: Linux64 FD Single-File Build
-        run: dotnet publish src/WinTenDev.ZiziBot.App -r linux-x64 -c Release --self-contained=false /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true
-      - name: Upload Linux64 Single-File Artifacs
+        run: dotnet publish src/WinTenDev.ZiziBot.Alpha1 -r linux-x64 -c Release --self-contained=false /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true
+      - name: Upload Linux64 Single-File Artifacts
         uses: actions/upload-artifact@v2
         with:
           name: zizibot-linux64-sf-build
-          path: src/WinTenDev.ZiziBot.App/bin/Release/net6.0/linux-x64/publish
+          path: src/WinTenDev.ZiziBot.Alpha1/bin/Release/net6.0/linux-x64/publish
 
   zizibot-win64-fd-build:
     runs-on: ubuntu-latest
@@ -68,12 +68,12 @@ jobs:
       - name: Install dependencies
         run: dotnet restore WinTenDev.ZiziBot.sln
       - name: Win64 FD Build
-        run: dotnet publish src/WinTenDev.ZiziBot.App -r win-x64 -c Release --self-contained=false
-      - name: Upload Win64 FD Artifacs
+        run: dotnet publish src/WinTenDev.ZiziBot.Alpha1 -r win-x64 -c Release --self-contained=false
+      - name: Upload Win64 FD Artifacts
         uses: actions/upload-artifact@v2
         with:
           name: zizibot-win64-fd-build
-          path: src/WinTenDev.ZiziBot.App/bin/Release/net6.0/win-x64/publish
+          path: src/WinTenDev.ZiziBot.Alpha1/bin/Release/net6.0/win-x64/publish
 
   zizibot-win64-sf-build:
     runs-on: ubuntu-latest
@@ -91,9 +91,9 @@ jobs:
         run: dotnet restore WinTenDev.ZiziBot.sln
 
       - name: Win64 FD Single-File Build
-        run: dotnet publish src/WinTenDev.ZiziBot.App -r win-x64 -c Release --self-contained=false /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true
-      - name: Upload Win64 SF Artifacs
+        run: dotnet publish src/WinTenDev.ZiziBot.Alpha1 -r win-x64 -c Release --self-contained=false /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true
+      - name: Upload Win64 SF Artifacts
         uses: actions/upload-artifact@v2
         with:
           name: zizibot-win64-sf-build
-          path: src/WinTenDev.ZiziBot.App/bin/Release/net6.0/win-x64/publish
+          path: src/WinTenDev.ZiziBot.Alpha1/bin/Release/net6.0/win-x64/publish

@@ -422,4 +422,12 @@ public static class UrlUtil
 
         return filename;
     }
+
+    public static bool IsBaseUrl(this string url)
+    {
+        var baseUrl = url.GetBaseUrl();
+        var isBaseUrl = baseUrl == url;
+
+        return isBaseUrl;
+    }
 }

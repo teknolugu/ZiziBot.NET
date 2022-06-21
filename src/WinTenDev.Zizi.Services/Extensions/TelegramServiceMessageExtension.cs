@@ -2,7 +2,9 @@
 using System.Linq;
 using System.Threading.Tasks;
 using MoreLinq;
+using QRCodeDecoderLibrary;
 using Serilog;
+using SerilogTimings;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -12,7 +14,9 @@ using WinTenDev.Zizi.Models.Types;
 using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Services.Telegram;
 using WinTenDev.Zizi.Utils;
+using WinTenDev.Zizi.Utils.IO;
 using WinTenDev.Zizi.Utils.Telegram;
+using Image=SixLabors.ImageSharp.Image;
 
 namespace WinTenDev.Zizi.Services.Extensions;
 
@@ -142,25 +146,22 @@ public static class TelegramServiceMessageExtension
                 return false;
             }
 
-            var text = telegramService.MessageOrEditedText ?? telegramService.MessageOrEditedCaption;
+            var textToScan = telegramService.MessageOrEdited.CloneText(true);
 
-            if (text.IsNullOrEmpty())
-            {
-                Log.Information("No Text at MessageId {MessageId} for scan..", messageId);
-                return false;
-            }
+            var scanMedia = await telegramService.ScanMediaAsync();
+            textToScan += "\n\n" + scanMedia;
 
             if (telegramService.IsFromSudo &&
                 (
-                    text.StartsWith("/dkata") ||
-                    text.StartsWith("/delkata") ||
-                    text.StartsWith("/kata")))
+                    textToScan.StartsWith("/dkata") ||
+                    textToScan.StartsWith("/delkata") ||
+                    textToScan.StartsWith("/kata")))
             {
                 Log.Debug("Seem User will modify Kata!");
                 return false;
             }
 
-            var result = await wordFilterService.IsMustDelete(text);
+            var result = await wordFilterService.IsMustDelete(textToScan);
             var isShouldDelete = result.IsSuccess;
 
             if (isShouldDelete)
@@ -208,6 +209,50 @@ public static class TelegramServiceMessageExtension
         }
     }
 
+    public static async Task<string> ScanMediaAsync(this TelegramService telegramService)
+    {
+        var chatId = telegramService.ChatId;
+        try
+        {
+            var op = Operation.Begin("Scanning Media from ChatId: {ChatId}", chatId);
+
+            var message = telegramService.MessageOrEdited;
+
+            if (message.Document == null &&
+                message.Photo == null)
+            {
+                return string.Empty;
+            }
+
+            var qrDecoder = telegramService.GetRequiredService<QRDecoder>();
+
+            var qrFile = await telegramService.DownloadFileAsync("qr-reader");
+            var image = await Image.LoadAsync(qrFile);
+            var qrResult = qrDecoder.ImageDecoder(image);
+            var data = QRDecoder.ByteArrayToString(qrResult.FirstOrDefault());
+
+            DirUtil.CleanCacheFiles(
+                s =>
+                    s.Contains(chatId.ReduceChatId().ToString()) &&
+                    s.Contains("qr-reader")
+            );
+
+            op.Complete();
+
+            return data;
+        }
+        catch (Exception exception)
+        {
+            Log.Error(
+                exception,
+                "Error occured when Scan Media at ChatId {ChatId}",
+                chatId
+            );
+
+            return string.Empty;
+        }
+    }
+
     public static async Task<bool> CheckUpdateHistoryAsync(this TelegramService telegramService)
     {
         var chatId = telegramService.ChatId;
@@ -221,67 +266,80 @@ public static class TelegramServiceMessageExtension
             return false;
         }
 
-        var chatSettings = await telegramService.GetChatSetting();
-        if (chatSettings.EnablePrivacyMode)
+        try
         {
-            Log.Debug("Check Update History disabled for ChatId: {ChatId} because Privacy Mode is enabled", chatId);
-            return false;
-        }
-
-        var message = telegramService.MessageOrEdited;
-        var messageEntities = message?.Entities ?? message?.CaptionEntities;
-
-        if (messageEntities == null) return false;
-
-        var filteredEntities = messageEntities?.Where(
-            x =>
-                x.Type is MessageEntityType.Mention or MessageEntityType.Url
-        ).ToList();
-
-        var botUpdateService = telegramService.GetRequiredService<BotUpdateService>();
-        var botUpdates = await botUpdateService.GetUpdateAsync(chatId, fromId);
-        var isRecentUpdateExist = botUpdates.Count > 0;
-        var entitiesCount = filteredEntities?.Count;
-
-        Log.Debug(
-            "Check Bot Update history for ChatId: {ChatId}. EntitiesCount: {EntitiesCount}. RecentUpdates: {RecentUpdates}",
-            chatId,
-            entitiesCount,
-            botUpdates.Count
-        );
-
-        if (!(filteredEntities?.Count > 0) || isRecentUpdateExist) return false;
-
-        var mentionAdmin = await telegramService.GetMentionAdminsStr();
-        var fullName = telegramService.From.GetFullName();
-
-        var htmlMessage = HtmlMessage.Empty
-            .BoldBr("Anti-Spam detection Beta")
-            .Bold("UserId: ").CodeBr(fromId.ToString())
-            .Bold("Name: ").CodeBr(fullName)
-            .Text("Telah mengirimkan link atau mention untuk pesan pertamanya. Apakah ini Spam?")
-            .Text(mentionAdmin);
-
-        var inlineKeyboard = new InlineKeyboardMarkup(
-            new[]
+            var chatSettings = await telegramService.GetChatSetting();
+            if (chatSettings.EnablePrivacyMode)
             {
+                Log.Debug("Check Update History disabled for ChatId: {ChatId} because Privacy Mode is enabled", chatId);
+                return false;
+            }
+
+            var message = telegramService.MessageOrEdited;
+            var messageEntities = message?.Entities ?? message?.CaptionEntities;
+
+            if (messageEntities == null) return false;
+
+            var filteredEntities = messageEntities?.Where(
+                x =>
+                    x.Type is MessageEntityType.Mention or MessageEntityType.Url
+            ).ToList();
+
+            var botUpdateService = telegramService.GetRequiredService<BotUpdateService>();
+            var botUpdates = await botUpdateService.GetUpdateAsync(chatId, fromId);
+            var isRecentUpdateExist = botUpdates.Count > 0;
+            var entitiesCount = filteredEntities?.Count;
+
+            Log.Debug(
+                "Check Bot Update history for ChatId: {ChatId}. EntitiesCount: {EntitiesCount}. RecentUpdates: {RecentUpdates}",
+                chatId,
+                entitiesCount,
+                botUpdates.Count
+            );
+
+            if (!(filteredEntities?.Count > 0) || isRecentUpdateExist) return false;
+
+            var mentionAdmin = await telegramService.GetMentionAdminsStr();
+            var fullName = telegramService.From.GetFullName();
+
+            var htmlMessage = HtmlMessage.Empty
+                .BoldBr("Anti-Spam detection Beta")
+                .Bold("UserId: ").CodeBr(fromId.ToString())
+                .Bold("Name: ").CodeBr(fullName)
+                .Text("Telah mengirimkan link atau mention untuk pesan pertamanya. Apakah ini Spam?")
+                .Text(mentionAdmin);
+
+            var inlineKeyboard = new InlineKeyboardMarkup(
                 new[]
                 {
-                    InlineKeyboardButton.WithCallbackData("Ya, ini Spam!", $"gban add {fromId}"),
-                    InlineKeyboardButton.WithCallbackData("Ini bukan Spam", $"gban del {fromId}")
+                    new[]
+                    {
+                        InlineKeyboardButton.WithCallbackData("Ya, ini Spam!", $"gban add {fromId}"),
+                        InlineKeyboardButton.WithCallbackData("Ini bukan Spam", $"gban del {fromId}")
+                    }
                 }
-            }
-        );
+            );
 
-        await telegramService.SendTextMessageAsync(
-            sendText: htmlMessage.ToString(),
-            replyMarkup: inlineKeyboard,
-            scheduleDeleteAt: DateTime.UtcNow.AddDays(1),
-            preventDuplicateSend: true,
-            messageFlag: MessageFlag.SpamDetection
-        );
+            await telegramService.SendTextMessageAsync(
+                sendText: htmlMessage.ToString(),
+                replyMarkup: inlineKeyboard,
+                scheduleDeleteAt: DateTime.UtcNow.AddDays(1),
+                preventDuplicateSend: true,
+                messageFlag: MessageFlag.SpamDetection
+            );
 
-        return true;
+            return true;
+        }
+        catch (Exception exception)
+        {
+            Log.Error(
+                exception,
+                "Error occured when Check Update History at ChatId {ChatId}",
+                chatId
+            );
+
+            return false;
+        }
     }
 
     public static async Task PinMessageAsync(this TelegramService telegramService)

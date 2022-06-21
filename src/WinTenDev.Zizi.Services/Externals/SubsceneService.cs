@@ -126,13 +126,22 @@ public class SubsceneService
             }
         ).ToList();
 
+        _logger.LogDebug(
+            "Extracted {Count} title(s) from {Url}",
+            movieResult?.Count,
+            searchUrlQuery
+        );
+
         try
         {
             if (!movieResult.AnyOrNotNull()) return default;
 
             _logger.LogDebug("Saving Subtitle Search to database. {rows} item(s)", movieResult?.Count);
 
-            await DB.DeleteAsync<SubsceneMovieSearch>(search => search.CreatedOn <= DateTime.UtcNow.AddDays(-3));
+            await DB.DeleteAsync<SubsceneMovieSearch>(
+                search =>
+                    search.CreatedOn <= DateTime.UtcNow.AddDays(-7)
+            );
 
             var insert = await movieResult.SaveAsync();
 
@@ -188,9 +197,15 @@ public class SubsceneService
             .Where(item => item.Language != null)
             .ToList();
 
+        _logger.LogDebug(
+            "Extracted {Count} subtitle(s) from {Url}",
+            movieList?.Count,
+            searchSubtitleFileUrl
+        );
+
         try
         {
-            _logger.LogDebug("Saving Subtitle language item Search to database. {rows} item(s)", movieList.Count);
+            _logger.LogDebug("Saving Subtitle language item Search to database. {rows} item(s)", movieList?.Count);
             await _queryService.MongoDbOpen("shared");
             var insert = await movieList.SaveAsync();
 

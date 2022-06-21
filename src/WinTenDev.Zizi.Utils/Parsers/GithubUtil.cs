@@ -6,4 +6,9 @@ public static class GithubUtil
     {
         return url.Contains("github.com") && url.Contains("releases");
     }
+
+    public static bool IsGithubCommitsUrl(this string url)
+    {
+        return url.Contains("github.com") && url.Contains("commits");
+    }
 }

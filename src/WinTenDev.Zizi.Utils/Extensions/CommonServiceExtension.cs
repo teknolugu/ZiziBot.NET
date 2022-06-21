@@ -23,6 +23,15 @@ public static class CommonServiceExtension
 
         services.AddServicesFrom("WinTenDev.Zizi.Services.NMemory", ServiceLifetime.Singleton);
 
+        services.AddImagingLibrary();
+
+        return services;
+    }
+
+    public static IServiceCollection AddImagingLibrary(this IServiceCollection services)
+    {
+        services.AddQRCodeDecoder();
+
         return services;
     }
 }

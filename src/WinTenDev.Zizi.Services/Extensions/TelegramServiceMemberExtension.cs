@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -346,7 +347,7 @@ public static class TelegramServiceMemberExtension
                 return;
             }
 
-            var channelsChannelParticipants = await wTelegramApiService.GetAllParticipants(chatId, evictAfter: true);
+            var channelsChannelParticipants = await wTelegramApiService.GetAllParticipants(chatId, disableCache: true);
             var allParticipants = channelsChannelParticipants.users;
             var inactiveParticipants = allParticipants.Values
                 .Where(
@@ -491,6 +492,45 @@ public static class TelegramServiceMemberExtension
         );
     }
 
+    public static async Task GetUserInfoAsync(this TelegramService telegramService)
+    {
+        var chatId = telegramService.ChatId;
+        var fromId = telegramService.FromId;
+        var userIdParam = telegramService.GetCommandParamAt<long>(0);
+
+        var chatService = telegramService.GetRequiredService<ChatService>();
+        var userProfileService = telegramService.GetRequiredService<UserProfilePhotoService>();
+
+        if (telegramService.ReplyToMessage != null)
+        {
+            fromId = telegramService.ReplyToMessage.From.Id;
+        }
+        else if (userIdParam != 0)
+        {
+            fromId = userIdParam;
+        }
+
+        var chatMember = await chatService.GetChatMemberAsync(chatId, fromId);
+        var profilePhotos = await userProfileService.GetUserProfilePhotosAsync(fromId);
+
+        var htmlMessage = HtmlMessage.Empty
+            .BoldBr("👤 User Info")
+            .Bold("ID: ").CodeBr(fromId.ToString())
+            .Bold("Username: ").CodeBr(chatMember.User.Username ?? "")
+            .Bold("First Name: ").CodeBr(chatMember.User.FirstName)
+            .Bold("Last Name: ").CodeBr(chatMember.User.LastName)
+            .Bold("Language Code: ").CodeBr(chatMember.User.LanguageCode ?? "")
+            .Bold("Is Bot: ").CodeBr(chatMember.User.IsBot.ToString())
+            .Bold("Status: ").CodeBr(chatMember.Status.ToString())
+            .Bold("Photo Count: ").CodeBr(profilePhotos.TotalCount.ToString());
+
+        await telegramService.SendTextMessageAsync(
+            sendText: htmlMessage.ToString(),
+            scheduleDeleteAt: DateTime.UtcNow.AddMinutes(3),
+            includeSenderMessage: true
+        );
+    }
+
     public static async Task InsightStatusMemberAsync(this TelegramService telegramService)
     {
         var chatId = telegramService.ChatId;
@@ -534,7 +574,7 @@ public static class TelegramServiceMemberExtension
             var chatLink = telegramService.Chat.GetChatLink();
             var chatTitle = telegramService.Chat.GetChatTitle();
 
-            var participant = await wTelegramApiService.GetAllParticipants(chatId, disableCache: false);
+            var participant = await wTelegramApiService.GetAllParticipants(chatId, disableCache: true);
             var allParticipants = participant.participants;
             var allUsers = participant.users.Select(pair => pair.Value).ToList();
 
@@ -684,11 +724,13 @@ public static class TelegramServiceMemberExtension
         if (message == null) return;
 
         var replyToMessage = telegramService.ReplyToMessage;
+        var replyFromId = replyToMessage?.From?.Id ?? 0;
 
-        var privateSetting = await telegramService.GetChatSetting(fromId);
+        var privateSetting = await telegramService.GetChatSetting(replyFromId);
 
         if (!privateSetting.EnableReplyNotification)
         {
+            Log.Debug("Reply Notification is disabled at ChatId: {ReplyFromId}", replyFromId);
             return;
         }
 
@@ -696,6 +738,7 @@ public static class TelegramServiceMemberExtension
 
         if (!groupSetting.EnableReplyNotification)
         {
+            Log.Debug("Reply Notification is disabled at ChatId: {ChatId}", chatId);
             return;
         }
 
@@ -711,11 +754,9 @@ public static class TelegramServiceMemberExtension
 
         if (replyToMessage != null)
         {
-            var toChatId = replyToMessage.From.Id;
-
             await telegramService.SendTextMessageAsync(
                 sendText: htmlMessage.ToString(),
-                customChatId: toChatId,
+                customChatId: replyFromId,
                 disableWebPreview: true
             );
 
@@ -915,13 +956,13 @@ public static class TelegramServiceMemberExtension
         {
             var chatAdminRepository = telegramService.GetRequiredService<ChatAdminService>();
 
-        if (telegramService.IsPrivateChat)
-        {
-            Log.Debug("No Chat Admin for private chat. ChatId: {ChatId}", chatId);
-            return;
-        }
+            if (telegramService.IsPrivateChat)
+            {
+                Log.Debug("No Chat Admin for private chat. ChatId: {ChatId}", chatId);
+                return;
+            }
 
-        var admins = await telegramService.GetChatAdmin();
+            var admins = await telegramService.GetChatAdmin();
 
             await chatAdminRepository.SaveAll(
                 admins.Select(
@@ -940,5 +981,56 @@ public static class TelegramServiceMemberExtension
         {
             throw new AdvancedApiRequestException($"Ensure Chat Admin failed. ChatId: {chatId}", exception);
         }
+    }
+
+    internal static async Task<bool> AnswerChatJoinRequestAsync(this TelegramService telegramService)
+    {
+        if (!telegramService.HasChatJoinRequest) return true;
+
+        var chatId = telegramService.ChatId;
+        Log.Information("Answer Chat join request for ChatId: {ChatId}", chatId);
+
+        var needManualAccept = true;
+        var reasons = new List<string>();
+        var client = telegramService.Client;
+        var chatJoinRequest = telegramService.ChatJoinRequest;
+        var userChatJoinRequest = chatJoinRequest.From;
+
+        var chatSettings = await telegramService.GetChatSetting();
+
+        if (chatSettings.EnableWarnUsername &&
+            userChatJoinRequest.Username.IsNullOrEmpty())
+        {
+            reasons.Add("Belum menetapkan Username");
+            needManualAccept = false;
+        }
+
+        if (chatSettings.EnableCheckProfilePhoto)
+        {
+            var userProfilePhotoService = telegramService.GetRequiredService<UserProfilePhotoService>();
+            var userProfilePhotos = await userProfilePhotoService.GetUserProfilePhotosAsync(userId: userChatJoinRequest.Id, evictBefore: true);
+
+            if (userProfilePhotos.TotalCount == 0)
+            {
+                reasons.Add("Belum menetapkan/menyembunyikan Foto Profil");
+                needManualAccept = false;
+            }
+        }
+
+        if (needManualAccept) return true;
+
+        await client.DeclineChatJoinRequest(chatId, userChatJoinRequest.Id);
+
+        var message = HtmlMessage.Empty
+            .Bold("Chat join request ditolak").Br()
+            .Bold("ID: ").CodeBr(userChatJoinRequest.Id.ToString())
+            .Bold("Nama: ").TextBr(userChatJoinRequest.GetNameLink())
+            .Bold("Karena: ").Br();
+
+        reasons.ForEach(s => message.TextBr("└ " + s));
+
+        await telegramService.SendTextMessageAsync(message.ToString());
+
+        return false;
     }
 }

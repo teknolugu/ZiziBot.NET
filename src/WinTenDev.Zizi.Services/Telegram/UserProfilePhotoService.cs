@@ -33,12 +33,19 @@ public class UserProfilePhotoService
         return cacheKey;
     }
 
-    public async Task<UserProfilePhotos> GetUserProfilePhotosAsync(long userId)
+    public async Task<UserProfilePhotos> GetUserProfilePhotosAsync(
+        long userId,
+        bool evictBefore = false
+    )
     {
-        var userProfilePhotos = await _cacheService.GetOrSetAsync(GetCacheKey(userId), async () => {
-            var userProfilePhotos = await _botClient.GetUserProfilePhotosAsync(userId);
-            return userProfilePhotos;
-        });
+        var userProfilePhotos = await _cacheService.GetOrSetAsync(
+            cacheKey: GetCacheKey(userId),
+            evictBefore: evictBefore,
+            action: async () => {
+                var userProfilePhotos = await _botClient.GetUserProfilePhotosAsync(userId);
+                return userProfilePhotos;
+            }
+        );
 
         return userProfilePhotos;
     }
@@ -61,7 +68,11 @@ public class UserProfilePhotoService
     {
         var chatPhoto = await GetUserProfilePhotosAsync(userId);
         var hasPhoto = chatPhoto.TotalCount > 0;
-        Log.Debug("UserId {UserId} has Profile photo? {HasPhoto}", userId, hasPhoto);
+        Log.Debug(
+            "UserId {UserId} has Profile photo? {HasPhoto}",
+            userId,
+            hasPhoto
+        );
 
         return hasPhoto;
     }
