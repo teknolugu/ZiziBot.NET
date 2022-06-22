@@ -122,7 +122,6 @@ public static class TelegramServiceRssExtension
             messageText,
             buttonMarkup,
             scheduleDeleteAt: DateTime.UtcNow.AddMinutes(10),
-            includeSenderMessage: true,
             preventDuplicateSend: true
         );
     }
