@@ -86,12 +86,12 @@ public class DefaultTraceLog : ITrace
 
     public void BeforeExists(CancellableTraceLog log)
     {
-        throw new System.NotImplementedException();
+        Log.Debug("RepoDB Trace - BeforeExist: {@Log}", log.Statement);
     }
 
     public void AfterExists(TraceLog log)
     {
-        throw new System.NotImplementedException();
+        Log.Debug("RepoDB Trace - AfterExist: {ExecutionTime} ", log.ExecutionTime);
     }
 
     public void BeforeExecuteNonQuery(CancellableTraceLog log)

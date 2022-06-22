@@ -27,6 +27,28 @@ public class BotUpdateService
         _queryService = queryService;
     }
 
+    public async Task<bool> IsBotUpdateExistAsync(
+        long chatId,
+        long userId
+    )
+    {
+        var isExist = await DbConnection.ExistsAsync<BotUpdate>(
+            update =>
+                update.ChatId == chatId &&
+                update.UserId == userId,
+            trace: new DefaultTraceLog()
+        );
+
+        _logger.LogInformation(
+            "Is Update for UserId: {UserId} on ChatId: {ChatId}  Exist? {IsExist}",
+            userId,
+            chatId,
+            isExist
+        );
+
+        return isExist;
+    }
+
     public async Task SaveUpdateAsync(BotUpdate botUpdate)
     {
         await DbConnection.InsertAsync(botUpdate, trace: new DefaultTraceLog());
