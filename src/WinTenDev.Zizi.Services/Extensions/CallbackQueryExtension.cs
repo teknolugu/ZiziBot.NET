@@ -262,7 +262,16 @@ public static class CallbackQueryExtension
             case "navigate-page":
                 var toPage = part.ElementAtOrDefault(2).ToInt();
                 page = toPage;
-                answerDescription = "Halaman " + (toPage + 1);
+                if (toPage < 0)
+                {
+                    page = 0;
+                    answerDescription = "Halaman 1";
+                    await telegramService.AnswerCallbackQueryAsync("Sepertinya ini halaman pertama", true);
+                }
+                else
+                {
+                    answerDescription = "Halaman " + (toPage + 1);
+                }
                 break;
         }
 
@@ -280,7 +289,10 @@ public static class CallbackQueryExtension
 
         if (answerDescription.IsNotNullOrEmpty())
         {
-            await telegramService.EditMessageCallback(answerCombined, btnMarkupCtl);
+            if (btnMarkupCtl.InlineKeyboard.Any())
+                await telegramService.EditMessageCallback(answerCombined, btnMarkupCtl);
+            else
+                await telegramService.AnswerCallbackQueryAsync("Sepertinya ini halaman terakhir", true);
 
             if (part.ElementAtOrDefault(1)?.Contains("all") ?? false)
                 await telegramService.AnswerCallbackQueryAsync(answerCombined, true);
