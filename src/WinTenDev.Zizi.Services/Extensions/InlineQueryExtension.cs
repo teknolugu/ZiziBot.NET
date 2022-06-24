@@ -9,6 +9,7 @@ using Telegram.Bot.Types.InlineQueryResults;
 using Telegram.Bot.Types.ReplyMarkups;
 using WinTenDev.Zizi.Models.Entities.MongoDb;
 using WinTenDev.Zizi.Models.Types;
+using WinTenDev.Zizi.Models.Types.UupDump;
 using WinTenDev.Zizi.Services.Externals;
 using WinTenDev.Zizi.Services.Telegram;
 using WinTenDev.Zizi.Utils;
@@ -58,6 +59,7 @@ public static class InlineQueryExtension
             "message" => await telegramService.OnInlineQueryMessageAsync(),
             "subscene" => await telegramService.OnInlineQuerySubsceneSearchAsync(),
             "subscene-dl" => await telegramService.OnInlineQuerySubsceneDownloadAsync(),
+            "uup" => await telegramService.OnInlineQuerySearchUupAsync(),
             _ => await telegramService.OnInlineQueryGuideAsync()
         };
 
@@ -461,5 +463,68 @@ public static class InlineQueryExtension
         executionResult.IsSuccess = true;
 
         return executionResult;
+    }
+
+    private static async Task<InlineQueryExecutionResult> OnInlineQuerySearchUupAsync(this TelegramService telegramService)
+    {
+        var inlineQueryExecution = new InlineQueryExecutionResult();
+        var uupService = telegramService.GetRequiredService<UupDumpService>();
+        var query1 = telegramService.GetInlineQueryAt<string>(1);
+        var query2 = telegramService.GetInlineQueryAt<string>(2);
+        var queryValue = telegramService.InlineQueryValue;
+        var builds = await uupService.GetUpdatesAsync(queryValue);
+
+        var inlineQueryResults = builds.Response.Builds.Select(
+            build => {
+                var title = build.BuildNumber + " - " + build.Arch.ToString().ToUpper();
+
+                var downloadLink = build.Arch == Arch.Arm64
+                    ? $"https://uupdump.net/download.php?id={build.Uuid}&pack=en-us&edition=core;professional"
+                    : $"https://uupdump.net/download.php?id={build.Uuid}&pack=en-us&edition=core;coren;professional;professionaln";
+
+                var htmlDescription = HtmlMessage.Empty
+                    .TextBr(build.Created.ToString("yyyy-MM-dd HH:mm:ss tt zz"))
+                    .TextBr(build.Title);
+
+                var htmlContent = HtmlMessage.Empty
+                    .Bold("Title: ").CodeBr(build.Title)
+                    .Bold("Version: ").CodeBr(build.BuildNumber)
+                    .Bold("Date: ").CodeBr(build.Created.ToString("yyyy-MM-dd HH:mm:ss tt zz"))
+                    .Bold("Arch: ").CodeBr(build.Arch.ToString().ToUpper());
+
+                var result = new InlineQueryResultArticle(
+                    id: build.Uuid,
+                    title: title,
+                    inputMessageContent: new InputTextMessageContent(htmlContent.ToString())
+                    {
+                        ParseMode = ParseMode.Html,
+                        DisableWebPagePreview = true
+                    }
+                )
+                {
+                    Description = htmlDescription.ToString(),
+                    ReplyMarkup = new InlineKeyboardMarkup(
+                        new[]
+                        {
+                            new[]
+                            {
+                                InlineKeyboardButton.WithUrl("Unduh", downloadLink)
+                            },
+                            new[]
+                            {
+                                InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Pencarian lanjut", $"uup {queryValue} "),
+                                InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Ulang pencarian", $"uup "),
+                            }
+                        }
+                    )
+                };
+
+                return result;
+            }
+        );
+
+        await telegramService.AnswerInlineQueryAsync(inlineQueryResults);
+
+        return inlineQueryExecution;
     }
 }
