@@ -91,7 +91,11 @@ public static class InlineQueryExtension
                 new[]
                 {
                     InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Cari subtitle", "subscene ")
-                }
+                },
+                new[]
+                {
+                    InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Cari UUP dump", "uup ")
+                },
             }
         );
 
