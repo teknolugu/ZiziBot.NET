@@ -286,18 +286,10 @@ public static class TelegramServiceMessageExtension
             ).ToList();
 
             var botUpdateService = telegramService.GetRequiredService<BotUpdateService>();
-            var botUpdates = await botUpdateService.GetUpdateAsync(chatId, fromId);
-            var isRecentUpdateExist = botUpdates.Count > 0;
-            var entitiesCount = filteredEntities?.Count;
 
-            Log.Debug(
-                "Check Bot Update history for ChatId: {ChatId}. EntitiesCount: {EntitiesCount}. RecentUpdates: {RecentUpdates}",
-                chatId,
-                entitiesCount,
-                botUpdates.Count
-            );
-
-            if (!(filteredEntities?.Count > 0) || isRecentUpdateExist) return false;
+            var isUpdateExist = await botUpdateService.IsBotUpdateExistAsync(chatId, fromId);
+            if (!(filteredEntities?.Count > 0) || isUpdateExist)
+                return false;
 
             var mentionAdmin = await telegramService.GetMentionAdminsStr();
             var fullName = telegramService.From.GetFullName();

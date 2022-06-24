@@ -69,8 +69,7 @@ public class WordFilterService
 
     public async Task<IEnumerable<WordFilter>> GetWordsList()
     {
-        var data = await _cacheService.GetOrSetAsync
-        (
+        var data = await _cacheService.GetOrSetAsync(
             cacheKey: CacheKey,
             action: async () => {
                 var data = await GetWordsListCore();
@@ -120,8 +119,7 @@ public class WordFilterService
 
         var listWords = await GetWordsList();
 
-        var partedWord = words.Split
-            (
+        var partedWord = words.Split(
                 new[] { '\n', '\r', ' ', '\t' },
                 StringSplitOptions.RemoveEmptyEntries
             )
@@ -136,9 +134,7 @@ public class WordFilterService
 
         skipWords.ForEach
         (
-            (
-                word1
-            ) => {
+            (word1) => {
                 partedWord.RemoveAll
                 (
                     word2 =>
@@ -166,10 +162,12 @@ public class WordFilterService
                     forFilter = forFilter.CleanExceptAlphaNumeric();
                     isShould = forCompare.Contains(forFilter);
 
-                    Log.Verbose
-                    (
+                    Log.Verbose(
                         "Message compare '{ForCompare}' LIKE '{ForFilter}' ? {IsShould}. Global: {IsGlobal}",
-                        forCompare, forFilter, isShould, isGlobal
+                        forCompare,
+                        forFilter,
+                        isShould,
+                        isGlobal
                     );
                 }
                 else
@@ -177,15 +175,23 @@ public class WordFilterService
                     forFilter = wordFilter.Word.ToLowerCase().CleanExceptAlphaNumeric();
                     if (forCompare == forFilter) isShould = true;
 
-                    Log.Verbose
-                    (
+                    Log.Verbose(
                         "Message compare '{ForCompare}' == '{ForFilter}' ? {IsShould}, Global: {IsGlobal}",
-                        forCompare, forFilter, isShould, isGlobal
+                        forCompare,
+                        forFilter,
+                        isShould,
+                        isGlobal
                     );
                 }
 
                 if (!isShould) continue;
-                telegramResult.Notes = $"Filter: {forFilter}, Kata: {forCompare}";
+
+                var htmlMessage = HtmlMessage.Empty
+                    .Bold("Filter: ").CodeBr(wordFilter.Word)
+                    .Bold("Comparer: ").CodeBr(forCompare)
+                    .Bold("Kata: ").CodeBr(word);
+
+                telegramResult.Notes = htmlMessage.ToString();
                 telegramResult.IsSuccess = true;
                 Log.Debug("Should break L2 loop!");
                 break;

@@ -35,13 +35,17 @@ jobs:
       - name: Creating Win-x64 package
         run: dotnet publish src/WinTenDev.ZiziBot.AppHost -r win-x64 -c Release --self-contained=false /t:CreateZip
 
+      - name: Creating Osx-x64 package
+        run: dotnet publish src/WinTenDev.ZiziBot.AppHost -r osx-x64 -c Release --self-contained=false /t:CreateZip
+
       - name: Uploading Artifacs
         uses: actions/upload-artifact@v2
         with:
-          name: zizibot-linux64-fd-build
+          name: ZiziBot FD Build
           path: |
             src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/linux-x64/*.zip
             src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/win-x64/*.zip
+            src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/osx-x64/*.zip
 
 
   zizibot-sf-build:
@@ -72,13 +76,17 @@ jobs:
       - name: Creating Win-x64 package
         run: dotnet publish src/WinTenDev.ZiziBot.AppHost -r win-x64 -c Release --self-contained=false /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true /t:CreateZip
 
+      - name: Creating Osx-x64 package
+        run: dotnet publish src/WinTenDev.ZiziBot.AppHost -r osx-x64 -c Release --self-contained=false /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true /t:CreateZip
+
       - name: Uploading Artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: zizibot-linux64-sf-build
+          name: ZiziBot SF Config
           path: |
             src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/linux-x64/*.zip
             src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/win-x64/*.zip
+            src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/osx-x64/*.zip
 
 #  zizibot-win64-fd-build:
 #    runs-on: ubuntu-latest

@@ -11,7 +11,6 @@ using Telegram.Bot.Types.ReplyMarkups;
 using WinTenDev.Zizi.Models.Dto;
 using WinTenDev.Zizi.Models.Tables;
 using WinTenDev.Zizi.Utils;
-using WinTenDev.Zizi.Utils.Parsers;
 using WinTenDev.Zizi.Utils.Telegram;
 
 namespace WinTenDev.Zizi.Services.Internals;
@@ -306,11 +305,11 @@ public class RssService
                     else
                         btnCtl.Add(InlineKeyboardButton.WithCallbackData("🚫 Stopped", $"rssctl start {rssSetting.Id}"));
 
-                    if (rssSetting.UrlFeed.IsGithubReleaseUrl())
-                        if (rssSetting.IncludeAttachment)
-                            btnCtl.Add(InlineKeyboardButton.WithCallbackData("✅ Attachment", $"rssctl attachment-off {rssSetting.Id}"));
-                        else
-                            btnCtl.Add(InlineKeyboardButton.WithCallbackData("❌ Attachment", $"rssctl attachment-on {rssSetting.Id}"));
+                    // if (rssSetting.UrlFeed.IsGithubReleaseUrl())
+                    //     if (rssSetting.IncludeAttachment)
+                    //         btnCtl.Add(InlineKeyboardButton.WithCallbackData("✅ Attachment", $"rssctl attachment-off {rssSetting.Id}"));
+                    //     else
+                    //         btnCtl.Add(InlineKeyboardButton.WithCallbackData("❌ Attachment", $"rssctl attachment-on {rssSetting.Id}"));
 
                     buttons.AddRange(
                         new InlineKeyboardButton[][]

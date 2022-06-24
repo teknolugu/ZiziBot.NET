@@ -1018,18 +1018,41 @@ public static class TelegramServiceMemberExtension
         }
 
         if (needManualAccept) return true;
+        var eventLogService = telegramService.GetRequiredService<EventLogService>();
 
         await client.DeclineChatJoinRequest(chatId, userChatJoinRequest.Id);
 
-        var message = HtmlMessage.Empty
+        var htmlMessage = HtmlMessage.Empty
             .Bold("Chat join request ditolak").Br()
             .Bold("ID: ").CodeBr(userChatJoinRequest.Id.ToString())
             .Bold("Nama: ").TextBr(userChatJoinRequest.GetNameLink())
             .Bold("Karena: ").Br();
 
-        reasons.ForEach(s => message.TextBr("└ " + s));
+        reasons.ForEach(s => htmlMessage.TextBr("└ " + s));
 
-        await telegramService.SendTextMessageAsync(message.ToString());
+        await telegramService.SendTextMessageAsync(
+            sendText: htmlMessage.ToString(),
+            scheduleDeleteAt: DateTime.UtcNow.AddMinutes(1),
+            preventDuplicateSend: true,
+            messageFlag: MessageFlag.ChatJoinRequest
+        );
+
+        var reducedChatId = chatId.ReduceChatId().ToString();
+        var fromId = chatJoinRequest.From.Id;
+
+        var eventLogMessage = HtmlMessage.Empty
+            .Bold("Event Log Preview").Br()
+            .Bold("Chat: ").Code(reducedChatId).Text(" - ").TextBr(chatJoinRequest.Chat.GetChatNameLink())
+            .Bold("User: ").Code(fromId.ToString()).Text(" - ").TextBr(chatJoinRequest.From.GetNameLink())
+            .Bold("Flag: #").TextBr(MessageFlag.ChatJoinRequest.ToString())
+            .Bold("Note: ")
+            .Append(htmlMessage).Br()
+            .TextBr($"#U{fromId} #C{reducedChatId}");
+
+        await eventLogService.SendEventLogCoreAsync(
+            sendText: eventLogMessage.ToString(),
+            disableWebPreview: true
+        );
 
         return false;
     }

@@ -9,6 +9,7 @@ public enum MessageFlag
     Afk,
     BadWord,
     Chat,
+    ChatJoinRequest,
     DelCity,
     Disable,
     Enable,
