@@ -12,6 +12,8 @@ public class ForceSubscription : IEntity, ICreatedOn, IModifiedOn
     public long ChatId { get; set; }
     public long UserId { get; set; }
     public long ChannelId { get; set; }
+    public string ChannelTitle { get; set; }
+    public string InviteLink { get; set; }
     public DateTime CreatedOn { get; set; }
     public DateTime ModifiedOn { get; set; }
 
