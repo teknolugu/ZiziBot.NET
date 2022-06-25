@@ -323,7 +323,8 @@ public class ChatService
                         exception.Contains("message can't be deleted") ||
                         exception.Contains("bot was kicked") ||
                         exception.Contains("not a member") ||
-                        exception.Contains("chat was upgraded")
+                        exception.Contains("chat was upgraded") ||
+                        exception.Contains("chat not found")
                        )
                     {
                         _logger.LogInformation(
