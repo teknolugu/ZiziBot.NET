@@ -5,11 +5,11 @@ using WinTenDev.Zizi.Services.Telegram;
 
 namespace WinTenDev.ZiziBot.AppHost.Handlers.Commands.Core;
 
-public class InfoCommand : CommandBase
+public class AppHostInfoCommand : CommandBase
 {
     private readonly TelegramService _telegramService;
 
-    public InfoCommand(TelegramService telegramService)
+    public AppHostInfoCommand(TelegramService telegramService)
     {
         _telegramService = telegramService;
     }
