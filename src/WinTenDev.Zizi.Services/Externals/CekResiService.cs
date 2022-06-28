@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using CacheTower;
 using Flurl;
 using Flurl.Http;
 using Microsoft.Extensions.Options;
@@ -14,19 +13,19 @@ namespace WinTenDev.Zizi.Services.Externals;
 public class CekResiService
 {
     private readonly BinderByteConfig _binderByteConfig;
-    private readonly CacheStack _cacheStack;
+    private readonly CacheService _cacheService;
     private readonly QueryService _queryService;
     private const string PigooraCekResiUrl = "https://api.cekresi.pigoora.com/cekResi";
     private const string CommonUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:85.0) Gecko/20100101 Firefox/85.0";
 
     public CekResiService(
         IOptionsSnapshot<BinderByteConfig> binderByteConfig,
-        CacheStack cacheStack,
+        CacheService cacheService,
         QueryService queryService
     )
     {
         _binderByteConfig = binderByteConfig.Value;
-        _cacheStack = cacheStack;
+        _cacheService = cacheService;
         _queryService = queryService;
     }
 
