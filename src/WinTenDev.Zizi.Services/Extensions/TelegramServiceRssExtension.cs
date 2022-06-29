@@ -41,7 +41,7 @@ public static class TelegramServiceRssExtension
             return;
         }
 
-        await telegramService.AppendTextAsync($"Memeriksa RSS Feed");
+        await telegramService.AppendTextAsync($"Memeriksa RSS Feed..");
 
         var isValid = await rssUrl.IsValidUrlFeed();
 
@@ -49,14 +49,14 @@ public static class TelegramServiceRssExtension
         {
             var baseUrl = rssUrl.GetBaseUrl();
 
-            await telegramService.AppendTextAsync("Mencari kemungkinan RSS Feed yang valid");
+            await telegramService.AppendTextAsync("Mencari kemungkinan RSS Feed yang valid..", reappendText: true);
             var foundUrl = await baseUrl.FindUrlFeed();
 
             Log.Debug("Found URL Feed: {FoundUrl}", foundUrl);
 
             if (foundUrl.IsNotNullOrEmpty())
             {
-                await telegramService.AppendTextAsync("Menemukan: " + foundUrl);
+                await telegramService.AppendTextAsync("Menemukan: " + foundUrl, reappendText: true);
                 rssUrl = foundUrl;
             }
             else
@@ -77,7 +77,7 @@ public static class TelegramServiceRssExtension
 
         if (!isFeedExist)
         {
-            await telegramService.AppendTextAsync($"Sedang menyimpan..");
+            await telegramService.AppendTextAsync($"Sedang menyimpan RSS..", reappendText: true);
 
             var data = new Dictionary<string, object>()
             {
@@ -88,15 +88,15 @@ public static class TelegramServiceRssExtension
 
             await rssService.SaveRssSettingAsync(data);
 
-            await telegramService.AppendTextAsync("Memastikan Scheduler sudah berjalan");
+            await telegramService.AppendTextAsync("Memastikan Scheduler sudah berjalan..", reappendText: true);
 
             rssFeedService.RegisterUrlFeed(chatId, rssUrl);
 
-            await telegramService.AppendTextAsync($"Tautan berhasil di simpan");
+            await telegramService.AppendTextAsync($"Tautan berhasil di simpan.", reappendText: true);
         }
         else
         {
-            await telegramService.AppendTextAsync($"Tautan sudah di simpan");
+            await telegramService.AppendTextAsync($"Tautan sudah di simpan.", reappendText: true);
         }
     }
 
