@@ -32,6 +32,7 @@ public class ProjectTool
 
         var appVeyorConfig = new AppVeyorConfig()
         {
+            Version = projectVersion,
             Environment = new AppVeyorEnvironment()
             {
                 VersionNumber = projectVersion
