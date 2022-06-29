@@ -30,7 +30,7 @@ jobs:
         run: dotnet restore WinTenDev.ZiziBot.sln
 
       - name: Update Project version
-        run: dotnet run --project .\src\WinTenDev.ZiziTools.Cli\
+        run: dotnet run --project src/WinTenDev.ZiziTools.Cli
 
       - name: Creating Linux-x64 package
         run: dotnet publish src/WinTenDev.ZiziBot.AppHost -r linux-x64 -c Release --self-contained=false /t:CreateZip
