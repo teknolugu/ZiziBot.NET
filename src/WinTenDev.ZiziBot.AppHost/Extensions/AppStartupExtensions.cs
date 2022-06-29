@@ -173,6 +173,7 @@ internal static class AppStartupExtensions
         app.GetRequiredService<DatabaseService>().FixTableCollation().WaitAndUnwrapException();
 
         botService.EnsureCommandRegistration().WaitAndUnwrapException();
+        botService.SendStartupNotification().WaitAndUnwrapException();
 
         app.RunMongoDbPreparation();
 
