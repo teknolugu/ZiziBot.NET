@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using System.Xml.Linq;
+using Nito.AsyncEx.Synchronous;
 
 namespace WinTenDev.ZiziTools.Cli.Tools;
 
@@ -28,6 +29,19 @@ public class ProjectTool
         var envVersionNumber = Environment.GetEnvironmentVariable("VERSION_NUMBER");
         Console.WriteLine($"Project version updated to {projectVersion}");
         Console.WriteLine($"Environment variable VERSION_NUMBER set to {envVersionNumber}");
+
+        var appVeyorConfig = new AppVeyorConfig()
+        {
+            Environment = new AppVeyorEnvironment()
+            {
+                VersionNumber = projectVersion
+            }
+        };
+
+        var configYaml = appVeyorConfig.ToYaml();
+
+        Console.WriteLine("Writing AppVeyor config...");
+        configYaml.ToFile("appveyor.yml").WaitAndUnwrapException();
     }
 
     private static int RunRecursive(
