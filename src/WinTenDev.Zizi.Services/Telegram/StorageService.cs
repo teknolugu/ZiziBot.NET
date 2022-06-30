@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Hangfire;
 using Humanizer;
 using Microsoft.Extensions.Options;
+using RepoDb;
 using Serilog;
 using StackExchange.Redis;
 using Telegram.Bot;
@@ -121,9 +122,6 @@ public class StorageService : IStorageService
         }
     }
 
-    /// <summary>
-    /// Hangfire storage reset
-    /// </summary>
     public async Task ResetHangfireMySqlStorage(ResetTableMode resetTableMode = ResetTableMode.Truncate)
     {
         if (_hangfireConfig.DataStore != HangfireDataStore.MySql)
@@ -134,30 +132,16 @@ public class StorageService : IStorageService
 
         Log.Information("Starting reset Hangfire MySQL storage");
 
-        const string prefixTable = "_hangfire";
-        var sbSql = new StringBuilder();
+        const string sqlListTable = "show tables like '%hangfire%';";
+        var listHangfireTable = await _queryService.GetHangfireMysqlConnectionCore()
+            .ExecuteQueryAsync<string>(sqlListTable);
 
-        var listTable = new[]
-        {
-            "AggregatedCounter",
-            "Counter",
-            "DistributedLock",
-            "Hash",
-            "JobParameter",
-            "JobQueue",
-            "State",
-            "List",
-            "Server",
-            "Set",
-            "State",
-            "Job"
-        };
+        var sbSql = new StringBuilder();
 
         sbSql.AppendLine("SET FOREIGN_KEY_CHECKS = 0;");
 
-        foreach (var table in listTable)
+        foreach (var tableName in listHangfireTable)
         {
-            var tableName = $"{prefixTable}{table}";
             var resetMode = resetTableMode.Humanize().ToUpperCase();
 
             sbSql.Append(resetMode).Append(" TABLE ");
@@ -172,8 +156,8 @@ public class StorageService : IStorageService
 
         var sqlTruncate = sbSql.ToTrimmedString();
         var rowCount = await _queryService
-            .CreateMySqlFactory()
-            .RunSqlAsync(sqlTruncate);
+            .GetHangfireMysqlConnectionCore()
+            .ExecuteNonQueryAsync(sqlTruncate);
 
         Log.Information("Reset Hangfire MySQL storage finish. Result: {RowCount}", rowCount);
     }

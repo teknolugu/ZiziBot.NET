@@ -3,6 +3,7 @@ using Telegram.Bot.Framework.Abstractions;
 using WinTenDev.Zizi.Services.Extensions;
 using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Services.Telegram;
+using WinTenDev.Zizi.Utils;
 
 namespace WinTenDev.ZiziBot.AppHost.Handlers.Commands.Rss;
 
@@ -31,6 +32,6 @@ public class SetRssCommand : CommandBase
     {
         await _telegramService.AddUpdateContext(context);
 
-        await _telegramService.AddRssUrlAsync();
+        _telegramService.AddRssUrlAsync().InBackground();
     }
 }

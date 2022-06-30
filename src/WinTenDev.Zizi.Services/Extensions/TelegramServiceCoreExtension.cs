@@ -295,36 +295,21 @@ public static class TelegramServiceCoreExtension
         }
     }
 
-    public static async Task GetAppHostInfoAsync(this TelegramService telegramService)
-    {
-        var featureConfig = await telegramService.GetFeatureConfig();
+	public static async Task GetAppHostInfoAsync(this TelegramService telegramService)
+	{
+		var featureConfig = await telegramService.GetFeatureConfig();
 
-        if (!featureConfig.NextHandler)
-        {
-            return;
-        }
+		if (!featureConfig.NextHandler)
+		{
+			return;
+		}
 
-        var hostName = Dns.GetHostName();
-        var processUptime = DateTime.UtcNow - Process.GetCurrentProcess().StartTime.ToUniversalTime();
+		var appHostInfo = AppHostUtil.GetAppHostInfo(includeUptime: true);
 
-        var htmlMessage = HtmlMessage.Empty
-            .Bold("Host Information").Br()
-            .Bold("Name: ").CodeBr(hostName)
-            .Bold("OS: ").CodeBr(Environment.OSVersion.Platform.ToString())
-            .Bold("Version: ").CodeBr(Environment.OSVersion.Version.ToString())
-            .Bold("Uptime: ").CodeBr(TimeSpan.FromMilliseconds(Environment.TickCount64).Humanize(precision: 10, minUnit: TimeUnit.Second))
-            .Bold("Runtime: ").CodeBr(System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription)
-            .Bold("DateTime: ").CodeBr(DateTime.Now.ToDetailDateTimeString())
-            .Br()
-            .Bold("App Information").Br()
-            .Bold("Name: ").CodeBr(Assembly.GetEntryAssembly().GetName().Name)
-            .Bold("Version: ").CodeBr(Assembly.GetEntryAssembly().GetName().Version.ToString())
-            .Bold("Uptime: ").CodeBr(TimeSpan.FromMilliseconds(processUptime.TotalMilliseconds).Humanize(precision: 10, minUnit: TimeUnit.Second));
-
-        await telegramService.SendTextMessageAsync(
-            sendText: htmlMessage.ToString(),
-            includeSenderMessage: true,
-            scheduleDeleteAt: DateTime.UtcNow.AddMinutes(10)
-        );
-    }
+		await telegramService.SendTextMessageAsync(
+			sendText: appHostInfo,
+			includeSenderMessage: true,
+			scheduleDeleteAt: DateTime.UtcNow.AddMinutes(10)
+		);
+	}
 }

@@ -11,64 +11,68 @@ jobs:
     name: Deploy Zizi Beta
     timeout-minutes: 30
     runs-on: ubuntu-latest
-#     runs-on: self-hosted
+    #     runs-on: self-hosted
 
     steps:
-    - name: Prepare Build
-      uses: actions/checkout@v2
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: 6.0.x
+      - name: Prepare Build
+        uses: actions/checkout@v2
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 6.0.x
 
-    - name: Restore dependencies
-      run: dotnet restore
-    - name: Publish
-      run: dotnet publish src/WinTenDev.ZiziBot.AppHost -r linux-x64 -c Release --self-contained=false /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true -o build/zizi-beta
+      - name: Restore dependencies
+        run: dotnet restore
 
-    - name: Send notify to Telegram before deployment
-      uses: appleboy/telegram-action@v0.1.1
-      with:
-        # telegram user
-        to: ${{ secrets.TG_LOG_CHAT_ID }}
-        # telegram token
-        token: ${{ secrets.TG_DEV_BOT_TOKEN }}
-        # telegram message
-        message: |
-          Zizi Beta entering Maintenance Mode
-        # disables link previews for links in this message
-        disable_web_page_preview: true
+      - name: Update Project version
+        run: dotnet run --project src/WinTenDev.ZiziTools.Cli
 
-    - name: ssh-scp-ssh-pipelines
-      # You may pin to the exact commit or the version.
-      # uses: cross-the-world/ssh-scp-ssh-pipelines@78e864b4890087a58248ff39320406971ca88b89
-      uses: cross-the-world/ssh-scp-ssh-pipelines@v1.1.4
-      with:
-        # ssh remote host
-        host: ${{ secrets.VPS_HOST }}
-        # ssh remote user
-        user: ${{ secrets.VPS_USER }}
-        # ssh remote password
-        pass: ${{ secrets.VPS_PASS }}
-        # execute pre-commands before scp
-        first_ssh: ${{ secrets.CMD_STOP_ZIZIBETA }}
-        # scp from local to remote
-        scp: |
-          build/zizi-beta/* => ${{ secrets.VPS_REMOTE_DIR }}
-        # execute post-commands after scp
-        last_ssh: ${{ secrets.CMD_START_ZIZIBETA }}
+      - name: Publish
+        run: dotnet publish src/WinTenDev.ZiziBot.AppHost -r linux-x64 -c Release --self-contained=false /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true -o build/zizi-beta
 
-    - name: Send notify to Telegram after deployment
-      uses: appleboy/telegram-action@v0.1.1
-      with:
-        # telegram user
-        to: ${{ secrets.TG_LOG_CHAT_ID }}
-        # telegram token
-        token: ${{ secrets.TG_DEV_BOT_TOKEN }}
-        # telegram message
-        message: |
-          Zizi Beta Deployment success
-          Repo: ${{ github.repository }}
-          Changes: https://github.com/${{ github.repository }}/commit/${{github.sha}}
-        # disables link previews for links in this message
-        disable_web_page_preview: true
+      - name: Send notify to Telegram before deployment
+        uses: appleboy/telegram-action@v0.1.1
+        with:
+          # telegram user
+          to: ${{ secrets.TG_LOG_CHAT_ID }}
+          # telegram token
+          token: ${{ secrets.TG_DEV_BOT_TOKEN }}
+          # telegram message
+          message: |
+            Zizi Beta entering Maintenance Mode
+          # disables link previews for links in this message
+          disable_web_page_preview: true
+
+      - name: ssh-scp-ssh-pipelines
+        # You may pin to the exact commit or the version.
+        # uses: cross-the-world/ssh-scp-ssh-pipelines@78e864b4890087a58248ff39320406971ca88b89
+        uses: cross-the-world/ssh-scp-ssh-pipelines@v1.1.4
+        with:
+          # ssh remote host
+          host: ${{ secrets.VPS_HOST }}
+          # ssh remote user
+          user: ${{ secrets.VPS_USER }}
+          # ssh remote password
+          pass: ${{ secrets.VPS_PASS }}
+          # execute pre-commands before scp
+          first_ssh: ${{ secrets.CMD_STOP_ZIZIBETA }}
+          # scp from local to remote
+          scp: |
+            build/zizi-beta/* => ${{ secrets.VPS_REMOTE_DIR }}
+          # execute post-commands after scp
+          last_ssh: ${{ secrets.CMD_START_ZIZIBETA }}
+
+      - name: Send notify to Telegram after deployment
+        uses: appleboy/telegram-action@v0.1.1
+        with:
+          # telegram user
+          to: ${{ secrets.TG_LOG_CHAT_ID }}
+          # telegram token
+          token: ${{ secrets.TG_DEV_BOT_TOKEN }}
+          # telegram message
+          message: |
+            Zizi Beta Deployment success
+            Repo: ${{ github.repository }}
+            Changes: https://github.com/${{ github.repository }}/commit/${{github.sha}}
+          # disables link previews for links in this message
+          disable_web_page_preview: true

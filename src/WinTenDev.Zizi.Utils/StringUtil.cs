@@ -209,10 +209,10 @@ public static class StringUtil
 
     public static string RemoveLastLines(
         this string str,
-        int lines = 0
+        int lines = 1
     )
     {
-        return str.Remove(str.TrimEnd().LastIndexOf(Environment.NewLine, StringComparison.Ordinal) + lines).Trim();
+        return str.Trim().Split("\n").SkipLast(lines).JoinStr("\n").Trim();
     }
 
     public static string StripMargin(this string s)

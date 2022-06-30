@@ -6,6 +6,7 @@ using WinTenDev.ZiziBot.AppHost.Handlers.Commands.Additional;
 using WinTenDev.ZiziBot.AppHost.Handlers.Commands.BlackLists;
 using WinTenDev.ZiziBot.AppHost.Handlers.Commands.Chat;
 using WinTenDev.ZiziBot.AppHost.Handlers.Commands.Core;
+using WinTenDev.ZiziBot.AppHost.Handlers.Commands.ForceSubscription;
 using WinTenDev.ZiziBot.AppHost.Handlers.Commands.GlobalBan;
 using WinTenDev.ZiziBot.AppHost.Handlers.Commands.Group;
 using WinTenDev.ZiziBot.AppHost.Handlers.Commands.Metrics;
@@ -66,6 +67,8 @@ public static class CommandBuilderExtension
                                         .UseCommand<AddNoteCommand>("addfilter")
                                         .UseCommand<AddSpellCommand>("addspell")
                                         .UseCommand<AddSpellCommand>("add_spell")
+                                        .UseCommand<AddForceSubCommand>("addfsub")
+                                        .UseCommand<AddForceSubCommand>("add_fsub")
                                         .UseCommand<AdminCommand>("admin")
                                         .UseCommand<AdminCommand>("adminlist")
                                         .UseCommand<AfkCommand>("afk")
@@ -79,6 +82,7 @@ public static class CommandBuilderExtension
                                         .UseCommand<ChatCommand>("chat")
                                         .UseCommand<CheckResiCommand>("resi")
                                         .UseCommand<CovidCommand>("covid")
+                                        .UseCommand<DeleteForceSubCommand>("delfsub")
                                         .UseCommand<DebugCommand>("dbg")
                                         .UseCommand<DebugCommand>("json")
                                         .UseCommand<DeleteBanCommand>("ungban")
@@ -107,7 +111,7 @@ public static class CommandBuilderExtension
                                         .UseCommand<ImportRssCommand>("importrss")
                                         .UseCommand<InactiveKickCommand>("inkick")
                                         .UseCommand<InsightStatusCommand>("instatus")
-                                        .UseCommand<InfoCommand>("info")
+                                        .UseCommand<AppHostInfoCommand>("apphost")
                                         .UseCommand<KataSyncCommand>("ksync")
                                         .UseCommand<KickCommand>("kick")
                                         .UseCommand<LearnCommand>("learn")
@@ -146,6 +150,7 @@ public static class CommandBuilderExtension
                                         .UseCommand<StatsCommand>("stats")
                                         .UseCommand<StickerPackCommand>("stickerpack")
                                         .UseCommand<StorageCommand>("storage")
+                                        .UseCommand<ForceSubListCommand>("fsublist")
                                         .UseCommand<TagCommand>("retag")
                                         .UseCommand<TagCommand>("tag")
                                         .UseCommand<TagsCommand>("notes")

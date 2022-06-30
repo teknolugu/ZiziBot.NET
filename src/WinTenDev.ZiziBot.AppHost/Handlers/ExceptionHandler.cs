@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Telegram.Bot.Framework.Abstractions;
@@ -42,7 +43,7 @@ public class ExceptionHandler : IUpdateHandler
             var htmlMessage = HtmlMessage.Empty
                 .Bold("🗒 Message: ").CodeBr(exception.Message).Br()
                 .BoldBr("🔄 Update: ").CodeBr(update.ToJson(true)).Br()
-                .BoldBr("🛑 Exception: ").CodeBr(exception.ToString()).Br();
+                .BoldBr("🛑 Exception: ").CodeBr(exception.ToStringDemystified()).Br();
 
             await _eventLogService.SendEventLogCoreAsync(htmlMessage.ToString());
         }

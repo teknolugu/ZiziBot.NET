@@ -484,4 +484,28 @@ public static class CallbackQueryExtension
 
         return true;
     }
+
+    public static async Task<bool> OnCallbackForceSubAsync(this TelegramService telegramService)
+    {
+        var chatId = telegramService.ChatId;
+        Log.Information("Receiving Ping callback");
+
+        if (!await telegramService.CheckFromAdminOrAnonymous())
+        {
+            await telegramService.AnswerCallbackQueryAsync("Kamu tidak memiliki izin untuk melakukan tidakan!", true);
+
+            return true;
+        }
+
+        var fSubsService = telegramService.GetRequiredService<ForceSubsService>();
+
+        var callbackAction = telegramService.GetCallbackDataAt<string>(1);
+        var channelId = telegramService.GetCallbackDataAt<long>(2);
+
+        await fSubsService.DeleteSubsAsync(chatId, channelId);
+
+        await telegramService.EditMessageCallback("Channel berhasil dihapus dari daftar subs!");
+
+        return true;
+    }
 }

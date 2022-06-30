@@ -7,7 +7,6 @@ using SerilogTimings;
 using Telegram.Bot.Types.Enums;
 using WinTenDev.Zizi.Models.Enums;
 using WinTenDev.Zizi.Models.Tables;
-using WinTenDev.Zizi.Services.Callbacks;
 using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Services.Telegram;
 using WinTenDev.Zizi.Utils;
@@ -42,6 +41,7 @@ public static class TelegramServiceActivityExtension
             "gban" => await telegramService.OnCallbackGlobalBanAsync(),
             "verify" => await telegramService.OnCallbackVerifyAsync(),
             "delete-message" => await telegramService.OnCallbackDeleteAsync(),
+            "fsub" => await telegramService.OnCallbackForceSubAsync(),
             "pin-message" => await telegramService.OnCallbackPinMessageAsync(),
             "rssctl" => await telegramService.OnCallbackRssCtlAsync(),
             "setting" => await telegramService.OnCallbackSettingAsync(),

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using CacheTower;
 using Flurl;
 using Flurl.Http;
 using Microsoft.Extensions.Logging;
@@ -20,7 +19,6 @@ public class BinderByteService
 {
     private readonly BinderByteConfig _binderByteConfig;
     private readonly ILogger<BinderByteService> _logger;
-    private readonly CacheStack _cacheStack;
     private readonly CacheService _cacheService;
     private readonly QueryService _queryService;
 
@@ -31,14 +29,12 @@ public class BinderByteService
     public BinderByteService(
         IOptionsSnapshot<BinderByteConfig> binderByteConfig,
         ILogger<BinderByteService> logger,
-        CacheStack cacheStack,
         CacheService cacheService,
         QueryService queryService
     )
     {
         _binderByteConfig = binderByteConfig.Value;
         _logger = logger;
-        _cacheStack = cacheStack;
         _cacheService = cacheService;
         _queryService = queryService;
 
@@ -47,9 +43,9 @@ public class BinderByteService
 
     public async Task<List<BinderByteCourier>> GetSupportedCouriers()
     {
-        var data = await _cacheService.GetOrSetAsync
-        (
-            "binder-byte-list-courier", async () => {
+        var data = await _cacheService.GetOrSetAsync(
+            "binder-byte-list-courier",
+            async () => {
                 var data = await GetSupportedCouriersCore();
                 return data;
             }
@@ -85,7 +81,11 @@ public class BinderByteService
 
         var insert = await _queryService
             .GetJsonCollection<BinderByteCekResi>()
-            .ReplaceOneAsync(resi, data, true);
+            .ReplaceOneAsync(
+                resi,
+                data,
+                true
+            );
 
         return insert;
     }
@@ -186,9 +186,11 @@ public class BinderByteService
         string awb
     )
     {
-        var result = await _cacheStack.GetOrSetAsync<BinderByteCekResi>
-        (
-            $"cek-resi-{courier}-{awb}", async (_) => {
+        var result = await _cacheService.GetOrSetAsync(
+            cacheKey: $"cek-resi-{courier}-{awb}",
+            staleAfter: "1h",
+            expireAfter: "1d",
+            action: async () => {
                 var response = await CekResiRawCoreAsync(courier, awb);
 
                 var status = response.Data?.Summary?.Status;
@@ -199,8 +201,7 @@ public class BinderByteService
                 }
 
                 return response;
-            },
-            new CacheSettings(TimeSpan.FromDays(1), TimeSpan.FromDays(1))
+            }
         );
 
         return result;

@@ -1282,9 +1282,13 @@ public class TelegramService
         DateTime scheduleDeleteAt = default,
         bool includeSenderMessage = false,
         MessageFlag messageFlag = default,
-        bool preventDuplicateSend = false
+        bool preventDuplicateSend = false,
+        bool reappendText = false
     )
     {
+        if (reappendText)
+            AppendText = AppendText.RemoveLastLines(1);
+
         if (string.IsNullOrEmpty(AppendText))
         {
             Log.Information("First, Sending new message to ChatId: {ChatId}", ChatId);

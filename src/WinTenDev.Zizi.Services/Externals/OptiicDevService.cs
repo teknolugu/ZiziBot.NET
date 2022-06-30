@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Threading.Tasks;
-using CacheTower;
 using Flurl.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using WinTenDev.Zizi.Models.Configs;
 using WinTenDev.Zizi.Models.Types;
+using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Utils;
 
 namespace WinTenDev.Zizi.Services.Externals;
@@ -13,17 +13,17 @@ namespace WinTenDev.Zizi.Services.Externals;
 public class OptiicDevService
 {
     private readonly ILogger<OptiicDevService> _logger;
-    private readonly CacheStack _cacheStack;
+    private readonly CacheService _cacheService;
     private readonly OptiicDevConfig _optiicDevConfig;
 
     public OptiicDevService(
         ILogger<OptiicDevService> logger,
         IOptionsSnapshot<OptiicDevConfig> optiicDevConfig,
-        CacheStack cacheStack
+        CacheService cacheService
     )
     {
         _logger = logger;
-        _cacheStack = cacheStack;
+        _cacheService = cacheService;
         _optiicDevConfig = optiicDevConfig.Value;
     }
 
@@ -44,9 +44,11 @@ public class OptiicDevService
 
         var randomApiKey = apiKeys.RandomElement();
 
-        var json = await _cacheStack.GetOrSetAsync<OptiicDevOcr>(
+        var json = await _cacheService.GetOrSetAsync(
             cacheKey: $"ocr-{filePath}",
-            getter: async (_) => {
+            expireAfter: "30d",
+            staleAfter: "1d",
+            action: async () => {
                 var response = await new FlurlClient("https://api.optiic.dev")
                     .Request("process")
                     .PostMultipartAsync(
@@ -57,8 +59,7 @@ public class OptiicDevService
 
                 var json = await response.GetJsonAsync<OptiicDevOcr>();
                 return json;
-            },
-            settings: new CacheSettings(TimeSpan.FromDays(30))
+            }
         );
 
         return json;

@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Threading.Tasks;
-using CacheTower;
 using Flurl;
 using Flurl.Http;
 using Microsoft.Extensions.Logging;
 using WinTenDev.Zizi.Models.Vendors.FathimahApi;
+using WinTenDev.Zizi.Services.Internals;
 
 namespace WinTenDev.Zizi.Services.Externals
 {
@@ -12,15 +12,15 @@ namespace WinTenDev.Zizi.Services.Externals
     {
         private const string BaseUrl = "https://api.banghasan.com";
         private readonly ILogger<FathimahApiService> _logger;
-        private readonly CacheStack _cacheStack;
+        private readonly CacheService _cacheService;
 
         public FathimahApiService(
             ILogger<FathimahApiService> logger,
-            CacheStack cacheStack
+            CacheService cacheService
         )
         {
             _logger = logger;
-            _cacheStack = cacheStack;
+            _cacheService = cacheService;
         }
 
         public async Task<CityResponse> GetAllCityAsync()
@@ -47,16 +47,17 @@ namespace WinTenDev.Zizi.Services.Externals
                 cacheKey
             );
 
-            var apis = await _cacheStack.GetOrSetAsync<ShalatTimeResponse>(
+            var apis = await _cacheService.GetOrSetAsync(
                 cacheKey: cacheKey,
-                async (_) => {
+                expireAfter: "1d",
+                staleAfter: "1h",
+                action: async () => {
                     var apis = await BaseUrl
                         .AppendPathSegment($"sholat/format/json/jadwal/kota/{cityId}/tanggal/{dateStr}")
                         .GetJsonAsync<ShalatTimeResponse>();
 
                     return apis;
-                },
-                new CacheSettings(TimeSpan.FromDays(1))
+                }
             );
 
             return apis;

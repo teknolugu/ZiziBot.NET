@@ -3,13 +3,13 @@ using Telegram.Bot.Framework.Abstractions;
 using WinTenDev.Zizi.Services.Extensions;
 using WinTenDev.Zizi.Services.Telegram;
 
-namespace WinTenDev.ZiziBot.AppHost.Handlers.Commands.Core;
+namespace WinTenDev.ZiziBot.AppHost.Handlers.Commands.ForceSubscription;
 
-public class InfoCommand : CommandBase
+internal class ForceSubListCommand : CommandBase
 {
     private readonly TelegramService _telegramService;
 
-    public InfoCommand(TelegramService telegramService)
+    public ForceSubListCommand(TelegramService telegramService)
     {
         _telegramService = telegramService;
     }
@@ -20,6 +20,8 @@ public class InfoCommand : CommandBase
         string[] args
     )
     {
-        await _telegramService.GetAppHostInfoAsync();
+        await _telegramService.AddUpdateContext(context);
+
+        await _telegramService.GetSubsListChannelAsync();
     }
 }
