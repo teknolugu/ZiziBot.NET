@@ -21,12 +21,14 @@ namespace WinTenDev.Zizi.Services.Internals;
 
 public class QueryService
 {
+    private readonly HangfireConfig _hangfireConfig;
     private readonly ILogger<QueryService> _logger;
     private readonly BotService _botService;
     private readonly ConnectionStrings _connectionStrings;
 
     public QueryService(
         IOptionsSnapshot<ConnectionStrings> connectionStrings,
+        IOptionsSnapshot<HangfireConfig> hangfireConfig,
         ILogger<QueryService> logger,
         BotService botService
     )
@@ -34,6 +36,7 @@ public class QueryService
         _logger = logger;
         _botService = botService;
         _connectionStrings = connectionStrings.Value;
+        _hangfireConfig = hangfireConfig.Value;
     }
 
     public QueryFactory CreateMySqlFactory()
@@ -53,6 +56,15 @@ public class QueryService
     public MySqlConnection CreateMysqlConnectionCore()
     {
         var mysqlConn = _connectionStrings.MySql;
+
+        var connection = new MySqlConnection(mysqlConn);
+
+        return connection;
+    }
+
+    public MySqlConnection GetHangfireMysqlConnectionCore()
+    {
+        var mysqlConn = _hangfireConfig.MysqlConnection;
 
         var connection = new MySqlConnection(mysqlConn);
 
