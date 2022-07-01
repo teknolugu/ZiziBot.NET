@@ -1,11 +1,6 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Linq;
-using System.Net;
-using System.Reflection;
 using System.Threading.Tasks;
-using Humanizer;
-using Humanizer.Localisation;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using SerilogTimings;
@@ -13,6 +8,7 @@ using Telegram.Bot;
 using Telegram.Bot.Types.ReplyMarkups;
 using WinTenDev.Zizi.Models.Enums;
 using WinTenDev.Zizi.Models.Types;
+using WinTenDev.Zizi.Services.NMemory;
 using WinTenDev.Zizi.Services.Starts;
 using WinTenDev.Zizi.Services.Telegram;
 using WinTenDev.Zizi.Utils;
@@ -29,6 +25,30 @@ public static class TelegramServiceCoreExtension
         var resolvedService = serviceProvider.GetRequiredService<TService>();
 
         return resolvedService;
+    }
+
+    public static void ResetCooldownByFeatureName(
+        this TelegramService telegramService,
+        string featureName = null
+    )
+    {
+        var rateLimitingInMemory = telegramService.GetRequiredService<RateLimitingInMemory>();
+
+        var commandName = featureName ?? telegramService.GetCommand();
+
+        rateLimitingInMemory.FeatureCooldowns.Delete(
+            new FeatureCooldown()
+            {
+                FeatureName = commandName,
+            }
+        );
+
+        rateLimitingInMemory.FeatureCooldowns.Delete(
+            new FeatureCooldown()
+            {
+                LastUsed = DateTime.UtcNow.AddMonths(-1)
+            }
+        );
     }
 
     public static async Task SendStartAsync(this TelegramService telegramService)
@@ -295,21 +315,21 @@ public static class TelegramServiceCoreExtension
         }
     }
 
-	public static async Task GetAppHostInfoAsync(this TelegramService telegramService)
-	{
-		var featureConfig = await telegramService.GetFeatureConfig();
+    public static async Task GetAppHostInfoAsync(this TelegramService telegramService)
+    {
+        var featureConfig = await telegramService.GetFeatureConfig();
 
-		if (!featureConfig.NextHandler)
-		{
-			return;
-		}
+        if (!featureConfig.NextHandler)
+        {
+            return;
+        }
 
-		var appHostInfo = AppHostUtil.GetAppHostInfo(includeUptime: true);
+        var appHostInfo = AppHostUtil.GetAppHostInfo(includeUptime: true);
 
-		await telegramService.SendTextMessageAsync(
-			sendText: appHostInfo,
-			includeSenderMessage: true,
-			scheduleDeleteAt: DateTime.UtcNow.AddMinutes(10)
-		);
-	}
+        await telegramService.SendTextMessageAsync(
+            sendText: appHostInfo,
+            includeSenderMessage: true,
+            scheduleDeleteAt: DateTime.UtcNow.AddMinutes(10)
+        );
+    }
 }
