@@ -35,8 +35,6 @@ public class Startup
         services.AddExceptionless();
         services.AddHttpContextAccessor();
 
-        services.AddFluentMigration();
-
         services.AddEasyCachingSqlite();
         services.AddCacheTower();
 
@@ -44,6 +42,8 @@ public class Startup
         services.AddSqlKataMysql();
         services.AddClickHouse();
         services.AddLiteDb();
+
+        // services.AddFluentMigration();
 
         services.AddWtTelegramApi();
 

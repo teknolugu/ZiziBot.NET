@@ -14,17 +14,26 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Serilog;
 using WinTenDev.Zizi.Models.Configs;
+using WinTenDev.Zizi.Utils;
 
 namespace WinTenDev.Zizi.DbMigrations.Extensions;
 
 public static class FluentMigrationExtension
 {
-    public static IServiceCollection AddFluentMigration(this IServiceCollection services)
+    public static IServiceCollection AddFluentMigration(
+        this IServiceCollection services,
+        string connectionString = null
+    )
     {
-        var connectionStrings = services.BuildServiceProvider()
-            .GetRequiredService<IOptionsSnapshot<ConnectionStrings>>().Value;
+        var connStr = connectionString;
+        if (connectionString == null)
+        {
 
-        var connStr = connectionStrings.MySql;
+            var serviceProvider = services.BuildServiceProvider();
+            var connectionStrings = serviceProvider.GetRequiredService<IOptionsSnapshot<ConnectionStrings>>().Value;
+
+            connStr = connectionStrings.MySql;
+        }
 
         services
             .AddFluentMigratorCore()
@@ -33,8 +42,7 @@ public static class FluentMigrationExtension
                 rb => rb
                     .AddMySql5()
                     .WithGlobalConnectionString(connStr)
-                    .ScanIn(Assembly.GetExecutingAssembly())
-                    .For.All()
+                    .ScanIn(Assembly.GetAssembly(typeof(FluentMigrationExtension))).For.All()
             )
             .AddLogging
             (
@@ -54,11 +62,14 @@ public static class FluentMigrationExtension
 
     public static IApplicationBuilder UseFluentMigration(this IApplicationBuilder app)
     {
-        var services = app.ApplicationServices;
-        var scopes = services.CreateScope();
-        var runner = scopes.ServiceProvider.GetRequiredService<IMigrationRunner>();
-
         Log.Information("Running DB migration..");
+
+        var connectionStrings = app.GetRequiredService<IOptionsSnapshot<ConnectionStrings>>().Value;
+        var services = new ServiceCollection();
+
+        services.AddFluentMigration(connectionStrings.MySql);
+
+        var runner = services.GetRequiredService<IMigrationRunner>();
 
         runner.ListMigrations();
 
