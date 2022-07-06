@@ -198,6 +198,52 @@ public class WTelegramApiService
         return channelParticipants;
     }
 
+    public async Task<List<Message>> GetAllMessagesAsync(
+        long chatId,
+        int startMessageId,
+        int endMessageId,
+        long userId = -1
+    )
+    {
+        var peer = await GetChannel(chatId);
+
+        var listMessage = new List<Message>();
+
+        for (var offsetId = 0;;)
+        {
+            var messages = await _client.Messages_GetHistory(
+                peer,
+                offsetId,
+                min_id: endMessageId - 1,
+                max_id: startMessageId
+            );
+
+            if (messages.Messages.Length == 0) break;
+
+            foreach (var msgBase in messages.Messages)
+            {
+                if (msgBase is not Message msg) continue;
+
+                listMessage.Add(msg);
+            }
+
+            offsetId = messages.Messages[^1].ID;
+
+            await Task.Delay(10);
+
+            // if (listMessage.Count > limit)
+            // {
+            //     break;
+            // }
+        }
+
+        if (userId == -1) return listMessage;
+
+        var filteredUser = listMessage.Where(x => x.From.ID == userId).ToList();
+
+        return filteredUser;
+    }
+
     public async Task<List<int>> GetMessagesIdByUserId(
         long chatId,
         long userId,
@@ -270,6 +316,27 @@ public class WTelegramApiService
                 chatId
             );
         }
+    }
+
+    public async Task<int> DeleteMessagesAsync(
+        long chatId,
+        List<int> messageIds
+    )
+    {
+        var affectedCount = 0;
+        var channel = await GetChannel(chatId);
+
+        await messageIds.Chunk(100)
+            .AsyncParallelForEach(
+                maxDegreeOfParallelism: 20,
+                body: async ints => {
+                    var delete = await _client.Channels_DeleteMessages(channel, ints.ToArray());
+
+                    affectedCount += delete.pts_count;
+                }
+            );
+
+        return messageIds.Count;
     }
 
     public async Task<Contacts_ResolvedPeer> FindPeerByUsername(string username)

@@ -123,6 +123,8 @@ public static class CommandBuilderExtension
                                         .UseCommand<PinCommand>("pin")
                                         .UseCommand<PredictCommand>("predict")
                                         .UseCommand<PromoteCommand>("promote")
+                                        .UseCommand<PurgeCommand>("purge")
+                                        .UseCommand<PurgeCommand>("purgeany")
                                         .UseCommand<QrCommand>("qr")
                                         .UseCommand<RandomCommand>("ran")
                                         .UseCommand<ReportCommand>("report")

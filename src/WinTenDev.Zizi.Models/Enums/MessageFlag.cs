@@ -25,6 +25,8 @@ public enum MessageFlag
     Photo,
     Pin,
     Ping,
+    Purge,
+    PurgeAny,
     Qr,
     ReadQr,
     RssCtl,

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using MoreLinq;
@@ -10,6 +11,7 @@ using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using WinTenDev.Zizi.Models.Dto;
 using WinTenDev.Zizi.Models.Enums;
+using WinTenDev.Zizi.Models.Enums.Languages;
 using WinTenDev.Zizi.Models.Types;
 using WinTenDev.Zizi.Services.Internals;
 using WinTenDev.Zizi.Services.Telegram;
@@ -390,6 +392,128 @@ public static class TelegramServiceMessageExtension
             replyMarkup: inlineKeyboard,
             scheduleDeleteAt: DateTime.UtcNow.AddMinutes(5),
             preventDuplicateSend: true
+        );
+    }
+
+    public static async Task PurgeMessageAsync(this TelegramService telegramService)
+    {
+        if (!await telegramService.CheckUserPermission())
+        {
+            Log.Information("User does not have permission to purge message");
+            return;
+        }
+
+        var chatId = telegramService.ChatId;
+        var userId = telegramService.FromId;
+        var wTelegramService = telegramService.GetRequiredService<WTelegramApiService>();
+
+        if (!await telegramService.CheckProbeRequirementAsync(true)) return;
+
+        var replyToMessage = telegramService.ReplyToMessage;
+
+        if (replyToMessage == null)
+        {
+            await telegramService.SendTextMessageAsync(
+                enumLang: Purge.ReplyToPurge,
+                scheduleDeleteAt: DateTime.UtcNow.AddMinutes(1),
+                includeSenderMessage: true
+            );
+
+            return;
+        }
+
+        var startMessageId = telegramService.Message.MessageId;
+        var endMessageId = replyToMessage.MessageId;
+        var replyToUserId = replyToMessage.From.Id;
+        var targetUserId = telegramService.IsCommand("/purge") ? replyToUserId : -1;
+        var featureName = telegramService.IsCommand("/purge") ? "Purge Message" : "Purge Message Any";
+        var onProgress = await telegramService.GetLocalizationString(Purge.OnProgress);
+
+        var confirmationMessage = await telegramService.GetLocalizationString(Purge.ConfirmationMessage);
+
+        if (replyToMessage.Date < DateTime.UtcNow.AddDays(-3))
+        {
+            await telegramService.SendTextMessageAsync(
+                enumLang: Purge.MaxDateExceed,
+                replyToMsgId: replyToMessage.MessageId,
+                scheduleDeleteAt: DateTime.UtcNow.AddMinutes(1),
+                includeSenderMessage: true
+            );
+
+            return;
+        }
+
+        var htmlMessage = HtmlMessage.Empty
+            .BoldBr($"🧹 {featureName}")
+            .TextBr(onProgress);
+        await telegramService.AppendTextAsync(htmlMessage.ToString());
+
+        var messages = await wTelegramService.GetAllMessagesAsync(
+            chatId: chatId,
+            startMessageId: startMessageId,
+            endMessageId: endMessageId,
+            userId: targetUserId
+        );
+
+        var messageIds = messages.Select(message => message.ID).ToList();
+
+        startMessageId = messageIds.FirstOrDefault();
+        endMessageId = messageIds.LastOrDefault();
+
+        var messageLinkStart = replyToMessage.GetMessageLink(startMessageId);
+        var messageLinkEnd = replyToMessage.GetMessageLink(endMessageId);
+
+        var placeHolders = new List<(string placeholder, string value)>()
+        {
+            ("StartMessageLink", messageLinkStart),
+            ("EndMessageLink", messageLinkEnd)
+        };
+
+        var featureDescription = telegramService.IsCommand("/purge")
+            ? await telegramService.GetLocalizationString(Purge.PurgeDescription, placeHolders)
+            : await telegramService.GetLocalizationString(Purge.PurgeAnyDescription, placeHolders);
+
+        var inlineKeyboard = new InlineKeyboardMarkup(
+            new[]
+            {
+                new[]
+                {
+                    InlineKeyboardButton.WithUrl("🔔 Pesan awal", messageLinkStart),
+                    InlineKeyboardButton.WithUrl("🔕 Pesan akhir", messageLinkEnd)
+                },
+                new[]
+                {
+                    InlineKeyboardButton.WithCallbackData("✅ Jalankan", $"delete-message purge {startMessageId} {endMessageId} {targetUserId}"),
+                    InlineKeyboardButton.WithCallbackData("❌ Tutup", $"delete-message current-message")
+                }
+            }
+        );
+
+        // await messageIds.AsyncParallelForEach(
+        //     async i => {
+        //         await telegramService.DeleteAsync(i);
+        //     }
+        // );
+
+        htmlMessage.PopLine(2);
+
+        if (targetUserId != -1)
+        {
+            htmlMessage.Bold("UserId: ").CodeBr(targetUserId.ToString());
+        }
+
+        htmlMessage
+            // .Bold("Pesan awal: ").CodeBr(startMessageId.ToString())
+            // .Bold("Pesan akhir: ").CodeBr(endMessageId.ToString())
+            .Bold("Jumlah: ").CodeBr(messageIds.Count().ToString())
+            .Text(featureDescription).Text(" ")
+            .Text(confirmationMessage);
+
+        await telegramService.EditMessageTextAsync(
+            sendText: htmlMessage.ToString(),
+            inlineKeyboard,
+            scheduleDeleteAt: DateTime.UtcNow.AddMinutes(5),
+            includeSenderMessage: true
         );
     }
 

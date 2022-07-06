@@ -88,10 +88,13 @@ public static class MessageUtil
         return text.Trim();
     }
 
-    public static string GetMessageLink(this Message message)
+    public static string GetMessageLink(
+        this Message message,
+        int replaceMessageId = -1
+    )
     {
         var chatUsername = message.Chat.Username;
-        var messageId = message.MessageId;
+        var messageId = replaceMessageId != -1 ? replaceMessageId : message.MessageId;
 
         var messageLink = $"https://t.me/{chatUsername}/{messageId}";
 

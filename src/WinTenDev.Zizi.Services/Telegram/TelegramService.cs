@@ -1322,6 +1322,33 @@ public class TelegramService
         }
     }
 
+    public async Task SendTextMessageAsync(
+        Enum enumLang,
+        IReplyMarkup replyMarkup = null,
+        int replyToMsgId = -1,
+        ChatId customChatId = null,
+        bool disableWebPreview = false,
+        DateTime scheduleDeleteAt = default,
+        bool includeSenderMessage = false,
+        MessageFlag messageFlag = default,
+        bool preventDuplicateSend = false
+    )
+    {
+        var message = await GetLocalizationString(enumLang);
+
+        await SendTextMessageAsync(
+            message,
+            replyMarkup,
+            replyToMsgId,
+            customChatId,
+            disableWebPreview,
+            scheduleDeleteAt,
+            includeSenderMessage,
+            messageFlag,
+            preventDuplicateSend
+        );
+    }
+
     public async Task DeleteSenderMessageAsync()
     {
         var messageId = MessageOrEdited.MessageId;
