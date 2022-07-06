@@ -51,6 +51,53 @@ public static class TelegramServiceCoreExtension
         );
     }
 
+    public static async Task<bool> CheckProbeRequirementAsync(
+        this TelegramService telegramService,
+        bool checkAdmin = false
+    )
+    {
+        var chatId = telegramService.ChatId;
+        var wTelegramApiService = telegramService.GetRequiredService<WTelegramApiService>();
+
+        if (checkAdmin)
+        {
+            var isProbeAdmin = await wTelegramApiService.IsProbeAdminAsync(chatId);
+            if (isProbeAdmin) return true;
+        }
+        else
+        {
+            var isProbeHere = await wTelegramApiService.IsProbeHereAsync(chatId);
+            if (isProbeHere) return true;
+        }
+
+        var probeInfo = await wTelegramApiService.GetMeAsync();
+        var userId = probeInfo.full_user.id;
+        var userName = probeInfo.users.FirstOrDefault(user => user.Key == userId).Value;
+
+        var htmlMessage = HtmlMessage.Empty;
+
+        htmlMessage.Text(
+                checkAdmin
+                    ? "Untuk dapat bekerja, ZiziBot membutuhkan Probe sebagai pembantu dalam menjalankan sebuah fitur. "
+                    : "Karena ini bukan Grup Publik, ZiziBot membutuhkan Probe sebagai pembantu dalam menjalankan sebuah fitur. "
+            )
+            .Text("Adapun Probe untuk ZiziBot adalah ")
+            .User(userId, userName.GetFullName()).Text(". ")
+            .Text(
+                checkAdmin
+                    ? "Silakan tambahkan Pengguna tersebut ke Grup Anda dan jadikan sebagai Admin."
+                    : "Silakan tambahkan Pengguna tersebut ke Grup Anda."
+            );
+
+        await telegramService.SendTextMessageAsync(
+            sendText: htmlMessage.ToString(),
+            scheduleDeleteAt: DateTime.UtcNow.AddMinutes(1),
+            includeSenderMessage: true
+        );
+
+        return false;
+    }
+
     public static async Task SendStartAsync(this TelegramService telegramService)
     {
         var enginesConfig = telegramService.EnginesConfig;

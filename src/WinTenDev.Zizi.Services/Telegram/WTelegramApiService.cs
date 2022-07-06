@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using TL;
 using WinTenDev.Zizi.Models.Telegram;
 using WinTenDev.Zizi.Services.Internals;
+using WinTenDev.Zizi.Utils;
 using WinTenDev.Zizi.Utils.Telegram;
 using WTelegram;
 
@@ -42,7 +43,7 @@ public class WTelegramApiService
             cacheKey: "tdlib-get-channel-" + channelId,
             staleAfter: "1m",
             action: async () => {
-                var chats = await _client.Messages_GetAllChats(null);
+                var chats = await _client.Messages_GetAllChats();
                 var channel = (Channel) chats.chats.Values.FirstOrDefault(chat => chat.ID == channelId);
 
                 return channel;
@@ -84,21 +85,34 @@ public class WTelegramApiService
 
     public async Task<bool> IsProbeAdminAsync(long chatId)
     {
-        var getMe = await GetMeAsync();
-        var meId = getMe.full_user.id;
+        try
+        {
+            var getMe = await GetMeAsync();
+            var meId = getMe.full_user.id;
 
-        var adminList = await GetChatAdministratorsCore(chatId);
-        var isCreator = adminList.ParticipantCreator.users.Any(pair => pair.Value.id == meId);
-        var isAdmin = adminList.ParticipantAdmin.users.Any(pair => pair.Value.id == meId);
-        var isCreatorOrAdmin = isCreator || isAdmin;
+            var adminList = await GetChatAdministratorsCore(chatId);
+            var isCreator = adminList.ParticipantCreator.users.Any(pair => pair.Value.id == meId);
+            var isAdmin = adminList.ParticipantAdmin.users.Any(pair => pair.Value.id == meId);
+            var isCreatorOrAdmin = isCreator || isAdmin;
 
-        _logger.LogDebug(
-            "User Probe is Admin at {ChatId}? {IsAdmin}",
-            chatId,
-            isCreatorOrAdmin
-        );
+            _logger.LogDebug(
+                "User Probe is Admin at {ChatId}? {IsAdmin}",
+                chatId,
+                isCreatorOrAdmin
+            );
 
-        return isCreatorOrAdmin;
+            return isCreatorOrAdmin;
+        }
+        catch (Exception exception)
+        {
+            _logger.LogWarning(
+                exception,
+                "Failed to check if User Probe is Admin at {ChatId}",
+                chatId
+            );
+
+            return false;
+        }
     }
 
     public async Task<Channels_ChannelParticipants> GetAllParticipants(
