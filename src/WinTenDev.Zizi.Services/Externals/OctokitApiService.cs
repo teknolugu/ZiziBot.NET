@@ -148,7 +148,7 @@ public class OctokitApiService
                 var assetSize = asset.Size.ToInt64().SizeFormat();
 
                 htmlMessage.Text($"{index + 1}. ").Url(urlDoc, asset.Name)
-                    .Text($"\n└ ⬇ {assetSize} - {asset.DownloadCount} downloads")
+                    .Text($"\n└ ⬇ {assetSize} - {asset.CreatedAt}")
                     .Br();
             }
         );
