@@ -1,14 +1,18 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Flurl.Http;
 using Serilog;
+using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
+using WinTenDev.Zizi.Models.Dto;
 using WinTenDev.Zizi.Models.Enums;
 using WinTenDev.Zizi.Models.Enums.Languages;
 using WinTenDev.Zizi.Models.Exceptions;
 using WinTenDev.Zizi.Models.Types;
+using WinTenDev.Zizi.Services.Externals;
 using WinTenDev.Zizi.Services.Telegram;
 using WinTenDev.Zizi.Utils;
 using WinTenDev.Zizi.Utils.IO;
@@ -90,7 +94,7 @@ public static class TelegramServiceAdditionalExtension
 
         if (cloneText.IsNullOrEmpty())
         {
-            var sendTextTr = await telegramService.GetLocalization(Qr.MissingTextOrEmpty);
+            var sendTextTr = await telegramService.GetLocalizationString(Qr.MissingTextOrEmpty);
 
             await telegramService.SendTextMessageAsync(
                 sendText: sendTextTr,
@@ -106,7 +110,7 @@ public static class TelegramServiceAdditionalExtension
         {
             var replyToMessage = telegramService.ReplyToMessage;
 
-            var btnCaptionTr = await telegramService.GetLocalization(Qr.SourceButtonCaption);
+            var btnCaptionTr = await telegramService.GetLocalizationString(Qr.SourceButtonCaption);
 
             keyboard = new InlineKeyboardMarkup(
                 InlineKeyboardButton.WithUrl(btnCaptionTr, replyToMessage.GetMessageLink())

@@ -41,7 +41,7 @@ public static class TelegramServiceNotesExtension
 
         if (filteredNotes.Count > 0)
         {
-            var notesTitleTr = await telegramService.GetLocalization(Notes.Title, placeHolders);
+            var notesTitleTr = await telegramService.GetLocalizationString(Notes.Title, placeHolders);
             htmlMessage.Bold(notesTitleTr).Br().Br();
 
             filteredNotes.ForEach(
@@ -58,7 +58,7 @@ public static class TelegramServiceNotesExtension
         }
         else
         {
-            var noNotesTr = await telegramService.GetLocalization(Notes.NoNotes, placeHolders);
+            var noNotesTr = await telegramService.GetLocalizationString(Notes.NoNotes, placeHolders);
             htmlMessage.Text(noNotesTr);
         }
 

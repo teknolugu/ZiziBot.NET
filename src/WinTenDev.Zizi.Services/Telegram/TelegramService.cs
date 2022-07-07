@@ -470,7 +470,7 @@ public class TelegramService
         return GetCommand() == command;
     }
 
-    public async Task<string> GetLocalization(
+    public async Task<string> GetLocalizationString(
         Enum value,
         IEnumerable<(string placeholder, string value)> placeHolders = null
     )
