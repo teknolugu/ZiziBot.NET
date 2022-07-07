@@ -600,7 +600,7 @@ public static class TelegramServiceMemberExtension
                 .Bold("Recent Online: ").CodeBr(lastActiveOnline.Count.ToString())
                 .Bold("Active recent: ").CodeBr(lastRecently.Count.ToString())
                 .Bold("Last week: ").CodeBr(lastActiveWeek.Count.ToString())
-                .Bold("Last month: ").CodeBr(lastActiveMonth.Count().ToString())
+                .Bold("Last month: ").CodeBr(lastActiveMonth.Count.ToString())
                 .Bold("Deleted accounts: ").CodeBr(deletedUsers.CountOrZero().ToString())
                 .Bold("Bots: ").CodeBr(allBots.Count.ToString())
                 .Bold("Banned: ").CodeBr(bannedUsers.Count.ToString());
@@ -781,6 +781,13 @@ public static class TelegramServiceMemberExtension
                 try
                 {
                     var targetChatId = allEntityValues?.ElementAtOrDefault(index) ?? "";
+
+                    if (!targetChatId.StartsWith("@"))
+                    {
+                        Log.Information("Seem {Username} is not a valid Username", targetChatId);
+                        return;
+                    }
+
                     var resolvedPeer = await wTelegramApiService.FindPeerByUsername(targetChatId);
 
                     if (resolvedPeer?.User == null)
