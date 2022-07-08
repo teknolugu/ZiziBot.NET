@@ -2,8 +2,6 @@
 using System.Threading.Tasks;
 using Telegram.Bot.Framework.Abstractions;
 using Telegram.Bot.Types.ReplyMarkups;
-using WinTenDev.Zizi.Services.Telegram;
-using WinTenDev.Zizi.Utils.Telegram;
 
 namespace WinTenDev.ZiziBot.AppHost.Handlers.Commands.Group;
 

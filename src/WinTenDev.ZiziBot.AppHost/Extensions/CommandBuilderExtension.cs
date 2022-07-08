@@ -1,23 +1,6 @@
 ﻿using Serilog;
 using Telegram.Bot.Framework;
 using Telegram.Bot.Framework.Abstractions;
-using WinTenDev.ZiziBot.AppHost.Handlers;
-using WinTenDev.ZiziBot.AppHost.Handlers.Commands.Additional;
-using WinTenDev.ZiziBot.AppHost.Handlers.Commands.BlackLists;
-using WinTenDev.ZiziBot.AppHost.Handlers.Commands.Chat;
-using WinTenDev.ZiziBot.AppHost.Handlers.Commands.Core;
-using WinTenDev.ZiziBot.AppHost.Handlers.Commands.ForceSubscription;
-using WinTenDev.ZiziBot.AppHost.Handlers.Commands.GlobalBan;
-using WinTenDev.ZiziBot.AppHost.Handlers.Commands.Group;
-using WinTenDev.ZiziBot.AppHost.Handlers.Commands.Metrics;
-using WinTenDev.ZiziBot.AppHost.Handlers.Commands.Notes;
-using WinTenDev.ZiziBot.AppHost.Handlers.Commands.Rss;
-using WinTenDev.ZiziBot.AppHost.Handlers.Commands.ShalatTime;
-using WinTenDev.ZiziBot.AppHost.Handlers.Commands.SpamLearning;
-using WinTenDev.ZiziBot.AppHost.Handlers.Commands.Spelling;
-using WinTenDev.ZiziBot.AppHost.Handlers.Commands.Tags;
-using WinTenDev.ZiziBot.AppHost.Handlers.Commands.Welcome;
-using WinTenDev.ZiziBot.AppHost.Handlers.Commands.Words;
 
 namespace WinTenDev.ZiziBot.AppHost.Extensions;
 

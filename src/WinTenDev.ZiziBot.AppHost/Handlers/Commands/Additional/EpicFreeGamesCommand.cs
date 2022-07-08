@@ -1,14 +1,5 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Telegram.Bot.Framework.Abstractions;
-using Telegram.Bot.Types;
-using Telegram.Bot.Types.Enums;
-using WinTenDev.Zizi.Models.Dto;
-using WinTenDev.Zizi.Services.Extensions;
-using WinTenDev.Zizi.Services.Externals;
-using WinTenDev.Zizi.Services.Telegram;
-using WinTenDev.Zizi.Utils;
 
 namespace WinTenDev.ZiziBot.AppHost.Handlers.Commands.Additional;
 

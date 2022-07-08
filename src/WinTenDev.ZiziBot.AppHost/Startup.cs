@@ -6,11 +6,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
-using WinTenDev.Zizi.DbMigrations.Extensions;
-using WinTenDev.Zizi.Services.Extensions;
-using WinTenDev.Zizi.Utils;
-using WinTenDev.Zizi.Utils.Extensions;
-using WinTenDev.ZiziBot.AppHost.Extensions;
 
 namespace WinTenDev.ZiziBot.AppHost;
 

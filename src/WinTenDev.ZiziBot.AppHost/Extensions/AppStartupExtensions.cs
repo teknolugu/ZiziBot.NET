@@ -13,14 +13,6 @@ using Serilog;
 using Telegram.Bot;
 using Telegram.Bot.Framework;
 using Telegram.Bot.Framework.Extensions;
-using WinTenDev.Zizi.Models.Bots.Options;
-using WinTenDev.Zizi.Models.Configs;
-using WinTenDev.Zizi.Models.Enums;
-using WinTenDev.Zizi.Services.Extensions;
-using WinTenDev.Zizi.Services.Externals;
-using WinTenDev.Zizi.Services.Internals;
-using WinTenDev.Zizi.Services.Telegram;
-using WinTenDev.Zizi.Utils;
 
 namespace WinTenDev.ZiziBot.AppHost.Extensions;
 

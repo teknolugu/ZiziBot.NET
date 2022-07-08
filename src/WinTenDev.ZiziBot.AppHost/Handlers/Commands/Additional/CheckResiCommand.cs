@@ -3,10 +3,6 @@ using System.Text;
 using System.Threading.Tasks;
 using Serilog;
 using Telegram.Bot.Framework.Abstractions;
-using WinTenDev.Zizi.Services.Externals;
-using WinTenDev.Zizi.Services.Telegram;
-using WinTenDev.Zizi.Utils;
-using WinTenDev.Zizi.Utils.Text;
 
 namespace WinTenDev.ZiziBot.AppHost.Handlers.Commands.Additional;
 

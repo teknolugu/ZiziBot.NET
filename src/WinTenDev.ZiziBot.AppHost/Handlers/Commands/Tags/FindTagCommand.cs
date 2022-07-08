@@ -4,11 +4,6 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using SerilogTimings;
 using Telegram.Bot.Framework.Abstractions;
-using WinTenDev.Zizi.Models.Tables;
-using WinTenDev.Zizi.Services.Internals;
-using WinTenDev.Zizi.Services.Telegram;
-using WinTenDev.Zizi.Utils;
-using WinTenDev.Zizi.Utils.Telegram;
 
 namespace WinTenDev.ZiziBot.AppHost.Handlers.Commands.Tags;
 
