@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Flurl.Http;
 using Serilog;
-using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using WinTenDev.Zizi.Models.Dto;
@@ -246,6 +244,30 @@ public static class TelegramServiceAdditionalExtension
         catch (Exception exception)
         {
             throw new AdvancedApiRequestException($"Error when send Warning compress image at ChatId: {chatId}", exception);
+        }
+    }
+
+    public static async Task GetEpicGamesFreeAsync(this TelegramService telegramService)
+    {
+        var epicGamesService = telegramService.GetRequiredService<EpicGamesService>();
+
+        var productSlug = telegramService.GetCommandParamAt<string>(0);
+
+        if (productSlug.IsNullOrEmpty())
+        {
+            var freeGamesOffered = await epicGamesService.GetFreeGamesOffered();
+            await telegramService.SendMediaGroupAsync(
+                new MessageResponseDto()
+                {
+                    ListAlbum = freeGamesOffered,
+                    ScheduleDeleteAt = DateTime.UtcNow.AddMinutes(1),
+                    IncludeSenderForDelete = true
+                }
+            );
+        }
+        else
+        {
+            var productDetail = await epicGamesService.GetGameDetail(productSlug);
         }
     }
 }

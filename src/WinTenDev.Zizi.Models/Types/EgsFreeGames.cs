@@ -11,8 +11,11 @@ public class EgsFreeGameParsed
     public string ProductUrl { get; set; }
     public string ProductTitle { get; set; }
     public string Text { get; set; }
+    public DateTimeOffset? StartOfferDate { get; set; }
+    public DateTimeOffset? EndOfferDate { get; set; }
     public string Detail { get; set; }
     public Uri Images { get; set; }
+    public string ProductSlug { get; set; }
 }
 
 public class EgsFreeGame
@@ -31,7 +34,7 @@ public class EgsFreeGameRaw
     public Extensions Extensions { get; set; }
 }
 
-public class Data
+public partial class Data
 {
     [JsonProperty("Catalog", NullValueHandling = NullValueHandling.Ignore)]
     public Catalog Catalog { get; set; }
