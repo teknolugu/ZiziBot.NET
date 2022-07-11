@@ -831,7 +831,20 @@ public static class TelegramServiceMemberExtension
 
         if (!telegramService.IsFromSudo)
         {
-            return;
+            var requirementResult = await telegramService.CheckGlobalBanAdminAsync();
+            if (!requirementResult.IsMeet)
+            {
+                var messageText = "Tidak dapat melakukan Global admin." +
+                                  "\nAlasan: " +
+                                  requirementResult.Message;
+
+                await telegramService.SendTextMessageAsync(
+                    sendText: messageText,
+                    scheduleDeleteAt: DateTime.UtcNow.AddMinutes(2)
+                );
+
+                return;
+            }
         }
 
         if (telegramService.ReplyToMessage != null)
@@ -946,6 +959,60 @@ public static class TelegramServiceMemberExtension
             scheduleDeleteAt: DateTime.UtcNow.AddMinutes(2),
             includeSenderMessage: true
         );
+    }
+
+    public static async Task<GlobalBanRequirementResult> CheckGlobalBanAdminAsync(this TelegramService telegramService)
+    {
+        var requirementResult = new GlobalBanRequirementResult();
+        var userId = telegramService.FromId;
+        var fromId = telegramService.FromId;
+        var chatId = telegramService.ChatId;
+
+        if (telegramService.CheckFromAnonymous())
+        {
+            requirementResult.Message = "Anonymous Admin tidak dapat melakukan Global Ban";
+            requirementResult.IsMeet = false;
+
+            return requirementResult;
+        }
+
+        if (!await telegramService.CheckFromAdmin())
+        {
+            requirementResult.Message = "Hanya admin Grup yang dapat melakukan Global Ban";
+            requirementResult.IsMeet = false;
+
+            return requirementResult;
+        }
+
+        var memberCount = await telegramService.GetMemberCount();
+        if (memberCount < 197)
+        {
+            requirementResult.Message = "Jumlah member di Grup ini kurang dari persyaratan minimum";
+            requirementResult.IsMeet = false;
+
+            return requirementResult;
+        }
+
+        requirementResult.IsMeet = true;
+
+        var globalBanService = telegramService.GetRequiredService<GlobalBanService>();
+
+        var adminItem = new GlobalBanAdminItem()
+        {
+            UserId = userId,
+            PromotedBy = fromId,
+            PromotedFrom = chatId,
+            CreatedAt = DateTime.UtcNow,
+            IsBanned = false
+        };
+
+        var isRegistered = await globalBanService.IsGBanAdminAsync(userId);
+        if (!isRegistered)
+        {
+            await globalBanService.SaveAdminBan(adminItem);
+        }
+
+        return requirementResult;
     }
 
     public static async Task EnsureChatAdminAsync(this TelegramService telegramService)

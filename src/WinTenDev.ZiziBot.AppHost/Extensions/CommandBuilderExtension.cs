@@ -78,7 +78,6 @@ public static class CommandBuilderExtension
                                         .UseCommand<EpicFreeGamesCommand>("egs_free")
                                         .UseCommand<ExportRssCommand>("exportrss")
                                         .UseCommand<FireCommand>("fire")
-                                        .UseCommand<GBanRegisterCommand>("gbanreg")
                                         .UseCommand<GetCityCommand>("get_city")
                                         .UseCommand<GetUserCommand>("u")
                                         .UseCommand<GetUserCommand>("user")
