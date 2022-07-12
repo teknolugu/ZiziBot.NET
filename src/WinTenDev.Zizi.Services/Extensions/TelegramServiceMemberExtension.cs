@@ -1091,6 +1091,13 @@ public static class TelegramServiceMemberExtension
             }
         }
 
+        var antiSpamResult = await telegramService.AntiSpamService.CheckSpam(chatId, userChatJoinRequest.Id);
+        if (antiSpamResult.IsAnyBanned)
+        {
+            reasons.Add("Pengguna telah diblokir di Global Ban Fed");
+            needManualAccept = false;
+        }
+
         if (needManualAccept) return true;
         var eventLogService = telegramService.GetRequiredService<EventLogService>();
 
