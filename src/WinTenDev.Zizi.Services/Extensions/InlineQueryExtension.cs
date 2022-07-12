@@ -60,6 +60,7 @@ public static class InlineQueryExtension
             "subscene" => await telegramService.OnInlineQuerySubsceneSearchAsync(),
             "subscene-dl" => await telegramService.OnInlineQuerySubsceneDownloadAsync(),
             "uup" => await telegramService.OnInlineQuerySearchUupAsync(),
+            "kbbi" => await telegramService.OnInlineQuerySearchKbbiAsync(),
             _ => await telegramService.OnInlineQueryGuideAsync()
         };
 
@@ -86,11 +87,15 @@ public static class InlineQueryExtension
                 },
                 new[]
                 {
-                    InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Buat pesan dengan tombol", $"message")
+                    InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Buat pesan dengan tombol", $"message ")
                 },
                 new[]
                 {
                     InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Cari subtitle", "subscene ")
+                },
+                new[]
+                {
+                    InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Cari KBBI", "kbbi ")
                 },
                 new[]
                 {
@@ -530,5 +535,89 @@ public static class InlineQueryExtension
         await telegramService.AnswerInlineQueryAsync(inlineQueryResults);
 
         return inlineQueryExecution;
+    }
+
+    public static async Task<InlineQueryExecutionResult> OnInlineQuerySearchKbbiAsync(this TelegramService telegramService)
+    {
+        var kbbiService = telegramService.GetRequiredService<KbbiService>();
+        var inlineValue = telegramService.InlineQueryValue;
+
+        var kbbiUrl = string.Empty;
+        var articleTitle = string.Empty;
+        var articleContent = string.Empty;
+        var articleId = StringUtil.NewGuid();
+        var htmlContent = HtmlMessage.Empty
+            .Bold("KBBI (Kamus Besar Bahasa Indonesia)").Br();
+
+        InlineKeyboardMarkup keyboardMarkup = InlineKeyboardMarkup.Empty();
+
+        if (inlineValue.IsNullOrEmpty())
+        {
+            articleTitle = "KBBI (Kamus Besar Bahasa Indonesia)";
+            articleContent = "Mulai ketikkan kata yang ingin Anda cari.";
+            htmlContent.Text(articleContent).Br().Br()
+                .Text("Kiat: Cobalah klik salah satu tombol dibawah ini");
+
+            keyboardMarkup = new InlineKeyboardMarkup(
+                new[]
+                {
+                    new[]
+                    {
+                        InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Mulai pencarian", $"kbbi ")
+                    }
+                }
+            );
+        }
+        else
+        {
+            var kbbiSearch = await kbbiService.SearchWord(inlineValue);
+
+            kbbiUrl = kbbiSearch.Url;
+            articleId = kbbiSearch.Url;
+            articleTitle = $"Kata: {inlineValue}";
+            articleContent = kbbiSearch.Content;
+
+            htmlContent
+                .Bold("Kata: ").CodeBr(inlineValue)
+                .TextBr(kbbiSearch.Content);
+
+            keyboardMarkup = new InlineKeyboardMarkup(
+                new[]
+                {
+                    new[]
+                    {
+                        InlineKeyboardButton.WithUrl("KBBI", kbbiUrl),
+                    },
+                    new[]
+                    {
+                        InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Pencarian lanjut", $"kbbi {inlineValue} "),
+                        InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Ulang pencarian", $"kbbi "),
+                    }
+                }
+            );
+        }
+
+        var result = new InlineQueryResultArticle(
+            id: articleId,
+            title: articleTitle,
+            inputMessageContent: new InputTextMessageContent(htmlContent.ToString())
+            {
+                ParseMode = ParseMode.Html,
+                DisableWebPagePreview = true
+            }
+        )
+        {
+            Description = articleContent,
+            ReplyMarkup = keyboardMarkup
+        };
+
+        await telegramService.AnswerInlineQueryAsync(
+            new List<InlineQueryResult>()
+            {
+                result
+            }
+        );
+
+        return default;
     }
 }

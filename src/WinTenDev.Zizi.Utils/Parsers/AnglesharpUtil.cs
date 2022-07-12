@@ -1,4 +1,6 @@
-﻿using AngleSharp;
+﻿using System.Threading.Tasks;
+using AngleSharp;
+using AngleSharp.Dom;
 
 namespace WinTenDev.Zizi.Utils.Parsers;
 
@@ -13,5 +15,12 @@ public static class AnglesharpUtil
 
             return context;
         }
+    }
+
+    public static async Task<IDocument> OpenDocumentAsync(this string url)
+    {
+        var document = await DefaultContext.OpenAsync(url);
+
+        return document;
     }
 }
