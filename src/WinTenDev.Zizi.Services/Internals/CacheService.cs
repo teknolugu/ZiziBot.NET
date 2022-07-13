@@ -73,7 +73,7 @@ public class CacheService
 
 		var cache = await _cacheStack.GetOrSetAsync<T>(
 			cacheKey: cacheKey.Trim(),
-			getter: async (_) => await action(),
+			valueFactory: async (_) => await action(),
 			settings: cacheSettings
 		);
 

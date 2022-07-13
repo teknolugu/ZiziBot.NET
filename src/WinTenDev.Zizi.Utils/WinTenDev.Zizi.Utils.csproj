@@ -8,9 +8,9 @@
         <PackageReference Include="AngleSharp.Js" Version="0.15.0"/>
         <PackageReference Include="AsyncAwaitBestPractices" Version="6.0.5"/>
         <PackageReference Include="Ben.Demystifier" Version="0.4.1"/>
-        <PackageReference Include="CacheTower" Version="0.12.0"/>
-        <PackageReference Include="CacheTower.Providers.FileSystem.Json" Version="0.12.0"/>
-        <PackageReference Include="CacheTower.Providers.Redis" Version="0.12.0"/>
+        <PackageReference Include="CacheTower" Version="0.13.0"/>
+        <PackageReference Include="CacheTower.Providers.FileSystem.Json" Version="0.13.0"/>
+        <PackageReference Include="CacheTower.Providers.Redis" Version="0.13.0"/>
         <PackageReference Include="ClickHouse.Client" Version="5.0.2"/>
         <PackageReference Include="CloudFlareUtilities" Version="1.3.0"/>
         <PackageReference Include="CodeHollow.FeedReader" Version="1.2.4"/>
