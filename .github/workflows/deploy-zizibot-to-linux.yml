@@ -81,7 +81,8 @@ jobs:
         with:
           repository: ${{ github.server_url }}/${{ github.repository }}
           release-only: true
-        run: echo "Latest release at version ${{ steps.octokit.outputs.tag }}"
+
+      - run: echo "Latest release at version ${{ steps.octokit.outputs.tag }}"
 
       - name: update release
         id: update_release
