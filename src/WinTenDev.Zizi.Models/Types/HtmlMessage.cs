@@ -1,5 +1,7 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 using System.Text;
+using MoreLinq;
 using Telegram.Bot.Types;
 
 namespace WinTenDev.Zizi.Models.Types;
@@ -56,11 +58,11 @@ public class HtmlMessage
     public HtmlMessage TextBr(
         string text,
         bool encoded = false
-    ) => Text(text + "\n\r", encoded);
+    ) => Text(text + Environment.NewLine, encoded);
 
     public HtmlMessage Br()
     {
-        sb.Append("\n\r");
+        sb.Append(Environment.NewLine);
         return this;
     }
 
@@ -145,6 +147,19 @@ public class HtmlMessage
         sb.Append($"<{tag}>");
         sb.Append(innerSting);
         sb.Append($"</{tag}>");
+        return this;
+    }
+
+    public HtmlMessage PopLine(int count = 1)
+    {
+        var sbStr = sb.ToString();
+
+        sb.Clear();
+
+        sbStr.Split(Environment.NewLine)
+            .SkipLast(count)
+            .ForEach(s => TextBr(s.Trim()));
+
         return this;
     }
 

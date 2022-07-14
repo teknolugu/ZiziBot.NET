@@ -7,11 +7,6 @@ using Serilog;
 using Telegram.Bot;
 using Telegram.Bot.Framework.Abstractions;
 using Telegram.Bot.Types.Enums;
-using WinTenDev.Zizi.Models.Enums;
-using WinTenDev.Zizi.Models.Types;
-using WinTenDev.Zizi.Services.Telegram;
-using WinTenDev.Zizi.Utils.IO;
-using WinTenDev.Zizi.Utils.Text;
 
 namespace WinTenDev.ZiziBot.AppHost.Handlers.Commands.Additional;
 

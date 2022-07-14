@@ -7,10 +7,11 @@ using Flurl;
 using Flurl.Http;
 using Hangfire;
 using Humanizer;
-using MoreLinq;
 using Serilog;
 using Telegram.Bot;
+using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.ReplyMarkups;
 using WinTenDev.Zizi.Models.Dto;
 using WinTenDev.Zizi.Models.Tables;
 using WinTenDev.Zizi.Models.Types;
@@ -29,6 +30,7 @@ public class EpicGamesService
     private readonly RssService _rssService;
     private readonly FeatureService _featureService;
     private readonly string BaseUrl = "https://store-site-backend-static-ipv4.ak.epicgames.com/freeGamesPromotions";
+    private readonly string ProductDetailUrl = "https://store-content-ipv4.ak.epicgames.com/api/en-US/content/products";
 
     public EpicGamesService(
         IRecurringJobManager recurringJobManager,
@@ -112,7 +114,50 @@ public class EpicGamesService
         }
     }
 
-    public async Task<List<EgsFreeGameParsed>> GetFreeGamesParsed(bool preferEmoji = false)
+    public async Task<List<IAlbumInputMedia>> GetFreeGamesOffered()
+    {
+        var buttonMarkup = new List<InlineKeyboardButton>();
+        var offeredGameList = await GetFreeGamesParsed(currentOffered: true);
+
+        var lastOffered = offeredGameList.LastOrDefault();
+
+        var listAlbum = offeredGameList
+            .SkipLast(1)
+            .Select(
+                item =>
+                    new InputMediaPhoto(item.Images.ToString())
+            )
+            .Cast<IAlbumInputMedia>()
+            .ToList();
+
+        var listGames = offeredGameList.Select(
+            parsed => {
+                buttonMarkup.Add(
+                    InlineKeyboardButton.WithCallbackData(
+                        parsed.ProductTitle,
+                        $"egs {parsed.ProductSlug}"
+                    )
+                );
+                return parsed.Detail;
+            }
+        ).JoinStr("\n\n");
+
+        listAlbum
+            .Add(
+                new InputMediaPhoto(lastOffered.Images.ToString())
+                {
+                    Caption = listGames,
+                    ParseMode = ParseMode.Html,
+                }
+            );
+
+        return listAlbum;
+    }
+
+    public async Task<List<EgsFreeGameParsed>> GetFreeGamesParsed(
+        bool preferEmoji = false,
+        bool currentOffered = false
+    )
     {
         var egsFreeGame = await GetFreeGamesRaw();
         var offeredGameList = egsFreeGame.DiscountGames.Select(
@@ -146,6 +191,7 @@ public class EpicGamesService
 
                     element.CustomAttributes
                         .Where(attribute => attribute.Key.Contains("Name"))
+                        .ToList()
                         .ForEach(
                             attribute => {
                                 var name = attribute.Key.Titleize().Replace("Name", "").Trim();
@@ -160,8 +206,11 @@ public class EpicGamesService
                     var egsParsed = new EgsFreeGameParsed()
                     {
                         ProductUrl = url,
+                        ProductSlug = element.ProductSlug,
                         ProductTitle = title,
                         Text = captionBuilder.ToTrimmedString(),
+                        StartOfferDate = offers.StartDate,
+                        EndOfferDate = offers.EndDate,
                         Detail = detailBuilder.ToTrimmedString(),
                         Images = element.KeyImages.FirstOrDefault(keyImage => keyImage.Type == "OfferImageWide")?.Url
                     };
@@ -170,6 +219,13 @@ public class EpicGamesService
                 }
             )
             .ToList();
+
+        if (currentOffered)
+        {
+            offeredGameList = offeredGameList.Where(
+                game => game.StartOfferDate <= DateTime.UtcNow && game.EndOfferDate >= DateTime.UtcNow
+            ).ToList();
+        }
 
         return offeredGameList;
     }
@@ -187,7 +243,7 @@ public class EpicGamesService
 
         var allGames = egsFreeGame.Data.Catalog.SearchStore.Elements;
         var freeGames = allGames
-            .Where(element => element.Price.TotalPrice.DiscountPrice == 0)
+            .Where(element => element.Price?.TotalPrice.DiscountPrice == 0)
             .ToList();
 
         var discountGames = allGames
@@ -216,6 +272,7 @@ public class EpicGamesService
                 var queryParams = promotionsDto.ToDictionary();
 
                 var freeGamesObj = BaseUrl
+                    .OpenFlurlSession()
                     .SetQueryParams(queryParams)
                     .GetJsonAsync<EgsFreeGameRaw>();
 
@@ -224,5 +281,15 @@ public class EpicGamesService
         );
 
         return freeGamesObj;
+    }
+
+    public async Task<EgsFreeGamesDetail> GetGameDetail(string slug)
+    {
+        var obj = await ProductDetailUrl
+            .OpenFlurlSession()
+            .AppendPathSegment(slug)
+            .GetJsonAsync<EgsFreeGamesDetail>();
+
+        return obj;
     }
 }

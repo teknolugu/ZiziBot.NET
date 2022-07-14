@@ -1,0 +1,26 @@
+﻿{
+  "Purge.ReplyToPurge": {
+    "id": "Balas sebuah pesan untuk menentukan titik akhir purge.",
+    "en": "Reply to a message to specify the purge endpoint."
+  },
+  "Purge.PurgeDescription": {
+    "id": "Purge akan menghapus pesan berdasarkan User ID pada rentang diatas.",
+    "en": "Purge will delete messages based on User ID in the range above."
+  },
+  "Purge.PurgeAnyDescription": {
+    "id": "Purge Any akan menghapus pesan siapapun pada rentang <a href='{StartMessageLink}'>pesan awal</a> sampai <a href='{EndMessageLink}'>pesan akhir</a>.",
+    "en": "Purge Any will delete any message in the range <a href='{StartMessageLink}'>start message</a> to <a href='{EndMessageLink}'>end message</a>.. "
+  },
+  "Purge.OnProgress":{
+    "id": "🔄 Sedang mengumpulkan informasi..",
+    "en": "🔄 Collecting information..."
+  },
+  "Purge.ConfirmationMessage": {
+    "id": "Apakah Anda yakin ingin menghapus pesan ini?",
+    "en": "Are you sure you want to delete this message?"
+  },
+  "Purge.MaxDateExceed": {
+    "id": "Maaf, saat ini purge dibatasi 3 hari terakhir.",
+    "en": "Sorry, purge is currently limited to 3 days ago."
+  }
+}

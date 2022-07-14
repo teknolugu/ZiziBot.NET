@@ -8,12 +8,6 @@ using SqlKata.Execution;
 using Telegram.Bot.Framework.Abstractions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
-using WinTenDev.Zizi.Models.Tables;
-using WinTenDev.Zizi.Services.Telegram;
-using WinTenDev.Zizi.Utils;
-using WinTenDev.Zizi.Utils.Providers;
-using WinTenDev.Zizi.Utils.Telegram;
-using WinTenDev.Zizi.Utils.Text;
 
 namespace WinTenDev.ZiziBot.AppHost.Handlers.Commands.Group;
 

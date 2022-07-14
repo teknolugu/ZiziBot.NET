@@ -600,7 +600,7 @@ public static class TelegramServiceMemberExtension
                 .Bold("Recent Online: ").CodeBr(lastActiveOnline.Count.ToString())
                 .Bold("Active recent: ").CodeBr(lastRecently.Count.ToString())
                 .Bold("Last week: ").CodeBr(lastActiveWeek.Count.ToString())
-                .Bold("Last month: ").CodeBr(lastActiveMonth.Count().ToString())
+                .Bold("Last month: ").CodeBr(lastActiveMonth.Count.ToString())
                 .Bold("Deleted accounts: ").CodeBr(deletedUsers.CountOrZero().ToString())
                 .Bold("Bots: ").CodeBr(allBots.Count.ToString())
                 .Bold("Banned: ").CodeBr(bannedUsers.Count.ToString());
@@ -781,6 +781,13 @@ public static class TelegramServiceMemberExtension
                 try
                 {
                     var targetChatId = allEntityValues?.ElementAtOrDefault(index) ?? "";
+
+                    if (!targetChatId.StartsWith("@"))
+                    {
+                        Log.Information("Seem {Username} is not a valid Username", targetChatId);
+                        return;
+                    }
+
                     var resolvedPeer = await wTelegramApiService.FindPeerByUsername(targetChatId);
 
                     if (resolvedPeer?.User == null)
@@ -824,7 +831,20 @@ public static class TelegramServiceMemberExtension
 
         if (!telegramService.IsFromSudo)
         {
-            return;
+            var requirementResult = await telegramService.CheckGlobalBanAdminAsync();
+            if (!requirementResult.IsMeet)
+            {
+                var messageText = "Tidak dapat melakukan Global admin." +
+                                  "\nAlasan: " +
+                                  requirementResult.Message;
+
+                await telegramService.SendTextMessageAsync(
+                    sendText: messageText,
+                    scheduleDeleteAt: DateTime.UtcNow.AddMinutes(2)
+                );
+
+                return;
+            }
         }
 
         if (telegramService.ReplyToMessage != null)
@@ -941,6 +961,60 @@ public static class TelegramServiceMemberExtension
         );
     }
 
+    public static async Task<GlobalBanRequirementResult> CheckGlobalBanAdminAsync(this TelegramService telegramService)
+    {
+        var requirementResult = new GlobalBanRequirementResult();
+        var userId = telegramService.FromId;
+        var fromId = telegramService.FromId;
+        var chatId = telegramService.ChatId;
+
+        if (telegramService.CheckFromAnonymous())
+        {
+            requirementResult.Message = "Anonymous Admin tidak dapat melakukan Global Ban";
+            requirementResult.IsMeet = false;
+
+            return requirementResult;
+        }
+
+        if (!await telegramService.CheckFromAdmin())
+        {
+            requirementResult.Message = "Hanya admin Grup yang dapat melakukan Global Ban";
+            requirementResult.IsMeet = false;
+
+            return requirementResult;
+        }
+
+        var memberCount = await telegramService.GetMemberCount();
+        if (memberCount < 197)
+        {
+            requirementResult.Message = "Jumlah member di Grup ini kurang dari persyaratan minimum";
+            requirementResult.IsMeet = false;
+
+            return requirementResult;
+        }
+
+        requirementResult.IsMeet = true;
+
+        var globalBanService = telegramService.GetRequiredService<GlobalBanService>();
+
+        var adminItem = new GlobalBanAdminItem()
+        {
+            UserId = userId,
+            PromotedBy = fromId,
+            PromotedFrom = chatId,
+            CreatedAt = DateTime.UtcNow,
+            IsBanned = false
+        };
+
+        var isRegistered = await globalBanService.IsGBanAdminAsync(userId);
+        if (!isRegistered)
+        {
+            await globalBanService.SaveAdminBan(adminItem);
+        }
+
+        return requirementResult;
+    }
+
     public static async Task EnsureChatAdminAsync(this TelegramService telegramService)
     {
         var chatId = telegramService.ChatId;
@@ -1015,6 +1089,13 @@ public static class TelegramServiceMemberExtension
                 reasons.Add("Belum menetapkan/menyembunyikan Foto Profil");
                 needManualAccept = false;
             }
+        }
+
+        var antiSpamResult = await telegramService.AntiSpamService.CheckSpam(chatId, userChatJoinRequest.Id);
+        if (antiSpamResult.IsAnyBanned)
+        {
+            reasons.Add("Pengguna telah diblokir di Global Ban Fed");
+            needManualAccept = false;
         }
 
         if (needManualAccept) return true;

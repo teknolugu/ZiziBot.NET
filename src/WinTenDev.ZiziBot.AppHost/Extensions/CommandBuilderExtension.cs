@@ -1,23 +1,6 @@
 ﻿using Serilog;
 using Telegram.Bot.Framework;
 using Telegram.Bot.Framework.Abstractions;
-using WinTenDev.ZiziBot.AppHost.Handlers;
-using WinTenDev.ZiziBot.AppHost.Handlers.Commands.Additional;
-using WinTenDev.ZiziBot.AppHost.Handlers.Commands.BlackLists;
-using WinTenDev.ZiziBot.AppHost.Handlers.Commands.Chat;
-using WinTenDev.ZiziBot.AppHost.Handlers.Commands.Core;
-using WinTenDev.ZiziBot.AppHost.Handlers.Commands.ForceSubscription;
-using WinTenDev.ZiziBot.AppHost.Handlers.Commands.GlobalBan;
-using WinTenDev.ZiziBot.AppHost.Handlers.Commands.Group;
-using WinTenDev.ZiziBot.AppHost.Handlers.Commands.Metrics;
-using WinTenDev.ZiziBot.AppHost.Handlers.Commands.Notes;
-using WinTenDev.ZiziBot.AppHost.Handlers.Commands.Rss;
-using WinTenDev.ZiziBot.AppHost.Handlers.Commands.ShalatTime;
-using WinTenDev.ZiziBot.AppHost.Handlers.Commands.SpamLearning;
-using WinTenDev.ZiziBot.AppHost.Handlers.Commands.Spelling;
-using WinTenDev.ZiziBot.AppHost.Handlers.Commands.Tags;
-using WinTenDev.ZiziBot.AppHost.Handlers.Commands.Welcome;
-using WinTenDev.ZiziBot.AppHost.Handlers.Commands.Words;
 
 namespace WinTenDev.ZiziBot.AppHost.Extensions;
 
@@ -95,7 +78,6 @@ public static class CommandBuilderExtension
                                         .UseCommand<EpicFreeGamesCommand>("egs_free")
                                         .UseCommand<ExportRssCommand>("exportrss")
                                         .UseCommand<FireCommand>("fire")
-                                        .UseCommand<GBanRegisterCommand>("gbanreg")
                                         .UseCommand<GetCityCommand>("get_city")
                                         .UseCommand<GetUserCommand>("u")
                                         .UseCommand<GetUserCommand>("user")
@@ -123,6 +105,8 @@ public static class CommandBuilderExtension
                                         .UseCommand<PinCommand>("pin")
                                         .UseCommand<PredictCommand>("predict")
                                         .UseCommand<PromoteCommand>("promote")
+                                        .UseCommand<PurgeCommand>("purge")
+                                        .UseCommand<PurgeCommand>("purgeany")
                                         .UseCommand<QrCommand>("qr")
                                         .UseCommand<RandomCommand>("ran")
                                         .UseCommand<ReportCommand>("report")

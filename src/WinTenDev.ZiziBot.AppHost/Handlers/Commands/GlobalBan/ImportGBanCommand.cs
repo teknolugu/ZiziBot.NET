@@ -2,9 +2,6 @@
 using System.Threading.Tasks;
 using Telegram.Bot.Framework.Abstractions;
 using Telegram.Bot.Types.Enums;
-using WinTenDev.Zizi.Models.Tables;
-using WinTenDev.Zizi.Services.Internals;
-using WinTenDev.Zizi.Services.Telegram;
 
 namespace WinTenDev.ZiziBot.AppHost.Handlers.Commands.GlobalBan;
 

@@ -14,6 +14,8 @@ public static class CommonServiceExtension
 
     public static IServiceCollection AddCommonService(this IServiceCollection services)
     {
+        services.AddServicesFrom("WinTenDev.Zizi.Services.StartupTasks", ServiceLifetime.Transient);
+
         services.AddServicesFrom("WinTenDev.Zizi.Services.Callbacks", ServiceLifetime.Scoped);
         services.AddServicesFrom("WinTenDev.Zizi.Services.Externals", ServiceLifetime.Scoped);
         services.AddServicesFrom("WinTenDev.Zizi.Services.Google", ServiceLifetime.Scoped);

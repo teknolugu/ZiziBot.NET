@@ -3,10 +3,6 @@ using Microsoft.Extensions.Options;
 using Serilog;
 using Telegram.Bot.Framework.Abstractions;
 using Telegram.Bot.Types.ReplyMarkups;
-using WinTenDev.Zizi.Models.Configs;
-using WinTenDev.Zizi.Services.Externals;
-using WinTenDev.Zizi.Services.Telegram;
-using WinTenDev.Zizi.Utils;
 
 namespace WinTenDev.ZiziBot.AppHost.Handlers.Commands.Additional;
 

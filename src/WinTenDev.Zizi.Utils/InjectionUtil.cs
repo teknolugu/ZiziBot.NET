@@ -32,4 +32,12 @@ public static class InjectionUtil
 
         return appService;
     }
+
+    public static TService GetRequiredService<TService>(this IServiceCollection services)
+    {
+        var serviceProvider = services.BuildServiceProvider();
+        var appService = serviceProvider.GetRequiredService<TService>();
+
+        return appService;
+    }
 }

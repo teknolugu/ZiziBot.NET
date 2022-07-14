@@ -6,8 +6,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Serilog;
-using WinTenDev.Zizi.Utils;
-using WinTenDev.Zizi.Utils.Extensions;
 
 namespace WinTenDev.ZiziBot.AppHost;
 

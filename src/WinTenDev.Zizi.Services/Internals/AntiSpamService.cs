@@ -98,9 +98,9 @@ public class AntiSpamService
         );
 
         var chatMember = getChatMemberTask.Result;
-        var swBan = checkSpamWatchTask.Result;
-        var casBan = checkCasBanTask.Result;
-        var es2Ban = checkEs2BanTask.Result;
+        var es2Ban = _chatSetting.EnableFedEs2 && checkEs2BanTask.Result;
+        var swBan = _chatSetting.EnableFedSpamWatch && checkSpamWatchTask.Result;
+        var casBan = _chatSetting.EnableFedCasBan && checkCasBanTask.Result;
         var anyBan = swBan || casBan || es2Ban;
 
         if (!anyBan)

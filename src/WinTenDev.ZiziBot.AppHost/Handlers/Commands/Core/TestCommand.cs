@@ -3,18 +3,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using EasyCaching.Core;
+using Flurl;
 using LiteDB.Async;
 using MoreLinq;
 using Serilog;
 using Telegram.Bot;
 using Telegram.Bot.Framework.Abstractions;
 using Telegram.Bot.Types;
-using WinTenDev.Zizi.Services.Externals;
-using WinTenDev.Zizi.Services.Internals;
-using WinTenDev.Zizi.Services.Telegram;
-using WinTenDev.Zizi.Utils;
-using WinTenDev.Zizi.Utils.Parsers.Url;
-using WinTenDev.Zizi.Utils.Text;
+using Telegram.Bot.Types.Enums;
 
 namespace WinTenDev.ZiziBot.AppHost.Handlers.Commands.Core;
 

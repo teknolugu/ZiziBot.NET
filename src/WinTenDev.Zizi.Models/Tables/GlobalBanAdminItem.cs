@@ -14,10 +14,6 @@ public class GlobalBanAdminItem
     [JsonProperty("user_id")]
     public long UserId { get; set; }
 
-    [Column("username")]
-    [JsonProperty("username")]
-    public string Username { get; set; }
-
     [Column("promoted_by")]
     [JsonProperty("promoted_by")]
     public long PromotedBy { get; set; }

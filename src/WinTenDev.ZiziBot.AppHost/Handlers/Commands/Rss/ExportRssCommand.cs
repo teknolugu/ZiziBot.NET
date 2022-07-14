@@ -5,12 +5,6 @@ using System.Text;
 using System.Threading.Tasks;
 using Serilog;
 using Telegram.Bot.Framework.Abstractions;
-using WinTenDev.Zizi.Models.Enums;
-using WinTenDev.Zizi.Services.Internals;
-using WinTenDev.Zizi.Services.Telegram;
-using WinTenDev.Zizi.Utils;
-using WinTenDev.Zizi.Utils.IO;
-using WinTenDev.Zizi.Utils.Text;
 
 namespace WinTenDev.ZiziBot.AppHost.Handlers.Commands.Rss;
 

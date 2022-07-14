@@ -49,6 +49,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{0A1668BA
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinTenDev.ZiziTools.Cli", "src\WinTenDev.ZiziTools.Cli\WinTenDev.ZiziTools.Cli.csproj", "{ECAF5A60-6A87-41F8-A835-44AFC27D96B8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinTenDev.Zizi.Extensions", "src\WinTenDev.Zizi.Extensions\WinTenDev.Zizi.Extensions.csproj", "{30A50B72-182A-4289-A71C-2D81D43DA0DD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -115,6 +117,10 @@ Global
 		{ECAF5A60-6A87-41F8-A835-44AFC27D96B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{ECAF5A60-6A87-41F8-A835-44AFC27D96B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{ECAF5A60-6A87-41F8-A835-44AFC27D96B8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{30A50B72-182A-4289-A71C-2D81D43DA0DD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{30A50B72-182A-4289-A71C-2D81D43DA0DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{30A50B72-182A-4289-A71C-2D81D43DA0DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{30A50B72-182A-4289-A71C-2D81D43DA0DD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -135,6 +141,7 @@ Global
 		{B3709FB9-9E14-426B-B964-D74FF5A3EEE4} = {CB519D18-4F9A-4032-8C6A-5801FE32961E}
 		{31FC4CC0-939A-4072-9445-D54F1D595100} = {3AE5E36F-46D3-44F3-BCA8-407BF6AED95B}
 		{ECAF5A60-6A87-41F8-A835-44AFC27D96B8} = {0A1668BA-C855-4E94-BADA-0B00E48D7AAE}
+		{30A50B72-182A-4289-A71C-2D81D43DA0DD} = {CB519D18-4F9A-4032-8C6A-5801FE32961E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {AFE8345E-016B-4B6D-A95A-3D62AEF8BA8A}

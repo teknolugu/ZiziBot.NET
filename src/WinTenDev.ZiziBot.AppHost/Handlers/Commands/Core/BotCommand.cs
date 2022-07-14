@@ -2,7 +2,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Telegram.Bot.Framework.Abstractions;
-using WinTenDev.Zizi.Services.Telegram;
 
 namespace WinTenDev.ZiziBot.AppHost.Handlers.Commands.Core;
 

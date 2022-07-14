@@ -2,9 +2,6 @@
 using System.Threading.Tasks;
 using Telegram.Bot.Framework.Abstractions;
 using TL;
-using WinTenDev.Zizi.Services.Telegram;
-using WinTenDev.Zizi.Utils;
-using WinTenDev.Zizi.Utils.Telegram;
 
 namespace WinTenDev.ZiziBot.AppHost.Handlers.Commands.Chat;
 
