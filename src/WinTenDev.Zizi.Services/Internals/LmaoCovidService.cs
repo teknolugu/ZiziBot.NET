@@ -3,9 +3,6 @@ using System.Text;
 using System.Threading.Tasks;
 using Flurl.Http;
 using Serilog;
-using WinTenDev.Zizi.Models.Lmao;
-using WinTenDev.Zizi.Utils;
-using CovidAll=WinTenDev.Zizi.Models.Types.CovidAll;
 
 namespace WinTenDev.Zizi.Services.Internals;
 

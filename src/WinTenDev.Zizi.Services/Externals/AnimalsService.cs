@@ -6,7 +6,6 @@ using Flurl.Http;
 using MoreLinq;
 using Serilog;
 using Telegram.Bot.Types;
-using WinTenDev.Zizi.Models.Types.CatsApis;
 
 namespace WinTenDev.Zizi.Services.Externals;
 
@@ -61,10 +60,11 @@ public class AnimalsService
 
         for (var i = 1; i <= catNumber; i++)
         {
-            Log.Information
-            (
+            Log.Information(
                 "Loading cat {I} of {CatNum} from {CatSource}",
-                i, catNumber, CatSourceAwsRandomCat
+                i,
+                catNumber,
+                CatSourceAwsRandomCat
             );
 
             var url = await CatSourceAwsRandomCat.GetJsonAsync<AwsRandomCatMeow>();

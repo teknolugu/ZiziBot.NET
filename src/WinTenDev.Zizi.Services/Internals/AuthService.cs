@@ -2,7 +2,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using LiteDB.Async;
 using Serilog;
-using WinTenDev.Zizi.Models.Types;
 
 namespace WinTenDev.Zizi.Services.Internals;
 
@@ -27,7 +26,11 @@ public class AuthService
             .ToListAsync();
 
         var isAuth = authChat.Any(chat => chat.ChatId == chatId && chat.IsAuthorized);
-        Log.Debug("Is ChatID '{ChatId}' authorized? {IsAuth}", chatId, isAuth);
+        Log.Debug(
+            "Is ChatID '{ChatId}' authorized? {IsAuth}",
+            chatId,
+            isAuth
+        );
 
         return isAuth;
     }

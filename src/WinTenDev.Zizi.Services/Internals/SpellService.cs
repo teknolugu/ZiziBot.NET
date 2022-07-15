@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using MySqlConnector;
 using RepoDb;
 using Serilog;
-using WinTenDev.Zizi.Models.Tables;
 
 namespace WinTenDev.Zizi.Services.Internals;
 

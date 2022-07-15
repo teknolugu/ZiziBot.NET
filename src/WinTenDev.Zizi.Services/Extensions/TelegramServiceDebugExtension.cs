@@ -1,9 +1,5 @@
 ﻿using System;
 using System.Threading.Tasks;
-using WinTenDev.Zizi.Models.Types;
-using WinTenDev.Zizi.Services.Telegram;
-using WinTenDev.Zizi.Utils;
-using WinTenDev.Zizi.Utils.Telegram;
 
 namespace WinTenDev.Zizi.Services.Extensions;
 

@@ -3,11 +3,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
-using WinTenDev.Zizi.Models.Entities.MongoDb.Internal;
-using WinTenDev.Zizi.Models.Types;
-using WinTenDev.Zizi.Services.Internals;
-using WinTenDev.Zizi.Services.Telegram;
-using WinTenDev.Zizi.Utils.Telegram;
 
 namespace WinTenDev.Zizi.Services.Extensions;
 

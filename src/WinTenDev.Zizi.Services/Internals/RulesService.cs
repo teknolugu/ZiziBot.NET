@@ -1,8 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using WinTenDev.Zizi.Models.Dto;
-using WinTenDev.Zizi.Models.Tables;
-using WinTenDev.Zizi.Utils.Telegram;
 
 namespace WinTenDev.Zizi.Services.Internals;
 

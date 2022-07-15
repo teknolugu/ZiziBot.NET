@@ -8,14 +8,6 @@ using Microsoft.Extensions.Options;
 using Serilog;
 using SerilogTimings;
 using SpamWatch.Types;
-using WinTenDev.Zizi.Models.Configs;
-using WinTenDev.Zizi.Models.Enums.Languages;
-using WinTenDev.Zizi.Models.Tables;
-using WinTenDev.Zizi.Models.Types;
-using WinTenDev.Zizi.Models.Validators;
-using WinTenDev.Zizi.Services.Telegram;
-using WinTenDev.Zizi.Utils;
-using WinTenDev.Zizi.Utils.Telegram;
 
 namespace WinTenDev.Zizi.Services.Internals;
 

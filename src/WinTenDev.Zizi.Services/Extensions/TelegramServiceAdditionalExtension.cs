@@ -5,17 +5,6 @@ using Flurl.Http;
 using Serilog;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
-using WinTenDev.Zizi.Models.Dto;
-using WinTenDev.Zizi.Models.Enums;
-using WinTenDev.Zizi.Models.Enums.Languages;
-using WinTenDev.Zizi.Models.Exceptions;
-using WinTenDev.Zizi.Models.Types;
-using WinTenDev.Zizi.Services.Externals;
-using WinTenDev.Zizi.Services.Telegram;
-using WinTenDev.Zizi.Utils;
-using WinTenDev.Zizi.Utils.IO;
-using WinTenDev.Zizi.Utils.Telegram;
-using WinTenDev.Zizi.Utils.Text;
 
 namespace WinTenDev.Zizi.Services.Extensions;
 

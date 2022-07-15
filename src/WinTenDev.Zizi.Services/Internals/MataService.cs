@@ -2,7 +2,6 @@
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using SerilogTimings;
-using WinTenDev.Zizi.Models.Tables;
 
 namespace WinTenDev.Zizi.Services.Internals;
 

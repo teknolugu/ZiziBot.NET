@@ -2,13 +2,6 @@
 using System.Threading.Tasks;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
-using WinTenDev.Zizi.Models.Dto;
-using WinTenDev.Zizi.Models.Enums;
-using WinTenDev.Zizi.Models.Types;
-using WinTenDev.Zizi.Services.Externals;
-using WinTenDev.Zizi.Services.Telegram;
-using WinTenDev.Zizi.Utils;
-using WinTenDev.Zizi.Utils.IO;
 
 namespace WinTenDev.Zizi.Services.Extensions;
 

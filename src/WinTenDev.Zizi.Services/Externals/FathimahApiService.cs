@@ -3,8 +3,6 @@ using System.Threading.Tasks;
 using Flurl;
 using Flurl.Http;
 using Microsoft.Extensions.Logging;
-using WinTenDev.Zizi.Models.Vendors.FathimahApi;
-using WinTenDev.Zizi.Services.Internals;
 
 namespace WinTenDev.Zizi.Services.Externals
 {

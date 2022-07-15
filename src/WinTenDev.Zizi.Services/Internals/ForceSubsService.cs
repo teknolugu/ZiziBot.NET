@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 using MongoDB.Entities;
-using WinTenDev.Zizi.Models.Entities.MongoDb.Internal;
 
 namespace WinTenDev.Zizi.Services.Internals;
 

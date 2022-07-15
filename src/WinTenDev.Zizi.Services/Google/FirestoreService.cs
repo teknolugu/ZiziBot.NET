@@ -1,9 +1,6 @@
 ﻿using System.Threading.Tasks;
 using Google.Cloud.Firestore;
 using Serilog;
-using WinTenDev.Zizi.Models.Configs;
-using WinTenDev.Zizi.Utils.IO;
-using WinTenDev.Zizi.Utils.Text;
 
 namespace WinTenDev.Zizi.Services.Google;
 
@@ -26,7 +23,10 @@ public class FirestoreService
         Db = client;
     }
 
-    public void Create(string path, object data)
+    public void Create(
+        string path,
+        object data
+    )
     {
         if (Db == null) MakeClient();
 

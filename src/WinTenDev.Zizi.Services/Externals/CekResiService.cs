@@ -4,9 +4,6 @@ using Flurl;
 using Flurl.Http;
 using Microsoft.Extensions.Options;
 using Serilog;
-using WinTenDev.Zizi.Models.Configs;
-using WinTenDev.Zizi.Models.Types.Pigoora;
-using WinTenDev.Zizi.Services.Internals;
 
 namespace WinTenDev.Zizi.Services.Externals;
 

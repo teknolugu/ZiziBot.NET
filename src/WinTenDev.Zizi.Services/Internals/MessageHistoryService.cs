@@ -3,9 +3,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using SqlKata.Execution;
-using WinTenDev.Zizi.Models.Dto;
-using WinTenDev.Zizi.Models.Tables;
-using WinTenDev.Zizi.Utils;
 
 namespace WinTenDev.Zizi.Services.Internals;
 
@@ -49,7 +46,10 @@ public class MessageHistoryService
         return query;
     }
 
-    public async Task<int> UpdateDeleteAtAsync(MessageHistoryFindDto findDto, DateTime dateTime)
+    public async Task<int> UpdateDeleteAtAsync(
+        MessageHistoryFindDto findDto,
+        DateTime dateTime
+    )
     {
         var where = findDto.ToDictionary();
 

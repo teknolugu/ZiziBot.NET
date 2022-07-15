@@ -6,13 +6,6 @@ using Serilog;
 using SerilogTimings;
 using Telegram.Bot;
 using Telegram.Bot.Types.ReplyMarkups;
-using WinTenDev.Zizi.Models.Enums;
-using WinTenDev.Zizi.Models.Types;
-using WinTenDev.Zizi.Services.NMemory;
-using WinTenDev.Zizi.Services.Starts;
-using WinTenDev.Zizi.Services.Telegram;
-using WinTenDev.Zizi.Utils;
-using WinTenDev.Zizi.Utils.Telegram;
 
 namespace WinTenDev.Zizi.Services.Extensions;
 

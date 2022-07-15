@@ -2,9 +2,6 @@
 using System.Threading.Tasks;
 using Flurl.Http;
 using Serilog;
-using WinTenDev.Zizi.Models.Types.UupDump;
-using WinTenDev.Zizi.Services.Internals;
-using WinTenDev.Zizi.Utils;
 
 namespace WinTenDev.Zizi.Services.Externals;
 

@@ -11,12 +11,6 @@ using Serilog;
 using StackExchange.Redis;
 using Telegram.Bot;
 using Telegram.Bot.Types.InputFiles;
-using WinTenDev.Zizi.Models.Configs;
-using WinTenDev.Zizi.Models.Enums;
-using WinTenDev.Zizi.Models.Interfaces;
-using WinTenDev.Zizi.Services.Internals;
-using WinTenDev.Zizi.Utils;
-using WinTenDev.Zizi.Utils.IO;
 
 namespace WinTenDev.Zizi.Services.Telegram;
 

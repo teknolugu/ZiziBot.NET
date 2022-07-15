@@ -4,10 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Serilog;
 using SqlKata.Execution;
-using WinTenDev.Zizi.Models.Tables;
-using WinTenDev.Zizi.Models.Types;
-using WinTenDev.Zizi.Utils;
-using WinTenDev.Zizi.Utils.Text;
 
 namespace WinTenDev.Zizi.Services.Internals;
 
@@ -34,7 +30,11 @@ public class GlobalBanService
         var query = await GetGlobalBanByIdCore(userId);
 
         var isBan = query != null;
-        Log.Information("UserId '{UserId}' Is ES2 Ban? {IsBan}", userId, isBan);
+        Log.Information(
+            "UserId '{UserId}' Is ES2 Ban? {IsBan}",
+            userId,
+            isBan
+        );
 
         return isBan;
     }
@@ -120,9 +120,9 @@ public class GlobalBanService
     {
         var cacheKey = GetCacheKey(userId);
 
-        var data = await _cacheService.GetOrSetAsync
-        (
-            cacheKey, async () => {
+        var data = await _cacheService.GetOrSetAsync(
+            cacheKey,
+            async () => {
                 var data = await GetGlobalBanByIdCore(userId);
                 return data;
             }
@@ -153,9 +153,9 @@ public class GlobalBanService
     {
         var cacheKey = "global-bans";
 
-        var datas = await _cacheService.GetOrSetAsync
-        (
-            cacheKey, async () => {
+        var datas = await _cacheService.GetOrSetAsync(
+            cacheKey,
+            async () => {
                 var datas = await GetGlobalBanCore();
                 return datas;
             }
@@ -208,8 +208,7 @@ public class GlobalBanService
         var insertRows = await _queryService
             .CreateMySqlFactory()
             .FromTable(GBanTable)
-            .InsertAsync
-            (
+            .InsertAsync(
                 columns: new[]
                 {
                     "user_id", "from_id", "chat_id", "reason", "created_at"
@@ -239,7 +238,11 @@ public class GlobalBanService
             .GetAsync<GlobalBanAdminItem>();
 
         var isRegistered = querySql.Any();
-        Log.Debug("UserId {UserId} is registered on ES2? {IsRegistered}", userId, isRegistered);
+        Log.Debug(
+            "UserId {UserId} is registered on ES2? {IsRegistered}",
+            userId,
+            isRegistered
+        );
 
         return isRegistered;
     }

@@ -5,11 +5,6 @@ using System.Threading.Tasks;
 using Hangfire;
 using Serilog;
 using SqlKata.Execution;
-using WinTenDev.Zizi.Models.Tables;
-using WinTenDev.Zizi.Utils;
-using WinTenDev.Zizi.Utils.IO;
-using WinTenDev.Zizi.Utils.Providers;
-using WinTenDev.Zizi.Utils.Text;
 
 namespace WinTenDev.Zizi.Services.Internals;
 
@@ -91,8 +86,10 @@ public class MetricService
         var dateFormat = "yyyy-MM-dd HH";
         var dateFormatted = DateTime.Now.ToString(dateFormat);
         Log.Debug("Filter last hour: {DateFormatted}", dateFormatted);
-        var filteredMetrics = metrics.Find(x =>
-            x.Timestamp.ToString(dateFormat) == dateFormatted).ToList();
+        var filteredMetrics = metrics.Find(
+            x =>
+                x.Timestamp.ToString(dateFormat) == dateFormatted
+        ).ToList();
 
         if (filteredMetrics.Count == 0)
         {
@@ -100,7 +97,11 @@ public class MetricService
             return;
         }
 
-        Log.Debug("Flushing {Count} of {CountAll} data..", filteredMetrics.Count, metrics.Count());
+        Log.Debug(
+            "Flushing {Count} of {CountAll} data..",
+            filteredMetrics.Count,
+            metrics.Count()
+        );
         foreach (var hitActivity in filteredMetrics)
         {
             var data = new Dictionary<string, object>()
@@ -128,9 +129,11 @@ public class MetricService
         }
 
         Log.Debug("Clearing local data..");
-        filteredMetrics.ForEach(x => {
-            metrics.DeleteMany(y => y.Timestamp == x.Timestamp);
-        });
+        filteredMetrics.ForEach(
+            x => {
+                metrics.DeleteMany(y => y.Timestamp == x.Timestamp);
+            }
+        );
 
         LiteDbProvider.Rebuild();
 

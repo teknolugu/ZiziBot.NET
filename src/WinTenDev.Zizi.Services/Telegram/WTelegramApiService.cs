@@ -4,10 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using TL;
-using WinTenDev.Zizi.Models.Telegram;
-using WinTenDev.Zizi.Services.Internals;
-using WinTenDev.Zizi.Utils;
-using WinTenDev.Zizi.Utils.Telegram;
 using WTelegram;
 
 namespace WinTenDev.Zizi.Services.Telegram;

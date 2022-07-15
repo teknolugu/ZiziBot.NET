@@ -12,13 +12,6 @@ using MongoDB.Driver;
 using MongoDB.Entities;
 using Serilog;
 using SerilogTimings;
-using WinTenDev.Zizi.Models.Configs;
-using WinTenDev.Zizi.Models.Entities.MongoDb;
-using WinTenDev.Zizi.Models.Types;
-using WinTenDev.Zizi.Services.Internals;
-using WinTenDev.Zizi.Services.Telegram;
-using WinTenDev.Zizi.Utils;
-using WinTenDev.Zizi.Utils.Parsers;
 
 namespace WinTenDev.Zizi.Services.Externals;
 

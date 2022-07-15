@@ -16,14 +16,6 @@ using SqlKata.Execution;
 using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InputFiles;
-using WinTenDev.Zizi.Models.Configs;
-using WinTenDev.Zizi.Models.Entities.MongoDb;
-using WinTenDev.Zizi.Models.Entities.MongoDb.Internal;
-using WinTenDev.Zizi.Models.Tables;
-using WinTenDev.Zizi.Models.Types;
-using WinTenDev.Zizi.Services.Telegram;
-using WinTenDev.Zizi.Utils;
-using WinTenDev.Zizi.Utils.IO;
 
 namespace WinTenDev.Zizi.Services.Internals;
 

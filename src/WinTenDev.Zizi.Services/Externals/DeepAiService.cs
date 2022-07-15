@@ -2,8 +2,6 @@ using System.Threading.Tasks;
 using Flurl.Http;
 using Microsoft.Extensions.Options;
 using Serilog;
-using WinTenDev.Zizi.Models.Configs;
-using WinTenDev.Zizi.Models.Types;
 
 namespace WinTenDev.Zizi.Services.Externals;
 

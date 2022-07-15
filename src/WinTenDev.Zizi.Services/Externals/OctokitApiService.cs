@@ -8,10 +8,6 @@ using Octokit;
 using Serilog;
 using SerilogTimings;
 using Telegram.Bot.Types;
-using WinTenDev.Zizi.Models.Configs;
-using WinTenDev.Zizi.Models.Types;
-using WinTenDev.Zizi.Services.Internals;
-using WinTenDev.Zizi.Utils;
 using FileMode=System.IO.FileMode;
 
 namespace WinTenDev.Zizi.Services.Externals;

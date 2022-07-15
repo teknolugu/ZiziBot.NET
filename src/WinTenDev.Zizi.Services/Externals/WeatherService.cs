@@ -2,8 +2,6 @@
 using System.Net.Http;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using WinTenDev.Zizi.Models.Interfaces;
-using WinTenDev.Zizi.Models.Types;
 
 namespace WinTenDev.Zizi.Services.Externals;
 
@@ -19,7 +17,10 @@ public class WeatherService : IWeatherService
         };
     }
 
-    public async Task<CurrentWeather> GetWeatherAsync(double lat, double lon)
+    public async Task<CurrentWeather> GetWeatherAsync(
+        double lat,
+        double lon
+    )
     {
         var location = await FindLocationIdAsync(lat, lon);
 
@@ -38,7 +39,10 @@ public class WeatherService : IWeatherService
         };
     }
 
-    private async Task<string> FindLocationIdAsync(double lat, double lon)
+    private async Task<string> FindLocationIdAsync(
+        double lat,
+        double lon
+    )
     {
         var json = await _client.GetStringAsync($"location/search?lattlong={lat},{lon}");
         dynamic arr = JsonConvert.DeserializeObject(json);

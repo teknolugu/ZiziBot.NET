@@ -9,15 +9,6 @@ using SerilogTimings;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
-using WinTenDev.Zizi.Models.Dto;
-using WinTenDev.Zizi.Models.Enums;
-using WinTenDev.Zizi.Models.Enums.Languages;
-using WinTenDev.Zizi.Models.Types;
-using WinTenDev.Zizi.Services.Internals;
-using WinTenDev.Zizi.Services.Telegram;
-using WinTenDev.Zizi.Utils;
-using WinTenDev.Zizi.Utils.IO;
-using WinTenDev.Zizi.Utils.Telegram;
 using Image=SixLabors.ImageSharp.Image;
 
 namespace WinTenDev.Zizi.Services.Extensions;

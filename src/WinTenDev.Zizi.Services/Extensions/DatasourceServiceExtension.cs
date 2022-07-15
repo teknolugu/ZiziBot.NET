@@ -1,7 +1,5 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Nito.AsyncEx.Synchronous;
-using WinTenDev.Zizi.Services.Internals;
-using WinTenDev.Zizi.Utils;
 
 namespace WinTenDev.Zizi.Services.Extensions;
 

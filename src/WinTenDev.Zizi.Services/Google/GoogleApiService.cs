@@ -8,8 +8,6 @@ using Google.Apis.Util.Store;
 using Google.Cloud.Vision.V1;
 using Microsoft.Extensions.Options;
 using Serilog;
-using WinTenDev.Zizi.Models.Configs;
-using WinTenDev.Zizi.Utils.IO;
 
 namespace WinTenDev.Zizi.Services.Google;
 
@@ -24,9 +22,7 @@ public class GoogleApiService
     /// Constructor for GoogleApiService
     /// </summary>
     /// <param name="googleCloudConfig"></param>
-    public GoogleApiService(
-        IOptionsSnapshot<GoogleCloudConfig> googleCloudConfig
-    )
+    public GoogleApiService(IOptionsSnapshot<GoogleCloudConfig> googleCloudConfig)
     {
         _googleCloudConfig = googleCloudConfig.Value;
     }
@@ -57,29 +53,36 @@ public class GoogleApiService
     public async Task<DriveService> CreateDriveClientAsync()
     {
         var driveAuth = _googleCloudConfig.DriveAuth;
-        var credPath = Path.Combine("Storage", "Common", "gdrive-auth-token-store").SanitizeSlash().EnsureDirectory();
+        var credPath = Path.Combine(
+            "Storage",
+            "Common",
+            "gdrive-auth-token-store"
+        ).SanitizeSlash().EnsureDirectory();
         var secrets = await GoogleClientSecrets.FromFileAsync(driveAuth);
 
         var fileDataStore = new FileDataStore(credPath, true);
         var credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(
-        secrets.Secrets,
-        new[]
-        {
-            DriveService.Scope.Drive,
-            DriveService.Scope.DriveFile
-        },
-        "user",
-        CancellationToken.None,
-        fileDataStore);
+            secrets.Secrets,
+            new[]
+            {
+                DriveService.Scope.Drive,
+                DriveService.Scope.DriveFile
+            },
+            "user",
+            CancellationToken.None,
+            fileDataStore
+        );
 
         Log.Debug("Credential saved to {CredPath}", credPath);
 
         Log.Debug("Initializing Drive service");
-        var service = new DriveService(new BaseClientService.Initializer()
-        {
-            HttpClientInitializer = credential,
-            ApplicationName = "ZiziBot"
-        });
+        var service = new DriveService(
+            new BaseClientService.Initializer()
+            {
+                HttpClientInitializer = credential,
+                ApplicationName = "ZiziBot"
+            }
+        );
 
         return service;
     }
