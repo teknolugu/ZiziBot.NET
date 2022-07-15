@@ -1022,7 +1022,10 @@ public class TelegramService
                 if (fileId.IsValidUrl())
                 {
                     Log.Information("Converting URL: '{Url}' to stream", fileId);
-                    var stream = await fileId.GetStreamAsync();
+                    var stream = await fileId
+                        .OpenFlurlSession()
+                        .GetStreamAsync();
+                    
                     inputFile = new InputOnlineFile(stream, customFileName);
                 }
 
