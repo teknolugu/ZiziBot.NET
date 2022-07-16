@@ -16,7 +16,7 @@
         <PackageReference Include="FluentValidation" Version="11.1.0"/>
         <PackageReference Include="Flurl.Http" Version="3.2.4"/>
         <PackageReference Include="Google.Apis.Auth" Version="1.57.0"/>
-        <PackageReference Include="Google.Apis.Drive.v3" Version="1.57.0.2684"/>
+        <PackageReference Include="Google.Apis.Drive.v3" Version="1.57.0.2746"/>
         <PackageReference Include="Google.Apis.Iam.v1" Version="1.57.0.2702"/>
         <PackageReference Include="Google.Cloud.Firestore" Version="3.0.0"/>
         <PackageReference Include="Google.Cloud.Vision.V1" Version="3.0.0"/>
@@ -34,7 +34,7 @@
         <PackageReference Include="ModernTlSharp" Version="1.2.4"/>
         <PackageReference Include="MongoDB.Entities" Version="20.26.3"/>
         <PackageReference Include="MySqlBackup.NET.MySqlConnector" Version="2.3.6"/>
-        <PackageReference Include="MySqlConnector" Version="2.1.10"/>
+        <PackageReference Include="MySqlConnector" Version="2.1.11"/>
         <PackageReference Include="Nerdicus.VirusTotal.NET" Version="1.0.0"/>
         <PackageReference Include="Nito.AsyncEx" Version="5.1.2"/>
         <PackageReference Include="NMemory" Version="3.1.4"/>
