@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using Humanizer;
-using Slapper;
 
 namespace WinTenDev.Zizi.Utils;
 
@@ -9,7 +8,7 @@ public static class MapperUtil
 {
     public static T DictionaryMapper<T>(this Dictionary<string, object> dictionary)
     {
-        return AutoMapper.Map<T>(dictionary);
+        return Slapper.AutoMapper.Map<T>(dictionary);
     }
 
     public static Dictionary<string, object> ToDictionary(
@@ -30,7 +29,7 @@ public static class MapperUtil
             var value = property.GetValue(values, null) ?? string.Empty;
 
             if ((value.ToString().IsNullOrEmpty() ||
-                value.ToString() == "0") &&
+                 value.ToString() == "0") &&
                 skipZeroNullOrEmpty) continue;
 
             if (property.PropertyType.IsEnum && enumToString)
