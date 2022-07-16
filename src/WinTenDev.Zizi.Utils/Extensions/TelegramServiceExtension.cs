@@ -1,10 +1,16 @@
 ﻿using System;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Nito.AsyncEx.Synchronous;
+using Telegram.Bot;
+using Telegram.Bot.Framework;
+using WinTenDev.Zizi.Models.Bots;
+using WinTenDev.Zizi.Models.Bots.Options;
 using WinTenDev.Zizi.Models.Configs;
 using WinTenDev.Zizi.Utils.IO;
+using WinTenDev.Zizi.Utils.Telegram;
 using WTelegram;
 
 namespace WinTenDev.Zizi.Utils.Extensions;
@@ -46,20 +52,50 @@ public static class TelegramServiceExtension
                 Helpers.Log = (
                     logLevel,
                     logStr
-                ) => logger.Log((LogLevel) logLevel, "WTelegram: {S}", logStr);
+                ) => logger.Log(
+                    (LogLevel) logLevel,
+                    "WTelegram: {S}",
+                    logStr
+                );
 
                 var client = new Client(Config);
+                client.CollectAccessHash = true;
+
                 var user = client.LoginUserIfNeeded().WaitAndUnwrapException();
 
-                logger.LogInformation
-                (
-                    "We are logged-in as {0} (id {1})",
-                    user.username ?? user.first_name + " " + user.last_name, user.id
+                logger.LogInformation(
+                    "We are logged-in as {Name} (id {UserId})",
+                    user.username ?? user.GetFullName(),
+                    user.id
                 );
 
                 return client;
             }
         );
+
+        return services;
+    }
+
+    public static IServiceCollection AddTelegramBotClient(this IServiceCollection services)
+    {
+        var scope = services.BuildServiceProvider();
+        var configuration = scope.GetRequiredService<IConfiguration>();
+        var configSection = configuration.GetSection(nameof(TgBotConfig));
+        var tgBotConfig = scope.GetRequiredService<IOptionsSnapshot<TgBotConfig>>().Value;
+
+        services
+            .AddTransient<BotClient>()
+            .Configure<BotOptions<BotClient>>(configSection)
+            .Configure<CustomBotOptions<BotClient>>(configSection);
+
+        if (tgBotConfig.CustomBotServer != null)
+        {
+            services.AddScoped<ITelegramBotClient>(_ => new TelegramBotClient(token: tgBotConfig.ApiToken));
+        }
+        else
+        {
+            services.AddScoped<ITelegramBotClient>(_ => new TelegramBotClient(tgBotConfig.ApiToken));
+        }
 
         return services;
     }
