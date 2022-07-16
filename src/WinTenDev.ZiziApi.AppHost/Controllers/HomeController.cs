@@ -12,7 +12,6 @@ public class HomeController : ControllerBase
         return Ok(
             new
             {
-                Success = true,
                 Message = "Welcome to Zizi API",
                 Version = "1.0.0.0"
             }
