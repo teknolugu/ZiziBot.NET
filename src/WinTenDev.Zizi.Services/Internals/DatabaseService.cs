@@ -270,6 +270,7 @@ public class DatabaseService
         await DB.InitAsync("shared", MongoClientSettings.FromConnectionString(connectionString));
 
         DB.DatabaseFor<ForceSubscription>(meUsername);
+        DB.DatabaseFor<WarnMember>(meUsername);
 
         DB.DatabaseFor<SubsceneMovieSearch>("shared");
         DB.DatabaseFor<SubsceneMovieItem>("shared");
