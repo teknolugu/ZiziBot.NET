@@ -448,11 +448,11 @@ public class TelegramService
         return value is null ? default : (T) Convert.ChangeType(value, typeof(T));
     }
 
-    public string GetCommandParam(int index)
+    public string GetCommandParam(int index = -1)
     {
-        var value = MessageTextParts.Skip(1).ElementAtOrDefault(index);
+        var commandParams = MessageTextParts.Skip(1);
 
-        return value;
+        return index == -1 ? commandParams.JoinStr(" ") : commandParams.ElementAtOrDefault(index);
     }
 
     public bool IsCommand(string command)
