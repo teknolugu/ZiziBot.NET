@@ -60,7 +60,6 @@
         <PackageReference Include="Microsoft.EntityFrameworkCore.Abstractions" Version="6.0.6"/>
         <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="6.0.0"/>
         <PackageReference Include="MimeTypesMap" Version="1.0.8"/>
-        <PackageReference Include="MongoDB.Entities" Version="20.26.3"/>
         <PackageReference Include="MonkeyCache" Version="1.6.3"/>
         <PackageReference Include="MonkeyCache.FileStore" Version="1.6.3"/>
         <PackageReference Include="morelinq" Version="3.3.2"/>
