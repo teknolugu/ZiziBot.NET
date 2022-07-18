@@ -24,7 +24,7 @@ public class WarnMemberService
             .ManyAsync(
                 member =>
                     member.ChatId == chatId &&
-                    member.MemberFromId == userId
+                    member.MemberUserId == userId
             );
 
         return latestWarn;
@@ -43,7 +43,7 @@ public class WarnMemberService
         var delete = await DB.DeleteAsync<WarnMember>(
             member =>
                 member.ChatId == chatId &&
-                member.MemberFromId == userId
+                member.MemberUserId == userId
         );
 
         _logger.LogDebug("Deleted {@Delete} warns", delete);

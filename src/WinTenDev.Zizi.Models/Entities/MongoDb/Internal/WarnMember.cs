@@ -10,7 +10,7 @@ public class WarnMember : IEntity, ICreatedOn
 
     public string ID { get; set; }
     public long ChatId { get; set; }
-    public long MemberFromId { get; set; }
+    public long MemberUserId { get; set; }
     public string MemberFirstName { get; set; }
     public string MemberLastName { get; set; }
     public long AdminUserId { get; set; }

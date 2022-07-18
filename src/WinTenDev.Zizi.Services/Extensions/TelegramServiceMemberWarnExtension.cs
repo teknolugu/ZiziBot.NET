@@ -5,31 +5,79 @@ namespace WinTenDev.Zizi.Services.Extensions;
 
 public static class TelegramServiceMemberWarnExtension
 {
-    public static async Task<object> WarnMemberAsync(this TelegramService telegramService)
+    public static async Task WarnMemberAsync(this TelegramService telegramService)
     {
-        int warnLimit = 4;
         var chatId = telegramService.ChatId;
         var fromId = telegramService.FromId;
         var reasonWarn = telegramService.GetCommandParam();
 
-        var message = telegramService.Message;
         var replyToMessage = telegramService.ReplyToMessage;
+
+        if (!await telegramService.CheckFromAdminOrAnonymous())
+        {
+            await telegramService.SendWarnMessageAsync(
+                new WarnMember
+                {
+                    ChatId = chatId,
+                    MemberUserId = fromId,
+                    MemberFirstName = telegramService.From.FirstName,
+                    MemberLastName = telegramService.From.LastName,
+                    AdminUserId = fromId,
+                    AdminFirstName = telegramService.From.FirstName,
+                    AdminLastName = telegramService.From.LastName,
+                    Reason = "Self-warn",
+                }
+            );
+
+            return;
+        }
 
         if (replyToMessage == null)
         {
-            return await telegramService.SendTextMessageAsync("Please reply to a message to warn the member");
+            await telegramService.SendTextMessageAsync(
+                sendText: "Balas seseorang yang ingin di Warn",
+                scheduleDeleteAt: DateTime.UtcNow.AddMinutes(1),
+                includeSenderMessage: true
+            );
+
+            return;
         }
 
-        var warnUserId = replyToMessage.From!.Id;
-        var warnNameLink = replyToMessage.From.GetNameLink();
-        var warnMemberService = telegramService.GetRequiredService<WarnMemberService>();
+        await telegramService.SendWarnMessageAsync(
+            new WarnMember
+            {
+                ChatId = chatId,
+                MemberUserId = replyToMessage.From!.Id,
+                MemberFirstName = replyToMessage.From.FirstName,
+                MemberLastName = replyToMessage.From.LastName,
+                AdminUserId = fromId,
+                AdminFirstName = telegramService.From.FirstName,
+                AdminLastName = telegramService.From.LastName,
+                Reason = reasonWarn ?? "Self-warn",
+            }
+        );
+    }
 
-        var beforeWarn = await warnMemberService.GetLatestWarn(chatId, warnUserId);
+    private static async Task SendWarnMessageAsync(
+        this TelegramService telegramService,
+        WarnMember warnMember,
+        string note = null
+    )
+    {
+        int warnLimit = 4;
+        var chatId = warnMember.ChatId;
+        var warnUserId = warnMember.MemberUserId;
+
+        var warnMemberService = telegramService.GetRequiredService<WarnMemberService>();
 
         var htmlMessage = HtmlMessage.Empty
             .Bold("⚠️ Warn Member").Br()
-            .Bold("User Id: ").CodeBr(warnUserId.ToString())
-            .Bold("Name: ").TextBr(warnNameLink);
+            .Bold("User Id: ").CodeBr(warnMember.MemberUserId.ToString())
+            .Bold("Name: ").User(warnMember.MemberUserId, (warnMember.MemberFirstName + " " + warnMember.MemberLastName).Trim()).Br();
+
+        if (note.IsNotNullOrEmpty()) htmlMessage.Br().TextBr(note);
+
+        var beforeWarn = await warnMemberService.GetLatestWarn(chatId, warnUserId);
 
         if (beforeWarn.Count >= warnLimit)
         {
@@ -49,28 +97,18 @@ public static class TelegramServiceMemberWarnExtension
 
             await telegramService.KickMemberAsync(warnUserId, true);
 
-            return telegramService.SendTextMessageAsync(
+            await telegramService.SendTextMessageAsync(
                 sendText: htmlMessage.ToString(),
                 scheduleDeleteAt: DateTime.UtcNow.AddMinutes(1),
                 includeSenderMessage: true
             );
+
+            return;
         }
 
-        await warnMemberService.SaveWarnAsync(
-            new WarnMember
-            {
-                ChatId = telegramService.ChatId,
-                Reason = reasonWarn,
-                MemberFromId = replyToMessage.From!.Id,
-                MemberFirstName = replyToMessage.From?.FirstName,
-                MemberLastName = replyToMessage.From?.LastName,
-                AdminUserId = fromId,
-                AdminFirstName = message.From?.FirstName,
-                AdminLastName = message.From?.LastName,
-            }
-        );
+        await warnMemberService.SaveWarnAsync(warnMember);
 
-        var latestWarn = await warnMemberService.GetLatestWarn(chatId, warnUserId);
+        var latestWarn = await warnMemberService.GetLatestWarn(warnMember.ChatId, warnMember.MemberUserId);
 
         htmlMessage.Br().TextBr("⏳ Riwayat");
 
@@ -83,7 +121,7 @@ public static class TelegramServiceMemberWarnExtension
             }
         );
 
-        return telegramService.SendTextMessageAsync(
+        await telegramService.SendTextMessageAsync(
             sendText: htmlMessage.ToString(),
             scheduleDeleteAt: DateTime.UtcNow.AddHours(1),
             includeSenderMessage: true
