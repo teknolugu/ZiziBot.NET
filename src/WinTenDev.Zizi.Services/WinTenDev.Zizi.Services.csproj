@@ -32,7 +32,7 @@
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="ModernTlSharp" Version="1.2.4"/>
-        <PackageReference Include="MongoDB.Entities" Version="20.26.3"/>
+        <PackageReference Include="MongoDB.Entities" Version="20.26.4"/>
         <PackageReference Include="MySqlBackup.NET.MySqlConnector" Version="2.3.6"/>
         <PackageReference Include="MySqlConnector" Version="2.1.11"/>
         <PackageReference Include="Nerdicus.VirusTotal.NET" Version="1.0.0"/>

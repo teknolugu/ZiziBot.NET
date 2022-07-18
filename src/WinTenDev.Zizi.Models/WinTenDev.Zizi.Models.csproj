@@ -23,7 +23,7 @@
         </PackageReference>
         <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="6.0.0"/>
         <PackageReference Include="Microsoft.ML" Version="1.7.1"/>
-        <PackageReference Include="MongoDB.Entities" Version="20.26.3"/>
+        <PackageReference Include="MongoDB.Entities" Version="20.26.4"/>
         <PackageReference Include="morelinq" Version="3.3.2"/>
         <PackageReference Include="Newtonsoft.Json" Version="13.0.1"/>
         <PackageReference Include="Octokit" Version="1.0.0"/>
