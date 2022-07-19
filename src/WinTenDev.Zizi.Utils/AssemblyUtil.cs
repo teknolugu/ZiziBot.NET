@@ -68,7 +68,7 @@ public static class AssemblyUtil
 
     public static string FormatVersion(this Version version)
     {
-        var versionStr = $"{version.Minor} Build {version.Build}";
+        var versionStr = $"{version.Major}.{version.Minor} Build {version.Build}";
         return versionStr;
     }
 
