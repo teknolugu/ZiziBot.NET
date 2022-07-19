@@ -16,6 +16,7 @@ public static class TelegramServiceForceSubExtension
             return;
         }
 
+        var chatId = telegramService.ChatId;
         var fSubsService = telegramService.GetRequiredService<ForceSubsService>();
         var chatService = telegramService.GetRequiredService<ChatService>();
         var channelId = telegramService.GetCommandParamAt<long>(0);
@@ -24,6 +25,18 @@ public static class TelegramServiceForceSubExtension
         {
             await telegramService.SendTextMessageAsync(
                 sendText: "Silakan masukkan ID Channel yang ingin ditambahkan",
+                scheduleDeleteAt: DateTime.UtcNow.AddMinutes(1),
+                includeSenderMessage: true
+            );
+
+            return;
+        }
+
+        var currentSubs = await fSubsService.GetSubsAsync(chatId);
+        if (currentSubs.Count >= 1)
+        {
+            await telegramService.AppendTextAsync(
+                sendText: "Grup ini sudah memiliki kanal langganan eksternal. \nKetik <code>/fsublist</code> untuk melihat daftar.",
                 scheduleDeleteAt: DateTime.UtcNow.AddMinutes(1),
                 includeSenderMessage: true
             );

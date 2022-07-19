@@ -283,14 +283,6 @@ public class DatabaseService
     {
         _logger.LogInformation("Creating MongoDb Index..");
 
-        await DB.Index<ForceSubscription>()
-            .Key(subscription => subscription.ChannelId, KeyType.Ascending)
-            .Option(
-                options =>
-                    options.Unique = true
-            )
-            .CreateAsync();
-
         await DB.Index<SubsceneMovieItem>()
             .Key(item => item.MovieUrl, KeyType.Ascending)
             .Option(

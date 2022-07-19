@@ -21,21 +21,18 @@ public class ForceSubsService
         var chatId = forceSubscription.ChatId;
         var channelId = forceSubscription.ChannelId;
 
-        await DB.Find<ForceSubscription>()
+        var currentSubscriptions = await DB.Find<ForceSubscription>()
             .ManyAsync(
                 subscription =>
                     subscription.ChatId == chatId &&
                     subscription.ChannelId == channelId
-            )
-            .ContinueWith(
-                async task => {
-                    affectedRows = task.Result.Count;
-                    if (task.Result.Count == 0)
-                    {
-                        await DB.InsertAsync<ForceSubscription>(forceSubscription);
-                    }
-                }
             );
+
+        if (currentSubscriptions.Count == 0)
+        {
+            await DB.SaveAsync<ForceSubscription>(forceSubscription);
+            affectedRows = 1;
+        }
 
         return affectedRows;
     }
