@@ -1,13 +1,9 @@
 using AutoWrapper;
-using DotNurse.Injector.AspNetCore;
 using Serilog;
-using WinTenDev.Zizi.Services.Extensions;
-using WinTenDev.Zizi.Utils.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Host
-    .UseDotNurseInjector()
     .UseSerilog(
         (
             context,
@@ -28,13 +24,20 @@ builder.Services.AddAutoMapper(
 
 builder.Services.AddCacheTower();
 
+builder.Services.AddLiteDb();
+
 builder.Services.AddTelegramBotClient();
+builder.Services.AddWtTelegramApi();
+builder.Services.AddHostedServices();
 builder.Services.AddCommonService();
+// builder.Services.AddInjectables();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddHangfireServerAndConfig();
 
 var app = builder.Build();
 
@@ -49,19 +52,22 @@ if (app.Environment.IsDevelopment())
     );
 }
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
 app.UseSerilogRequestLogging();
 
 app.UseAuthorization();
 app.RunMongoDbPreparation();
 
+app.UseHangfireDashboardAndServer();
+
 app.UseApiResponseAndExceptionWrapper(
     new AutoWrapperOptions()
     {
         IsDebug = true,
-        ShowStatusCode = true
+        ShowStatusCode = true,
+        BypassHTMLValidation = true
     }
 );
 app.MapControllers();
 
-app.Run();
+await app.RunAsync();

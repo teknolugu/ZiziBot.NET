@@ -19,9 +19,6 @@ using Telegram.Bot.Types.InputFiles;
 
 namespace WinTenDev.Zizi.Services.Internals;
 
-/// <summary>
-/// Data Backup service implementation
-/// </summary>
 public class DatabaseService
 {
     private const string DataDir = "Storage/Data/";
@@ -271,6 +268,7 @@ public class DatabaseService
 
         DB.DatabaseFor<ForceSubscription>(meUsername);
         DB.DatabaseFor<WarnMember>(meUsername);
+        DB.DatabaseFor<WebHookChat>(meUsername);
 
         DB.DatabaseFor<SubsceneMovieSearch>("shared");
         DB.DatabaseFor<SubsceneMovieItem>("shared");

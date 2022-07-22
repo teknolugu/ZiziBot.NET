@@ -1,4 +1,5 @@
 ﻿// Global using directives
+global using WinTenDev.Zizi.Models;
 global using WinTenDev.Zizi.Models.Attributes;
 global using WinTenDev.Zizi.Models.Configs;
 global using WinTenDev.Zizi.Models.Dto;

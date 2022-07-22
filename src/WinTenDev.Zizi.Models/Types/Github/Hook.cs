@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
-namespace WinTenDev.WebHook.AppHost.Models.Github
+namespace WinTenDev.Zizi.Models.Types.Github
 {
     public class Hook
     {
@@ -26,11 +26,11 @@ namespace WinTenDev.WebHook.AppHost.Models.Github
         public Config Config { get; set; }
 
         [JsonProperty("updated_at")]
-        [JsonConverter(typeof(UnixDateTimeConverter))]
+        [JsonConverter(typeof(IsoDateTimeConverter))]
         public DateTimeOffset UpdatedAt { get; set; }
 
         [JsonProperty("created_at")]
-        [JsonConverter(typeof(UnixDateTimeConverter))]
+        [JsonConverter(typeof(IsoDateTimeConverter))]
         public DateTimeOffset CreatedAt { get; set; }
 
         [JsonProperty("url")]

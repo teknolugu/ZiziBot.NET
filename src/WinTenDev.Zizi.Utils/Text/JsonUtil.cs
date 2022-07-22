@@ -71,4 +71,16 @@ public static class JsonUtil
 
         return filePath;
     }
+
+    public static string JsonFormat(
+        this string content,
+        Formatting formatting = Formatting.Indented
+    )
+    {
+        if (formatting == Formatting.None) return content;
+
+        var formatJson = JToken.Parse(content).ToString(formatting);
+
+        return formatJson;
+    }
 }

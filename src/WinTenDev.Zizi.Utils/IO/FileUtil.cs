@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using Serilog;
+using WinTenDev.Zizi.Utils.Text;
 
 namespace WinTenDev.Zizi.Utils.IO;
 
@@ -40,7 +42,8 @@ public static class FileUtil
 
     public static async Task WriteTextAsync(
         this string content,
-        string filePath
+        string filePath,
+        Formatting jsonFormatting = Formatting.None
     )
     {
         var cachePath = "Storage/Caches";
@@ -50,7 +53,7 @@ public static class FileUtil
 
         filePath.SanitizeSlash().EnsureDirectory();
 
-        await File.WriteAllTextAsync(filePath, content);
+        await File.WriteAllTextAsync(filePath, content.JsonFormat(jsonFormatting));
 
         Log.Information("Writing file success..");
     }

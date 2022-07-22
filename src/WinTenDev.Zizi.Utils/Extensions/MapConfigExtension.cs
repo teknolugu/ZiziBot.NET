@@ -95,6 +95,7 @@ public static class MapConfigExtension
         services.Configure<GrafanaConfig>(config.GetSection(nameof(GrafanaConfig)));
         services.Configure<HangfireConfig>(config.GetSection(nameof(HangfireConfig)));
         services.Configure<HealthConfig>(config.GetSection(nameof(HealthConfig)));
+        services.Configure<HttpTunnelConfig>(config.GetSection(nameof(HttpTunnelConfig)));
         services.Configure<LocalizationConfig>(config.GetSection(nameof(LocalizationConfig)));
         services.Configure<NewRelicConfig>(config.GetSection(nameof(NewRelicConfig)));
         services.Configure<OctokitConfig>(config.GetSection(nameof(OctokitConfig)));
