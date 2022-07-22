@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using WinTenDev.Zizi.Models.Enums;
 
 namespace WinTenDev.Zizi.Utils;
 
