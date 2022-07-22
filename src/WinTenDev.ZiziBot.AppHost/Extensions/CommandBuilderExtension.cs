@@ -148,6 +148,7 @@ public static class CommandBuilderExtension
                                         .UseCommand<UntagCommand>("untag")
                                         .UseCommand<UsernameCommand>("username")
                                         .UseCommand<WarnCommand>("warn")
+                                        .UseCommand<WebHookCommand>("webhook")
                                         .UseCommand<WelcomeButtonCommand>("welbtn")
                                         .UseCommand<WelcomeCommand>("welcome")
                                         .UseCommand<WelcomeDocumentCommand>("weldoc")
