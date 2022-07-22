@@ -24,6 +24,7 @@ global using WinTenDev.Zizi.Models.Validators;
 global using WinTenDev.Zizi.Models.Vendors.FathimahApi;
 global using WinTenDev.Zizi.Services.Extensions;
 global using WinTenDev.Zizi.Services.Externals;
+global using WinTenDev.Zizi.Services.HostedServices;
 global using WinTenDev.Zizi.Services.Internals;
 global using WinTenDev.Zizi.Services.NMemory;
 global using WinTenDev.Zizi.Services.Starts;
