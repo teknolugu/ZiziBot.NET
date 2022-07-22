@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using Polly;
 using Serilog;
 
@@ -14,12 +15,14 @@ namespace WinTenDev.Zizi.Services.HostedServices;
 
 public class HttpTunnelingHostedService : BackgroundService
 {
+    private readonly HttpTunnelConfig _httpTunnelConfig;
     private readonly IServer _server;
     private readonly IHostApplicationLifetime _hostApplicationLifetime;
     private readonly ILogger _logger;
     private readonly LocalXposeService _localXposeService;
 
     public HttpTunnelingHostedService(
+        IOptions<HttpTunnelConfig> httpTunnelConfig,
         IServer server,
         IHostApplicationLifetime hostApplicationLifetime,
         IConfiguration config,
@@ -27,6 +30,7 @@ public class HttpTunnelingHostedService : BackgroundService
         IServiceProvider serviceProvider
     )
     {
+        _httpTunnelConfig = httpTunnelConfig.Value;
         _server = server;
         _hostApplicationLifetime = hostApplicationLifetime;
         _logger = logger;
@@ -36,6 +40,12 @@ public class HttpTunnelingHostedService : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         await WaitForApplicationStarted();
+
+        if (!_httpTunnelConfig.IsEnabled)
+        {
+            _logger.Information("Http Tunneling is disabled");
+            return;
+        }
 
         var addresses = _server.Features.Get<IServerAddressesFeature>()?.Addresses;
         var localUrl = addresses?.SingleOrDefault(u => u.StartsWith("http://"));
