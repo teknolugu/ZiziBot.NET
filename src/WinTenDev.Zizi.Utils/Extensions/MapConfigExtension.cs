@@ -107,6 +107,7 @@ public static class MapConfigExtension
         services.Configure<TgBotConfig>(config.GetSection(nameof(TgBotConfig)));
         services.Configure<SpamWatchConfig>(config.GetSection(nameof(SpamWatchConfig)));
         services.Configure<UptoboxConfig>(config.GetSection(nameof(UptoboxConfig)));
+        services.Configure<UsergeFedConfig>(config.GetSection(nameof(UsergeFedConfig)));
         services.Configure<RestrictionConfig>(config.GetSection(nameof(RestrictionConfig)));
         services.Configure<WebApiConfig>(config.GetSection(nameof(WebApiConfig)));
 
