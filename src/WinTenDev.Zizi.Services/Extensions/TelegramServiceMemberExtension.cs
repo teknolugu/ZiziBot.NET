@@ -31,16 +31,18 @@ public static class TelegramServiceMemberExtension
         };
 
         if (telegramService.IsPrivateChat ||
-            telegramService.MessageOrEdited == null ||
             telegramService.CheckFromAnonymous() ||
             telegramService.CheckSenderChannel())
         {
             return defaultResult;
         }
 
-        if (await telegramService.CheckFromAdminOrAnonymous()) return defaultResult;
-
         var message = telegramService.MessageOrEdited;
+        if (message != null)
+        {
+            if (await telegramService.CheckFromAdminOrAnonymous())
+                return defaultResult;
+        }
 
         var antiSpamResult = await telegramService.AntiSpamService.CheckSpam(chatId, fromId);
 
@@ -54,7 +56,7 @@ public static class TelegramServiceMemberExtension
             telegramService.KickMemberAsync(
                 userId: fromId,
                 unban: false,
-                untilDate: DateTime.Now.AddMinutes(1)
+                untilDate: DateTime.Now.AddHours(1)
             ),
             telegramService.SendTextMessageAsync(
                 sendText: messageBan,

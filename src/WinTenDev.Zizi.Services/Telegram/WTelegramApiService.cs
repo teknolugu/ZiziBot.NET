@@ -377,4 +377,10 @@ public class WTelegramApiService
             return default;
         }
     }
+
+    public async Task<Users_UserFull> GetFullUser(long userId)
+    {
+        var fullUser = await _client.Users_GetFullUser(new InputUser(userId, _client.GetAccessHashFor<Users_UserFull>(userId)));
+
+        return fullUser;
 }
