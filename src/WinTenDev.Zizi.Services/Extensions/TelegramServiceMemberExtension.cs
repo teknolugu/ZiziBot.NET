@@ -1049,7 +1049,7 @@ public static class TelegramServiceMemberExtension
         }
     }
 
-    internal static async Task<bool> AnswerChatJoinRequestAsync(this TelegramService telegramService)
+    public static async Task<bool> AnswerChatJoinRequestAsync(this TelegramService telegramService)
     {
         if (!telegramService.HasChatJoinRequest) return true;
 
@@ -1090,6 +1090,20 @@ public static class TelegramServiceMemberExtension
             needManualAccept = false;
         }
 
+        if (chatSettings.EnableForceSubscription)
+        {
+            var checkSubscription = await telegramService.ChatService.CheckChatMemberSubscriptionToAllAsync(chatId, userChatJoinRequest.Id);
+            var listChannelStr = checkSubscription
+                .Select(result => $"<a href=\"{result.InviteLink}\">{result.ChannelName}</a>")
+                .JoinStr(", ");
+
+            if (checkSubscription.Any())
+            {
+                reasons.Add($"Belum subrek ke {listChannelStr}");
+                needManualAccept = false;
+            }
+        }
+
         if (needManualAccept) return true;
         var eventLogService = telegramService.GetRequiredService<EventLogService>();
 
@@ -1105,7 +1119,8 @@ public static class TelegramServiceMemberExtension
 
         await telegramService.SendTextMessageAsync(
             sendText: htmlMessage.ToString(),
-            scheduleDeleteAt: DateTime.UtcNow.AddMinutes(1),
+            disableWebPreview: true,
+            scheduleDeleteAt: DateTime.UtcNow.AddMinutes(10),
             preventDuplicateSend: true,
             messageFlag: MessageFlag.ChatJoinRequest
         );

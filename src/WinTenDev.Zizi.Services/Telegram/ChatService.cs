@@ -20,6 +20,7 @@ public class ChatService
     private readonly ILogger<ChatService> _logger;
     private readonly ITelegramBotClient _botClient;
     private readonly BotService _botService;
+    private readonly ForceSubsService _forceSubsService;
     private readonly MessageHistoryService _messageHistoryService;
     private readonly SettingsService _settingsService;
     private readonly CacheService _cacheService;
@@ -31,16 +32,18 @@ public class ChatService
         IOptionsSnapshot<RestrictionConfig> restrictionConfig,
         ITelegramBotClient botClient,
         BotService botService,
+        ForceSubsService forceSubsService,
         MessageHistoryService messageHistoryService,
         SettingsService settingsService
     )
     {
+        _restrictionConfig = restrictionConfig.Value;
         _logger = logger;
         _botClient = botClient;
         _botService = botService;
+        _forceSubsService = forceSubsService;
         _messageHistoryService = messageHistoryService;
         _cacheService = cacheService;
-        _restrictionConfig = restrictionConfig.Value;
         _settingsService = settingsService;
     }
 
@@ -117,13 +120,17 @@ public class ChatService
         }
     }
 
-    public async Task<Chat> GetChatAsync(ChatId chatId)
+    public async Task<Chat> GetChatAsync(
+        ChatId chatId,
+        bool evictBefore = false
+    )
     {
         var cacheKey = "chat_" + chatId;
 
         var data = await _cacheService.GetOrSetAsync(
-            cacheKey,
-            async () => {
+            cacheKey: cacheKey,
+            evictBefore: evictBefore,
+            action: async () => {
                 var chat = await _botClient.GetChatAsync(chatId);
 
                 return chat;
@@ -153,13 +160,15 @@ public class ChatService
     public async Task<ChatMember> GetChatMemberAsync(
         ChatId chatId,
         long userId,
+        bool evictBefore = false,
         bool evictAfter = false
     )
     {
         var cacheKey = "chat-member_" + chatId + $"_{userId}";
 
         var data = await _cacheService.GetOrSetAsync(
-            cacheKey,
+            cacheKey: cacheKey,
+            evictBefore: evictBefore,
             evictAfter: evictAfter,
             action: async () => {
                 var chat = await _botClient.GetChatMemberAsync(chatId, userId);
@@ -169,6 +178,136 @@ public class ChatService
         );
 
         return data;
+    }
+
+    public async Task<List<ChannelSubscriptionResult>> CheckChatMemberSubscriptionToAllAsync(
+        long chatId,
+        long userId
+    )
+    {
+        var subscriptionResults = new List<ChannelSubscriptionResult>();
+
+        var subscriptionIntoLinkedChannel = await CheckChatMemberSubscriptionIntoLinkedChannelAsync(chatId, userId);
+
+        if (!subscriptionIntoLinkedChannel.IsSubscribed)
+        {
+            subscriptionResults.Add(subscriptionIntoLinkedChannel);
+        }
+
+        var subscriptionIntoAddedChannel = await CheckChatMemberSubscriptionIntoAddedChannelAsync(chatId, userId);
+
+        if (!subscriptionIntoAddedChannel.IsSubscribedToAll)
+        {
+            subscriptionResults.AddRange(subscriptionIntoAddedChannel.ChannelSubscriptions);
+        }
+
+        return subscriptionResults
+            .DistinctBy(result => result.ChannelId)
+            .ToList();
+    }
+
+    public async Task<ChannelSubscriptionResult> CheckChatMemberSubscriptionIntoLinkedChannelAsync(
+        long chatId,
+        long userId
+    )
+    {
+        var subscriptionResult = new ChannelSubscriptionResult()
+        {
+            IsSubscribed = true
+        };
+
+        var getChat = await GetChatAsync(chatId);
+
+        var linkedChatId = getChat.LinkedChatId ?? 0;
+
+        if (getChat.LinkedChatId == null) return subscriptionResult;
+        var chatLinked = await GetChatAsync(linkedChatId, true);
+
+        if (chatLinked.Username == null)
+        {
+            Log.Information(
+                "Force Subs for ChatId: {ChatId} is disabled because linked channel with Id: {LinkedChatId} is not a Public Channel",
+                chatId,
+                linkedChatId
+            );
+
+            return subscriptionResult;
+        }
+
+        subscriptionResult.ChannelId = linkedChatId;
+        subscriptionResult.ChannelName = chatLinked.Title;
+        subscriptionResult.InviteLink = chatLinked.InviteLink;
+
+        var chatMember = await GetChatMemberAsync(
+            chatId: linkedChatId,
+            userId: userId,
+            evictBefore: true,
+            evictAfter: true
+        );
+
+        var isSubscribed = chatMember.Status != ChatMemberStatus.Left;
+
+        subscriptionResult.IsSubscribed = isSubscribed;
+
+        if (!isSubscribed)
+        {
+            return subscriptionResult;
+        }
+
+        return subscriptionResult;
+    }
+
+    public async Task<ChannelSubscriptionIntoAddedChannelResult> CheckChatMemberSubscriptionIntoAddedChannelAsync(
+        long chatId,
+        long userId
+    )
+    {
+        var subscriptionResult = new ChannelSubscriptionIntoAddedChannelResult();
+
+        var checkSubs = await _forceSubsService.GetSubsAsync(chatId);
+
+        var checkSubscriptionTasks = checkSubs.Select(
+                async subscription => {
+                    var chatMember = await GetChatMemberAsync(
+                        chatId: subscription.ChannelId,
+                        userId: userId,
+                        evictBefore: true,
+                        evictAfter: true
+                    );
+
+                    return new ChannelSubscriptionIntoChannelResult()
+                    {
+                        ChannelId = subscription.ChannelId,
+                        ChatMember = chatMember
+                    };
+                }
+            )
+            .Select(task => task.Result)
+            .ToList();
+
+        var notSubscribed = checkSubscriptionTasks
+            .Where(x => x.ChatMember.Status == ChatMemberStatus.Left)
+            .ToList();
+
+        subscriptionResult.IsSubscribedToAll = !notSubscribed.Any();
+        subscriptionResult.ChannelSubscriptions.AddRange(
+            notSubscribed.Select(
+                (member) => {
+                    var channel = checkSubs
+                        .FirstOrDefault(subscription => subscription.ChannelId == member.ChannelId);
+
+                    return new ChannelSubscriptionResult()
+                    {
+                        IsSubscribed = member.ChatMember.Status != ChatMemberStatus.Left,
+                        ChannelId = member.ChannelId,
+                        InviteLink = channel?.InviteLink,
+                        ChannelName = channel?.ChannelTitle
+                    };
+                }
+            )
+        );
+
+        return subscriptionResult;
     }
 
     public async Task<bool> IsMeHereAsync(long chatId)
