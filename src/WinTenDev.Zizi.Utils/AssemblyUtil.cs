@@ -72,13 +72,21 @@ public static class AssemblyUtil
         return versionStr;
     }
 
+    public static string GetVersionNumber()
+    {
+        var currentAssembly = Assembly.GetCallingAssembly().GetName();
+        var assemblyVersion = currentAssembly.Version?.ToString();
+
+        return assemblyVersion;
+    }
+
     public static HtmlMessage GetAboutHeader(this User me)
     {
         var meFullName = me.GetFullName();
         var currentAssembly = Assembly.GetExecutingAssembly().GetName();
         var buildNumber = currentAssembly.Version?.Build.ToString();
         var assemblyVersion = currentAssembly.Version?.ToString();
-        var buildDate = AssemblyUtil.GetBuildDate();
+        var buildDate = GetBuildDate();
 
         var htmlMessage = HtmlMessage.Empty
             .Bold($"{meFullName} 4 Build {buildNumber}").Br()

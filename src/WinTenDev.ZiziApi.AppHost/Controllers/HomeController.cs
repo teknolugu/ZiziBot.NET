@@ -13,7 +13,7 @@ public class HomeController : ControllerBase
             new
             {
                 Message = "Welcome to Zizi API",
-                Version = "1.0.0.0"
+                Version = AssemblyUtil.GetVersionNumber()
             }
         );
     }
