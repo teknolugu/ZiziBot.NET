@@ -383,4 +383,5 @@ public class WTelegramApiService
         var fullUser = await _client.Users_GetFullUser(new InputUser(userId, _client.GetAccessHashFor<Users_UserFull>(userId)));
 
         return fullUser;
+    }
 }
