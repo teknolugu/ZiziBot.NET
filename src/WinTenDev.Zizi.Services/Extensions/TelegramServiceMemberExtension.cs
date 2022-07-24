@@ -621,7 +621,9 @@ public static class TelegramServiceMemberExtension
         var chatId = telegramService.ChatId;
 
         if (telegramService.IsGlobalIgnored() ||
-            telegramService.InlineQuery != null)
+            telegramService.HasChatJoinRequest ||
+            telegramService.InlineQuery != null ||
+            telegramService.ChosenInlineResult != null)
         {
             return true;
         }
@@ -650,36 +652,29 @@ public static class TelegramServiceMemberExtension
                 return true;
             }
 
+            var subscriptionToAll = await telegramService.ChatService.CheckChatMemberSubscriptionToAllAsync(chatId, fromId);
+
             var fromNameLink = telegramService.FromNameLink;
 
-            var getChat = await telegramService.GetChat();
-            var linkedChatId = getChat.LinkedChatId ?? 0;
-
-            if (getChat.LinkedChatId == null) return true;
-            var chatLinked = await telegramService.ChatService.GetChatAsync(linkedChatId);
-
-            if (chatLinked.Username == null)
+            if (subscriptionToAll.Count == 0)
             {
                 Log.Information(
-                    "Force Subs for ChatId: {ChatId} is disabled because linked channel with Id: {LinkedChatId} is not a Public Channel",
-                    chatId,
-                    linkedChatId
+                    "UserId: {UserId} at ChatId: {ChatId} is subscribed to any configured channel",
+                    fromId,
+                    chatId
                 );
 
                 return true;
             }
 
-            var chatMember = await telegramService.ChatService.GetChatMemberAsync(
-                chatId: linkedChatId,
-                userId: fromId,
-                evictAfter: true
+            var listKeyboard = subscriptionToAll.Select(
+                result => {
+                    return InlineKeyboardButton.WithCallbackData(result.ChannelName, result.ChannelId.ToString());
+                }
             );
 
-            if (chatMember.Status != ChatMemberStatus.Left) return true;
+            var keyboard = new InlineKeyboardMarkup(listKeyboard.Chunk(1));
 
-            var keyboard = new InlineKeyboardMarkup(
-                InlineKeyboardButton.WithUrl(chatLinked.GetChatTitle(), chatLinked.GetChatLink())
-            );
             var sendText = $"Hai {fromNameLink}" +
                            "\nKamu belum Subscribe ke Channel dibawah ini, silakan segera Subcribe agar tidak di tendang.";
 
