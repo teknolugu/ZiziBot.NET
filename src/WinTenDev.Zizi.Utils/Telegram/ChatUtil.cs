@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Text;
 using Serilog;
 using Telegram.Bot.Types;
@@ -189,5 +191,85 @@ public static class ChatUtil
                        $"\n{adminList}";
 
         return adminAll;
+    }
+
+    [SuppressMessage("ReSharper", "PossibleNullReferenceException")]
+    public static User GetSender(this Update update)
+    {
+        return update.Type switch
+        {
+            UpdateType.Unknown => null,
+            UpdateType.Message => update.Message.From,
+            UpdateType.InlineQuery => update.InlineQuery.From,
+            UpdateType.ChosenInlineResult => update.ChosenInlineResult.From,
+            UpdateType.CallbackQuery => update.CallbackQuery.From,
+            UpdateType.EditedMessage => update.EditedMessage.From,
+            UpdateType.ChannelPost => update.ChannelPost.From,
+            UpdateType.EditedChannelPost => update.EditedChannelPost.From,
+            UpdateType.ShippingQuery => update.ShippingQuery.From,
+            UpdateType.PreCheckoutQuery => update.PreCheckoutQuery.From,
+            UpdateType.Poll => null,
+            UpdateType.PollAnswer => update.PollAnswer.User,
+            UpdateType.ChatMember => update.ChatMember.From,
+            UpdateType.MyChatMember => update.MyChatMember.From,
+            UpdateType.ChatJoinRequest => update.ChatJoinRequest.From,
+            _ => default
+        };
+    }
+
+    [SuppressMessage("ReSharper", "PossibleNullReferenceException")]
+    public static Chat GetChat(this Update update)
+    {
+        return update.Type switch
+        {
+            UpdateType.Message => update.Message.Chat,
+            UpdateType.CallbackQuery => update.CallbackQuery.Message.Chat,
+            UpdateType.EditedMessage => update.EditedMessage.Chat,
+            UpdateType.ChannelPost => update.ChannelPost.Chat,
+            UpdateType.EditedChannelPost => update.EditedChannelPost.Chat,
+            UpdateType.ChatMember => update.ChatMember.Chat,
+            UpdateType.MyChatMember => update.MyChatMember.Chat,
+            UpdateType.ChatJoinRequest => update.ChatJoinRequest.Chat,
+            UpdateType.Unknown => null,
+            UpdateType.InlineQuery => null,
+            UpdateType.ChosenInlineResult => null,
+            UpdateType.ShippingQuery => null,
+            UpdateType.PreCheckoutQuery => null,
+            UpdateType.Poll => null,
+            UpdateType.PollAnswer => null,
+            _ => default
+        };
+    }
+
+    [SuppressMessage("ReSharper", "PossibleNullReferenceException")]
+    public static DateTime GetMessageDate(this Update update)
+    {
+        var date = update.Type switch
+        {
+            UpdateType.EditedMessage => update.EditedMessage.EditDate.GetValueOrDefault(),
+            UpdateType.EditedChannelPost => update.EditedChannelPost.EditDate.GetValueOrDefault(),
+            UpdateType.Message => update.Message.Date,
+            UpdateType.MyChatMember => update.MyChatMember.Date,
+            UpdateType.CallbackQuery => DateTime.UtcNow,
+            UpdateType.ChannelPost => update.ChannelPost.Date,
+            UpdateType.ChatMember => update.ChatMember.Date,
+            UpdateType.ChatJoinRequest => update.ChatJoinRequest.Date,
+            _ => DateTime.UtcNow
+        };
+
+        return date;
+    }
+
+    [SuppressMessage("ReSharper", "PossibleNullReferenceException")]
+    public static DateTime? GetMessageEditDate(this Update update)
+    {
+        var date = update.Type switch
+        {
+            UpdateType.EditedMessage => update.EditedMessage.EditDate,
+            UpdateType.EditedChannelPost => update.EditedChannelPost.EditDate,
+            _ => DateTime.UtcNow
+        };
+
+        return date;
     }
 }

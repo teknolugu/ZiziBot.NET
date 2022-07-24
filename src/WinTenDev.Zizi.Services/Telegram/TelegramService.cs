@@ -250,13 +250,12 @@ public class TelegramService
 
         ReplyFromId = ReplyToMessage?.From?.Id ?? 0;
 
-        From = ChannelOrEditedPost?.From ??
-               MyChatMember?.From ?? ChosenInlineResult?.From ?? InlineQuery?.From ?? CallbackQuery?.From ?? ChatJoinRequest?.From ?? MessageOrEdited?.From;
-        Chat = ChannelOrEditedPost?.Chat ?? MyChatMember?.Chat ?? CallbackQuery?.Message?.Chat ?? ChatJoinRequest?.Chat ?? MessageOrEdited?.Chat;
+        From = update.GetSender();
+        Chat = update.GetChat();
         SenderChat = MessageOrEdited?.SenderChat;
-        MessageDate = MyChatMember?.Date ?? CallbackQuery?.Message?.Date ?? MessageOrEdited?.Date ?? DateTime.Now;
-        MessageEditDate = MessageOrEdited?.EditDate;
-        MessageDateOrEditDate = MessageEditDate ?? MessageDate;
+        MessageDate = update.GetMessageDate();
+        MessageEditDate = update.GetMessageEditDate();
+        // MessageDateOrEditDate = MessageEditDate ?? MessageDate;
 
         TimeInit = MessageDate.GetDelay();
 
@@ -283,7 +282,12 @@ public class TelegramService
         CallbackQueryData = CallbackQuery?.Data;
         CallbackQueryDatas = CallbackQueryData?.Split(' ');
 
-        InlineQueryValues = InlineQuery?.Query.Split(" ", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries).ToList();
+        InlineQueryValues = InlineQuery?.Query.Split(
+                separator: " ",
+                options: StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries
+            )
+            .ToList();
+
         InlineQueryCmd = InlineQueryValues?.FirstOrDefault();
         InlineQueryValue = InlineQueryValues?.Skip(1).JoinStr(" ");
 
