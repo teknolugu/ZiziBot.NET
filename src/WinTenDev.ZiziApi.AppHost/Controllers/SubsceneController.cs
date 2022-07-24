@@ -1,5 +1,4 @@
 using AutoMapper;
-using DotNurse.Injector.Attributes;
 using Microsoft.AspNetCore.Mvc;
 
 namespace WinTenDev.ZiziApi.AppHost.Controllers;
@@ -8,11 +7,17 @@ namespace WinTenDev.ZiziApi.AppHost.Controllers;
 [ApiController]
 public class SubsceneController : ControllerBase
 {
-    [InjectService]
-    private SubsceneService _subsceneService;
+    private readonly SubsceneService _subsceneService;
+    private readonly IMapper _mapper;
 
-    [InjectService]
-    private IMapper _mapper;
+    public SubsceneController(
+        SubsceneService subsceneService,
+        IMapper mapper
+    )
+    {
+        _subsceneService = subsceneService;
+        _mapper = mapper;
+    }
 
     [HttpGet("SearchByTitle")]
     [ProducesResponseType(typeof(SubsceneTitleDto), 200)]
