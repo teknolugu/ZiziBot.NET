@@ -48,6 +48,18 @@ public class WebHookService
         var hookId = request.RouteValues.ElementAtOrDefault(2).Value;
         var webHookChat = await _webHookChatService.GetWebHookById(hookId.ToString());
 
+        if (webHookChat == null)
+        {
+            result.ParsedMessage = "WebHook not found for id: " + hookId;
+
+            return result;
+        }
+
+        _logger.LogInformation("WebHook Chat destination for HookId: {HookId} => {@WebHookChat}",
+            hookId,
+            webHookChat
+        );
+
         var chatId = webHookChat.ChatId;
         var source = result.WebhookSource;
         var message = result.ParsedMessage;
@@ -59,8 +71,7 @@ public class WebHookService
             disableWebPagePreview: true
         );
 
-        _logger.LogInformation(
-            "Sent WebHook from {Source} to ChatId: {ChatId} Message: {@Message}",
+        _logger.LogInformation("Sent WebHook from {Source} to ChatId: {ChatId} Message: {@Message}",
             source,
             chatId,
             sentMessage
@@ -77,8 +88,7 @@ public class WebHookService
 
         var sentMessage = await _botClient.SendTextMessageAsync(chatId, message);
 
-        _logger.LogInformation(
-            "Sent WebHook from {Source} to ChatId: {ChatId} Message: {@Message}",
+        _logger.LogInformation("Sent WebHook from {Source} to ChatId: {ChatId} Message: {@Message}",
             source,
             chatId,
             sentMessage
