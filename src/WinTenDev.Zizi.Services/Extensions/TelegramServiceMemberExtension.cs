@@ -31,6 +31,8 @@ public static class TelegramServiceMemberExtension
         };
 
         if (telegramService.IsPrivateChat ||
+            telegramService.ChannelPost != null ||
+            telegramService.EditedChannelPost != null ||
             telegramService.CheckFromAnonymous() ||
             telegramService.CheckSenderChannel())
         {
