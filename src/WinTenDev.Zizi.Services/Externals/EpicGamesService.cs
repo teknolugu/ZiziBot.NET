@@ -153,7 +153,11 @@ public class EpicGamesService
     )
     {
         var egsFreeGame = await GetFreeGamesRaw();
-        var offeredGameList = egsFreeGame.DiscountGames.Select(
+        var offeredGameList = egsFreeGame.DiscountGames
+            .Where(element =>
+                (element.Promotions.PromotionalOffers?.Count != 0 ||
+                 element.Promotions.UpcomingPromotionalOffers?.Count != 0))
+            .Select(
                 (
                     element,
                     index

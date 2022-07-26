@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -20,9 +21,26 @@ internal static class StartCommandExtension
         Task.Run(
             async () => {
                 await telegramService.SendTextMessageAsync("Subtitle sedang diproses, mohon tunggu...");
-                await telegramService.SendChatActionAsync(ChatAction.UploadDocument);
 
                 var movieDetail = await subsceneService.GetSubtitleFileAsync(fixedSlug);
+
+                if (movieDetail.SubtitleDownloadUrl == null)
+                {
+                    var htmlMessage = HtmlMessage.Empty
+                        .BoldBr("Pengunduhan Subtitle")
+                        .Bold("Pesan: ").TextBr("Terjadi kesalahan ketika mengunduh Subtitle, silakan hubungi Administrator")
+                        .Bold("Url: ").TextBr(movieDetail.SubtitleMovieUrl);
+
+                    await telegramService.EditMessageTextAsync(
+                        sendText: htmlMessage.ToString(),
+                        scheduleDeleteAt: DateTime.UtcNow.AddMinutes(10),
+                        includeSenderMessage: true
+                    );
+
+                    return;
+                }
+
+                await telegramService.SendChatActionAsync(ChatAction.UploadDocument);
 
                 var subsceneUrl = "https://subscene.com" + movieDetail.SubtitleMovieUrl;
                 var commentaryUrl = "https://subscene.com" + movieDetail.CommentaryUrl;
