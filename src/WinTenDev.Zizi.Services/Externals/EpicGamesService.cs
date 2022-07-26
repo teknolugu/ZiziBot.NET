@@ -52,59 +52,58 @@ public class EpicGamesService
                 var jobId = "egs-free-" + chatId.ReduceChatId();
                 _recurringJobManager.AddOrUpdate(
                     recurringJobId: jobId,
-                    methodCall: () => SendEpicGamesBroadcaster(chatId),
+                    methodCall: () => RunEpicGamesBroadcaster(chatId),
                     cronExpression: Cron.Minutely
                 );
             }
         );
     }
 
-    [JobDisplayName("EpicGames Broadcaster {0}")]
+    [JobDisplayName("EGS Free {0}")]
     [AutomaticRetry(Attempts = 0, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
-    public async Task SendEpicGamesBroadcaster(long chatId)
+    public async Task RunEpicGamesBroadcaster(long chatId)
     {
         var games = await GetFreeGamesParsed();
-        var freeGames = games.FirstOrDefault();
 
-        if (freeGames == null) return;
+        await games.ForEachAsync(async freeGames => {
+            var productUrl = freeGames.ProductUrl;
+            var productTitle = freeGames.ProductTitle;
 
-        var productUrl = freeGames.ProductUrl;
-        var productTitle = freeGames.ProductTitle;
+            var chat = await _botClient.GetChatAsync(chatId);
+            if (chat.LinkedChatId != null) chatId = chat.LinkedChatId.Value;
 
-        var chat = await _botClient.GetChatAsync(chatId);
-        if (chat.LinkedChatId != null) chatId = chat.LinkedChatId.Value;
+            var isHistoryExist = await _rssService.IsHistoryExist(chatId, productUrl);
+            if (isHistoryExist)
+            {
+                Log.Information(
+                    "Seem EpicGames with Title: '{Title}' already sent to ChatId: {ChannelId}",
+                    productTitle,
+                    chatId
+                );
+            }
+            else
+            {
+                await _botClient.SendPhotoAsync(
+                    chatId: chatId,
+                    photo: freeGames.Images.ToString(),
+                    caption: freeGames.Detail,
+                    parseMode: ParseMode.Html
+                );
 
-        var isHistoryExist = await _rssService.IsHistoryExist(chatId, productUrl);
-        if (isHistoryExist)
-        {
-            Log.Information(
-                "Seem EpicGames with Title: '{Title}' already sent to ChatId: {ChannelId}",
-                productTitle,
-                chatId
-            );
-        }
-        else
-        {
-            await _botClient.SendPhotoAsync(
-                chatId: chatId,
-                photo: freeGames.Images.ToString(),
-                caption: freeGames.Detail,
-                parseMode: ParseMode.Html
-            );
-
-            await _rssService.SaveRssHistoryAsync(
-                new RssHistory()
-                {
-                    ChatId = chatId,
-                    Title = productTitle,
-                    Url = productUrl,
-                    PublishDate = DateTime.UtcNow,
-                    Author = "EpicGames Free",
-                    CreatedAt = DateTime.UtcNow,
-                    RssSource = "https://store.epicgames.com"
-                }
-            );
-        }
+                await _rssService.SaveRssHistoryAsync(
+                    new RssHistory()
+                    {
+                        ChatId = chatId,
+                        Title = productTitle,
+                        Url = productUrl,
+                        PublishDate = DateTime.UtcNow,
+                        Author = "EpicGames Free",
+                        CreatedAt = DateTime.UtcNow,
+                        RssSource = "https://store.epicgames.com"
+                    }
+                );
+            }
+        });
     }
 
     public async Task<List<IAlbumInputMedia>> GetFreeGamesOffered()
