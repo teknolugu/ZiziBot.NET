@@ -155,8 +155,9 @@ public class EpicGamesService
         var egsFreeGame = await GetFreeGamesRaw();
         var offeredGameList = egsFreeGame.DiscountGames
             .Where(element =>
-                (element.Promotions.PromotionalOffers?.Count != 0 ||
-                 element.Promotions.UpcomingPromotionalOffers?.Count != 0))
+                element.Promotions.PromotionalOffers?.Count != 0 ||
+                element.Promotions.UpcomingPromotionalOffers?.Count != 0
+            )
             .Select(
                 (
                     element,
@@ -165,18 +166,19 @@ public class EpicGamesService
                     var captionBuilder = new StringBuilder();
                     var detailBuilder = new StringBuilder();
 
-                    var slug = element.ProductSlug ?? element.UrlSlug;
-                    var url = Url.Combine("https://www.epicgames.com/store/en-US/p/", slug);
                     var title = element.Title;
-                    var titleLink = element.Title.MkUrl(url);
+                    var mappingPageSlug = element.CatalogNs.Mappings.FirstOrDefault()?.PageSlug;
+                    var slug = element.ProductSlug ?? element.UrlSlug;
+                    var productSlug = element.ProductSlug ?? mappingPageSlug;
+                    var gameUrl = Url.Combine("https://www.epicgames.com/store/en-US/p/", mappingPageSlug);
+                    var titleLink = element.Title.MkUrl(gameUrl);
 
                     var promotionOffers = element.Promotions.PromotionalOffers?.FirstOrDefault()?.PromotionalOffers.FirstOrDefault();
                     var upcomingPromotionalOffers = element.Promotions.UpcomingPromotionalOffers?.FirstOrDefault()?.PromotionalOffers.FirstOrDefault();
                     var offers = promotionOffers ?? upcomingPromotionalOffers;
 
-                    captionBuilder.AppendLine($"{index + 1}. {titleLink}");
+                    captionBuilder.Append(index + 1).Append(". ").AppendLine(titleLink);
 
-                    // if (offers != null)
                     captionBuilder
                         .Append("<b>Offers date:</b> ")
                         .Append(offers?.StartDate?.LocalDateTime.ToString("yyyy-MM-dd hh:mm tt"))
@@ -202,8 +204,8 @@ public class EpicGamesService
 
                     var egsParsed = new EgsFreeGameParsed()
                     {
-                        ProductUrl = url,
-                        ProductSlug = element.ProductSlug,
+                        ProductUrl = gameUrl,
+                        ProductSlug = productSlug,
                         ProductTitle = title,
                         Text = captionBuilder.ToTrimmedString(),
                         StartOfferDate = offers.StartDate,
@@ -214,8 +216,7 @@ public class EpicGamesService
 
                     return egsParsed;
                 }
-            )
-            .ToList();
+            );
 
         if (currentOffered)
         {
@@ -224,7 +225,7 @@ public class EpicGamesService
             ).ToList();
         }
 
-        return offeredGameList;
+        return offeredGameList.ToList();
     }
 
     public async Task<EgsFreeGame> GetFreeGamesRaw()
