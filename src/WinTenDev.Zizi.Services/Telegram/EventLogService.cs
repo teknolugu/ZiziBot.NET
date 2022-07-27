@@ -7,6 +7,7 @@ using Serilog;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.InputFiles;
 
 namespace WinTenDev.Zizi.Services.Telegram;
 
@@ -52,7 +53,10 @@ public class EventLogService
 
         Log.Debug("List Channel Targets: {ListLogTarget}", filteredTargets);
 
-        return filteredTargets;
+        // In Bot API, chatId is should below -100. So, larger than -1 is not valid chatId.
+        return filteredTargets
+            .Where(id => id < -1)
+            .ToList();
     }
 
     public async Task SendEventLogAsync(
@@ -145,15 +149,35 @@ public class EventLogService
 
             try
             {
-                var sentEventLog = await _botClient.SendTextMessageAsync(
-                    chatId: eventLogTarget,
-                    text: sendText,
-                    allowSendingWithoutReply: true,
-                    disableWebPagePreview: disableWebPreview,
-                    replyToMessageId: replyToMessageId,
-                    parseMode: ParseMode.Html
-                );
+                Message sentEventLog;
 
+                if (sendText.Length <= 4000)
+                {
+                    sentEventLog = await _botClient.SendTextMessageAsync(
+                        chatId: eventLogTarget,
+                        text: sendText,
+                        allowSendingWithoutReply: true,
+                        disableWebPagePreview: disableWebPreview,
+                        replyToMessageId: replyToMessageId,
+                        parseMode: ParseMode.Html
+                    );
+                }
+                else
+                {
+                    var errorLog = sendText.HtmlDecode();
+                    var errorSplit = errorLog.Split(Environment.NewLine);
+                    var caption = errorSplit.FirstOrDefault();
+
+                    sentEventLog = await _botClient.SendDocumentAsync(
+                        chatId: eventLogTarget,
+                        document: new InputOnlineFile(errorLog.Replace(Environment.NewLine, "<br>").ToStream(), "stacktrace.html"),
+                        caption: caption,
+                        allowSendingWithoutReply: true,
+                        replyToMessageId: replyToMessageId,
+                        parseMode: ParseMode.Html,
+                        disableNotification: true
+                    );
+                }
                 Log.Information(
                     "Send EventLog Successfully to ChatId: {ChatId}, Sent MessageId: {MessageId}",
                     eventLogTarget,
