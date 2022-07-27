@@ -98,13 +98,11 @@ jobs:
       - name: Update Project version
         run: dotnet run --project src/WinTenDev.ZiziTools.Cli
 
-      - uses: kzrnm/get-net-sdk-project-versions-action@v1
+      - name: Getting Project Version
+        uses: kzrnm/get-net-sdk-project-versions-action@v1
         id: get-version
         with:
           proj-path: src/WinTenDev.ZiziTools.Cli/WinTenDev.ZiziTools.Cli.csproj
-
-      - name: Print version
-        run: echo "${{steps.get-version.outputs.version}}"
 
       - name: Creating Linux-x64 package
         run: dotnet publish src/WinTenDev.ZiziBot.AppHost -r linux-x64 -c Release --self-contained=false /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true /t:CreateZip
@@ -118,7 +116,7 @@ jobs:
       - name: Create Release Assets
         uses: softprops/action-gh-release@v1
         with:
-          name: "Zizi Bot {{steps.get-version.outputs.version}}"
+          name: "Zizi Bot ${{steps.get-version.outputs.version}}"
           tag_name: "v${{steps.get-version.outputs.version}}"
           files: |
             src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/linux-x64/*.zip
