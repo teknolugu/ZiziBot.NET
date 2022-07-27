@@ -311,8 +311,8 @@ public static class StringUtil
 
         Enumerable
             .Range(65, 26)
-            .Select(e => ((char) e).ToString())
-            .Concat(Enumerable.Range(97, 26).Select(e => ((char) e).ToString()))
+            .Select(e => ((char)e).ToString())
+            .Concat(Enumerable.Range(97, 26).Select(e => ((char)e).ToString()))
             .Concat(Enumerable.Range(0, 10).Select(e => e.ToString()))
             .OrderBy(_ => Guid.NewGuid())
             .Take(lengthId)
@@ -386,7 +386,7 @@ public static class StringUtil
             LowerStrCount = lowerStrCount,
             UpperStrCount = upperStrCount,
             // ReSharper disable once RedundantCast
-            FireRatio = (float) upperStrCount / (float) alphaNumNoSpaceStrCount
+            FireRatio = (float)upperStrCount / (float)alphaNumNoSpaceStrCount
         };
 
         Log.Debug("String analyzer result: {@Result}", result);
@@ -429,5 +429,13 @@ public static class StringUtil
             pattern: pattern,
             replacement: replacement
         );
+    }
+
+    public static MemoryStream ToStream(this string str)
+    {
+        var byteArray = Encoding.UTF8.GetBytes(str);
+        var stream = new MemoryStream(byteArray);
+
+        return stream;
     }
 }
