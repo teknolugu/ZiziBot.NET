@@ -79,10 +79,11 @@ jobs:
         uses: oprypin/find-latest-tag@v1
         id: current_release
         with:
-          repository: ${{ github.server_url }}/${{ github.repository }}
-          release-only: true
+          repository: ${{ github.repository }}
+          releases-only: true
 
-      - run: echo "Latest release at version ${{ steps.octokit.outputs.tag }}"
+      - name: Print latest tag
+        run: echo "Latest release at version ${{ steps.current_release.outputs.tag }}"
 
       - name: update release
         id: update_release
