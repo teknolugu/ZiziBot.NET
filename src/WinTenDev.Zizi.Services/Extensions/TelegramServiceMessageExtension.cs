@@ -211,8 +211,8 @@ public static class TelegramServiceMessageExtension
 
             var message = telegramService.MessageOrEdited;
 
-            if (message.Document == null &&
-                message.Photo == null)
+            if (message?.Document == null &&
+                message?.Photo == null)
             {
                 return string.Empty;
             }
@@ -222,6 +222,12 @@ public static class TelegramServiceMessageExtension
             var qrFile = await telegramService.DownloadFileAsync("qr-reader");
             var image = await Image.LoadAsync(qrFile);
             var qrResult = qrDecoder.ImageDecoder(image);
+
+            if (qrResult == null)
+            {
+                return string.Empty;
+            }
+
             var data = QRDecoder.ByteArrayToString(qrResult.FirstOrDefault());
 
             DirUtil.CleanCacheFiles(
