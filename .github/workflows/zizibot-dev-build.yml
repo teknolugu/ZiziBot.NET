@@ -122,7 +122,7 @@ jobs:
             src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/linux-x64/*.zip
             src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/win-x64/*.zip
             src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/osx-x64/*.zip
-          draft: true
+          draft: false
           prerelease: true
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
