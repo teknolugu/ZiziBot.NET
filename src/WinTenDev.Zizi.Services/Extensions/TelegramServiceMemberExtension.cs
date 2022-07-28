@@ -326,6 +326,9 @@ public static class TelegramServiceMemberExtension
                 scheduleDeleteAt: DateTime.UtcNow.AddMinutes(10),
                 includeSenderMessage: true
             );
+
+            telegramService.ResetCooldownByFeatureName();
+
             return;
         }
 
@@ -340,6 +343,9 @@ public static class TelegramServiceMemberExtension
                     scheduleDeleteAt: DateTime.UtcNow.AddMinutes(10),
                     includeSenderMessage: true
                 );
+
+                telegramService.ResetCooldownByFeatureName();
+
                 return;
             }
 
