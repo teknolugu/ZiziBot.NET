@@ -217,8 +217,7 @@ public static class SerilogServiceExtension
                     Value = "Zizi Beta"
                 }
             },
-            batchPostingLimit: 20,
-            createLevelLabel: true
+            batchPostingLimit: 20
         );
 
         return logger;
