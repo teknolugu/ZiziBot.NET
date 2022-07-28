@@ -192,7 +192,7 @@ public class TelegramService
 
     public Task AddUpdateContext(UpdateContext context)
     {
-        ChatId = context.ChatId.Identifier ?? 0;
+        ChatId = context.ChatId ?? 0;
 
         Client = context.Client;
         Update = context.Update;
