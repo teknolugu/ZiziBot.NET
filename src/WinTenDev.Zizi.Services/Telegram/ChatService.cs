@@ -238,23 +238,42 @@ public class ChatService
         subscriptionResult.ChannelName = chatLinked.Title;
         subscriptionResult.InviteLink = chatLinked.InviteLink;
 
-        var chatMember = await GetChatMemberAsync(
-            chatId: linkedChatId,
-            userId: userId,
-            evictBefore: true,
-            evictAfter: true
-        );
-
-        var isSubscribed = chatMember.Status != ChatMemberStatus.Left;
-
-        subscriptionResult.IsSubscribed = isSubscribed;
-
-        if (!isSubscribed)
+        try
         {
+            var chatMember = await GetChatMemberAsync(
+                chatId: linkedChatId,
+                userId: userId,
+                evictBefore: true,
+                evictAfter: true
+            );
+
+            var isSubscribed = chatMember.Status != ChatMemberStatus.Left;
+
+            subscriptionResult.IsSubscribed = isSubscribed;
+
+            if (!isSubscribed)
+            {
+                return subscriptionResult;
+            }
+
             return subscriptionResult;
         }
+        catch (Exception exception)
+        {
+            Log.Error(
+                exception,
+                "Error when check UserId: {UserId} Subscription into Linked ChannelId: {ChatId}",
+                userId,
+                linkedChatId
+            );
 
-        return subscriptionResult;
+            if (exception.Contains("user not found"))
+            {
+                subscriptionResult.IsSubscribed = false;
+            }
+
+            return subscriptionResult;
+        }
     }
 
     public async Task<ChannelSubscriptionIntoAddedChannelResult> CheckChatMemberSubscriptionIntoAddedChannelAsync(
@@ -268,28 +287,43 @@ public class ChatService
 
         var checkSubscriptionTasks = checkSubs.Select(
                 async subscription => {
-                    var chatMember = await GetChatMemberAsync(
-                        chatId: subscription.ChannelId,
-                        userId: userId,
-                        evictBefore: true,
-                        evictAfter: true
-                    );
-
-                    return new ChannelSubscriptionIntoChannelResult()
+                    var result = new ChannelSubscriptionIntoChannelResult
                     {
-                        ChannelId = subscription.ChannelId,
-                        ChatMember = chatMember
+                        ChannelId = subscription.ChannelId
                     };
+
+                    try
+                    {
+                        var chatMember = await GetChatMemberAsync(
+                            chatId: subscription.ChannelId,
+                            userId: userId,
+                            evictBefore: true,
+                            evictAfter: true
+                        );
+
+                        result.ChatMember = chatMember;
+                    }
+                    catch (Exception exception)
+                    {
+                        Log.Error(
+                            exception,
+                            "Error when check UserId: {UserId} Subscription into ChannelId: {ChannelId}",
+                            userId,
+                            subscription.ChannelId
+                        );
+                    }
+
+                    return result;
                 }
             )
             .Select(task => task.Result)
             .ToList();
 
         var notSubscribed = checkSubscriptionTasks
-            .Where(x => x.ChatMember.Status == ChatMemberStatus.Left)
+            .Where(x => x.ChatMember?.Status == ChatMemberStatus.Left)
             .ToList();
 
-        subscriptionResult.IsSubscribedToAll = !notSubscribed.Any();
+        subscriptionResult.IsSubscribedToAll = notSubscribed.Count == 0;
         subscriptionResult.ChannelSubscriptions.AddRange(
             notSubscribed.Select(
                 (member) => {
@@ -456,7 +490,7 @@ public class ChatService
                         exception.Contains("not a member") ||
                         exception.Contains("chat was upgraded") ||
                         exception.Contains("chat not found")
-                       )
+                    )
                     {
                         _logger.LogInformation(
                             "Error delete message History with Id: '{MessageId}' at ChatId: '{ChatId}'",
