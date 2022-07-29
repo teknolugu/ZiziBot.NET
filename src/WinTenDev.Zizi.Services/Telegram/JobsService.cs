@@ -219,6 +219,15 @@ public class JobsService
         );
     }
 
+    public void RegisterJobRunMongoDbBackup()
+    {
+        _recurringJobManager.AddOrUpdate<DatabaseService>(
+            "daily-mongodb-backup",
+            service => service.MongoDbExport(),
+            Cron.Daily
+        );
+    }
+
     public void RegisterJobRunDeleteOldUpdates()
     {
         _recurringJobManager.AddOrUpdate<BotUpdateService>(
