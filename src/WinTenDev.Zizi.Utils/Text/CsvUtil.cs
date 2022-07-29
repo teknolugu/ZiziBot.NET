@@ -20,11 +20,13 @@ public static class CsvUtil
     /// <param name="filePath">The file path.</param>
     /// <param name="delimiter">The delimiter.</param>
     /// <param name="append">If true, append.</param>
+    /// <param name="hasHeader">If true, CSV Header will be written</param>
     public static void WriteRecords<T>(
         this List<T> records,
         string filePath,
         string delimiter = ",",
-        bool append = false
+        bool append = false,
+        bool hasHeader = false
     )
     {
         Log.Information
@@ -36,7 +38,7 @@ public static class CsvUtil
         var config = new CsvConfiguration(CultureInfo.CurrentCulture)
         {
             Delimiter = delimiter,
-            HasHeaderRecord = false
+            HasHeaderRecord = hasHeader
         };
 
         var writer = new StreamWriter(filePath);
@@ -50,10 +52,11 @@ public static class CsvUtil
         var csv = new CsvWriter(writer, config);
 
         csv.WriteRecords(records);
+
         Log.Debug("CSV file written to {FilePath}", filePath);
 
-        writer.Dispose();
         csv.Dispose();
+        writer.Dispose();
     }
 
     /// <summary>

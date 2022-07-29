@@ -25,6 +25,7 @@ public static class HangfireJobsExtension
         jobService.RegisterJobDeleteOldStep();
         jobService.RegisterJobDeleteOldRssHistory();
         jobService.RegisterJobDeleteOldMessageHistory();
+        jobService.RegisterJobRunMongoDbBackup();
         jobService.RegisterJobRunMysqlBackup();
         jobService.RegisterJobRunDeleteOldUpdates();
 

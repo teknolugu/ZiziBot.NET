@@ -53,7 +53,8 @@ public static class ZipUtil
 
     public static string CreateZip(
         this IEnumerable<string> listPath,
-        string saveTo
+        string saveTo,
+        bool flattenDir = false
     )
     {
         using var zip = new ZipFile
@@ -63,10 +64,10 @@ public static class ZipUtil
 
         foreach (var file in listPath)
         {
-            zip.AddFile(file, Path.GetDirectoryName(file));
+            zip.AddFile(file, flattenDir ? "" : Path.GetDirectoryName(file));
         }
 
-        Log.Debug("Saving to {0}", saveTo);
+        Log.Debug("Saving to {SaveTo}", saveTo);
         zip.Save(saveTo);
 
         return saveTo;

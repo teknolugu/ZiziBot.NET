@@ -7,6 +7,9 @@ using Humanizer;
 using Ionic.Zip;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using MongoDB.Bson;
+using MongoDB.Bson.IO;
+using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 using MongoDB.Entities;
 using MoreLinq;
@@ -303,5 +306,82 @@ public class DatabaseService
             .CreateAsync();
 
         _logger.LogInformation("Creating MongoDb Index complete");
+    }
+
+    [JobDisplayName("MongoDB AutoBackup")]
+    public async Task MongoDbExport()
+    {
+        await MongoDbExportCore<ForceSubscription>("csv");
+        await MongoDbExportCore<WarnMember>("csv");
+        await MongoDbExportCore<WebHookChat>("csv");
+
+        var dirStamp = DateTime.UtcNow.ToString("yyyy-MM-dd");
+        var srcPath = Path.Combine("Storage", "Data", "MongoExport", dirStamp);
+        var zipFileName = "MongoExport_" + dirStamp + ".zip";
+        var filePath = Path.Combine("Storage", "Data", "MongoExport", zipFileName);
+
+        var saveTo = srcPath
+            .EnumerateFiles()
+            .CreateZip(filePath, true);
+
+        var channelTarget = _eventLogConfig.ChannelId;
+
+        var fileSize = saveTo.FileSize();
+        var dirSize = srcPath.DirSize();
+
+        var caption = HtmlMessage.Empty
+            .Bold("File Size: ").CodeBr($"{dirSize.SizeFormat()}")
+            .Bold("Zip Size: ").CodeBr($"{fileSize.SizeFormat()}")
+            .Text("#mongodb #auto #backup");
+
+        await using var fileStream = File.OpenRead(saveTo);
+
+        var media = new InputOnlineFile(fileStream, filePath)
+        {
+            FileName = zipFileName
+        };
+
+        await _botClient.SendDocumentAsync(
+            chatId: channelTarget,
+            document: media,
+            caption: caption.ToString(),
+            parseMode: ParseMode.Html
+        );
+    }
+
+    private async Task MongoDbExportCore<T>(string fileType = "json") where T : IEntity
+    {
+        var collection = DB.Collection<T>();
+
+        var collectionName = collection.CollectionNamespace.CollectionName;
+        var fileName = collectionName + $".{fileType}";
+        var dirStamp = DateTime.UtcNow.ToString("yyyy-MM-dd");
+
+        var filePath = Path.Combine("Storage", "Data", "MongoExport", dirStamp, fileName).EnsureDirectory();
+
+        _logger.LogInformation("Exporting MongoDb Collection {CollectionName} to {FilePath}", collectionName, filePath);
+
+        if (fileType == "csv")
+        {
+            var jsonPath = filePath.ReplaceExt("csv");
+            var rows = await DB.Find<T>().ExecuteAsync();
+
+            rows.WriteRecords(jsonPath, hasHeader: true);
+        }
+        else
+        {
+            await using var streamWriter = new StreamWriter(filePath);
+            await collection.Find(new BsonDocument())
+                .ForEachAsync(async (document) => {
+                    await using var stringWriter = new StringWriter();
+                    using var jsonWriter = new JsonWriter(stringWriter);
+
+                    var context = BsonSerializationContext.CreateRoot(jsonWriter);
+                    collection.DocumentSerializer.Serialize(context, document);
+                    var line = stringWriter.ToString();
+
+                    await streamWriter.WriteLineAsync(line);
+                });
+        }
     }
 }
