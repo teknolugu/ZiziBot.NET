@@ -1,8 +1,8 @@
 ﻿using System;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
+using WinTenDev.Zizi.Models.JsonConverters;
 
-namespace WinTenDev.WebHook.AppHost.Models.Github
+namespace WinTenDev.Zizi.Models.Types.Github
 {
     public class Repository
     {
@@ -145,14 +145,14 @@ namespace WinTenDev.WebHook.AppHost.Models.Github
         public Uri DeploymentsUrl { get; set; }
 
         [JsonProperty("created_at")]
-        [JsonConverter(typeof(UnixDateTimeConverter))]
+        [JsonConverter(typeof(EpochSecondOrDateStrToDateTimeOffsetConverter))]
         public DateTimeOffset CreatedAt { get; set; }
 
         [JsonProperty("updated_at")]
         public DateTimeOffset UpdatedAt { get; set; }
 
         [JsonProperty("pushed_at")]
-        [JsonConverter(typeof(UnixDateTimeConverter))]
+        [JsonConverter(typeof(EpochSecondOrDateStrToDateTimeOffsetConverter))]
         public DateTimeOffset PushedAt { get; set; }
 
         [JsonProperty("git_url")]

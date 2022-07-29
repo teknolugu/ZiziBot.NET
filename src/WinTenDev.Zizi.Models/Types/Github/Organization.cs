@@ -1,7 +1,7 @@
 ﻿using System;
 using Newtonsoft.Json;
 
-namespace WinTenDev.WebHook.AppHost.Models.Github
+namespace WinTenDev.Zizi.Models.Types.Github
 {
     public partial class Organization
     {

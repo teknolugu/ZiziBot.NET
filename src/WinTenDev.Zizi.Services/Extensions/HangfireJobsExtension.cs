@@ -1,10 +1,6 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Nito.AsyncEx.Synchronous;
-using WinTenDev.Zizi.Models.Enums;
-using WinTenDev.Zizi.Services.Externals;
-using WinTenDev.Zizi.Services.Telegram;
-using WinTenDev.Zizi.Utils;
 
 namespace WinTenDev.Zizi.Services.Extensions;
 
@@ -25,6 +21,7 @@ public static class HangfireJobsExtension
         jobService.ClearPendingJobs();
         jobService.RegisterJobChatCleanUp().InBackground();
         jobService.RegisterJobClearLog();
+        jobService.RegisterJobClearTempFiles();
         jobService.RegisterJobDeleteOldStep();
         jobService.RegisterJobDeleteOldRssHistory();
         jobService.RegisterJobDeleteOldMessageHistory();

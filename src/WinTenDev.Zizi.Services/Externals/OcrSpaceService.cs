@@ -5,8 +5,6 @@ using System.Threading.Tasks;
 using Flurl.Http;
 using Newtonsoft.Json;
 using Serilog;
-using WinTenDev.Zizi.Models.Types;
-using WinTenDev.Zizi.Utils;
 
 namespace WinTenDev.Zizi.Services.Externals;
 
@@ -28,12 +26,22 @@ public class OcrSpaceService
                 return string.Empty;
             }
 
-            Log.Information("Sending {FilePath} to {Url}", filePath, url);
+            Log.Information(
+                "Sending {FilePath} to {Url}",
+                filePath,
+                url
+            );
             var postResult = await url
-                .PostMultipartAsync(post =>
-                    post.AddFile("image", fs, fileName)
-                        .AddString("apikey", ocrKey)
-                        .AddString("language", "eng"));
+                .PostMultipartAsync(
+                    post =>
+                        post.AddFile(
+                                "image",
+                                fs,
+                                fileName
+                            )
+                            .AddString("apikey", ocrKey)
+                            .AddString("language", "eng")
+                );
 
             Log.Information("OCR: {StatusCode}", postResult.StatusCode);
             var json = await postResult.GetStringAsync();
@@ -42,8 +50,14 @@ public class OcrSpaceService
 
             if (map.OcrExitCode == 1)
             {
-                result = map.ParsedResults.Aggregate(result, (current, t) =>
-                    current + t.ParsedText);
+                result = map.ParsedResults.Aggregate(
+                    result,
+                    (
+                            current,
+                            t
+                        ) =>
+                        current + t.ParsedText
+                );
             }
 
             Log.Information("Scan complete.");

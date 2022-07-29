@@ -1,10 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
-using WinTenDev.Zizi.Models.Enums;
-using WinTenDev.Zizi.Models.Exceptions;
-using WinTenDev.Zizi.Services.Telegram;
-using WinTenDev.Zizi.Utils;
 
 namespace WinTenDev.Zizi.Services.Extensions;
 

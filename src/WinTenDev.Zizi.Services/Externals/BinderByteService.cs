@@ -8,10 +8,6 @@ using Flurl.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MoreLinq;
-using WinTenDev.Zizi.Models.Configs;
-using WinTenDev.Zizi.Models.Types.BinderByte;
-using WinTenDev.Zizi.Services.Internals;
-using WinTenDev.Zizi.Utils;
 
 namespace WinTenDev.Zizi.Services.Externals;
 

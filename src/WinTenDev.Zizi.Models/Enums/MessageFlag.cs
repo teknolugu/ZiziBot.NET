@@ -7,6 +7,7 @@ public enum MessageFlag
     AddCity,
     AddSpell,
     Afk,
+    AppHost,
     BadWord,
     Chat,
     ChatJoinRequest,
@@ -39,6 +40,7 @@ public enum MessageFlag
     Tag,
     Tags,
     Username,
+    Warn,
     Welcome,
     ZiziMata
 }

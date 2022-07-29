@@ -8,10 +8,6 @@ using MoreLinq;
 using Serilog;
 using SqlKata.Execution;
 using Telegram.Bot.Types.ReplyMarkups;
-using WinTenDev.Zizi.Models.Dto;
-using WinTenDev.Zizi.Models.Tables;
-using WinTenDev.Zizi.Utils;
-using WinTenDev.Zizi.Utils.Telegram;
 
 namespace WinTenDev.Zizi.Services.Internals;
 

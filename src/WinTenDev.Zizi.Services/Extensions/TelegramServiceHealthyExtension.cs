@@ -3,13 +3,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 using Serilog;
-using WinTenDev.Zizi.Models.Configs;
-using WinTenDev.Zizi.Models.Enums;
-using WinTenDev.Zizi.Models.Tables;
-using WinTenDev.Zizi.Models.Types;
-using WinTenDev.Zizi.Services.Telegram;
-using WinTenDev.Zizi.Utils;
-using WinTenDev.Zizi.Utils.Telegram;
 
 namespace WinTenDev.Zizi.Services.Extensions;
 

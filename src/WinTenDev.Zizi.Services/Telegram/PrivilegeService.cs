@@ -14,11 +14,6 @@ using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
-using WinTenDev.Zizi.Models.Configs;
-using WinTenDev.Zizi.Models.Telegram;
-using WinTenDev.Zizi.Services.Internals;
-using WinTenDev.Zizi.Utils;
-using WinTenDev.Zizi.Utils.Telegram;
 
 namespace WinTenDev.Zizi.Services.Telegram;
 

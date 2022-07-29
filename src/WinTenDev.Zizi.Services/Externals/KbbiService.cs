@@ -1,8 +1,6 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
 using AngleSharp.Html.Dom;
-using WinTenDev.Zizi.Models.Types;
-using WinTenDev.Zizi.Utils.Parsers;
 
 namespace WinTenDev.Zizi.Services.Externals;
 

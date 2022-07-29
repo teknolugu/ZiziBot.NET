@@ -1,8 +1,6 @@
 ﻿using System.Threading.Tasks;
 using Serilog;
 using Telegram.Bot.Types;
-using WinTenDev.Zizi.Services.Telegram;
-using WinTenDev.Zizi.Utils;
 
 namespace WinTenDev.Zizi.Services.Callbacks;
 

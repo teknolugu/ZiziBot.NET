@@ -19,16 +19,6 @@ using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InputFiles;
 using Telegram.Bot.Types.ReplyMarkups;
 using TgBotFramework;
-using WinTenDev.Zizi.Models.Configs;
-using WinTenDev.Zizi.Models.Dto;
-using WinTenDev.Zizi.Models.Enums;
-using WinTenDev.Zizi.Models.Tables;
-using WinTenDev.Zizi.Models.Types;
-using WinTenDev.Zizi.Services.Externals;
-using WinTenDev.Zizi.Services.Internals;
-using WinTenDev.Zizi.Utils;
-using WinTenDev.Zizi.Utils.IO;
-using WinTenDev.Zizi.Utils.Telegram;
 using File=System.IO.File;
 
 namespace WinTenDev.Zizi.Services.Telegram;
@@ -202,7 +192,7 @@ public class TelegramService
 
     public Task AddUpdateContext(UpdateContext context)
     {
-        ChatId = context.ChatId.Identifier ?? 0;
+        ChatId = context.ChatId ?? 0;
 
         Client = context.Client;
         Update = context.Update;
@@ -260,13 +250,12 @@ public class TelegramService
 
         ReplyFromId = ReplyToMessage?.From?.Id ?? 0;
 
-        From = ChannelOrEditedPost?.From ??
-               MyChatMember?.From ?? ChosenInlineResult?.From ?? InlineQuery?.From ?? CallbackQuery?.From ?? ChatJoinRequest?.From ?? MessageOrEdited?.From;
-        Chat = ChannelOrEditedPost?.Chat ?? MyChatMember?.Chat ?? CallbackQuery?.Message?.Chat ?? ChatJoinRequest?.Chat ?? MessageOrEdited?.Chat;
+        From = update.GetSender();
+        Chat = update.GetChat();
         SenderChat = MessageOrEdited?.SenderChat;
-        MessageDate = MyChatMember?.Date ?? CallbackQuery?.Message?.Date ?? MessageOrEdited?.Date ?? DateTime.Now;
-        MessageEditDate = MessageOrEdited?.EditDate;
-        MessageDateOrEditDate = MessageEditDate ?? MessageDate;
+        MessageDate = update.GetMessageDate();
+        MessageEditDate = update.GetMessageEditDate();
+        // MessageDateOrEditDate = MessageEditDate ?? MessageDate;
 
         TimeInit = MessageDate.GetDelay();
 
@@ -293,7 +282,12 @@ public class TelegramService
         CallbackQueryData = CallbackQuery?.Data;
         CallbackQueryDatas = CallbackQueryData?.Split(' ');
 
-        InlineQueryValues = InlineQuery?.Query.Split(" ", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries).ToList();
+        InlineQueryValues = InlineQuery?.Query.Split(
+                separator: " ",
+                options: StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries
+            )
+            .ToList();
+
         InlineQueryCmd = InlineQueryValues?.FirstOrDefault();
         InlineQueryValue = InlineQueryValues?.Skip(1).JoinStr(" ");
 
@@ -458,11 +452,11 @@ public class TelegramService
         return value is null ? default : (T) Convert.ChangeType(value, typeof(T));
     }
 
-    public string GetCommandParam(int index)
+    public string GetCommandParam(int index = -1)
     {
-        var value = MessageTextParts.Skip(1).ElementAtOrDefault(index);
+        var commandParams = MessageTextParts.Skip(1);
 
-        return value;
+        return index == -1 ? commandParams.JoinStr(" ") : commandParams.ElementAtOrDefault(index);
     }
 
     public bool IsCommand(string command)
@@ -1032,7 +1026,10 @@ public class TelegramService
                 if (fileId.IsValidUrl())
                 {
                     Log.Information("Converting URL: '{Url}' to stream", fileId);
-                    var stream = await fileId.GetStreamAsync();
+                    var stream = await fileId
+                        .OpenFlurlSession()
+                        .GetStreamAsync();
+                    
                     inputFile = new InputOnlineFile(stream, customFileName);
                 }
 

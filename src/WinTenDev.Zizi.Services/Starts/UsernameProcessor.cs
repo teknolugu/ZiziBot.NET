@@ -1,5 +1,4 @@
 ﻿using Telegram.Bot.Types.ReplyMarkups;
-using WinTenDev.Zizi.Models.Dto;
 
 namespace WinTenDev.Zizi.Services.Starts
 {

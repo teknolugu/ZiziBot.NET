@@ -10,14 +10,6 @@ using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using TL;
-using WinTenDev.Zizi.Models.Enums;
-using WinTenDev.Zizi.Models.Exceptions;
-using WinTenDev.Zizi.Models.Tables;
-using WinTenDev.Zizi.Models.Types;
-using WinTenDev.Zizi.Services.Internals;
-using WinTenDev.Zizi.Services.Telegram;
-using WinTenDev.Zizi.Utils;
-using WinTenDev.Zizi.Utils.Telegram;
 
 namespace WinTenDev.Zizi.Services.Extensions;
 
@@ -39,16 +31,20 @@ public static class TelegramServiceMemberExtension
         };
 
         if (telegramService.IsPrivateChat ||
-            telegramService.MessageOrEdited == null ||
+            telegramService.ChannelPost != null ||
+            telegramService.EditedChannelPost != null ||
             telegramService.CheckFromAnonymous() ||
             telegramService.CheckSenderChannel())
         {
             return defaultResult;
         }
 
-        if (await telegramService.CheckFromAdminOrAnonymous()) return defaultResult;
-
         var message = telegramService.MessageOrEdited;
+        if (message != null)
+        {
+            if (await telegramService.CheckFromAdminOrAnonymous())
+                return defaultResult;
+        }
 
         var antiSpamResult = await telegramService.AntiSpamService.CheckSpam(chatId, fromId);
 
@@ -62,7 +58,7 @@ public static class TelegramServiceMemberExtension
             telegramService.KickMemberAsync(
                 userId: fromId,
                 unban: false,
-                untilDate: DateTime.Now.AddMinutes(1)
+                untilDate: DateTime.Now.AddHours(1)
             ),
             telegramService.SendTextMessageAsync(
                 sendText: messageBan,
@@ -330,6 +326,9 @@ public static class TelegramServiceMemberExtension
                 scheduleDeleteAt: DateTime.UtcNow.AddMinutes(10),
                 includeSenderMessage: true
             );
+
+            telegramService.ResetCooldownByFeatureName();
+
             return;
         }
 
@@ -344,6 +343,9 @@ public static class TelegramServiceMemberExtension
                     scheduleDeleteAt: DateTime.UtcNow.AddMinutes(10),
                     includeSenderMessage: true
                 );
+
+                telegramService.ResetCooldownByFeatureName();
+
                 return;
             }
 
@@ -627,7 +629,9 @@ public static class TelegramServiceMemberExtension
         var chatId = telegramService.ChatId;
 
         if (telegramService.IsGlobalIgnored() ||
-            telegramService.InlineQuery != null)
+            telegramService.HasChatJoinRequest ||
+            telegramService.InlineQuery != null ||
+            telegramService.ChosenInlineResult != null)
         {
             return true;
         }
@@ -656,36 +660,29 @@ public static class TelegramServiceMemberExtension
                 return true;
             }
 
+            var subscriptionToAll = await telegramService.ChatService.CheckChatMemberSubscriptionToAllAsync(chatId, fromId);
+
             var fromNameLink = telegramService.FromNameLink;
 
-            var getChat = await telegramService.GetChat();
-            var linkedChatId = getChat.LinkedChatId ?? 0;
-
-            if (getChat.LinkedChatId == null) return true;
-            var chatLinked = await telegramService.ChatService.GetChatAsync(linkedChatId);
-
-            if (chatLinked.Username == null)
+            if (subscriptionToAll.Count == 0)
             {
                 Log.Information(
-                    "Force Subs for ChatId: {ChatId} is disabled because linked channel with Id: {LinkedChatId} is not a Public Channel",
-                    chatId,
-                    linkedChatId
+                    "UserId: {UserId} at ChatId: {ChatId} is subscribed to any configured channel",
+                    fromId,
+                    chatId
                 );
 
                 return true;
             }
 
-            var chatMember = await telegramService.ChatService.GetChatMemberAsync(
-                chatId: linkedChatId,
-                userId: fromId,
-                evictAfter: true
+            var listKeyboard = subscriptionToAll.Select(
+                result => {
+                    return InlineKeyboardButton.WithCallbackData(result.ChannelName, result.ChannelId.ToString());
+                }
             );
 
-            if (chatMember.Status != ChatMemberStatus.Left) return true;
+            var keyboard = new InlineKeyboardMarkup(listKeyboard.Chunk(1));
 
-            var keyboard = new InlineKeyboardMarkup(
-                InlineKeyboardButton.WithUrl(chatLinked.GetChatTitle(), chatLinked.GetChatLink())
-            );
             var sendText = $"Hai {fromNameLink}" +
                            "\nKamu belum Subscribe ke Channel dibawah ini, silakan segera Subcribe agar tidak di tendang.";
 
@@ -1057,7 +1054,7 @@ public static class TelegramServiceMemberExtension
         }
     }
 
-    internal static async Task<bool> AnswerChatJoinRequestAsync(this TelegramService telegramService)
+    public static async Task<bool> AnswerChatJoinRequestAsync(this TelegramService telegramService)
     {
         if (!telegramService.HasChatJoinRequest) return true;
 
@@ -1098,6 +1095,20 @@ public static class TelegramServiceMemberExtension
             needManualAccept = false;
         }
 
+        if (chatSettings.EnableForceSubscription)
+        {
+            var checkSubscription = await telegramService.ChatService.CheckChatMemberSubscriptionToAllAsync(chatId, userChatJoinRequest.Id);
+            var listChannelStr = checkSubscription
+                .Select(result => $"<a href=\"{result.InviteLink}\">{result.ChannelName}</a>")
+                .JoinStr(", ");
+
+            if (checkSubscription.Any())
+            {
+                reasons.Add($"Belum subrek ke {listChannelStr}");
+                needManualAccept = false;
+            }
+        }
+
         if (needManualAccept) return true;
         var eventLogService = telegramService.GetRequiredService<EventLogService>();
 
@@ -1113,7 +1124,8 @@ public static class TelegramServiceMemberExtension
 
         await telegramService.SendTextMessageAsync(
             sendText: htmlMessage.ToString(),
-            scheduleDeleteAt: DateTime.UtcNow.AddMinutes(1),
+            disableWebPreview: true,
+            scheduleDeleteAt: DateTime.UtcNow.AddMinutes(10),
             preventDuplicateSend: true,
             messageFlag: MessageFlag.ChatJoinRequest
         );

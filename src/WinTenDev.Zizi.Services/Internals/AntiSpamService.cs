@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Flurl;
@@ -8,14 +9,6 @@ using Microsoft.Extensions.Options;
 using Serilog;
 using SerilogTimings;
 using SpamWatch.Types;
-using WinTenDev.Zizi.Models.Configs;
-using WinTenDev.Zizi.Models.Enums.Languages;
-using WinTenDev.Zizi.Models.Tables;
-using WinTenDev.Zizi.Models.Types;
-using WinTenDev.Zizi.Models.Validators;
-using WinTenDev.Zizi.Services.Telegram;
-using WinTenDev.Zizi.Utils;
-using WinTenDev.Zizi.Utils.Telegram;
 
 namespace WinTenDev.Zizi.Services.Internals;
 
@@ -24,11 +17,13 @@ namespace WinTenDev.Zizi.Services.Internals;
 /// </summary>
 public class AntiSpamService
 {
+    private readonly UsergeFedConfig _usergeFedConfig;
     private readonly CacheService _cacheService;
     private readonly ChatService _chatService;
     private readonly LocalizationService _localizationService;
     private readonly GlobalBanService _globalBanService;
     private readonly SettingsService _settingsService;
+    private readonly WTelegramApiService _wTelegramApiService;
     private readonly SpamWatchConfig _spamWatchConfig;
     private ChatSetting _chatSetting;
 
@@ -36,26 +31,32 @@ public class AntiSpamService
     /// Initializes a new instance of the <see cref="AntiSpamService"/> class.
     /// </summary>
     /// <param name="spamWatchConfig"></param>
+    /// <param name="usergeFedConfig"></param>
     /// <param name="cacheService"></param>
     /// <param name="chatService"></param>
     /// <param name="localizationService"></param>
     /// <param name="globalBanService">The global ban service.</param>
     /// <param name="settingsService"></param>
+    /// <param name="wTelegramApiService"></param>
     public AntiSpamService(
         IOptionsSnapshot<SpamWatchConfig> spamWatchConfig,
+        IOptionsSnapshot<UsergeFedConfig> usergeFedConfig,
         CacheService cacheService,
         ChatService chatService,
         LocalizationService localizationService,
         GlobalBanService globalBanService,
-        SettingsService settingsService
+        SettingsService settingsService,
+        WTelegramApiService wTelegramApiService
     )
     {
         _spamWatchConfig = spamWatchConfig.Value;
+        _usergeFedConfig = usergeFedConfig.Value;
         _cacheService = cacheService;
         _chatService = chatService;
         _localizationService = localizationService;
         _globalBanService = globalBanService;
         _settingsService = settingsService;
+        _wTelegramApiService = wTelegramApiService;
     }
 
     /// <summary>
@@ -85,23 +86,36 @@ public class AntiSpamService
 
         _chatSetting = await _settingsService.GetSettingsByGroup(chatId);
 
-        var getChatMemberTask = _chatService.GetChatMemberAsync(chatId, userId);
+        string nameLink;
+
+        if (chatId != 0)
+        {
+            var chatMember = await _chatService.GetChatMemberAsync(chatId, userId);
+            nameLink = chatMember.User.GetNameLink();
+        }
+        else
+        {
+            var fullUser = await _wTelegramApiService.GetFullUser(userId);
+            nameLink = fullUser.users.Values.FirstOrDefault()?.GetNameLink();
+        }
+
         var checkSpamWatchTask = CheckSpamWatch(userId);
         var checkCasBanTask = CheckCasBan(userId);
         var checkEs2BanTask = CheckEs2Ban(userId);
+        var checkUsergeBanTask = CheckUsergeBan(userId);
 
         await Task.WhenAll(
             checkSpamWatchTask,
             checkCasBanTask,
             checkEs2BanTask,
-            getChatMemberTask
+            checkUsergeBanTask
         );
 
-        var chatMember = getChatMemberTask.Result;
         var es2Ban = _chatSetting.EnableFedEs2 && checkEs2BanTask.Result;
         var swBan = _chatSetting.EnableFedSpamWatch && checkSpamWatchTask.Result;
         var casBan = _chatSetting.EnableFedCasBan && checkCasBanTask.Result;
-        var anyBan = swBan || casBan || es2Ban;
+        var usergeBan = checkUsergeBanTask.Result;
+        var anyBan = swBan || casBan || es2Ban || usergeBan;
 
         if (!anyBan)
         {
@@ -115,7 +129,7 @@ public class AntiSpamService
             placeHolders: new List<(string placeholder, string value)>()
             {
                 ("UserId", userId.ToString()),
-                ("FullName", chatMember.User.GetNameLink())
+                ("FullName", nameLink)
             }
         );
 
@@ -125,6 +139,7 @@ public class AntiSpamService
         if (es2Ban) htmlMessage.Url("https://t.me/WinTenDev", "- ES2 Global Ban").Br();
         if (casBan) htmlMessage.Url($"https://cas.chat/query?u={userId}", "- CAS Fed").Br();
         if (swBan) htmlMessage.Url("https://t.me/SpamWatchSupport", "- SpamWatch Fed");
+        if (usergeBan) htmlMessage.Url("https://t.me/UsergeAntiSpamSupport", "- Userge Fed");
 
         spamResult = new AntiSpamResult()
         {
@@ -132,7 +147,8 @@ public class AntiSpamService
             IsAnyBanned = anyBan,
             IsEs2Banned = es2Ban,
             IsCasBanned = casBan,
-            IsSpamWatched = swBan
+            IsSpamWatched = swBan,
+            IsUsergeBanned = usergeBan,
         };
 
         if (funcAntiSpamResult != null) await funcAntiSpamResult(spamResult);
@@ -342,6 +358,38 @@ public class AntiSpamService
                 userId
             );
 
+            op.Complete();
+            return false;
+        }
+    }
+
+    public async Task<bool> CheckUsergeBan(long userId)
+    {
+        if (!_usergeFedConfig.IsEnabled) return false;
+
+        var op = Operation.Begin("Userge Fed check for UserId: {UserId}", userId);
+
+        try
+        {
+            var usergeGBanResult = await _cacheService.GetOrSetAsync(
+                cacheKey: "ban-userge_" + userId,
+                action: async () => {
+                    var usergeGBanResult = await _usergeFedConfig.BaseUrl
+                        .OpenFlurlSession()
+                        .AppendPathSegment("ban/")
+                        .SetQueryParam("user_id", userId)
+                        .SetQueryParam("api_key", _usergeFedConfig.ApiToken)
+                        .GetJsonAsync<UsergeGBanResult>();
+
+                    return usergeGBanResult;
+                }
+            );
+
+            op.Complete();
+            return usergeGBanResult.Success;
+        }
+        catch (Exception e)
+        {
             op.Complete();
             return false;
         }

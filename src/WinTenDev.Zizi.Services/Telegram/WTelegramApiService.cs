@@ -4,10 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using TL;
-using WinTenDev.Zizi.Models.Telegram;
-using WinTenDev.Zizi.Services.Internals;
-using WinTenDev.Zizi.Utils;
-using WinTenDev.Zizi.Utils.Telegram;
 using WTelegram;
 
 namespace WinTenDev.Zizi.Services.Telegram;
@@ -360,7 +356,9 @@ public class WTelegramApiService
             var fixedUsername = username.TrimStart('@');
 
             var resolvedPeer = await _cacheService.GetOrSetAsync(
-                cacheKey: "tdlib-resolved_peer-" + fixedUsername,
+                cacheKey: "tdlib-resolved-peer_" + fixedUsername,
+                staleAfter: "1h",
+                expireAfter: "24h",
                 action: async () => {
                     var resolvedPeer = await _client.Contacts_ResolveUsername(fixedUsername);
 
@@ -380,5 +378,12 @@ public class WTelegramApiService
 
             return default;
         }
+    }
+
+    public async Task<Users_UserFull> GetFullUser(long userId)
+    {
+        var fullUser = await _client.Users_GetFullUser(new InputUser(userId, _client.GetAccessHashFor<Users_UserFull>(userId)));
+
+        return fullUser;
     }
 }

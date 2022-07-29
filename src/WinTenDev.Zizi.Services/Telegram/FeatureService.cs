@@ -7,10 +7,6 @@ using Microsoft.Extensions.Options;
 using MoreLinq;
 using NMemory.Tables;
 using Telegram.Bot.Types.ReplyMarkups;
-using WinTenDev.Zizi.Models.Configs;
-using WinTenDev.Zizi.Models.Types;
-using WinTenDev.Zizi.Services.NMemory;
-using WinTenDev.Zizi.Utils;
 
 namespace WinTenDev.Zizi.Services.Telegram;
 

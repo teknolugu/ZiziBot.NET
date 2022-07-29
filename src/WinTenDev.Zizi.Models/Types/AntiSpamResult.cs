@@ -8,4 +8,5 @@ public class AntiSpamResult
     public bool IsEs2Banned { get; set; }
     public bool IsCasBanned { get; set; }
     public bool IsSpamWatched { get; set; }
+    public bool IsUsergeBanned { get; set; }
 }

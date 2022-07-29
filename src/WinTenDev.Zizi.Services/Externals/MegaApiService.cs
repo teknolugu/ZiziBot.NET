@@ -3,8 +3,6 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using CG.Web.MegaApiClient;
 using Serilog;
-using WinTenDev.Zizi.Models.Enums;
-using WinTenDev.Zizi.Models.Types;
 
 namespace WinTenDev.Zizi.Services.Externals;
 
@@ -25,7 +23,10 @@ public class MegaApiService
     /// </summary>
     /// <param name="megaUrl">The mega url</param>
     /// <param name="onAnswerCallback">The on answer callback</param>
-    public async Task DownloadFileAsync(string megaUrl, Func<CallbackAnswer, Task> onAnswerCallback)
+    public async Task DownloadFileAsync(
+        string megaUrl,
+        Func<CallbackAnswer, Task> onAnswerCallback
+    )
     {
         try
         {
@@ -40,30 +41,40 @@ public class MegaApiService
             var nodeName = node.Name;
 
             Log.Debug("Downloading {0}", nodeName);
-            IProgress<double> progressHandler = new Progress<double>(async x => {
-                downloadProgress = x;
+            IProgress<double> progressHandler = new Progress<double>(
+                async x => {
+                    downloadProgress = x;
 
-                if (swUpdater.Elapsed.Seconds < 5) return;
-                swUpdater.Restart();
-                await onAnswerCallback(new CallbackAnswer()
-                {
-                    CallbackAnswerMode = CallbackAnswerMode.EditMessage,
-                    CallbackAnswerText = $"Downloading Progress: {downloadProgress:.##} %"
-                });
+                    if (swUpdater.Elapsed.Seconds < 5) return;
+                    swUpdater.Restart();
+                    await onAnswerCallback(
+                        new CallbackAnswer()
+                        {
+                            CallbackAnswerMode = CallbackAnswerMode.EditMessage,
+                            CallbackAnswerText = $"Downloading Progress: {downloadProgress:.##} %"
+                        }
+                    );
 
-                // await telegramService.EditMessageTextAsync($"Downloading Progress: {downloadProgress:.##} %");
-                // swUpdater.Start();
-            });
+                    // await telegramService.EditMessageTextAsync($"Downloading Progress: {downloadProgress:.##} %");
+                    // swUpdater.Start();
+                }
+            );
 
-            await client.DownloadFileAsync(fileLink, nodeName, progressHandler);
+            await client.DownloadFileAsync(
+                fileLink,
+                nodeName,
+                progressHandler
+            );
         }
         catch (Exception ex)
         {
-            await onAnswerCallback(new CallbackAnswer()
-            {
-                CallbackAnswerMode = CallbackAnswerMode.SendMessage,
-                CallbackAnswerText = $"Sesuatu kesalahan telah terjadi."
-            });
+            await onAnswerCallback(
+                new CallbackAnswer()
+                {
+                    CallbackAnswerMode = CallbackAnswerMode.SendMessage,
+                    CallbackAnswerText = $"Sesuatu kesalahan telah terjadi."
+                }
+            );
 
             // await telegramService.SendTextMessageAsync($"🚫 <b>Sesuatu telah terjadi.</b>\n{ex.Message}");
         }

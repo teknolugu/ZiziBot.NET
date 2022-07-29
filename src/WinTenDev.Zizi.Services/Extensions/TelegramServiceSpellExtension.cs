@@ -2,12 +2,6 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Serilog;
-using WinTenDev.Zizi.Models.Tables;
-using WinTenDev.Zizi.Models.Types;
-using WinTenDev.Zizi.Models.Validators;
-using WinTenDev.Zizi.Services.Internals;
-using WinTenDev.Zizi.Services.Telegram;
-using WinTenDev.Zizi.Utils;
 
 namespace WinTenDev.Zizi.Services.Extensions;
 

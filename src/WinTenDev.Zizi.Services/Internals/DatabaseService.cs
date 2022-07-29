@@ -16,20 +16,9 @@ using SqlKata.Execution;
 using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InputFiles;
-using WinTenDev.Zizi.Models.Configs;
-using WinTenDev.Zizi.Models.Entities.MongoDb;
-using WinTenDev.Zizi.Models.Entities.MongoDb.Internal;
-using WinTenDev.Zizi.Models.Tables;
-using WinTenDev.Zizi.Models.Types;
-using WinTenDev.Zizi.Services.Telegram;
-using WinTenDev.Zizi.Utils;
-using WinTenDev.Zizi.Utils.IO;
 
 namespace WinTenDev.Zizi.Services.Internals;
 
-/// <summary>
-/// Data Backup service implementation
-/// </summary>
 public class DatabaseService
 {
     private const string DataDir = "Storage/Data/";
@@ -278,6 +267,8 @@ public class DatabaseService
         await DB.InitAsync("shared", MongoClientSettings.FromConnectionString(connectionString));
 
         DB.DatabaseFor<ForceSubscription>(meUsername);
+        DB.DatabaseFor<WarnMember>(meUsername);
+        DB.DatabaseFor<WebHookChat>(meUsername);
 
         DB.DatabaseFor<SubsceneMovieSearch>("shared");
         DB.DatabaseFor<SubsceneMovieItem>("shared");
@@ -289,14 +280,6 @@ public class DatabaseService
     public async Task MongoDbEnsureCollectionIndex()
     {
         _logger.LogInformation("Creating MongoDb Index..");
-
-        await DB.Index<ForceSubscription>()
-            .Key(subscription => subscription.ChannelId, KeyType.Ascending)
-            .Option(
-                options =>
-                    options.Unique = true
-            )
-            .CreateAsync();
 
         await DB.Index<SubsceneMovieItem>()
             .Key(item => item.MovieUrl, KeyType.Ascending)

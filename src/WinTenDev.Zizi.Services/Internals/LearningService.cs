@@ -3,8 +3,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Serilog;
 using SqlKata.Execution;
-using WinTenDev.Zizi.Models.Tables;
-using WinTenDev.Zizi.Utils;
 
 namespace WinTenDev.Zizi.Services.Internals;
 
@@ -13,9 +11,7 @@ public class LearningService
     private readonly QueryService _queryService;
     private const string TableName = "words_learning";
 
-    public LearningService(
-        QueryService queryService
-    )
+    public LearningService(QueryService queryService)
     {
         _queryService = queryService;
     }
@@ -45,13 +41,15 @@ public class LearningService
         var insert = await _queryService
             .CreateMySqlFactory()
             .FromTable(TableName)
-            .InsertAsync(new Dictionary<string, object>()
-            {
-                { "label", learnData.Label },
-                { "message", learnData.Message },
-                { "from_id", learnData.FromId },
-                { "chat_id", learnData.ChatId }
-            });
+            .InsertAsync(
+                new Dictionary<string, object>()
+                {
+                    { "label", learnData.Label },
+                    { "message", learnData.Message },
+                    { "from_id", learnData.FromId },
+                    { "chat_id", learnData.ChatId }
+                }
+            );
 
         Log.Information("Save Learn: {Insert}", insert);
 

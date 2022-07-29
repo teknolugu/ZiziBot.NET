@@ -68,8 +68,16 @@ public static class AssemblyUtil
 
     public static string FormatVersion(this Version version)
     {
-        var versionStr = $"{version.Minor} Build {version.Build}";
+        var versionStr = $"{version.Major}.{version.Minor} Build {version.Build}";
         return versionStr;
+    }
+
+    public static string GetVersionNumber()
+    {
+        var currentAssembly = Assembly.GetCallingAssembly().GetName();
+        var assemblyVersion = currentAssembly.Version?.ToString();
+
+        return assemblyVersion;
     }
 
     public static HtmlMessage GetAboutHeader(this User me)
@@ -78,7 +86,7 @@ public static class AssemblyUtil
         var currentAssembly = Assembly.GetExecutingAssembly().GetName();
         var buildNumber = currentAssembly.Version?.Build.ToString();
         var assemblyVersion = currentAssembly.Version?.ToString();
-        var buildDate = AssemblyUtil.GetBuildDate();
+        var buildDate = GetBuildDate();
 
         var htmlMessage = HtmlMessage.Empty
             .Bold($"{meFullName} 4 Build {buildNumber}").Br()

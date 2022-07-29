@@ -6,9 +6,6 @@ using MoreLinq;
 using Serilog;
 using SerilogTimings;
 using SqlKata.Execution;
-using WinTenDev.Zizi.Models.Tables;
-using WinTenDev.Zizi.Models.Types;
-using WinTenDev.Zizi.Utils;
 
 namespace WinTenDev.Zizi.Services.Internals;
 

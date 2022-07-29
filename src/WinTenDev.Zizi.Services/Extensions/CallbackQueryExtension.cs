@@ -5,15 +5,6 @@ using System.Threading.Tasks;
 using Serilog;
 using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
-using WinTenDev.Zizi.Models.Dto;
-using WinTenDev.Zizi.Models.Enums;
-using WinTenDev.Zizi.Models.Tables;
-using WinTenDev.Zizi.Models.Types;
-using WinTenDev.Zizi.Services.Internals;
-using WinTenDev.Zizi.Services.Telegram;
-using WinTenDev.Zizi.Utils;
-using WinTenDev.Zizi.Utils.Telegram;
-using WinTenDev.Zizi.Utils.Text;
 
 namespace WinTenDev.Zizi.Services.Extensions;
 
@@ -58,14 +49,40 @@ public static class CallbackQueryExtension
             return true;
         }
 
-        if (messageTarget == "current-message")
+        switch (messageTarget)
         {
-            await telegramService.DeleteCurrentCallbackMessageAsync();
-        }
-        else
-        {
-            var messageId = telegramService.GetCallbackDataAt<int>(1);
-            await telegramService.DeleteAsync(messageId);
+            case "current-message":
+                await telegramService.DeleteCurrentCallbackMessageAsync();
+                break;
+            case "purge":
+                var startMessageId = telegramService.GetCallbackDataAt<int>(2);
+                var endMessageId = telegramService.GetCallbackDataAt<int>(3);
+                var userId = telegramService.GetCallbackDataAt<int>(4);
+
+                var wTelegramApiService = telegramService.GetRequiredService<WTelegramApiService>();
+                var messages = await wTelegramApiService.GetAllMessagesAsync(
+                    chatId: chatId,
+                    startMessageId: startMessageId,
+                    endMessageId: endMessageId,
+                    userId: userId
+                );
+
+                var messageIds = messages.Select(message => message.ID).ToList();
+
+                var affectedMessages = await wTelegramApiService.DeleteMessagesAsync(chatId, messageIds);
+
+                // await messageIds.AsyncParallelForEach(maxDegreeOfParallelism: 10, body: messageId => telegramService.DeleteAsync(messageId));
+
+                await telegramService.AnswerCallbackQueryAsync($"Sekitar {affectedMessages} pesan dihapus", true);
+                await telegramService.DeleteCurrentCallbackMessageAsync();
+
+                break;
+            default:
+            {
+                var messageId = telegramService.GetCallbackDataAt<int>(1);
+                await telegramService.DeleteAsync(messageId);
+                break;
+            }
         }
 
         return true;

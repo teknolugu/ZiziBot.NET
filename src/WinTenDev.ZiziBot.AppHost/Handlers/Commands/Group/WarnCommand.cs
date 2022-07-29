@@ -20,22 +20,16 @@ public class WarnCommand : CommandBase
         _telegramService = telegramService;
     }
 
-    public override async Task HandleAsync(IUpdateContext context, UpdateDelegate next, string[] args)
+    public override async Task HandleAsync(
+        IUpdateContext context,
+        UpdateDelegate next,
+        string[] args
+    )
     {
         await _telegramService.AddUpdateContext(context);
 
-        var msg = _telegramService.Message;
-
-        if (!await _telegramService.IsAdminOrPrivateChat()) return;
-
-        if (msg.ReplyToMessage != null)
-        {
-            await WarnMemberAsync();
-        }
-        else
-        {
-            await _telegramService.SendTextMessageAsync("Balas pengguna yang akan di Warn", replyToMsgId: msg.MessageId);
-        }
+        // await WarnMemberAsync();
+        await _telegramService.WarnMemberAsync();
     }
 
     public async Task WarnMemberAsync()
@@ -85,13 +79,15 @@ public class WarnCommand : CommandBase
                 return;
             }
 
-            var inlineKeyboard = new InlineKeyboardMarkup(new[]
-            {
+            var inlineKeyboard = new InlineKeyboardMarkup(
                 new[]
                 {
-                    InlineKeyboardButton.WithCallbackData("Hapus peringatan", $"action remove-warn {user.Id}")
+                    new[]
+                    {
+                        InlineKeyboardButton.WithCallbackData("Hapus peringatan", $"action remove-warn {user.Id}")
+                    }
                 }
-            });
+            );
 
             await _telegramService.SendTextMessageAsync(sendText, inlineKeyboard);
             await UpdateLastWarnMemberMessageIdAsync(message, _telegramService.SentMessageId);
@@ -135,7 +131,11 @@ public class WarnCommand : CommandBase
             Log.Information("Mapped: {V}", warnHistories.ToJson(true));
 
             var newStep = warnHistories.StepCount + 1;
-            Log.Information("New step for {From} is {NewStep}", message.From, newStep);
+            Log.Information(
+                "New step for {From} is {NewStep}",
+                message.From,
+                newStep
+            );
 
             var update = new Dictionary<string, object>
             {
@@ -188,7 +188,10 @@ public class WarnCommand : CommandBase
         return updatedHistory.ToJson().MapObject<List<WarnMemberHistory>>().First();
     }
 
-    public async Task UpdateLastWarnMemberMessageIdAsync(Message message, long messageId)
+    public async Task UpdateLastWarnMemberMessageIdAsync(
+        Message message,
+        long messageId
+    )
     {
         Log.Information("Updating last Warn Member MessageId.");
 

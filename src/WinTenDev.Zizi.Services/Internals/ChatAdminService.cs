@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using MySqlConnector;
 using RepoDb;
-using WinTenDev.Zizi.Models.Tables;
 
 namespace WinTenDev.Zizi.Services.Internals
 {

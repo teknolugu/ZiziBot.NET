@@ -12,13 +12,6 @@ using MongoDB.Driver;
 using MongoDB.Entities;
 using Serilog;
 using SerilogTimings;
-using WinTenDev.Zizi.Models.Configs;
-using WinTenDev.Zizi.Models.Entities.MongoDb;
-using WinTenDev.Zizi.Models.Types;
-using WinTenDev.Zizi.Services.Internals;
-using WinTenDev.Zizi.Services.Telegram;
-using WinTenDev.Zizi.Utils;
-using WinTenDev.Zizi.Utils.Parsers;
 
 namespace WinTenDev.Zizi.Services.Externals;
 
@@ -229,6 +222,7 @@ public class SubsceneService
     {
         _logger.LogInformation("Preparing download subtitle file {Slug}", subtitleId);
 
+        var movieDetail = new SubsceneMovieDetail();
         var subtitleItem = await DB.Find<SubsceneSubtitleItem>().OneAsync(subtitleId);
         var moviePath = subtitleItem.MovieUrl.Split("/").Skip(2).JoinStr("/");
 
@@ -238,6 +232,12 @@ public class SubsceneService
             .Where(element => element.ClassName == "top left")
             .OfType<IHtmlDivElement>()
             .FirstOrDefault();
+
+        if (all == null)
+        {
+            movieDetail.SubtitleMovieUrl = "https://subscene.com/subtitles/" + moviePath;
+            return movieDetail;
+        }
 
         var subtitleListUrl = subtitleItem.MovieUrl;
         var language = moviePath.Split("/").ElementAtOrDefault(1);
@@ -251,7 +251,7 @@ public class SubsceneService
         var subtitleUrl = document.QuerySelectorAll<IHtmlAnchorElement>("a[href ^= '/subtitles']")
             .FirstOrDefault(element => element.Href.Contains("text"))?.Href;
 
-        var movieDetail = new SubsceneMovieDetail()
+        movieDetail = new SubsceneMovieDetail()
         {
             SubtitleMovieUrl = subtitleListUrl,
             MovieName = movieTitle,

@@ -3,11 +3,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Serilog;
 using SqlKata.Execution;
-using WinTenDev.Zizi.Models.Dto;
-using WinTenDev.Zizi.Models.Tables;
-using WinTenDev.Zizi.Utils;
-using WinTenDev.Zizi.Utils.Telegram;
-using WinTenDev.Zizi.Utils.Text;
 
 namespace WinTenDev.Zizi.Services.Internals;
 

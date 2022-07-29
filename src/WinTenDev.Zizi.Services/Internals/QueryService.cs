@@ -12,10 +12,6 @@ using Realms;
 using Serilog;
 using SqlKata.Compilers;
 using SqlKata.Execution;
-using WinTenDev.Zizi.Models.Configs;
-using WinTenDev.Zizi.Services.Telegram;
-using WinTenDev.Zizi.Utils;
-using WinTenDev.Zizi.Utils.IO;
 
 namespace WinTenDev.Zizi.Services.Internals;
 

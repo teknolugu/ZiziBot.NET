@@ -7,7 +7,73 @@ on:
     branches: [ main ]
 
 jobs:
-  zizibot-fd-build:
+  #  zizibot-fd-build:
+  #    runs-on: ubuntu-latest
+  #    defaults:
+  #      run:
+  #        working-directory: /home/runner/work/ZiziBot.NET/ZiziBot.NET
+  
+  #    steps:
+  #      - uses: actions/checkout@v2
+  #      - name: Setup .NET
+  #        uses: actions/setup-dotnet@v1
+  #        with:
+  #          dotnet-version: 6.0.x
+  #
+  #      - name: Preparing Environment
+  #        run:
+  #          dotnet tool install --global dotnet-zip &&
+  #          dotnet zip install
+  #
+  #      - name: Install dependencies
+  #        run: dotnet restore WinTenDev.ZiziBot.sln
+  #
+  #      - name: Update Project version
+  #        run: dotnet run --project src/WinTenDev.ZiziTools.Cli
+  #
+  #      - uses: kzrnm/get-net-sdk-project-versions-action@v1
+  #        id: get-version
+  #        with:
+  #          proj-path: src/WinTenDev.ZiziTools.Cli/WinTenDev.ZiziTools.Cli.csproj
+  #
+  #      - name: Print version
+  #        run: echo "${{steps.get-version.outputs.version}}"
+  #
+  #      - name: Creating Linux-x64 package
+  #        run: dotnet publish src/WinTenDev.ZiziBot.AppHost -r linux-x64 -c Release --self-contained=false /t:CreateZip
+  #
+  #      - name: Creating Win-x64 package
+  #        run: dotnet publish src/WinTenDev.ZiziBot.AppHost -r win-x64 -c Release --self-contained=false /t:CreateZip
+  #
+  #      - name: Creating Osx-x64 package
+  #        run: dotnet publish src/WinTenDev.ZiziBot.AppHost -r osx-x64 -c Release --self-contained=false /t:CreateZip
+  #
+  #      - name: Create Release Asset
+  #        uses: softprops/action-gh-release@v1
+  #        with:
+  #          name: "Zizi Bot {{steps.get-version.outputs.version}}"
+  #          tag_name: "v${{steps.get-version.outputs.version}}"
+  #          files: |
+  #            src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/linux-x64/*.zip
+  #            src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/win-x64/*.zip
+  #            src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/osx-x64/*.zip
+  #          draft: true
+  #          prerelease: true
+  #        env:
+  #          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+  
+  #      - name: Uploading Artifacs
+  #        uses: actions/upload-artifact@v2
+  #        with:
+  #          name: ZiziBot FD Build
+  #          path: |
+  #            src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/linux-x64/*.zip
+  #            src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/win-x64/*.zip
+  #            src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/osx-x64/*.zip
+
+
+  zizibot-sf-build:
+    name: Zizi Bot SF Build
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -32,46 +98,11 @@ jobs:
       - name: Update Project version
         run: dotnet run --project src/WinTenDev.ZiziTools.Cli
 
-      - name: Creating Linux-x64 package
-        run: dotnet publish src/WinTenDev.ZiziBot.AppHost -r linux-x64 -c Release --self-contained=false /t:CreateZip
-
-      - name: Creating Win-x64 package
-        run: dotnet publish src/WinTenDev.ZiziBot.AppHost -r win-x64 -c Release --self-contained=false /t:CreateZip
-
-      - name: Creating Osx-x64 package
-        run: dotnet publish src/WinTenDev.ZiziBot.AppHost -r osx-x64 -c Release --self-contained=false /t:CreateZip
-
-      - name: Uploading Artifacs
-        uses: actions/upload-artifact@v2
+      - name: Getting Project Version
+        uses: kzrnm/get-net-sdk-project-versions-action@v1
+        id: get-version
         with:
-          name: ZiziBot FD Build
-          path: |
-            src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/linux-x64/*.zip
-            src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/win-x64/*.zip
-            src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/osx-x64/*.zip
-
-
-  zizibot-sf-build:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: /home/runner/work/ZiziBot.NET/ZiziBot.NET
-
-    steps:
-      - uses: actions/checkout@v2
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: 6.0.x
-
-      - name: Preparing Environment
-        run:
-          dotnet tool install --global dotnet-zip &&
-          cd src/WinTenDev.ZiziBot.AppHost &&
-          dotnet zip install
-
-      - name: Install dependencies
-        run: dotnet restore WinTenDev.ZiziBot.sln
+          proj-path: src/WinTenDev.ZiziTools.Cli/WinTenDev.ZiziTools.Cli.csproj
 
       - name: Creating Linux-x64 package
         run: dotnet publish src/WinTenDev.ZiziBot.AppHost -r linux-x64 -c Release --self-contained=false /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true /t:CreateZip
@@ -82,14 +113,28 @@ jobs:
       - name: Creating Osx-x64 package
         run: dotnet publish src/WinTenDev.ZiziBot.AppHost -r osx-x64 -c Release --self-contained=false /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true /t:CreateZip
 
-      - name: Uploading Artifacts
-        uses: actions/upload-artifact@v2
+      - name: Create Release Assets
+        uses: softprops/action-gh-release@v1
         with:
-          name: ZiziBot SF Config
-          path: |
+          name: "Zizi Bot ${{steps.get-version.outputs.version}}"
+          tag_name: "v${{steps.get-version.outputs.version}}"
+          files: |
             src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/linux-x64/*.zip
             src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/win-x64/*.zip
             src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/osx-x64/*.zip
+          draft: false
+          prerelease: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+
+#      - name: Uploading Artifacts
+#        uses: actions/upload-artifact@v2
+#        with:
+#          name: ZiziBot SF Build
+#          path: |
+#            src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/linux-x64/*.zip
+#            src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/win-x64/*.zip
+#            src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/osx-x64/*.zip
 
 #  zizibot-win64-fd-build:
 #    runs-on: ubuntu-latest

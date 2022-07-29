@@ -3,7 +3,6 @@ using Microsoft.Extensions.Logging;
 using Serilog;
 using Telegram.Bot;
 using Telegram.Bot.Types;
-using WinTenDev.Zizi.Services.Internals;
 
 namespace WinTenDev.Zizi.Services.Telegram;
 

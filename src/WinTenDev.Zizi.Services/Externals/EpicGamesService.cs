@@ -12,13 +12,6 @@ using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
-using WinTenDev.Zizi.Models.Dto;
-using WinTenDev.Zizi.Models.Tables;
-using WinTenDev.Zizi.Models.Types;
-using WinTenDev.Zizi.Services.Internals;
-using WinTenDev.Zizi.Services.Telegram;
-using WinTenDev.Zizi.Utils;
-using WinTenDev.Zizi.Utils.Telegram;
 
 namespace WinTenDev.Zizi.Services.Externals;
 
@@ -59,59 +52,58 @@ public class EpicGamesService
                 var jobId = "egs-free-" + chatId.ReduceChatId();
                 _recurringJobManager.AddOrUpdate(
                     recurringJobId: jobId,
-                    methodCall: () => SendEpicGamesBroadcaster(chatId),
+                    methodCall: () => RunEpicGamesBroadcaster(chatId),
                     cronExpression: Cron.Minutely
                 );
             }
         );
     }
 
-    [JobDisplayName("EpicGames Broadcaster {0}")]
+    [JobDisplayName("EGS Free {0}")]
     [AutomaticRetry(Attempts = 0, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
-    public async Task SendEpicGamesBroadcaster(long chatId)
+    public async Task RunEpicGamesBroadcaster(long chatId)
     {
         var games = await GetFreeGamesParsed();
-        var freeGames = games.FirstOrDefault();
 
-        if (freeGames == null) return;
+        await games.ForEachAsync(async freeGames => {
+            var productUrl = freeGames.ProductUrl;
+            var productTitle = freeGames.ProductTitle;
 
-        var productUrl = freeGames.ProductUrl;
-        var productTitle = freeGames.ProductTitle;
+            var chat = await _botClient.GetChatAsync(chatId);
+            if (chat.LinkedChatId != null) chatId = chat.LinkedChatId.Value;
 
-        var chat = await _botClient.GetChatAsync(chatId);
-        if (chat.LinkedChatId != null) chatId = chat.LinkedChatId.Value;
+            var isHistoryExist = await _rssService.IsHistoryExist(chatId, productUrl);
+            if (isHistoryExist)
+            {
+                Log.Information(
+                    "Seem EpicGames with Title: '{Title}' already sent to ChatId: {ChannelId}",
+                    productTitle,
+                    chatId
+                );
+            }
+            else
+            {
+                await _botClient.SendPhotoAsync(
+                    chatId: chatId,
+                    photo: freeGames.Images.ToString(),
+                    caption: freeGames.Detail,
+                    parseMode: ParseMode.Html
+                );
 
-        var isHistoryExist = await _rssService.IsHistoryExist(chatId, productUrl);
-        if (isHistoryExist)
-        {
-            Log.Information(
-                "Seem EpicGames with Title: '{Title}' already sent to ChatId: {ChannelId}",
-                productTitle,
-                chatId
-            );
-        }
-        else
-        {
-            await _botClient.SendPhotoAsync(
-                chatId: chatId,
-                photo: freeGames.Images.ToString(),
-                caption: freeGames.Detail,
-                parseMode: ParseMode.Html
-            );
-
-            await _rssService.SaveRssHistoryAsync(
-                new RssHistory()
-                {
-                    ChatId = chatId,
-                    Title = productTitle,
-                    Url = productUrl,
-                    PublishDate = DateTime.UtcNow,
-                    Author = "EpicGames Free",
-                    CreatedAt = DateTime.UtcNow,
-                    RssSource = "https://store.epicgames.com"
-                }
-            );
-        }
+                await _rssService.SaveRssHistoryAsync(
+                    new RssHistory()
+                    {
+                        ChatId = chatId,
+                        Title = productTitle,
+                        Url = productUrl,
+                        PublishDate = DateTime.UtcNow,
+                        Author = "EpicGames Free",
+                        CreatedAt = DateTime.UtcNow,
+                        RssSource = "https://store.epicgames.com"
+                    }
+                );
+            }
+        });
     }
 
     public async Task<List<IAlbumInputMedia>> GetFreeGamesOffered()
@@ -160,7 +152,12 @@ public class EpicGamesService
     )
     {
         var egsFreeGame = await GetFreeGamesRaw();
-        var offeredGameList = egsFreeGame.DiscountGames.Select(
+        var offeredGameList = egsFreeGame.DiscountGames
+            .Where(element =>
+                element.Promotions.PromotionalOffers?.Count != 0 ||
+                element.Promotions.UpcomingPromotionalOffers?.Count != 0
+            )
+            .Select(
                 (
                     element,
                     index
@@ -168,18 +165,19 @@ public class EpicGamesService
                     var captionBuilder = new StringBuilder();
                     var detailBuilder = new StringBuilder();
 
-                    var slug = element.ProductSlug ?? element.UrlSlug;
-                    var url = Url.Combine("https://www.epicgames.com/store/en-US/p/", slug);
                     var title = element.Title;
-                    var titleLink = element.Title.MkUrl(url);
+                    var mappingPageSlug = element.CatalogNs.Mappings.FirstOrDefault()?.PageSlug;
+                    var slug = element.ProductSlug ?? element.UrlSlug;
+                    var productSlug = element.ProductSlug ?? mappingPageSlug;
+                    var gameUrl = Url.Combine("https://www.epicgames.com/store/en-US/p/", mappingPageSlug);
+                    var titleLink = element.Title.MkUrl(gameUrl);
 
                     var promotionOffers = element.Promotions.PromotionalOffers?.FirstOrDefault()?.PromotionalOffers.FirstOrDefault();
                     var upcomingPromotionalOffers = element.Promotions.UpcomingPromotionalOffers?.FirstOrDefault()?.PromotionalOffers.FirstOrDefault();
                     var offers = promotionOffers ?? upcomingPromotionalOffers;
 
-                    captionBuilder.AppendLine($"{index + 1}. {titleLink}");
+                    captionBuilder.Append(index + 1).Append(". ").AppendLine(titleLink);
 
-                    // if (offers != null)
                     captionBuilder
                         .Append("<b>Offers date:</b> ")
                         .Append(offers?.StartDate?.LocalDateTime.ToString("yyyy-MM-dd hh:mm tt"))
@@ -205,8 +203,8 @@ public class EpicGamesService
 
                     var egsParsed = new EgsFreeGameParsed()
                     {
-                        ProductUrl = url,
-                        ProductSlug = element.ProductSlug,
+                        ProductUrl = gameUrl,
+                        ProductSlug = productSlug,
                         ProductTitle = title,
                         Text = captionBuilder.ToTrimmedString(),
                         StartOfferDate = offers.StartDate,
@@ -217,8 +215,7 @@ public class EpicGamesService
 
                     return egsParsed;
                 }
-            )
-            .ToList();
+            );
 
         if (currentOffered)
         {
@@ -227,7 +224,7 @@ public class EpicGamesService
             ).ToList();
         }
 
-        return offeredGameList;
+        return offeredGameList.ToList();
     }
 
     public async Task<EgsFreeGame> GetFreeGamesRaw()

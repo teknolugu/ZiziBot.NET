@@ -5,9 +5,6 @@ using System.Threading.Tasks;
 using Flurl.Http;
 using SerilogTimings;
 using SqlKata.Execution;
-using WinTenDev.Zizi.Models.Tables;
-using WinTenDev.Zizi.Models.Types;
-using WinTenDev.Zizi.Utils;
 
 namespace WinTenDev.Zizi.Services.Internals;
 
@@ -38,10 +35,13 @@ public class BlockListService
     {
         var op = Operation.Begin("Read BlockList");
 
-        var data = await _cacheService.GetOrSetAsync(url, async () => {
-            var allUrl = await url.GetStringAsync();
-            return allUrl;
-        });
+        var data = await _cacheService.GetOrSetAsync(
+            url,
+            async () => {
+                var allUrl = await url.GetStringAsync();
+                return allUrl;
+            }
+        );
 
         var parseList = ParseListCore(data);
 

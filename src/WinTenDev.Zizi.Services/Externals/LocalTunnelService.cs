@@ -5,7 +5,6 @@ using Localtunnel.Tunnels;
 using Microsoft.Extensions.Hosting;
 using Nito.AsyncEx.Synchronous;
 using Serilog;
-using WinTenDev.Zizi.Utils;
 
 namespace WinTenDev.Zizi.Services.Externals;
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -10,13 +11,8 @@ using RepoDb;
 using Serilog;
 using StackExchange.Redis;
 using Telegram.Bot;
+using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InputFiles;
-using WinTenDev.Zizi.Models.Configs;
-using WinTenDev.Zizi.Models.Enums;
-using WinTenDev.Zizi.Models.Interfaces;
-using WinTenDev.Zizi.Services.Internals;
-using WinTenDev.Zizi.Utils;
-using WinTenDev.Zizi.Utils.IO;
 
 namespace WinTenDev.Zizi.Services.Telegram;
 
@@ -120,6 +116,61 @@ public class StorageService : IStorageService
         {
             Log.Error(ex, "Error Send .Log file to ChannelTarget");
         }
+    }
+
+    [JobDisplayName("Delete Temp Files")]
+    public async Task RemoveTemporaryFiles()
+    {
+        var sw = Stopwatch.StartNew();
+
+        const string tempDir = "Storage/Caches";
+
+        var prevDirSize = tempDir.DirSize();
+
+        var tempFiles = tempDir
+            .EnumerateFiles(recursive: true)
+            .ToList();
+
+        var filteredFiles = tempFiles.Select(s => s.FileInfo())
+            .Where(fileInfo =>
+                fileInfo.LastAccessTime <= DateTime.UtcNow.AddDays(-1)
+                || fileInfo.CreationTime <= DateTime.UtcNow.AddDays(-1)
+            ).Select(fileInfo => fileInfo.FullName)
+            .ToList();
+
+        Log.Information("Found {FileCount} files of {Length} total(s)", filteredFiles.Count, tempFiles.Count);
+
+        filteredFiles.RemoveFiles();
+
+        var afterDirSize = tempDir.DirSize();
+        var diffSize = prevDirSize - afterDirSize;
+
+        Log.Information("Storage saved, about: {Size}", diffSize.SizeFormat());
+
+        var htmlMessage = HtmlMessage.Empty
+            .Bold("♻ Storage - Cleanup Temp Files").Br()
+            .Bold("Total files: ").TextBr(tempFiles.Count.ToString())
+            .Bold("Del files: ").TextBr(filteredFiles.Count.ToString())
+            .Bold("Prev size: ").TextBr(prevDirSize.SizeFormat())
+            .Bold("After size: ").TextBr(afterDirSize.SizeFormat())
+            .Bold("Storage saved: ").TextBr(diffSize.SizeFormat())
+            .Bold("Execution time: ").TextBr(sw.Elapsed.ToString());
+
+        sw.Stop();
+
+        var channelTarget = _eventLogConfig.ChannelId;
+
+        if (channelTarget == 0)
+        {
+            Log.Information("EventLog channel target is not set");
+            return;
+        }
+
+        await _botClient.SendTextMessageAsync(
+            chatId: channelTarget,
+            text: htmlMessage.ToString(),
+            parseMode: ParseMode.Html
+        );
     }
 
     public async Task ResetHangfireMySqlStorage(ResetTableMode resetTableMode = ResetTableMode.Truncate)
