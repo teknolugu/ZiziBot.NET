@@ -116,6 +116,61 @@ public class StorageService : IStorageService
         }
     }
 
+    [JobDisplayName("Delete Temp Files")]
+    public async Task RemoveTemporaryFiles()
+    {
+        var sw = Stopwatch.StartNew();
+
+        const string tempDir = "Storage/Caches";
+
+        var prevDirSize = tempDir.DirSize();
+
+        var tempFiles = tempDir
+            .EnumerateFiles(recursive: true)
+            .ToList();
+
+        var filteredFiles = tempFiles.Select(s => s.FileInfo())
+            .Where(fileInfo =>
+                fileInfo.LastAccessTime <= DateTime.UtcNow.AddDays(-1)
+                || fileInfo.CreationTime <= DateTime.UtcNow.AddDays(-1)
+            ).Select(fileInfo => fileInfo.FullName)
+            .ToList();
+
+        Log.Information("Found {FileCount} files of {Length} total(s)", filteredFiles.Count, tempFiles.Count);
+
+        filteredFiles.RemoveFiles();
+
+        var afterDirSize = tempDir.DirSize();
+        var diffSize = prevDirSize - afterDirSize;
+
+        Log.Information("Storage saved, about: {Size}", diffSize.SizeFormat());
+
+        var htmlMessage = HtmlMessage.Empty
+            .Bold("♻ Storage - Cleanup Temp Files").Br()
+            .Bold("Total files: ").TextBr(tempFiles.Count.ToString())
+            .Bold("Del files: ").TextBr(filteredFiles.Count.ToString())
+            .Bold("Prev size: ").TextBr(prevDirSize.SizeFormat())
+            .Bold("After size: ").TextBr(afterDirSize.SizeFormat())
+            .Bold("Storage saved: ").TextBr(diffSize.SizeFormat())
+            .Bold("Execution time: ").TextBr(sw.Elapsed.ToString());
+
+        sw.Stop();
+
+        var channelTarget = _eventLogConfig.ChannelId;
+
+        if (channelTarget == 0)
+        {
+            Log.Information("EventLog channel target is not set");
+            return;
+        }
+
+        await _botClient.SendTextMessageAsync(
+            chatId: channelTarget,
+            text: htmlMessage.ToString(),
+            parseMode: ParseMode.Html
+        );
+    }
+
     public async Task ResetHangfireMySqlStorage(ResetTableMode resetTableMode = ResetTableMode.Truncate)
     {
         if (_hangfireConfig.DataStore != HangfireDataStore.MySql)

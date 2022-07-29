@@ -21,6 +21,7 @@ public static class HangfireJobsExtension
         jobService.ClearPendingJobs();
         jobService.RegisterJobChatCleanUp().InBackground();
         jobService.RegisterJobClearLog();
+        jobService.RegisterJobClearTempFiles();
         jobService.RegisterJobDeleteOldStep();
         jobService.RegisterJobDeleteOldRssHistory();
         jobService.RegisterJobDeleteOldMessageHistory();

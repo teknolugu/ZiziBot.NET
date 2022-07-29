@@ -174,6 +174,15 @@ public class JobsService
         );
     }
 
+    public void RegisterJobClearTempFiles()
+    {
+        _recurringJobManager.AddOrUpdate<StorageService>(
+            "temp-cleaner",
+            (service) => service.RemoveTemporaryFiles(),
+            Cron.Daily
+        );
+    }
+
     public void RegisterJobDeleteOldStep()
     {
         _recurringJobManager.AddOrUpdate<StepHistoriesService>(
