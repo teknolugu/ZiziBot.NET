@@ -916,7 +916,7 @@ public class TelegramService
         bool preventDuplicateSend = false
     )
     {
-        TimeProc = MessageDateOrEditDate.GetDelay();
+        TimeProc = MessageDate.GetDelay();
         TimeProcSpan = MessageDateOrEditDate.GetDelaySpan();
 
         if (sendText.IsNotNullOrEmpty() &&
