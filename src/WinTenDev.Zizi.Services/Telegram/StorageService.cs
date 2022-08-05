@@ -217,11 +217,11 @@ public class StorageService : IStorageService
     {
         if (_hangfireConfig.DataStore != HangfireDataStore.Redis)
         {
-            Log.Information("Reset Hangfire Redis Storage isn't required because Hangfire DataStore is {HangfireDataStore}", _hangfireConfig.DataStore);
+            Log.Information("Reset Hangfire RedisConnection Storage isn't required because Hangfire DataStore is {HangfireDataStore}", _hangfireConfig.DataStore);
             return;
         }
 
-        var redis = await ConnectionMultiplexer.ConnectAsync(_hangfireConfig.Redis);
+        var redis = await ConnectionMultiplexer.ConnectAsync(_hangfireConfig.RedisConnection);
         var endPoint = redis.GetEndPoints().FirstOrDefault();
 
         var server = redis.GetServer(endPoint);
