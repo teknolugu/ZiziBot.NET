@@ -143,6 +143,7 @@ public static class CommandBuilderExtension
                                         .UseCommand<ToggleCommand>("enable")
                                         .UseCommand<ToggleCommand>("disable")
                                         .UseCommand<TranslateCommand>("tr")
+                                        .UseCommand<UnRestrictCommand>("unmute")
                                         .UseCommand<ReadQrCommand>("read_qr")
                                         .UseCommand<ReadQrCommand>("readqr")
                                         .UseCommand<UntagCommand>("untag")

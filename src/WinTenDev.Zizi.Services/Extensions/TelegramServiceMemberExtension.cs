@@ -165,6 +165,44 @@ public static class TelegramServiceMemberExtension
         }
     }
 
+    public static async Task UnRestrictMemberAsync(this TelegramService telegramService)
+    {
+        if (!await telegramService.CheckFromAdminOrAnonymous())
+        {
+            await telegramService.DeleteSenderMessageAsync();
+            return;
+        }
+
+        string muteAnswer = string.Empty;
+        try
+        {
+            if (telegramService.ReplyToMessage == null)
+            {
+                muteAnswer = "Silakan balas Pengguna yang ingin di UnMute";
+            }
+            else
+            {
+                var replyFrom = telegramService.ReplyToMessage.From;
+                var fromNameLink = replyFrom.GetNameLink();
+                var replyUserId = replyFrom.Id;
+
+                var result = await telegramService.UnmuteChatMemberAsync(replyUserId);
+
+                muteAnswer = "Berhasil membuka Mute " + fromNameLink;
+            }
+
+            await telegramService.SendTextMessageAsync(
+                muteAnswer,
+                scheduleDeleteAt: DateTime.UtcNow.AddMinutes(5),
+                includeSenderMessage: true
+            );
+        }
+        catch (Exception e)
+        {
+            Log.Error(e, "Error when Un-Restrict UserId: ");
+        }
+    }
+
     public static async Task CheckNameChangesAsync(this TelegramService telegramService)
     {
         var fromId = telegramService.FromId;
