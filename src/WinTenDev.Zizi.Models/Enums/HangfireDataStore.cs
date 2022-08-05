@@ -6,5 +6,6 @@ public enum HangfireDataStore
     Memory,
     Sqlite,
     Litedb,
-    Redis
+    Redis,
+    MongoDb
 }

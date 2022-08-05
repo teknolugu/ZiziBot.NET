@@ -288,7 +288,7 @@ public static class HangfireUtil
             redisConnectionStr = $"{redisHost}:{redisPort},password={redisPassword}";
         }
 
-        Log.Information("Hangfire Redis: {ConnStr}", redisConnectionStr);
+        Log.Information("Hangfire RedisConnection: {ConnStr}", redisConnectionStr);
 
         return redisConnectionStr;
     }
