@@ -25,6 +25,35 @@ public static class CallbackQueryExtension
         return true;
     }
 
+    public static async Task<bool> OnCallbackUnRestrictMemberAsync(this TelegramService telegramService)
+    {
+        Log.Information("Receiving Ping callback");
+        var chatId = telegramService.ChatId;
+        var fromId = telegramService.FromId;
+        var userIdTarget = telegramService.GetCallbackDataAt<long>(1);
+
+        if (!await telegramService.CheckUserPermission())
+        {
+            Log.Information(
+                "UserId: '{UserId}' at ChatId: '{ChatId}' has no permission to delete message",
+                fromId,
+                chatId
+            );
+
+            await telegramService.AnswerCallbackQueryAsync("Kamu tidak mempunyai akses melakukan tindakan ini!", true);
+            return true;
+        }
+
+        var result = await telegramService.UnmuteChatMemberAsync(userIdTarget);
+
+        var chatMember = await telegramService.GetChatMemberAsync(userIdTarget);
+        var nameLink = chatMember.User.GetNameLink();
+
+        await telegramService.EditMessageCallback($"Berhasil membuka Mute {nameLink}");
+
+        return true;
+    }
+
     public static async Task<bool> OnCallbackDeleteAsync(this TelegramService telegramService)
     {
         var chatId = telegramService.ChatId;

@@ -34,6 +34,7 @@ public static class TelegramServiceActivityExtension
             "gban" => await telegramService.OnCallbackGlobalBanAsync(),
             "verify" => await telegramService.OnCallbackVerifyAsync(),
             "delete-message" => await telegramService.OnCallbackDeleteAsync(),
+            "un-restrict" => await telegramService.OnCallbackUnRestrictMemberAsync(),
             "fsub" => await telegramService.OnCallbackForceSubAsync(),
             "pin-message" => await telegramService.OnCallbackPinMessageAsync(),
             "rssctl" => await telegramService.OnCallbackRssCtlAsync(),

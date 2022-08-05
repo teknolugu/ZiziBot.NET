@@ -1905,7 +1905,17 @@ public class TelegramService
             await RestrictMemberAsync(FromId, until: untilDate);
         }
 
-        await SendTextMessageAsync(sendText);
+        var replyMarkup = new InlineKeyboardMarkup(
+            new[]
+            {
+                new[]
+                {
+                    InlineKeyboardButton.WithCallbackData("🧹 Hapus Debuff", $"un-restrict {FromId}")
+                }
+            }
+        );
+
+        await SendTextMessageAsync(sendText, replyMarkup: replyMarkup, scheduleDeleteAt: untilDate);
         return result;
     }
 
