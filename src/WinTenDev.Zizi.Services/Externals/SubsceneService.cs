@@ -12,6 +12,7 @@ using MongoDB.Driver;
 using MongoDB.Entities;
 using Serilog;
 using SerilogTimings;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace WinTenDev.Zizi.Services.Externals;
 
@@ -40,6 +41,73 @@ public class SubsceneService
         _eventLogService = eventLogService;
         _queryService = queryService;
         _databaseService = databaseService;
+    }
+
+    public async Task<int> SaveSourceUrl(SubsceneSource subsceneSource)
+    {
+        var find = await DB.Find<SubsceneSource>()
+            .ManyAsync(x =>
+                x.SearchTitleUrl == subsceneSource.SearchTitleUrl
+            );
+
+        if (find.Count != 0) return 0;
+
+        await subsceneSource.InsertAsync();
+        return 1;
+    }
+
+    public async Task<List<SubsceneSource>> GetSourcesAsync()
+    {
+        var find = await DB.Find<SubsceneSource>()
+            .ExecuteAsync();
+
+        return find;
+    }
+
+    public async Task<InlineKeyboardMarkup> GetSourcesAsButtonAsync()
+    {
+        var sources = await GetSourcesAsync();
+        var buttonsList = sources.Select(source => {
+                var btnEmoji = source.IsActive ? "✅" : "❌";
+                var baseUrl = source.SearchTitleUrl.GetBaseUrl();
+                var btnText = $"{btnEmoji} {baseUrl}";
+
+                return InlineKeyboardButton.WithCallbackData(btnText, "sub-src " + source.ID);
+            })
+            .Chunk(1)
+            .ToList();
+
+        buttonsList.Add(new InlineKeyboardButton[]
+        {
+            InlineKeyboardButton.WithCallbackData("Tutup", "delete-message current-message"),
+        });
+
+        return buttonsList.ToButtonMarkup();
+    }
+
+    public async Task SetSourceUrlAsync(string sourceId)
+    {
+        _logger.LogInformation("Resetting Subscene Source Url state");
+        var resetResult = await DB.Update<SubsceneSource>()
+            .Match(_ => true)
+            .Modify(source => source.IsActive, false)
+            .ExecuteAsync();
+        _logger.LogDebug("Reset result: {@ResetResult}", resetResult);
+
+        _logger.LogInformation("Updating Source status by SourceId: {SourceId}", sourceId);
+        var updateResult = DB.Update<SubsceneSource>()
+            .Match(source => source.ID == sourceId)
+            .Modify(source => source.IsActive, true)
+            .ExecuteAsync();
+        _logger.LogDebug("Update result: {@UpdateResult}", updateResult);
+    }
+
+    public async Task<SubsceneSource> GetActiveSourceAsync()
+    {
+        var sources = await GetSourcesAsync();
+        var subsceneSource = sources.FirstOrDefault(source => source.IsActive);
+
+        return subsceneSource;
     }
 
     public async Task<List<SubsceneMovieItem>> FeedPopularTitles()
@@ -90,7 +158,10 @@ public class SubsceneService
 
     public async Task<List<SubsceneMovieSearch>> FeedMovieByTitle(string title)
     {
-        var searchUrl = _subsceneConfig.SearchTitleUrl;
+        var activeSource = await GetActiveSourceAsync();
+        // var searchUrl = _subsceneConfig.SearchTitleUrl;
+        var searchUrl = activeSource.SearchTitleUrl;
+
         Log.Information("Preparing parse {Url}", searchUrl);
         Log.Debug("Loading web {Url}", searchUrl);
         var searchUrlQuery = searchUrl + "?query=" + title;
@@ -160,7 +231,10 @@ public class SubsceneService
 
     public async Task<List<SubsceneSubtitleItem>> FeedSubtitleBySlug(string slug)
     {
-        var searchSubtitleFileUrl = $"{_subsceneConfig.SearchSubtitleUrl}/{slug}";
+        var activeSource = await GetActiveSourceAsync();
+        var subtitleUrl = activeSource.SearchSubtitleUrl;
+
+        var searchSubtitleFileUrl = $"{subtitleUrl}/{slug}";
 
         var document = await AnglesharpUtil.DefaultContext.OpenAsync(searchSubtitleFileUrl);
         var list = document.All
@@ -221,12 +295,14 @@ public class SubsceneService
     public async Task<SubsceneMovieDetail> GetSubtitleFileAsync(string subtitleId)
     {
         _logger.LogInformation("Preparing download subtitle file {Slug}", subtitleId);
+        var activeSource = await GetActiveSourceAsync();
+        var searchSubtitleUrl = activeSource.SearchSubtitleUrl;
 
         var movieDetail = new SubsceneMovieDetail();
         var subtitleItem = await DB.Find<SubsceneSubtitleItem>().OneAsync(subtitleId);
         var moviePath = subtitleItem.MovieUrl.Split("/").Skip(2).JoinStr("/");
 
-        var address = $"{_subsceneConfig.SearchSubtitleUrl}/{moviePath}";
+        var address = $"{searchSubtitleUrl}/{moviePath}";
         var document = await AnglesharpUtil.DefaultContext.OpenAsync(address);
         var all = document.All
             .Where(element => element.ClassName == "top left")
@@ -248,7 +324,7 @@ public class SubsceneService
             .Select(element => element.TextContent.Trim()).ToList();
         var authorElement = headerElement?.QuerySelector<IHtmlAnchorElement>("a[href ^= '/u']");
         var comment = headerElement?.QuerySelector<IHtmlDivElement>("div.comment");
-        var subtitleUrl = document.QuerySelectorAll<IHtmlAnchorElement>("a[href ^= '/subtitles']")
+        var subtitleDownloadUrl = document.QuerySelectorAll<IHtmlAnchorElement>("a[href ^= '/subtitles']")
             .FirstOrDefault(element => element.Href.Contains("text"))?.Href;
 
         movieDetail = new SubsceneMovieDetail()
@@ -262,7 +338,7 @@ public class SubsceneService
             ReleaseInfo = releaseInfo?.JoinStr("\n"),
             ReleaseInfos = releaseInfo,
             Comment = comment?.TextContent.Trim(),
-            SubtitleDownloadUrl = subtitleUrl
+            SubtitleDownloadUrl = subtitleDownloadUrl
         };
 
         // var localPath = "subtitles/" + subtitleId;

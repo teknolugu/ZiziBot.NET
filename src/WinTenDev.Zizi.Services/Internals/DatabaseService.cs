@@ -273,6 +273,7 @@ public class DatabaseService
         DB.DatabaseFor<WarnMember>(meUsername);
         DB.DatabaseFor<WebHookChat>(meUsername);
 
+        DB.DatabaseFor<SubsceneSource>("shared");
         DB.DatabaseFor<SubsceneMovieSearch>("shared");
         DB.DatabaseFor<SubsceneMovieItem>("shared");
         DB.DatabaseFor<SubsceneSubtitleItem>("shared");
