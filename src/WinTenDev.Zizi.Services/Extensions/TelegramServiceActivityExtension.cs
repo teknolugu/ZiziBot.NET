@@ -39,6 +39,7 @@ public static class TelegramServiceActivityExtension
             "pin-message" => await telegramService.OnCallbackPinMessageAsync(),
             "rssctl" => await telegramService.OnCallbackRssCtlAsync(),
             "setting" => await telegramService.OnCallbackSettingAsync(),
+            "sub-src" => await telegramService.OnCallbackSelectSubsceneSourceAsync(),
             _ => false
         };
 
