@@ -92,7 +92,7 @@ namespace WinTenDev.Zizi.Services.Telegram
                 chatId
             );
 
-            var isMeHere = await _chatService.IsMeHereAsync(chatId);
+            var isMeHere = await _chatService.IsMeHereAsync(chatId, evictBefore: true);
             if (!isMeHere)
             {
                 _logger.LogWarning("Unregistering Shalat Time job because bot no longer in ChatId: {ChatId}", chatId);

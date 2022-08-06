@@ -359,16 +359,29 @@ public class ChatService
         bool evictBefore = false
     )
     {
-        var me = await _botService.GetMeAsync();
-        var chatMember = await GetChatMemberAsync(
-            chatId: chatId,
-            userId: me.Id,
-            evictBefore: evictBefore
-        );
+        try
+        {
+            var me = await _botService.GetMeAsync();
+            var chatMember = await GetChatMemberAsync(
+                chatId: chatId,
+                userId: me.Id,
+                evictBefore: evictBefore
+            );
 
-        var isHere = chatMember.Status is not (ChatMemberStatus.Left or ChatMemberStatus.Kicked);
+            var isHere = chatMember.Status is not (ChatMemberStatus.Left or ChatMemberStatus.Kicked);
 
-        return isHere;
+            return isHere;
+        }
+        catch (Exception exception)
+        {
+            Log.Error(
+                exception,
+                "Error when check IsMeHere for ChatId: {ChatId}",
+                chatId
+            );
+
+            return !exception.Message.ContainsListStr("chat not found");
+        }
     }
 
     public async Task<bool> IsPrivateChat(long chatId)
