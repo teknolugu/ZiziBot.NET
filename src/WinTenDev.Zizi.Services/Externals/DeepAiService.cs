@@ -11,11 +11,6 @@ public class DeepAiService
 
     // private readonly DeepAI_API _deepAiApi;
 
-    public DeepAiService()
-    {
-
-    }
-
     public DeepAiService(IOptionsSnapshot<CommonConfig> commonConfig)
     {
         _commonConfig = commonConfig.Value;
