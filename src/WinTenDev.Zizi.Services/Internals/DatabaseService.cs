@@ -272,6 +272,7 @@ public class DatabaseService
         DB.DatabaseFor<ForceSubscription>(meUsername);
         DB.DatabaseFor<WarnMember>(meUsername);
         DB.DatabaseFor<WebHookChat>(meUsername);
+        DB.DatabaseFor<WTelegramSession>(meUsername);
 
         DB.DatabaseFor<SubsceneSource>("shared");
         DB.DatabaseFor<SubsceneMovieSearch>("shared");
