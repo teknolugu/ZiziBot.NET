@@ -306,7 +306,7 @@ public static class SerilogServiceExtension
             botToken: botToken,
             chatId: channelId.ToString(),
             applicationName: config.AppName,
-            restrictedToMinimumLevel: LogEventLevel.Error
+            restrictedToMinimumLevel: LogEventLevel.Warning
         );
 
         // logger.WriteTo.TelegramBot(

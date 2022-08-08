@@ -4,11 +4,18 @@ using Hangfire.Dashboard.Dark;
 using Hangfire.Heartbeat;
 using Hangfire.Heartbeat.Server;
 using Hangfire.MemoryStorage;
+using Hangfire.Mongo;
+using Hangfire.Mongo.Migration.Strategies;
+using Hangfire.Mongo.Migration.Strategies.Backup;
+using Hangfire.Server;
 using HangfireBasicAuthenticationFilter;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting.Server;
+using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
+using MongoDB.Driver;
 using Nito.AsyncEx.Synchronous;
 using Serilog;
 using WinTenDev.Zizi.Models.Configs;
@@ -28,44 +35,43 @@ public static class HangfireServiceExtension
         var hangfireConfig = scope.GetRequiredService<IOptionsSnapshot<HangfireConfig>>().Value;
         var connStrings = scope.GetRequiredService<IOptionsSnapshot<ConnectionStrings>>().Value;
 
-        // services.AddHangfireServer(options => {
-        //     options.WorkerCount = Environment.ProcessorCount * hangfireConfig.WorkerMultiplier;
-        //     options.Queues = hangfireConfig.Queues;
-        // });
-
-        services.AddHangfire
-        (
+        services.AddHangfire(
             config => {
-                switch (hangfireConfig.DataStore)
-                {
-                    case HangfireDataStore.MySql:
-                        var hangfireMysql = hangfireConfig.MysqlConnection;
-                        if (hangfireMysql.IsNullOrEmpty()) hangfireMysql = connStrings.MySql;
-
-                        config.UseStorage(HangfireUtil.GetMysqlStorage(hangfireMysql));
-                        break;
-
-                    case HangfireDataStore.Sqlite:
-                        config.UseStorage(HangfireUtil.GetSqliteStorage(hangfireConfig.Sqlite));
-                        break;
-
-                    case HangfireDataStore.Litedb:
-                        config.UseStorage(HangfireUtil.GetLiteDbStorage(hangfireConfig.LiteDb));
-                        break;
-
-                    case HangfireDataStore.Redis:
-                        // config.UseStorage(HangfireUtil.GetRedisStorage(hangfireConfig.Redis));
-                        config.UseRedisStorage(HangfireUtil.GetRedisConnectionMultiplexer(hangfireConfig.Redis));
-                        break;
-
-                    case HangfireDataStore.Memory:
-                        config.UseMemoryStorage();
-                        break;
-
-                    default:
-                        Log.Warning("Unknown Hangfire DataStore");
-                        break;
-                }
+                // switch (hangfireConfig.DataStore)
+                // {
+                //     case HangfireDataStore.MySql:
+                //         var hangfireMysql = hangfireConfig.MysqlConnection;
+                //         if (hangfireMysql.IsNullOrEmpty()) hangfireMysql = connStrings.MySql;
+                //
+                //         // config.UseStorage(HangfireUtil.GetMysqlStorage(hangfireMysql));
+                //         JobStorage.Current = HangfireUtil.GetMysqlStorage(hangfireMysql);
+                //         break;
+                //
+                // case HangfireDataStore.Sqlite:
+                //         // config.UseStorage(HangfireUtil.GetSqliteStorage(hangfireConfig.SqliteConnection));
+                //         JobStorage.Current = HangfireUtil.GetSqliteStorage(hangfireConfig.SqliteConnection);
+                //         break;
+                //
+                // case HangfireDataStore.Litedb:
+                //         // config.UseStorage(HangfireUtil.GetLiteDbStorage(hangfireConfig.LiteDbConnection));
+                //         JobStorage.Current = HangfireUtil.GetLiteDbStorage(hangfireConfig.LiteDbConnection);
+                //         break;
+                //
+                //     case HangfireDataStore.Redis:
+                //         // config.UseStorage(HangfireUtil.GetRedisStorage(hangfireConfig.RedisConnection));
+                //         // config.UseRedisStorage(HangfireUtil.GetRedisConnectionMultiplexer(hangfireConfig.RedisConnection));
+                //         JobStorage.Current = HangfireUtil.GetRedisStorage(hangfireConfig.RedisConnection);
+                //         break;
+                //
+                //     case HangfireDataStore.Memory:
+                //         // config.UseMemoryStorage();
+                //         JobStorage.Current = new MemoryStorage();
+                //         break;
+                //
+                //     default:
+                //         Log.Warning("Unknown Hangfire DataStore");
+                //         break;
+                // }
 
                 config.UseDarkDashboard()
                     .SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
@@ -76,6 +82,66 @@ public static class HangfireServiceExtension
                     .UseSerilogLogProvider();
             }
         );
+
+        switch (hangfireConfig.DataStore)
+        {
+            case HangfireDataStore.MySql:
+                var hangfireMysql = hangfireConfig.MysqlConnection;
+                if (hangfireMysql.IsNullOrEmpty()) hangfireMysql = connStrings.MySql;
+                JobStorage.Current = HangfireUtil.GetMysqlStorage(hangfireMysql);
+                break;
+
+            case HangfireDataStore.Sqlite:
+                JobStorage.Current = HangfireUtil.GetSqliteStorage(hangfireConfig.SqliteConnection);
+                break;
+
+            case HangfireDataStore.Litedb:
+                JobStorage.Current = HangfireUtil.GetLiteDbStorage(hangfireConfig.LiteDbConnection);
+                break;
+
+            case HangfireDataStore.Redis:
+                JobStorage.Current = HangfireUtil.GetRedisStorage(hangfireConfig.RedisConnection);
+                break;
+
+            case HangfireDataStore.MongoDb:
+                var mongoUrlBuilder = new MongoUrlBuilder(hangfireConfig.MongoDbConnection);
+                var settings = MongoClientSettings.FromUrl(mongoUrlBuilder.ToMongoUrl());
+
+                settings.ServerApi = new ServerApi(ServerApiVersion.V1);
+                var mongoClient = new MongoClient(settings);
+
+                mongoClient.GetDatabase(mongoUrlBuilder.DatabaseName);
+
+                JobStorage.Current = new MongoStorage(mongoClient, mongoUrlBuilder.DatabaseName, new MongoStorageOptions()
+                {
+                    MigrationOptions = new MongoMigrationOptions
+                    {
+                        MigrationStrategy = new MigrateMongoMigrationStrategy(),
+                        BackupStrategy = new CollectionMongoBackupStrategy()
+                    },
+                    CheckConnection = false
+                });
+                break;
+
+            default:
+                JobStorage.Current = new MemoryStorage();
+                Log.Warning("Set default Hangfire Storage to MemoryStorage");
+                break;
+        }
+
+        services.AddHangfireServer(
+            (
+                provider,
+                options
+            ) => {
+                options.WorkerCount = Environment.ProcessorCount * hangfireConfig.WorkerMultiplier;
+                options.Queues = hangfireConfig.Queues;
+            },
+            storage: JobStorage.Current,
+            additionalProcesses: new IBackgroundProcess[]
+            {
+                new ProcessMonitor(TimeSpan.FromSeconds(3))
+            });
 
         Log.Debug("Hangfire Service added..");
 
@@ -109,6 +175,9 @@ public static class HangfireServiceExtension
         var serviceProvider = app.GetServiceProvider();
         var hangfireConfig = serviceProvider.GetRequiredService<IOptionsSnapshot<HangfireConfig>>().Value;
         var env = serviceProvider.GetRequiredService<IHostEnvironment>();
+        var server = serviceProvider.GetRequiredService<IServer>();
+        var addresses = server.Features.Get<IServerAddressesFeature>()?.Addresses;
+
 
         var baseUrl = hangfireConfig.BaseUrl;
         var username = hangfireConfig.Username;
@@ -138,21 +207,22 @@ public static class HangfireServiceExtension
 
         app.UseHangfireDashboard(baseUrl, dashboardOptions);
 
-        var serverOptions = new BackgroundJobServerOptions
-        {
-            WorkerCount = Environment.ProcessorCount * hangfireConfig.WorkerMultiplier,
-            Queues = hangfireConfig.Queues
-        };
-
-        app.UseHangfireServer(
-            serverOptions,
-            new[]
-            {
-                new ProcessMonitor(TimeSpan.FromSeconds(3))
-            }
-        );
+        // var serverOptions = new BackgroundJobServerOptions
+        // {
+        //     WorkerCount = Environment.ProcessorCount * hangfireConfig.WorkerMultiplier,
+        //     Queues = hangfireConfig.Queues
+        // };
+        //
+        // app.UseHangfireServer(
+        //     serverOptions,
+        //     new[]
+        //     {
+        //         new ProcessMonitor(TimeSpan.FromSeconds(3))
+        //     }
+        // );
 
         Log.Information("Hangfire is Running..");
         return app;
     }
+
 }

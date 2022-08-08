@@ -77,8 +77,8 @@ public static class BotSettings
             GoogleDriveAuth = GlobalConfiguration["GoogleCloud:DriveAuth"];
 
             // HangfireMysqlDb = GlobalConfiguration["Hangfire:MySql"];
-            // HangfireSqliteDb = GlobalConfiguration["Hangfire:Sqlite"];
-            // HangfireLiteDb = GlobalConfiguration["Hangfire:LiteDb"];
+            // HangfireSqliteDb = GlobalConfiguration["Hangfire:SqliteConnection"];
+            // HangfireLiteDb = GlobalConfiguration["Hangfire:LiteDbConnection"];
 
             // SerilogLogglyToken = GlobalConfiguration["CommonConfig:LogglyToken"];
 

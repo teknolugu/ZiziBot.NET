@@ -16,6 +16,7 @@ namespace WinTenDev.Zizi.Services.Telegram
         private readonly IRecurringJobManager _recurringJobManager;
         private readonly ITelegramBotClient _botClient;
         private readonly CacheService _cacheService;
+        private readonly ChatService _chatService;
         private readonly ShalatTimeService _shalatTimeService;
         private readonly FathimahApiService _fathimahApiService;
 
@@ -24,6 +25,7 @@ namespace WinTenDev.Zizi.Services.Telegram
             IRecurringJobManager recurringJobManager,
             ITelegramBotClient botClient,
             CacheService cacheService,
+            ChatService chatService,
             ShalatTimeService shalatTimeService,
             FathimahApiService fathimahApiService
         )
@@ -32,6 +34,7 @@ namespace WinTenDev.Zizi.Services.Telegram
             _recurringJobManager = recurringJobManager;
             _botClient = botClient;
             _cacheService = cacheService;
+            _chatService = chatService;
             _shalatTimeService = shalatTimeService;
             _fathimahApiService = fathimahApiService;
         }
@@ -88,6 +91,14 @@ namespace WinTenDev.Zizi.Services.Telegram
                 shalatTimesCount,
                 chatId
             );
+
+            var isMeHere = await _chatService.IsMeHereAsync(chatId, evictBefore: true);
+            if (!isMeHere)
+            {
+                _logger.LogWarning("Unregistering Shalat Time job because bot no longer in ChatId: {ChatId}", chatId);
+                UnRegisterJobShalatTime(chatId);
+                return;
+            }
 
             await shalatTimes.AsyncParallelForEach(
                 maxDegreeOfParallelism: 8,

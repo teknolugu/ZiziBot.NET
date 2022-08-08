@@ -33,6 +33,7 @@ global using WinTenDev.ZiziBot.AppHost.Handlers.Commands.Rss;
 global using WinTenDev.ZiziBot.AppHost.Handlers.Commands.ShalatTime;
 global using WinTenDev.ZiziBot.AppHost.Handlers.Commands.SpamLearning;
 global using WinTenDev.ZiziBot.AppHost.Handlers.Commands.Spelling;
+global using WinTenDev.ZiziBot.AppHost.Handlers.Commands.Subtitle;
 global using WinTenDev.ZiziBot.AppHost.Handlers.Commands.Tags;
 global using WinTenDev.ZiziBot.AppHost.Handlers.Commands.Welcome;
 global using WinTenDev.ZiziBot.AppHost.Handlers.Commands.Words;

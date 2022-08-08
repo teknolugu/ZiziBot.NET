@@ -9,6 +9,8 @@ using Telegram.Bot.Framework;
 using WinTenDev.Zizi.Models.Bots;
 using WinTenDev.Zizi.Models.Bots.Options;
 using WinTenDev.Zizi.Models.Configs;
+using WinTenDev.Zizi.Models.Enums;
+using WinTenDev.Zizi.Models.Misc;
 using WinTenDev.Zizi.Utils.IO;
 using WinTenDev.Zizi.Utils.Telegram;
 using WTelegram;
@@ -23,14 +25,15 @@ public static class TelegramServiceExtension
         (
             provider => {
                 var serviceScope = provider.CreateScope().ServiceProvider;
-                var tdLibConfig = serviceScope.GetRequiredService<IOptionsSnapshot<TdLibConfig>>().Value;
                 var logger = provider.GetRequiredService<ILoggerFactory>().CreateLogger("WTelegram");
+                var tdLibConfig = serviceScope.GetRequiredService<IOptionsSnapshot<TdLibConfig>>().Value;
 
                 var apiId = tdLibConfig.ApiId;
-                var sessionFile = $"Storage/Common/WTelegram_session_{apiId}.dat".EnsureDirectory();
 
                 string Config(string what)
                 {
+                    logger.LogDebug("Getting config: {What}", what);
+
                     switch (what)
                     {
                         case "api_id": return apiId;
@@ -41,7 +44,7 @@ public static class TelegramServiceExtension
                             logger.LogInformation("Input Verification Code: ");
                             return Console.ReadLine();
                         }
-                        case "session_pathname": return sessionFile;
+                        case "session_pathname": return $"Storage/Common/WTelegram_session_{apiId}.dat".EnsureDirectory();
                         case "first_name": return tdLibConfig.FirstName;// if sign-up is required
                         case "last_name": return tdLibConfig.LastName;// if sign-up is required
                         // case "password": return "secret!";     // if user has enabled 2FA
@@ -53,12 +56,18 @@ public static class TelegramServiceExtension
                     logLevel,
                     logStr
                 ) => logger.Log(
-                    (LogLevel) logLevel,
+                    (LogLevel)logLevel,
                     "WTelegram: {S}",
                     logStr
                 );
 
-                var client = new Client(Config);
+                var client = tdLibConfig.WTelegramSessionStore switch
+                {
+                    WTelegramSessionStore.MongoDb => new Client(Config, new WTelegramSessionMongoDbStorageStream(apiId)),
+                    WTelegramSessionStore.File => new Client(Config),
+                    _ => new Client(Config)
+                };
+
                 client.CollectAccessHash = true;
 
                 var user = client.LoginUserIfNeeded().WaitAndUnwrapException();
@@ -90,11 +99,19 @@ public static class TelegramServiceExtension
 
         if (tgBotConfig.CustomBotServer != null)
         {
-            services.AddScoped<ITelegramBotClient>(_ => new TelegramBotClient(token: tgBotConfig.ApiToken));
+            services.AddScoped<ITelegramBotClient>(_ =>
+                new TelegramBotClient(new TelegramBotClientOptions(
+                        token: tgBotConfig.ApiToken,
+                        baseUrl: tgBotConfig.CustomBotServer
+                    )
+                )
+            );
         }
         else
         {
-            services.AddScoped<ITelegramBotClient>(_ => new TelegramBotClient(tgBotConfig.ApiToken));
+            services.AddScoped<ITelegramBotClient>(_ =>
+                new TelegramBotClient(tgBotConfig.ApiToken)
+            );
         }
 
         return services;

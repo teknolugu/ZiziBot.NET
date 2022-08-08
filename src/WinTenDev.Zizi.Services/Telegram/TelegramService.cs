@@ -449,7 +449,7 @@ public class TelegramService
     {
         dynamic value = MessageTextParts.Skip(1).ElementAtOrDefault(index);
 
-        return value is null ? default : (T) Convert.ChangeType(value, typeof(T));
+        return value is null ? default : (T)Convert.ChangeType(value, typeof(T));
     }
 
     public string GetCommandParam(int index = -1)
@@ -616,7 +616,7 @@ public class TelegramService
                 {
                     featureConfig.NextHandler = false;
 
-                    var nextAvailableDate = nextAvailable.ToLocalTime();
+                    var nextAvailableDate = nextAvailable.ToLocalTime().ToDetailDateTimeString();
 
                     await SendTextMessageAsync(
                         sendText: $"Fitur '{featureName}' membutuhkan Cooldown sebelum dapat digunakan kembali. Silakan coba lagi setelah {nextAvailableDate}",
@@ -1905,7 +1905,17 @@ public class TelegramService
             await RestrictMemberAsync(FromId, until: untilDate);
         }
 
-        await SendTextMessageAsync(sendText);
+        var replyMarkup = new InlineKeyboardMarkup(
+            new[]
+            {
+                new[]
+                {
+                    InlineKeyboardButton.WithCallbackData("🧹 Hapus Debuff", $"un-restrict {FromId}")
+                }
+            }
+        );
+
+        await SendTextMessageAsync(sendText, replyMarkup: replyMarkup, scheduleDeleteAt: untilDate);
         return result;
     }
 
