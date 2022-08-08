@@ -36,7 +36,7 @@ public class WebHookService
 
         var webHookSource = request.GetWebHookSource();
 
-        await RunDebugMode(request);
+        var isDebugMode = await CheckDebugMode(request);
 
         var result = webHookSource switch
         {
@@ -67,6 +67,11 @@ public class WebHookService
         var source = result.WebhookSource;
         var message = result.ParsedMessage;
 
+        if (isDebugMode)
+        {
+            message += "\n\n#DEBUG_MODE";
+        }
+
         var sentMessage = await _botClient.SendTextMessageAsync(
             chatId: chatId,
             text: message,
@@ -86,7 +91,7 @@ public class WebHookService
         return result;
     }
 
-    private async Task RunDebugMode(HttpRequest request)
+    private async Task<bool> CheckDebugMode(HttpRequest request)
     {
         var requestStartedOn = (DateTime)request.HttpContext.Items["RequestStartedOn"]!;
         var webHookSource = request.GetWebHookSource();
@@ -94,10 +99,12 @@ public class WebHookService
 
         var isDebug = request.Query.FirstOrDefault(pair => pair.Key == "debug").Value.FirstOrDefault().ToBool();
 
-        if (!isDebug) return;
+        if (!isDebug) return false;
 
         var dateStamp = requestStartedOn.ToString("yyyy-MM-dd/HH-mm-ss");
         var requestPath = request.Path.Value;
         await bodyString.WriteTextAsync($"{requestPath}/{webHookSource}/{dateStamp}.json", Formatting.Indented);
+
+        return true;
     }
 }
