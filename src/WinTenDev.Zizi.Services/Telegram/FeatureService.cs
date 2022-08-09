@@ -54,6 +54,9 @@ public class FeatureService
             Markup = buttonMarkup
         };
 
+        if (featureName.IsNullOrEmpty())
+            return buttonParsed;
+
         if (config == null)
         {
             _logger.LogWarning("ButtonConfig Not Found: {Key}", featureName);
