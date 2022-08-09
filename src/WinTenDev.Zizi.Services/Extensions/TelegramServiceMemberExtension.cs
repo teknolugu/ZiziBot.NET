@@ -228,21 +228,13 @@ public static class TelegramServiceMemberExtension
 
             var botUser = await telegramService.GetMeAsync();
 
-            var userHistory = new UserHistory()
+            var userInfo = new UserInfo
             {
-                ViaBot = botUser.Username,
-                UpdateType = updateType,
-                FromId = fromId,
-                FromFirstName = fromFirstName,
-                FromLastName = fromLastName,
-                FromUsername = fromUsername,
-                FromLangCode = fromLanguageCode,
-                ChatId = chatId,
-                ChatUsername = currentChat.Username,
-                ChatType = currentChat.Type.Humanize().Pascalize(),
-                ChatTitle = telegramService.ChatTitle,
-                MessageDate = telegramService.MessageDate,
-                Timestamp = DateTime.UtcNow
+                UserId = fromId,
+                FirstName = fromFirstName,
+                LastName = fromLastName,
+                Username = fromUsername,
+                LangCode = fromLanguageCode
             };
 
             Log.Information(
@@ -260,7 +252,7 @@ public static class TelegramServiceMemberExtension
                     chatId
                 );
 
-                await telegramService.MataService.SaveMataAsync(userHistory);
+                await telegramService.MataService.SaveMataAsync(userInfo);
 
                 return;
             }
@@ -271,7 +263,7 @@ public static class TelegramServiceMemberExtension
             msgBuild.AppendLine("😽 <b>MataZizi</b>");
             msgBuild.Append("<b>UserID:</b> ").Append(fromId).AppendLine();
 
-            if (fromUsername != lastActivity.FromUsername)
+            if (fromUsername != lastActivity.Username)
             {
                 Log.Debug("Username changed detected for UserId: {UserId}", fromId);
                 if (fromUsername.IsNullOrEmpty())
@@ -282,7 +274,7 @@ public static class TelegramServiceMemberExtension
                 changesCount++;
             }
 
-            if (fromFirstName != lastActivity.FromFirstName)
+            if (fromFirstName != lastActivity.FirstName)
             {
                 Log.Debug("First Name changed detected for UserId: {UserId}", fromId);
                 if (fromFirstName.IsNullOrEmpty())
@@ -293,7 +285,7 @@ public static class TelegramServiceMemberExtension
                 changesCount++;
             }
 
-            if (fromLastName != lastActivity.FromLastName)
+            if (fromLastName != lastActivity.LastName)
             {
                 Log.Debug("Last Name changed detected for UserId: {UserId}", fromId);
                 if (fromLastName.IsNullOrEmpty())
@@ -318,7 +310,7 @@ public static class TelegramServiceMemberExtension
                                 history.MessageFlag == MessageFlag.ZiziMata &&
                                 history.ChatId == chatId
                         ),
-                    telegramService.MataService.SaveMataAsync(userHistory)
+                    telegramService.MataService.SaveMataAsync(userInfo)
                 );
             }
 
