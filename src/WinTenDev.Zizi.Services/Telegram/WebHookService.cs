@@ -1,11 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using Telegram.Bot;
+using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 
 namespace WinTenDev.Zizi.Services.Telegram;
@@ -15,6 +16,7 @@ public class WebHookService
     private readonly ILogger<WebHookService> _logger;
     private readonly ITelegramBotClient _botClient;
     private readonly WebHookChatService _webHookChatService;
+    private WebHookChat _webHookChat;
 
     public WebHookService(
         ILogger<WebHookService> logger,
@@ -31,12 +33,9 @@ public class WebHookService
     {
         var stopwatch = Stopwatch.StartNew();
         var requestStartedOn = (DateTime)request.HttpContext.Items["RequestStartedOn"]!;
-
         var responseTime = DateTime.UtcNow - requestStartedOn;
 
         var webHookSource = request.GetWebHookSource();
-
-        var isDebugMode = await CheckDebugMode(request);
 
         var result = webHookSource switch
         {
@@ -49,21 +48,22 @@ public class WebHookService
         };
 
         var hookId = request.RouteValues.ElementAtOrDefault(2).Value;
-        var webHookChat = await _webHookChatService.GetWebHookById(hookId?.ToString());
+        _webHookChat = await _webHookChatService.GetWebHookById(hookId?.ToString());
 
-        if (webHookChat == null)
+        if (_webHookChat == null)
         {
             result.ParsedMessage = "WebHook not found for id: " + hookId;
 
             return result;
         }
 
+        var isDebugMode = await CheckDebugMode(request);
         _logger.LogInformation("WebHook Chat destination for HookId: {HookId} => {@WebHookChat}",
             hookId,
-            webHookChat
+            _webHookChat
         );
 
-        var chatId = webHookChat.ChatId;
+        var chatId = _webHookChat.ChatId;
         var source = result.WebhookSource;
         var message = result.ParsedMessage;
 
@@ -93,18 +93,34 @@ public class WebHookService
 
     private async Task<bool> CheckDebugMode(HttpRequest request)
     {
-        var requestStartedOn = (DateTime)request.HttpContext.Items["RequestStartedOn"]!;
-        var webHookSource = request.GetWebHookSource();
-        var bodyString = await request.GetRawBodyAsync();
-
-        var isDebug = request.Query.FirstOrDefault(pair => pair.Key == "debug").Value.FirstOrDefault().ToBool();
+        var isDebug = request.Query
+            .FirstOrDefault(pair => pair.Key == "debug").Value
+            .FirstOrDefault().ToBool();
 
         if (!isDebug) return false;
 
-        var dateStamp = requestStartedOn.ToString("yyyy-MM-dd/HH-mm-ss");
-        var requestPath = request.Path.Value;
-        await bodyString.WriteTextAsync($"{requestPath}/{webHookSource}/{dateStamp}.json", Formatting.Indented);
+        var requestStartedOn = (DateTime)request.HttpContext.Items["RequestStartedOn"]!;
+        var webHookSource = request.GetWebHookSource();
+        var bodyString = await request.GetRawBodyAsync();
+        var headerJson = request.Headers.ToJson(indented: true);
 
+        // var dateStamp = requestStartedOn.ToString("yyyy-MM-dd/HH-mm-ss");
+        // var requestPath = request.Path.Value;
+        // await bodyString.WriteTextAsync($"{requestPath}/{webHookSource}/{dateStamp}.json", Formatting.Indented);
+
+        await _botClient.SendMediaGroupAsync(
+            chatId: _webHookChat.ChatId,
+            media: new List<IAlbumInputMedia>()
+            {
+                new InputMediaDocument(bodyString.ToInputMedia("payload.json"))
+                {
+                    Caption = "Payload"
+                },
+                new InputMediaDocument(headerJson.ToInputMedia("headers.json"))
+                {
+                    Caption = "Headers"
+                }
+            });
         return true;
     }
 }
