@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -112,7 +113,7 @@ public class WebHookService
             chatId: _webHookChat.ChatId,
             media: new List<IAlbumInputMedia>()
             {
-                new InputMediaDocument(bodyString.ToInputMedia("payload.json"))
+                new InputMediaDocument(bodyString.JsonFormat(Formatting.Indented).ToInputMedia("payload.json"))
                 {
                     Caption = "Payload"
                 },
