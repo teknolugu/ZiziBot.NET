@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using MongoDB.Entities;
@@ -26,6 +27,25 @@ public class MataService
 
         var lastActivity = await DB.Find<UserInfo>()
             .Match(info => info.UserId == userId)
+            .Sort(info => info.CreatedOn, Order.Descending)
+            .ExecuteFirstAsync();
+
+        if (lastActivity == null)
+        {
+            op.Complete();
+            return null;
+        }
+
+        op.Complete();
+        return lastActivity;
+    }
+
+    public async Task<UserInfo> GetLastMataAsync(Expression<Func<UserInfo, bool>> expression)
+    {
+        var op = Operation.Begin("Getting last User History with expression {UserId}", expression);
+
+        var lastActivity = await DB.Find<UserInfo>()
+            .Match(expression)
             .Sort(info => info.CreatedOn, Order.Descending)
             .ExecuteFirstAsync();
 

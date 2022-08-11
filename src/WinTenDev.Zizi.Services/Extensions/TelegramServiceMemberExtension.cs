@@ -799,6 +799,7 @@ public static class TelegramServiceMemberExtension
             .ToList();
 
         var wTelegramApiService = telegramService.GetRequiredService<WTelegramApiService>();
+        var mataService = telegramService.GetRequiredService<MataService>();
 
         mentionEntities?.ForEach(
             async (
@@ -815,7 +816,22 @@ public static class TelegramServiceMemberExtension
                         return;
                     }
 
-                    var resolvedPeer = await wTelegramApiService.FindPeerByUsername(targetChatId);
+                    long userId;
+                    var targetUsername = targetChatId.TrimStart('@');
+
+                    var userInfo = await mataService.GetLastMataAsync(info => info.Username == targetUsername);
+                    if (userInfo != null)
+                    {
+                        Log.Debug("Found user info for {Username}. UserInfo: {@UserInfo}",
+                            targetChatId,
+                            userInfo
+                        );
+
+                        userId = userInfo.UserId;
+                    }
+                    else
+                    {
+                        var resolvedPeer = await wTelegramApiService.FindPeerByUsername(targetUsername);
 
                     if (resolvedPeer?.User == null)
                     {
@@ -823,9 +839,12 @@ public static class TelegramServiceMemberExtension
                         return;
                     }
 
+                        userId = resolvedPeer.User.ID;
+                    }
+
                     await telegramService.SendTextMessageAsync(
                         sendText: htmlMessage.ToString(),
-                        customChatId: resolvedPeer.User.ID,
+                        customChatId: userId,
                         disableWebPreview: true
                     );
                 }
