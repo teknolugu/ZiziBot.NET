@@ -4,9 +4,6 @@ using Hangfire.Dashboard.Dark;
 using Hangfire.Heartbeat;
 using Hangfire.Heartbeat.Server;
 using Hangfire.MemoryStorage;
-using Hangfire.Mongo;
-using Hangfire.Mongo.Migration.Strategies;
-using Hangfire.Mongo.Migration.Strategies.Backup;
 using Hangfire.Server;
 using HangfireBasicAuthenticationFilter;
 using Microsoft.AspNetCore.Builder;
@@ -15,7 +12,6 @@ using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
-using MongoDB.Driver;
 using Nito.AsyncEx.Synchronous;
 using Serilog;
 using WinTenDev.Zizi.Models.Configs;
@@ -104,23 +100,7 @@ public static class HangfireServiceExtension
                 break;
 
             case HangfireDataStore.MongoDb:
-                var mongoUrlBuilder = new MongoUrlBuilder(hangfireConfig.MongoDbConnection);
-                var settings = MongoClientSettings.FromUrl(mongoUrlBuilder.ToMongoUrl());
-
-                settings.ServerApi = new ServerApi(ServerApiVersion.V1);
-                var mongoClient = new MongoClient(settings);
-
-                mongoClient.GetDatabase(mongoUrlBuilder.DatabaseName);
-
-                JobStorage.Current = new MongoStorage(mongoClient, mongoUrlBuilder.DatabaseName, new MongoStorageOptions()
-                {
-                    MigrationOptions = new MongoMigrationOptions
-                    {
-                        MigrationStrategy = new MigrateMongoMigrationStrategy(),
-                        BackupStrategy = new CollectionMongoBackupStrategy()
-                    },
-                    CheckConnection = false
-                });
+                JobStorage.Current = HangfireUtil.GetMongoDbStorage(hangfireConfig.MongoDbConnection);
                 break;
 
             default:
