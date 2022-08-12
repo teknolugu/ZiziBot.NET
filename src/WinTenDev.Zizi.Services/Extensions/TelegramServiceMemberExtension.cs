@@ -1115,6 +1115,7 @@ public static class TelegramServiceMemberExtension
         var client = telegramService.Client;
         var chatJoinRequest = telegramService.ChatJoinRequest;
         var userChatJoinRequest = chatJoinRequest.From;
+        var userId = userChatJoinRequest.Id;
 
         var chatSettings = await telegramService.GetChatSetting();
 
@@ -1137,7 +1138,7 @@ public static class TelegramServiceMemberExtension
             }
         }
 
-        var antiSpamResult = await telegramService.AntiSpamService.CheckSpam(chatId, userChatJoinRequest.Id);
+        var antiSpamResult = await telegramService.AntiSpamService.CheckSpam(chatId, userId);
         if (antiSpamResult.IsAnyBanned)
         {
             reasons.Add("Pengguna telah diblokir di Global Ban Fed");
@@ -1146,14 +1147,16 @@ public static class TelegramServiceMemberExtension
 
         if (chatSettings.EnableForceSubscription)
         {
-            var checkSubscription = await telegramService.ChatService.CheckChatMemberSubscriptionToAllAsync(chatId, userChatJoinRequest.Id);
-            var listChannelStr = checkSubscription
-                .Select(result => $"<a href=\"{result.InviteLink}\">{result.ChannelName}</a>")
-                .JoinStr(", ");
+            var checkSubscription = await telegramService.ChatService.CheckChatMemberSubscriptionToAllAsync(chatId, userId);
+            Log.Warning("Check subscription: {CheckSubscription}", checkSubscription.ToJson(true));
 
-            if (checkSubscription.Any())
+            var listChannelStr = checkSubscription
+                .Select(result => $"\t└ <a href=\"{result.InviteLink}\">{result.ChannelName}</a>")
+                .JoinStr("\n");
+
+            if (checkSubscription.Count > 0)
             {
-                reasons.Add($"Belum subrek ke {listChannelStr}");
+                reasons.Add($"Belum subrek ke \n{listChannelStr}");
                 needManualAccept = false;
             }
         }
@@ -1164,7 +1167,7 @@ public static class TelegramServiceMemberExtension
         await client.DeclineChatJoinRequest(chatId, userChatJoinRequest.Id);
 
         var htmlMessage = HtmlMessage.Empty
-            .Bold("Chat join request ditolak").Br()
+            .Bold("Chat Join Request ditolak").Br()
             .Bold("ID: ").CodeBr(userChatJoinRequest.Id.ToString())
             .Bold("Nama: ").TextBr(userChatJoinRequest.GetNameLink())
             .Bold("Karena: ").Br();
