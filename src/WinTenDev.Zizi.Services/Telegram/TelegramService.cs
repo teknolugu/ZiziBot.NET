@@ -1759,7 +1759,8 @@ public class TelegramService
             ChatId
         );
 
-        if (ChannelOrEditedPost != null)
+        if (ChannelOrEditedPost != null ||
+            HasChatJoinRequest)
         {
             op.Complete();
             return true;
