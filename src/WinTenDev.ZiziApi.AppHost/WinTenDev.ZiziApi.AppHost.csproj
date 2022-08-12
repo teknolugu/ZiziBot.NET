@@ -8,7 +8,7 @@
     <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="11.0.0" />
     <PackageReference Include="AutoWrapper.Core" Version="4.5.0" />
     <PackageReference Include="DotNurse.Injector.AspNetCore" Version="2.5.2" />
-    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="6.0.7" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="6.0.8" />
     <PackageReference Include="Sentry.AspNetCore" Version="3.20.1" />
     <PackageReference Include="Serilog.AspNetCore" Version="6.0.1" />
     <PackageReference Include="Serilog.Extensions.Hosting" Version="5.0.1" />

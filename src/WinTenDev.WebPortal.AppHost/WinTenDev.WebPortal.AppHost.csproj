@@ -10,7 +10,7 @@
         <!--        <Watch Include="..\**\*.cs" />-->
     </ItemGroup>
     <ItemGroup>
-    <PackageReference Include="BootstrapBlazor" Version="6.8.18" />
+    <PackageReference Include="BootstrapBlazor" Version="6.9.0" />
     <PackageReference Include="Dapper" Version="2.0.123" />
     <PackageReference Include="EasyCaching.Disk" Version="1.6.0" />
     <PackageReference Include="EasyCaching.SQLite" Version="1.6.0" />
@@ -33,12 +33,12 @@
     <PackageReference Include="Serilog.Sinks.Console" Version="4.0.1" />
     <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
     <PackageReference Include="SerilogAnalyzer" Version="0.15.0" />
-    <PackageReference Include="SonarAnalyzer.CSharp" Version="8.42.0.51121">
+    <PackageReference Include="SonarAnalyzer.CSharp" Version="8.43.0.51858">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
     <PackageReference Include="SqlKata.Execution" Version="2.3.7" />
-    <PackageReference Include="Syncfusion.Blazor" Version="20.2.0.40" />
+    <PackageReference Include="Syncfusion.Blazor" Version="20.2.0.43" />
     <PackageReference Include="Telegram.Bot.Extensions.LoginWidget" Version="1.2.0" />
     </ItemGroup>
     <ItemGroup>

@@ -69,7 +69,7 @@
     <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
     <PackageReference Include="Serilog.Sinks.Loggly" Version="5.4.0" />
     <PackageReference Include="SerilogAnalyzer" Version="0.15.0" />
-    <PackageReference Include="SonarAnalyzer.CSharp" Version="8.42.0.51121">
+    <PackageReference Include="SonarAnalyzer.CSharp" Version="8.43.0.51858">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
@@ -78,7 +78,7 @@
     <PackageReference Include="System.Data.SQLite.Core" Version="1.0.116" />
     <PackageReference Include="SystemInfoLibrary-devel" Version="1.5.0.25" />
     <PackageReference Include="Telegram.Bot" Version="18.0.0" />
-    <PackageReference Include="WTelegramClient" Version="2.5.2" />
+    <PackageReference Include="WTelegramClient" Version="2.6.2" />
     </ItemGroup>
     <ItemGroup>
     <ProjectReference Include="..\WinTenDev.Zizi.DbMigrations\WinTenDev.Zizi.DbMigrations.csproj" />
