@@ -1167,7 +1167,27 @@ public static class TelegramServiceMemberExtension
         if (needManualAccept) return true;
         var eventLogService = telegramService.GetRequiredService<EventLogService>();
 
+        try
+        {
         await client.DeclineChatJoinRequest(chatId, userChatJoinRequest.Id);
+        }
+        catch (Exception exception)
+        {
+            if (exception.Contains("HIDE_REQUESTER_MISSING"))
+            {
+                Log.Warning("Maybe the user has accepted/rejected the Join Request. ChatId: {ChatId}, UserId: {UserId}",
+                    chatId,
+                    userId
+                );
+            }
+            else
+            {
+                Log.Error(exception,
+                    "Answer Chat join request failed. ChatId: {ChatId}, UserId: {UserId}",
+                    chatId, userId
+                );
+            }
+        }
 
         var htmlMessage = HtmlMessage.Empty
             .Bold("Chat Join Request ditolak").Br()
