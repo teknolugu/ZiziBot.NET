@@ -1,14 +1,12 @@
 ﻿using System;
 using MongoDB.Bson;
 using Newtonsoft.Json;
-using Realms;
 
 namespace WinTenDev.Zizi.Models.Tables;
 
-public class UserHistory : RealmObject
+public class UserHistory
 {
     [JsonProperty("id")]
-    [PrimaryKey]
     public ObjectId Id { get; set; } = ObjectId.GenerateNewId();
 
     [JsonProperty("via_bot")]

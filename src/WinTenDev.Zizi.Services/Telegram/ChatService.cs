@@ -374,13 +374,24 @@ public class ChatService
         }
         catch (Exception exception)
         {
-            Log.Error(
-                exception,
-                "Error when check IsMeHere for ChatId: {ChatId}",
-                chatId
-            );
+            if (exception.Message.ContainsListStr("not found"))
+            {
+                Log.Warning(
+                    "Check IsMeHere for ChatId: {ChatId}. Message: {Message}",
+                    chatId,
+                    exception.Message
+                );
+            }
+            else
+            {
+                Log.Error(
+                    exception,
+                    "Error when check IsMeHere for ChatId: {ChatId}",
+                    chatId
+                );
+            }
 
-            return !exception.Message.ContainsListStr("chat not found");
+            return false;
         }
     }
 

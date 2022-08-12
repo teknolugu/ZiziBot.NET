@@ -353,14 +353,12 @@ public class WTelegramApiService
     {
         try
         {
-            var fixedUsername = username.TrimStart('@');
-
             var resolvedPeer = await _cacheService.GetOrSetAsync(
-                cacheKey: "tdlib-resolved-peer_" + fixedUsername,
+                cacheKey: "tdlib-resolved-peer_" + username,
                 staleAfter: "1h",
                 expireAfter: "24h",
                 action: async () => {
-                    var resolvedPeer = await _client.Contacts_ResolveUsername(fixedUsername);
+                    var resolvedPeer = await _client.Contacts_ResolveUsername(username);
 
                     return resolvedPeer;
                 }

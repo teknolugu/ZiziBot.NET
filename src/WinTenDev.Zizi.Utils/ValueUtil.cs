@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Telegram.Bot.Types;
 
 namespace WinTenDev.Zizi.Utils
 {
@@ -32,6 +33,14 @@ namespace WinTenDev.Zizi.Utils
             if (source == null) return new List<T>();
 
             return source.ToList();
+        }
+
+        public static InputMedia ToInputMedia(
+            this string stringData,
+            string fileName
+        )
+        {
+            return new InputMedia(stringData.ToStream(), fileName);
         }
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -6,10 +7,15 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Hangfire;
 using Hangfire.LiteDB;
+using Hangfire.Mongo;
+using Hangfire.Mongo.Migration.Strategies;
+using Hangfire.Mongo.Migration.Strategies.Backup;
 using Hangfire.MySql;
 using Hangfire.Redis;
 using Hangfire.Storage;
+using Hangfire.Storage.Monitoring;
 using Hangfire.Storage.SQLite;
+using MongoDB.Driver;
 using Serilog;
 using StackExchange.Redis;
 using WinTenDev.Zizi.Utils.IO;
@@ -268,6 +274,29 @@ public static class HangfireUtil
     public static RedisStorage GetRedisStorage(string connStr)
     {
         return new RedisStorage(connStr);
+    }
+
+    public static MongoStorage GetMongoDbStorage(string connectionString)
+    {
+        var mongoUrlBuilder = new MongoUrlBuilder(connectionString);
+        var settings = MongoClientSettings.FromUrl(mongoUrlBuilder.ToMongoUrl());
+
+        settings.ServerApi = new ServerApi(ServerApiVersion.V1);
+        var mongoClient = new MongoClient(settings);
+
+        mongoClient.GetDatabase(mongoUrlBuilder.DatabaseName);
+
+        var mongoStorage = new MongoStorage(mongoClient, mongoUrlBuilder.DatabaseName, new MongoStorageOptions()
+        {
+            MigrationOptions = new MongoMigrationOptions
+            {
+                MigrationStrategy = new MigrateMongoMigrationStrategy(),
+                BackupStrategy = new CollectionMongoBackupStrategy()
+            },
+            CheckConnection = false
+        });
+
+        return mongoStorage;
     }
 
     [SuppressMessage("Minor Code Smell", "S3220:Method calls should not resolve ambiguously to overloads with \"params\"")]

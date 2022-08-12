@@ -1233,6 +1233,14 @@ public class TelegramService
                 CallBackMessageId
             );
 
+            if (sendText.IsNotNullOrEmpty())
+            {
+                Log.Debug("Appending execution time..");
+
+                TimeProc = MessageDate.GetDelay();
+                sendText += $"\n\n⏱ <code>{TimeInit} s</code> | ⌛️ <code>{TimeProc} s</code>";
+            }
+
             await Client.EditMessageTextAsync(
                 ChatId,
                 CallBackMessageId,
@@ -1759,7 +1767,8 @@ public class TelegramService
             ChatId
         );
 
-        if (ChannelOrEditedPost != null)
+        if (ChannelOrEditedPost != null ||
+            HasChatJoinRequest)
         {
             op.Complete();
             return true;

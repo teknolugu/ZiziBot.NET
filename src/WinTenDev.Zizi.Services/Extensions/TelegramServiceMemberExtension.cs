@@ -228,21 +228,13 @@ public static class TelegramServiceMemberExtension
 
             var botUser = await telegramService.GetMeAsync();
 
-            var userHistory = new UserHistory()
+            var userInfo = new UserInfo
             {
-                ViaBot = botUser.Username,
-                UpdateType = updateType,
-                FromId = fromId,
-                FromFirstName = fromFirstName,
-                FromLastName = fromLastName,
-                FromUsername = fromUsername,
-                FromLangCode = fromLanguageCode,
-                ChatId = chatId,
-                ChatUsername = currentChat.Username,
-                ChatType = currentChat.Type.Humanize().Pascalize(),
-                ChatTitle = telegramService.ChatTitle,
-                MessageDate = telegramService.MessageDate,
-                Timestamp = DateTime.UtcNow
+                UserId = fromId,
+                FirstName = fromFirstName,
+                LastName = fromLastName,
+                Username = fromUsername,
+                LangCode = fromLanguageCode
             };
 
             Log.Information(
@@ -260,7 +252,7 @@ public static class TelegramServiceMemberExtension
                     chatId
                 );
 
-                await telegramService.MataService.SaveMataAsync(userHistory);
+                await telegramService.MataService.SaveMataAsync(userInfo);
 
                 return;
             }
@@ -271,7 +263,7 @@ public static class TelegramServiceMemberExtension
             msgBuild.AppendLine("😽 <b>MataZizi</b>");
             msgBuild.Append("<b>UserID:</b> ").Append(fromId).AppendLine();
 
-            if (fromUsername != lastActivity.FromUsername)
+            if (fromUsername != lastActivity.Username)
             {
                 Log.Debug("Username changed detected for UserId: {UserId}", fromId);
                 if (fromUsername.IsNullOrEmpty())
@@ -282,7 +274,7 @@ public static class TelegramServiceMemberExtension
                 changesCount++;
             }
 
-            if (fromFirstName != lastActivity.FromFirstName)
+            if (fromFirstName != lastActivity.FirstName)
             {
                 Log.Debug("First Name changed detected for UserId: {UserId}", fromId);
                 if (fromFirstName.IsNullOrEmpty())
@@ -293,7 +285,7 @@ public static class TelegramServiceMemberExtension
                 changesCount++;
             }
 
-            if (fromLastName != lastActivity.FromLastName)
+            if (fromLastName != lastActivity.LastName)
             {
                 Log.Debug("Last Name changed detected for UserId: {UserId}", fromId);
                 if (fromLastName.IsNullOrEmpty())
@@ -318,7 +310,7 @@ public static class TelegramServiceMemberExtension
                                 history.MessageFlag == MessageFlag.ZiziMata &&
                                 history.ChatId == chatId
                         ),
-                    telegramService.MataService.SaveMataAsync(userHistory)
+                    telegramService.MataService.SaveMataAsync(userInfo)
                 );
             }
 
@@ -345,8 +337,9 @@ public static class TelegramServiceMemberExtension
         if (!await telegramService.CheckFromAdminOrAnonymous())
         {
             await telegramService.SendTextMessageAsync(
-                "Kamu tidak mempunyai akses ke fitur ini.",
+                sendText: "Kamu tidak mempunyai akses ke fitur ini.",
                 scheduleDeleteAt: DateTime.UtcNow.AddMinutes(1),
+                preventDuplicateSend: true,
                 includeSenderMessage: true
             );
 
@@ -360,8 +353,9 @@ public static class TelegramServiceMemberExtension
         if (param1.IsNullOrEmpty())
         {
             await telegramService.SendTextMessageAsync(
-                "Tentukan berapa lama durasi tidak aktif, misal 3d.",
+                sendText: "Tentukan berapa lama durasi tidak aktif, misal 3d.",
                 scheduleDeleteAt: DateTime.UtcNow.AddMinutes(10),
+                preventDuplicateSend: true,
                 includeSenderMessage: true
             );
 
@@ -377,8 +371,9 @@ public static class TelegramServiceMemberExtension
             if (timeOffset < TimeSpan.FromDays(1))
             {
                 await telegramService.SendTextMessageAsync(
-                    "Terlalu banyak Anggota yang bakal ditendang, silakan tentukan waktu yang lebih lama, misal 3d.",
+                    sendText: "Terlalu banyak Anggota yang bakal ditendang, silakan tentukan waktu yang lebih lama, misal 3d.",
                     scheduleDeleteAt: DateTime.UtcNow.AddMinutes(10),
+                    preventDuplicateSend: true,
                     includeSenderMessage: true
                 );
 
@@ -807,6 +802,7 @@ public static class TelegramServiceMemberExtension
             .ToList();
 
         var wTelegramApiService = telegramService.GetRequiredService<WTelegramApiService>();
+        var mataService = telegramService.GetRequiredService<MataService>();
 
         mentionEntities?.ForEach(
             async (
@@ -823,17 +819,35 @@ public static class TelegramServiceMemberExtension
                         return;
                     }
 
-                    var resolvedPeer = await wTelegramApiService.FindPeerByUsername(targetChatId);
+                    long userId;
+                    var targetUsername = targetChatId.TrimStart('@');
 
-                    if (resolvedPeer?.User == null)
+                    var userInfo = await mataService.GetLastMataAsync(info => info.Username == targetUsername);
+                    if (userInfo != null)
                     {
-                        Log.Debug("Send reply notification skip because Username: {Username} is non-User", targetChatId);
-                        return;
+                        Log.Debug("Found user info for {Username}. UserInfo: {@UserInfo}",
+                            targetChatId,
+                            userInfo
+                        );
+
+                        userId = userInfo.UserId;
+                    }
+                    else
+                    {
+                        var resolvedPeer = await wTelegramApiService.FindPeerByUsername(targetUsername);
+
+                        if (resolvedPeer?.User == null)
+                        {
+                            Log.Debug("Send reply notification skip because Username: {Username} is non-User", targetChatId);
+                            return;
+                        }
+
+                        userId = resolvedPeer.User.ID;
                     }
 
                     await telegramService.SendTextMessageAsync(
                         sendText: htmlMessage.ToString(),
-                        customChatId: resolvedPeer.User.ID,
+                        customChatId: userId,
                         disableWebPreview: true
                     );
                 }
@@ -1104,6 +1118,7 @@ public static class TelegramServiceMemberExtension
         var client = telegramService.Client;
         var chatJoinRequest = telegramService.ChatJoinRequest;
         var userChatJoinRequest = chatJoinRequest.From;
+        var userId = userChatJoinRequest.Id;
 
         var chatSettings = await telegramService.GetChatSetting();
 
@@ -1126,7 +1141,7 @@ public static class TelegramServiceMemberExtension
             }
         }
 
-        var antiSpamResult = await telegramService.AntiSpamService.CheckSpam(chatId, userChatJoinRequest.Id);
+        var antiSpamResult = await telegramService.AntiSpamService.CheckSpam(chatId, userId);
         if (antiSpamResult.IsAnyBanned)
         {
             reasons.Add("Pengguna telah diblokir di Global Ban Fed");
@@ -1135,14 +1150,16 @@ public static class TelegramServiceMemberExtension
 
         if (chatSettings.EnableForceSubscription)
         {
-            var checkSubscription = await telegramService.ChatService.CheckChatMemberSubscriptionToAllAsync(chatId, userChatJoinRequest.Id);
-            var listChannelStr = checkSubscription
-                .Select(result => $"<a href=\"{result.InviteLink}\">{result.ChannelName}</a>")
-                .JoinStr(", ");
+            var checkSubscription = await telegramService.ChatService.CheckChatMemberSubscriptionToAllAsync(chatId, userId);
+            Log.Warning("Check subscription: {CheckSubscription}", checkSubscription.ToJson(true));
 
-            if (checkSubscription.Any())
+            var listChannelStr = checkSubscription
+                .Select(result => $"\t└ <a href=\"{result.InviteLink}\">{result.ChannelName}</a>")
+                .JoinStr("\n");
+
+            if (checkSubscription.Count > 0)
             {
-                reasons.Add($"Belum subrek ke {listChannelStr}");
+                reasons.Add($"Belum subrek ke \n{listChannelStr}");
                 needManualAccept = false;
             }
         }
@@ -1150,10 +1167,30 @@ public static class TelegramServiceMemberExtension
         if (needManualAccept) return true;
         var eventLogService = telegramService.GetRequiredService<EventLogService>();
 
+        try
+        {
         await client.DeclineChatJoinRequest(chatId, userChatJoinRequest.Id);
+        }
+        catch (Exception exception)
+        {
+            if (exception.Contains("HIDE_REQUESTER_MISSING"))
+            {
+                Log.Warning("Maybe the user has accepted/rejected the Join Request. ChatId: {ChatId}, UserId: {UserId}",
+                    chatId,
+                    userId
+                );
+            }
+            else
+            {
+                Log.Error(exception,
+                    "Answer Chat join request failed. ChatId: {ChatId}, UserId: {UserId}",
+                    chatId, userId
+                );
+            }
+        }
 
         var htmlMessage = HtmlMessage.Empty
-            .Bold("Chat join request ditolak").Br()
+            .Bold("Chat Join Request ditolak").Br()
             .Bold("ID: ").CodeBr(userChatJoinRequest.Id.ToString())
             .Bold("Nama: ").TextBr(userChatJoinRequest.GetNameLink())
             .Bold("Karena: ").Br();
