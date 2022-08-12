@@ -8,7 +8,6 @@ using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using MongoDB.Entities;
 using MySqlConnector;
-using Realms;
 using Serilog;
 using SqlKata.Compilers;
 using SqlKata.Execution;
@@ -92,18 +91,18 @@ public class QueryService
         return collection;
     }
 
-    public async Task<Realm> GetMongoRealmInstance()
-    {
-        var realmPath = DirUtil.PathCombine(true, "Storage/Data/Realm.realm").EnsureDirectory();
-        var realmInstance = await Realm.GetInstanceAsync(
-            new RealmConfiguration(realmPath)
-            {
-                ShouldDeleteIfMigrationNeeded = true
-            }
-        );
-
-        return realmInstance;
-    }
+    // public async Task<Realm> GetMongoRealmInstance()
+    // {
+    //     var realmPath = DirUtil.PathCombine(true, "Storage/Data/Realm.realm").EnsureDirectory();
+    //     var realmInstance = await Realm.GetInstanceAsync(
+    //         new RealmConfiguration(realmPath)
+    //         {
+    //             ShouldDeleteIfMigrationNeeded = true
+    //         }
+    //     );
+    //
+    //     return realmInstance;
+    // }
 
     #region C R U D
 
