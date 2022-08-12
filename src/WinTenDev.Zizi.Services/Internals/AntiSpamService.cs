@@ -210,7 +210,7 @@ public class AntiSpamService
     /// <returns>A Task.</returns>
     public async Task<bool> CheckSpamWatch(long userId)
     {
-        var op = Operation.Begin("SpamWatch check for UserId: {UserId}", userId);
+        var op = Operation.Begin("SpamWatch Fed check for UserId: {UserId}", userId);
         var cacheKey = $"ban-sw_{userId}";
 
         var isEnabled = _spamWatchConfig.IsEnabled;
