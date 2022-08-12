@@ -337,8 +337,9 @@ public static class TelegramServiceMemberExtension
         if (!await telegramService.CheckFromAdminOrAnonymous())
         {
             await telegramService.SendTextMessageAsync(
-                "Kamu tidak mempunyai akses ke fitur ini.",
+                sendText: "Kamu tidak mempunyai akses ke fitur ini.",
                 scheduleDeleteAt: DateTime.UtcNow.AddMinutes(1),
+                preventDuplicateSend: true,
                 includeSenderMessage: true
             );
 
@@ -352,8 +353,9 @@ public static class TelegramServiceMemberExtension
         if (param1.IsNullOrEmpty())
         {
             await telegramService.SendTextMessageAsync(
-                "Tentukan berapa lama durasi tidak aktif, misal 3d.",
+                sendText: "Tentukan berapa lama durasi tidak aktif, misal 3d.",
                 scheduleDeleteAt: DateTime.UtcNow.AddMinutes(10),
+                preventDuplicateSend: true,
                 includeSenderMessage: true
             );
 
@@ -369,8 +371,9 @@ public static class TelegramServiceMemberExtension
             if (timeOffset < TimeSpan.FromDays(1))
             {
                 await telegramService.SendTextMessageAsync(
-                    "Terlalu banyak Anggota yang bakal ditendang, silakan tentukan waktu yang lebih lama, misal 3d.",
+                    sendText: "Terlalu banyak Anggota yang bakal ditendang, silakan tentukan waktu yang lebih lama, misal 3d.",
                     scheduleDeleteAt: DateTime.UtcNow.AddMinutes(10),
+                    preventDuplicateSend: true,
                     includeSenderMessage: true
                 );
 
@@ -833,11 +836,11 @@ public static class TelegramServiceMemberExtension
                     {
                         var resolvedPeer = await wTelegramApiService.FindPeerByUsername(targetUsername);
 
-                    if (resolvedPeer?.User == null)
-                    {
-                        Log.Debug("Send reply notification skip because Username: {Username} is non-User", targetChatId);
-                        return;
-                    }
+                        if (resolvedPeer?.User == null)
+                        {
+                            Log.Debug("Send reply notification skip because Username: {Username} is non-User", targetChatId);
+                            return;
+                        }
 
                         userId = resolvedPeer.User.ID;
                     }
