@@ -23,6 +23,9 @@ public class Startup
     {
         services.AddTelegramBot();
         services.MappingAppSettings();
+        services.ConfigureAutoMapper();
+
+        services.AddTelegramBot();
 
         services.AddHealthChecks();
 
