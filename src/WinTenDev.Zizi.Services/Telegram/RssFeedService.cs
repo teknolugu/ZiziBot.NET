@@ -78,9 +78,8 @@ public class RssFeedService
     }
 
     [AutomaticRetry(Attempts = 0, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
-    [MaximumConcurrentExecutions(1, timeoutInSeconds: 500)]
-    [DisableMultipleQueuedItemsFilter]
     [JobDisplayName("RSS {0}")]
+    [Queue("rss-feed")]
     public async Task ExecuteUrlAsync(
         long chatId,
         string rssUrl
