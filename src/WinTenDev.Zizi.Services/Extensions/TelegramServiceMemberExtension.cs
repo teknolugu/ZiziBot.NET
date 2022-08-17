@@ -5,7 +5,6 @@ using System.Text;
 using System.Threading.Tasks;
 using Humanizer;
 using MoreLinq;
-using Serilog;
 using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -1071,13 +1070,13 @@ public static class TelegramServiceMemberExtension
         if (telegramService.ChosenInlineResult != null ||
             telegramService.InlineQuery != null)
         {
-            Log.Information("Ensure chat Admin skip because Update type is: {UpdateType}}", telegramService.Update.Type);
+            Log.Information("Ensure chat Admin skip because Update type is: {UpdateType}", telegramService.Update.Type);
             return;
         }
 
         try
         {
-            var chatAdminRepository = telegramService.GetRequiredService<ChatAdminService>();
+            var chatAdminService = telegramService.GetRequiredService<ChatAdminService>();
 
             if (telegramService.IsPrivateChat)
             {
@@ -1087,15 +1086,14 @@ public static class TelegramServiceMemberExtension
 
             var admins = await telegramService.GetChatAdmin();
 
-            await chatAdminRepository.SaveAll(
+            await chatAdminService.SaveAll(
                 admins.Select(
                     member =>
-                        new ChatAdmin()
+                        new GroupAdmin()
                         {
                             UserId = member.User.Id,
                             ChatId = telegramService.ChatId,
-                            Role = member.Status,
-                            CreatedAt = DateTime.UtcNow
+                            Role = member.Status
                         }
                 )
             );
@@ -1169,7 +1167,7 @@ public static class TelegramServiceMemberExtension
 
         try
         {
-        await client.DeclineChatJoinRequest(chatId, userChatJoinRequest.Id);
+            await client.DeclineChatJoinRequest(chatId, userChatJoinRequest.Id);
         }
         catch (Exception exception)
         {

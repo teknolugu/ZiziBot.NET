@@ -270,6 +270,7 @@ public class DatabaseService
         await DB.InitAsync("shared", MongoClientSettings.FromConnectionString(connectionString));
 
         DB.DatabaseFor<ForceSubscription>(meUsername);
+        DB.DatabaseFor<GroupAdmin>(meUsername);
         DB.DatabaseFor<UserInfo>(meUsername);
         DB.DatabaseFor<WarnMember>(meUsername);
         DB.DatabaseFor<WebHookChat>(meUsername);
