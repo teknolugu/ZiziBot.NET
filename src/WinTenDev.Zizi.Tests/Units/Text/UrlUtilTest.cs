@@ -1,8 +1,7 @@
 ﻿using FluentAssertions;
-using WinTenDev.Zizi.Utils;
 using Xunit;
 
-namespace WinTenDev.Zizi.Tests;
+namespace WinTenDev.Zizi.Tests.Units.Text;
 
 public class UrlUtilTest
 {

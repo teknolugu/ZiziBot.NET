@@ -1,8 +1,7 @@
 ﻿using FluentAssertions;
-using WinTenDev.Zizi.Utils.Telegram;
 using Xunit;
 
-namespace WinTenDev.Zizi.Tests;
+namespace WinTenDev.Zizi.Tests.Units.Telegram;
 
 public class ChatUtilTest
 {
