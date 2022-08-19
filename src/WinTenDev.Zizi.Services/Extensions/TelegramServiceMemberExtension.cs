@@ -1149,7 +1149,11 @@ public static class TelegramServiceMemberExtension
         if (chatSettings.EnableForceSubscription)
         {
             var checkSubscription = await telegramService.ChatService.CheckChatMemberSubscriptionToAllAsync(chatId, userId);
-            Log.Warning("Check subscription: {CheckSubscription}", checkSubscription.ToJson(true));
+            Log.Warning("Check subscription for UserId: {UserId} on ChatId: {ChatId}. Result: {CheckSubscription}",
+                userId,
+                chatId,
+                checkSubscription.ToJson(true)
+            );
 
             var listChannelStr = checkSubscription
                 .Select(result => $"\t└ <a href=\"{result.InviteLink}\">{result.ChannelName}</a>")
@@ -1157,7 +1161,7 @@ public static class TelegramServiceMemberExtension
 
             if (checkSubscription.Count > 0)
             {
-                reasons.Add($"Belum subrek ke \n{listChannelStr}");
+                reasons.Add($"Belum berlanggan ke Kanal \n{listChannelStr}");
                 needManualAccept = false;
             }
         }
