@@ -1,13 +1,13 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using System.Threading.Tasks;
+using Microsoft.AspNetCore.Builder;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Conventions;
-using Nito.AsyncEx.Synchronous;
 
 namespace WinTenDev.Zizi.Services.Extensions;
 
 public static class DatasourceServiceExtension
 {
-    public static IApplicationBuilder RunMongoDbPreparation(this IApplicationBuilder app)
+    public static async Task<IApplicationBuilder> RunMongoDbPreparation(this IApplicationBuilder app)
     {
         var databaseService = app.GetRequiredService<DatabaseService>();
 
@@ -16,8 +16,8 @@ public static class DatasourceServiceExtension
             new EnumRepresentationConvention(BsonType.String),
         }, type => true);
 
-        databaseService.MongoDbDatabaseMapping().WaitAndUnwrapException();
-        databaseService.MongoDbEnsureCollectionIndex().WaitAndUnwrapException();
+        await databaseService.MongoDbDatabaseMapping();
+        await databaseService.MongoDbEnsureCollectionIndex();
 
         return app;
     }

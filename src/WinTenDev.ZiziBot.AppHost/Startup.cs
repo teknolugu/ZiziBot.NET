@@ -65,7 +65,7 @@ public class Startup
         app.UseFluentMigration();
         app.ConfigureNewtonsoftJson();
         app.ConfigureDapper();
-        app.ExecuteStartupTasks();
+        app.ExecuteStartupTasks().WaitAndUnwrapException();
 
         if (env.IsDevelopment()) app.UseDeveloperExceptionPage();
 
