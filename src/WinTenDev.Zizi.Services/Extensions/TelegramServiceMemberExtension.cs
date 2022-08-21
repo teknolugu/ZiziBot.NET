@@ -1142,7 +1142,31 @@ public static class TelegramServiceMemberExtension
         var antiSpamResult = await telegramService.AntiSpamService.CheckSpam(chatId, userId);
         if (antiSpamResult.IsAnyBanned)
         {
-            reasons.Add("Pengguna telah diblokir di Global Ban Fed");
+            var gbanReason = new StringBuilder();
+            gbanReason.AppendLine("Pengguna telah diblokir di Global Ban Fed");
+
+            if (antiSpamResult.IsEs2Banned)
+            {
+                gbanReason.AppendLine("\t\t└ WinTenDev ES2");
+            }
+
+            if (antiSpamResult.IsCasBanned)
+            {
+                gbanReason.AppendLine("\t\t└ CAS Fed");
+            }
+
+            if (antiSpamResult.IsSpamWatched)
+            {
+                gbanReason.AppendLine("\t\t└ Spamwatch Fed");
+            }
+
+            if (antiSpamResult.IsUsergeBanned)
+            {
+                gbanReason.AppendLine("\t\t└ Userge Fed");
+            }
+
+            reasons.Add(gbanReason.ToTrimmedString());
+
             needManualAccept = false;
         }
 
@@ -1156,7 +1180,7 @@ public static class TelegramServiceMemberExtension
             );
 
             var listChannelStr = checkSubscription
-                .Select(result => $"\t└ <a href=\"{result.InviteLink}\">{result.ChannelName}</a>")
+                .Select(result => $"\t\t└ <a href=\"{result.InviteLink}\">{result.ChannelName}</a>")
                 .JoinStr("\n");
 
             if (checkSubscription.Count > 0)
