@@ -15,16 +15,15 @@ public static class TelegramServiceSpellExtension
         var chatId = telegramService.ChatId;
         var fromId = telegramService.FromId;
 
-        var spellData = new Spell()
+        var spellDto = new SpellDto()
         {
             Typo = typo,
             Fix = fix,
             ChatId = chatId,
             FromId = fromId,
-            CreatedAt = DateTime.UtcNow
         };
 
-        if (!spellData.Validate<AddSpellValidator, Spell>().IsValid)
+        if (!(await spellDto.ValidateAsync<AddSpellDtoValidator, SpellDto>()).IsValid)
         {
             await telegramService.SendTextMessageAsync(
                 sendText: "Sepertinya input Spell tidak valid" +
@@ -37,16 +36,7 @@ public static class TelegramServiceSpellExtension
         }
 
         var htmlMessage = HtmlMessage.Empty;
-        var saveSpell = await spellService.SaveSpell(
-            new Spell()
-            {
-                Typo = typo,
-                Fix = fix,
-                ChatId = chatId,
-                FromId = fromId,
-                CreatedAt = DateTime.UtcNow
-            }
-        );
+        var saveSpell = await spellService.SaveSpell(spellDto);
 
         if (saveSpell)
         {

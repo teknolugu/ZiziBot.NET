@@ -1,11 +1,11 @@
 ﻿using FluentValidation;
-using WinTenDev.Zizi.Models.Tables;
+using WinTenDev.Zizi.Models.Dto;
 
 namespace WinTenDev.Zizi.Models.Validators;
 
-public class AddSpellValidator : AbstractValidator<Spell>
+public class AddSpellDtoValidator : AbstractValidator<SpellDto>
 {
-    public AddSpellValidator()
+    public AddSpellDtoValidator()
     {
         RuleFor(spell => spell.Typo).NotEmpty().WithMessage("Typo is required");
         RuleFor(spell => spell.Fix).NotEmpty().WithMessage("Fix is required");
