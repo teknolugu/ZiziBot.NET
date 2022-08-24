@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Hangfire;
 using Hangfire.Dashboard.Dark;
 using Hangfire.Heartbeat;
@@ -115,7 +116,7 @@ public static class HangfireServiceExtension
                 options
             ) => {
                 options.WorkerCount = Environment.ProcessorCount * hangfireConfig.WorkerMultiplier;
-                options.Queues = hangfireConfig.Queues;
+                options.Queues = hangfireConfig.Queues.Distinct().ToArray();
             },
             storage: JobStorage.Current,
             additionalProcesses: new IBackgroundProcess[]
