@@ -8,7 +8,7 @@ public static class HangfireJobsExtension
 {
     public static IApplicationBuilder RegisterHangfireJobs(this IApplicationBuilder app)
     {
-        HangfireUtil.DeleteAllJobs();
+        HangfireUtil.PurgeJobs();
 
         var serviceProvider = app.GetServiceProvider();
         var jobService = serviceProvider.GetRequiredService<JobsService>();
