@@ -4,8 +4,6 @@ using System.Threading.Tasks;
 using AutoMapper;
 using MongoDB.Entities;
 using MySqlConnector;
-using RepoDb;
-using Serilog;
 
 namespace WinTenDev.Zizi.Services.Internals;
 
@@ -70,5 +68,14 @@ public class SpellService
         );
 
         return spells.ToList();
+    }
+
+    public async Task<long> ImportSpell(IEnumerable<SpellDto> spellDto)
+    {
+        var datas = _mapper.Map<List<SpellEntity>>(spellDto);
+
+        var insert = await datas.InsertAsync();
+
+        return insert.InsertedCount;
     }
 }
