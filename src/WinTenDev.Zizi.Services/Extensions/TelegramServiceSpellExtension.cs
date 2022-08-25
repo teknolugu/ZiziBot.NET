@@ -9,6 +9,12 @@ public static class TelegramServiceSpellExtension
 {
     public static async Task AddSpellAsync(this TelegramService telegramService)
     {
+        if (!telegramService.IsFromSudo)
+        {
+            await telegramService.DeleteSenderMessageAsync();
+            return;
+        }
+
         var spellService = telegramService.GetRequiredService<SpellService>();
         var typo = telegramService.GetCommandParam(0);
         var fix = telegramService.GetCommandParam(1);
