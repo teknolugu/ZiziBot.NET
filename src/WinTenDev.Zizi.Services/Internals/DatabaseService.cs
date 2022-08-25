@@ -271,6 +271,7 @@ public class DatabaseService
 
         DB.DatabaseFor<ForceSubscription>(meUsername);
         DB.DatabaseFor<GroupAdmin>(meUsername);
+        DB.DatabaseFor<SpellEntity>(meUsername);
         DB.DatabaseFor<UserInfo>(meUsername);
         DB.DatabaseFor<WarnMember>(meUsername);
         DB.DatabaseFor<WebHookChat>(meUsername);
@@ -287,6 +288,11 @@ public class DatabaseService
     public async Task MongoDbEnsureCollectionIndex()
     {
         _logger.LogInformation("Creating MongoDb Index..");
+
+        await DB.Index<SpellEntity>()
+            .Key(entity => entity.Typo, KeyType.Ascending)
+            .Option(options => options.Unique = true)
+            .CreateAsync();
 
         await DB.Index<SubsceneMovieItem>()
             .Key(item => item.MovieUrl, KeyType.Ascending)
