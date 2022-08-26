@@ -1,7 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Telegram.Bot.Framework.Abstractions;
+using WinTenDev.Zizi.Models.Dto;
 
 namespace WinTenDev.ZiziBot.AppHost.Handlers.Commands.Group;
 
@@ -50,26 +49,35 @@ public class AfkCommand : CommandBase
             return;
         }
 
-        var data = new Dictionary<string, object>()
-        {
-            { "user_id", fromId },
-            { "chat_id", chatId },
-            { "is_afk", 1 },
-            { "afk_start", DateTime.Now },
-            { "afk_end", DateTime.Now }
-        };
+        // var data = new Dictionary<string, object>()
+        // {
+        //     { "user_id", fromId },
+        //     { "chat_id", chatId },
+        //     { "is_afk", 1 },
+        //     { "afk_start", DateTime.Now },
+        //     { "afk_end", DateTime.Now }
+        // };
 
         var sendText = $"{fromNameLink} Sedang afk.";
 
         if (afkReason.IsNotNullOrEmpty())
         {
-            data.Add("afk_reason", afkReason);
+            // data.Add("afk_reason", afkReason);
 
             sendText += $"\n<i>{afkReason}</i>";
         }
 
         await _telegramService.SendTextMessageAsync(sendText);
-        await _afkService.SaveAsync(data);
-        await _afkService.UpdateAfkByIdCacheAsync(fromId);
+        // await _afkService.SaveAsync(data);
+        // await _afkService.UpdateAfkByIdCacheAsync(fromId);
+
+        await _afkService.SaveAsync(new AfkDto()
+        {
+            ChatId = chatId,
+            UserId = fromId,
+            IsAfk = true,
+            Reason = afkReason
+        });
+
     }
 }

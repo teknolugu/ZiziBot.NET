@@ -242,19 +242,28 @@ public static class TelegramServiceActivityExtension
             {
                 var nameLink = message.GetFromNameLink();
 
-                if (fromAfk.IsAfk) await telegramService.SendTextMessageAsync($"{nameLink} sudah tidak afk");
+                if (fromAfk.IsAfk)
+                    await telegramService.SendTextMessageAsync($"{nameLink} sudah tidak afk");
 
-                var data = new Dictionary<string, object>
+                // var data = new Dictionary<string, object>
+                // {
+                //     { "chat_id", chatId },
+                //     { "user_id", fromId },
+                //     { "is_afk", 0 },
+                //     { "afk_reason", "" },
+                //     { "afk_end", DateTime.Now }
+                // };
+
+                // await telegramService.AfkService.SaveAsync(data);
+                // await telegramService.AfkService.UpdateAfkByIdCacheAsync(fromId);
+
+                await telegramService.AfkService.SaveAsync(new AfkDto()
                 {
-                    { "chat_id", chatId },
-                    { "user_id", fromId },
-                    { "is_afk", 0 },
-                    { "afk_reason", "" },
-                    { "afk_end", DateTime.Now }
-                };
-
-                await telegramService.AfkService.SaveAsync(data);
-                await telegramService.AfkService.UpdateAfkByIdCacheAsync(fromId);
+                    ChatId = chatId,
+                    UserId = fromId,
+                    IsAfk = false,
+                    Reason = ""
+                });
             }
         }
         catch (Exception exception)
