@@ -1120,10 +1120,16 @@ public static class TelegramServiceMemberExtension
 
         var chatSettings = await telegramService.GetChatSetting();
 
+        var htmlMessage = HtmlMessage.Empty
+            .Bold("Chat Join Request ditolak").Br()
+            .Bold("ID: ").CodeBr(userChatJoinRequest.Id.ToString())
+            .Bold("Nama: ").TextBr(userChatJoinRequest.GetNameLink())
+            .Bold("Karena: ").Br();
+
         if (chatSettings.EnableWarnUsername &&
             userChatJoinRequest.Username.IsNullOrEmpty())
         {
-            reasons.Add("Belum menetapkan Username");
+            htmlMessage.Text("└ ").Url("https://t.me/WinTenDev/29", "Belum menetapkan Username").Br();
             needManualAccept = false;
         }
 
@@ -1214,12 +1220,6 @@ public static class TelegramServiceMemberExtension
                 );
             }
         }
-
-        var htmlMessage = HtmlMessage.Empty
-            .Bold("Chat Join Request ditolak").Br()
-            .Bold("ID: ").CodeBr(userChatJoinRequest.Id.ToString())
-            .Bold("Nama: ").TextBr(userChatJoinRequest.GetNameLink())
-            .Bold("Karena: ").Br();
 
         reasons.ForEach(s => htmlMessage.TextBr("└ " + s));
 
