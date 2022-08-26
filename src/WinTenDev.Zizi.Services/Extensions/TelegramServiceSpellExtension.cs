@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
-using Serilog;
+using MongoDB.Driver;
 
 namespace WinTenDev.Zizi.Services.Extensions;
 
@@ -9,22 +9,27 @@ public static class TelegramServiceSpellExtension
 {
     public static async Task AddSpellAsync(this TelegramService telegramService)
     {
+        if (!telegramService.IsFromSudo)
+        {
+            await telegramService.DeleteSenderMessageAsync();
+            return;
+        }
+
         var spellService = telegramService.GetRequiredService<SpellService>();
         var typo = telegramService.GetCommandParam(0);
         var fix = telegramService.GetCommandParam(1);
         var chatId = telegramService.ChatId;
         var fromId = telegramService.FromId;
 
-        var spellData = new Spell()
+        var spellDto = new SpellDto()
         {
             Typo = typo,
             Fix = fix,
             ChatId = chatId,
             FromId = fromId,
-            CreatedAt = DateTime.UtcNow
         };
 
-        if (!spellData.Validate<AddSpellValidator, Spell>().IsValid)
+        if (!(await spellDto.ValidateAsync<AddSpellDtoValidator, SpellDto>()).IsValid)
         {
             await telegramService.SendTextMessageAsync(
                 sendText: "Sepertinya input Spell tidak valid" +
@@ -37,16 +42,7 @@ public static class TelegramServiceSpellExtension
         }
 
         var htmlMessage = HtmlMessage.Empty;
-        var saveSpell = await spellService.SaveSpell(
-            new Spell()
-            {
-                Typo = typo,
-                Fix = fix,
-                ChatId = chatId,
-                FromId = fromId,
-                CreatedAt = DateTime.UtcNow
-            }
-        );
+        var saveSpell = await spellService.SaveSpell(spellDto);
 
         if (saveSpell)
         {
@@ -66,6 +62,78 @@ public static class TelegramServiceSpellExtension
             scheduleDeleteAt: DateTime.UtcNow.AddMinutes(5),
             includeSenderMessage: true
         );
+    }
+
+    public static async Task ImportSpellAsync(this TelegramService telegramService)
+    {
+        if (!telegramService.IsFromSudo)
+        {
+            await telegramService.DeleteSenderMessageAsync();
+            return;
+        }
+
+        if (telegramService.ReplyToMessage == null)
+        {
+            await telegramService.SendTextMessageAsync(
+                sendText: "Balas pesan yang berisi file spell",
+                scheduleDeleteAt: DateTime.UtcNow.AddMinutes(5),
+                includeSenderMessage: true
+            );
+
+            return;
+        }
+
+        var spellService = telegramService.GetRequiredService<SpellService>();
+
+        var fileName = await telegramService.DownloadFileAsync("spell");
+
+        var csvRows = fileName.ReadCsv<SpellDto>();
+
+        var htmlMessage = HtmlMessage.Empty
+            .BoldBr("⏬ Import Spell");
+
+        try
+        {
+            var importSpell = await spellService.ImportSpell(csvRows);
+
+            htmlMessage.TextBr("Spell berhasil diimport")
+                .Bold("Total: ").CodeBr(importSpell.ToString());
+
+            await telegramService.SendTextMessageAsync(
+                htmlMessage.ToString(),
+                includeSenderMessage: true,
+                scheduleDeleteAt: DateTime.UtcNow.AddMinutes(5));
+        }
+        catch (MongoBulkWriteException<SpellEntity> bulkWriteException)
+        {
+            var writeResult = bulkWriteException.Result;
+
+            if (writeResult.InsertedCount > 0)
+            {
+                htmlMessage.TextBr("Spell berhasil diimport")
+                    .Bold("Ditambahkan: ").CodeBr(writeResult.InsertedCount.ToString())
+                    .Bold("Dilewat: ").CodeBr(bulkWriteException.WriteErrors.Count.ToString());
+            }
+            else
+            {
+                htmlMessage.TextBr("Spell telah diimport")
+                    .Bold("Total: ").CodeBr(bulkWriteException.WriteErrors.Count.ToString());
+            }
+
+            await telegramService.SendTextMessageAsync(
+                htmlMessage.ToString(),
+                includeSenderMessage: true,
+                scheduleDeleteAt: DateTime.UtcNow.AddMinutes(5)
+            );
+        }
+        catch (Exception ex)
+        {
+            await telegramService.SendTextMessageAsync(
+                sendText: "Terjadi kesalahan pada saat import spell",
+                includeSenderMessage: true,
+                scheduleDeleteAt: DateTime.UtcNow.AddMinutes(5)
+            );
+        }
     }
 
     public static async Task RunSpellingAsync(this TelegramService telegramService)

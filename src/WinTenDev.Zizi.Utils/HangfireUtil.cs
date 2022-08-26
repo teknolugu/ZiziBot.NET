@@ -24,13 +24,19 @@ namespace WinTenDev.Zizi.Utils;
 
 public static class HangfireUtil
 {
-    public static void DeleteAllJobs()
+    public static void PurgeJobs()
+    {
+        JobStorage.Current.PurgeEnqueuedJobs();
+        JobStorage.Current.PurgeOrphanedJobs();
+        JobStorage.Current.PurgeRecurringJobs();
+    }
+
+    public static void PurgeRecurringJobs(this JobStorage jobStorage)
     {
         var sw = Stopwatch.StartNew();
 
         Log.Information("Deleting previous Hangfire jobs..");
-        var connection = JobStorage.Current.GetConnection();
-        var recurringJobs = connection.GetRecurringJobs();
+        var recurringJobs = jobStorage.GetConnection().GetRecurringJobs();
 
         var numOfJobs = recurringJobs.Count;
 
@@ -65,6 +71,43 @@ public static class HangfireUtil
         );
 
         sw.Stop();
+    }
+
+    public static void PurgeEnqueuedJobs(this JobStorage jobStorage)
+    {
+        var toDelete = new List<string>();
+        var monitor = jobStorage.GetMonitoringApi();
+
+        foreach (var queue in monitor.Queues())
+        {
+            for (var i = 0; i < Math.Ceiling(queue.Length / 1000d); i++)
+            {
+                monitor.EnqueuedJobs(queue.Name, 1000 * i, 1000)
+                    .ForEach(x => toDelete.Add(x.Key));
+            }
+        }
+
+        foreach (var jobId in toDelete)
+        {
+            BackgroundJob.Delete(jobId);
+        }
+    }
+
+    private static void PurgeOrphanedJobs(this JobStorage jobStorage)
+    {
+        var api = jobStorage.GetMonitoringApi();
+        var processingJobs = api.ProcessingJobs(0, 100);
+        var servers = api.Servers();
+        var orphanJobs = processingJobs
+            .Where(j => !servers.Any(s => s.Name == j.Value.ServerId))
+            .ToList();
+
+        Log.Information("Deleting orphaned Hangfire jobs. Total {Total}", orphanJobs.Count);
+
+        foreach (var orphanJob in orphanJobs)
+        {
+            BackgroundJob.Delete(orphanJob.Key);
+        }
     }
 
     public static void DeleteJob(string jobId)

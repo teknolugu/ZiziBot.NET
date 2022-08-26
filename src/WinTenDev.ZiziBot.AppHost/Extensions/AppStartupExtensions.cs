@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
 using Flurl;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -157,21 +158,21 @@ internal static class AppStartupExtensions
         return app;
     }
 
-    public static IApplicationBuilder ExecuteStartupTasks(this IApplicationBuilder app)
+    public static async Task<IApplicationBuilder> ExecuteStartupTasks(this IApplicationBuilder app)
     {
         var config = app.GetRequiredService<IConfiguration>();
         var botService = app.GetRequiredService<BotService>();
 
-        app.GetRequiredService<DatabaseService>().FixTableCollation().WaitAndUnwrapException();
+        await app.GetRequiredService<DatabaseService>().FixTableCollation();
 
-        botService.EnsureCommandRegistration().WaitAndUnwrapException();
-        botService.SendStartupNotification().WaitAndUnwrapException();
+        await botService.EnsureCommandRegistration();
+        // await botService.SendStartupNotification();
 
-        app.RunMongoDbPreparation();
+        await app.RunMongoDbPreparation();
 
         ChangeToken.OnChange(
-            () => config.GetReloadToken(),
-            () => botService.EnsureCommandRegistration().WaitAndUnwrapException()
+            changeTokenProducer: () => config.GetReloadToken(),
+            changeTokenConsumer: async () => await botService.EnsureCommandRegistration()
         );
 
         return app;

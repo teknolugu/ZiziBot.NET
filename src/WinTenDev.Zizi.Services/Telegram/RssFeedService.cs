@@ -17,12 +17,14 @@ public class RssFeedService
     private readonly RssService _rssService;
     private readonly IRecurringJobManager _recurringJobManager;
     private readonly ITelegramBotClient _botClient;
+    private readonly ArticleSentService _articleSentService;
     private readonly OctokitApiService _octokitApiService;
     private readonly JobsService _jobsService;
 
     public RssFeedService(
         IRecurringJobManager recurringJobManager,
         ITelegramBotClient botClient,
+        ArticleSentService articleSentService,
         OctokitApiService octokitApiService,
         JobsService jobsService,
         RssService rssService
@@ -30,6 +32,7 @@ public class RssFeedService
     {
         _recurringJobManager = recurringJobManager;
         _botClient = botClient;
+        _articleSentService = articleSentService;
         _octokitApiService = octokitApiService;
         _jobsService = jobsService;
         _rssService = rssService;
@@ -78,9 +81,8 @@ public class RssFeedService
     }
 
     [AutomaticRetry(Attempts = 0, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
-    [MaximumConcurrentExecutions(1, timeoutInSeconds: 500)]
-    [DisableMultipleQueuedItemsFilter]
     [JobDisplayName("RSS {0}")]
+    [Queue("rss-feed")]
     public async Task ExecuteUrlAsync(
         long chatId,
         string rssUrl
@@ -115,7 +117,7 @@ public class RssFeedService
         Log.Debug("CurrentArticleDate: {Date}", rssPublishDate);
         Log.Debug("Prepare sending article to ChatId {ChatId}", chatId);
 
-        var isExist = await _rssService.IsHistoryExist(chatId, rssFeedLink);
+        var isExist = await _articleSentService.IsSentAsync(chatId, rssFeedLink);
 
         if (isExist)
         {
@@ -184,18 +186,15 @@ public class RssFeedService
                 rssUrl
             );
 
-            await _rssService.SaveRssHistoryAsync(
-                new RssHistory
+            await _articleSentService.SaveAsync(new ArticleSentDto()
                 {
-                    Url = rssFeedLink,
-                    RssSource = rssUrl,
                     ChatId = chatId,
+                RssSource = rssUrl,
                     Title = rssFeedTitle,
-                    PublishDate = rssPublishDate,
-                    Author = rssFeedAuthor ?? "N/A",
-                    CreatedAt = DateTime.Now
-                }
-            );
+                PublishDate = rssPublishDate.UtcDateTime,
+                Author = rssFeedAuthor ?? "Fulan",
+                Url = rssFeedLink
+            });
         }
         catch (Exception ex)
         {

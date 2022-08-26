@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using MongoDB.Entities;
 using MySqlConnector;
-using RepoDb;
 
 namespace WinTenDev.Zizi.Services.Internals
 {
@@ -20,17 +20,24 @@ namespace WinTenDev.Zizi.Services.Internals
             return _queryService.CreateMysqlConnectionCore();
         }
 
-        public async Task<int> SaveAll(IEnumerable<ChatAdmin> entities)
+        public async Task<long> SaveAll(IEnumerable<GroupAdmin> entities)
         {
-            await using var connection = CreateConnection();
+            // await using var connection = CreateConnection();
+            //
+            // var chatAdmins = await connection.QueryAsync<ChatAdmin>(
+            //     admin =>
+            //         admin.ChatId == entities.First().ChatId
+            // );
+            //
+            // var deletedRows = await connection.DeleteAllAsync(chatAdmins);
+            // var insertRows = await connection.InsertAllAsync(entities);
 
-            var chatAdmins = await connection.QueryAsync<ChatAdmin>(
-                admin =>
-                    admin.ChatId == entities.First().ChatId
-            );
+            var deleted = await DB.DeleteAsync<GroupAdmin>(admin => admin.ChatId == entities.First().ChatId);
+            var insert = await entities.InsertAsync();
 
-            var deletedRows = await connection.DeleteAllAsync(chatAdmins);
-            var insertRows = await connection.InsertAllAsync(entities);
+            var deletedRows = deleted.DeletedCount;
+            var insertRows = insert.InsertedCount;
+
             var diffRows = insertRows - deletedRows;
 
             return diffRows;

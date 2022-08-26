@@ -4,7 +4,7 @@ using WinTenDev.Zizi.Utils.IO;
 using WinTenDev.Zizi.Utils.Text;
 using Xunit;
 
-namespace WinTenDev.Zizi.Tests
+namespace WinTenDev.Zizi.Tests.Units.Text
 {
     public class JsonUtilTests
     {

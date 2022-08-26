@@ -1,15 +1,12 @@
 ﻿using FluentAssertions;
-using WinTenDev.Zizi.Models.Tables;
-using WinTenDev.Zizi.Models.Validators;
-using WinTenDev.Zizi.Utils;
 using Xunit;
 
-namespace WinTenDev.Zizi.Tests;
+namespace WinTenDev.Zizi.Tests.Units.Validator;
 
-public class FluentValidationUtilTest
+public class TagTests
 {
     [Fact]
-    public void ValidateTest()
+    public void AddTagTest()
     {
         var tagData = new CloudTag
         {

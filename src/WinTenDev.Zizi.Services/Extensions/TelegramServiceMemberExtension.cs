@@ -5,7 +5,6 @@ using System.Text;
 using System.Threading.Tasks;
 using Humanizer;
 using MoreLinq;
-using Serilog;
 using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -1071,13 +1070,13 @@ public static class TelegramServiceMemberExtension
         if (telegramService.ChosenInlineResult != null ||
             telegramService.InlineQuery != null)
         {
-            Log.Information("Ensure chat Admin skip because Update type is: {UpdateType}}", telegramService.Update.Type);
+            Log.Information("Ensure chat Admin skip because Update type is: {UpdateType}", telegramService.Update.Type);
             return;
         }
 
         try
         {
-            var chatAdminRepository = telegramService.GetRequiredService<ChatAdminService>();
+            var chatAdminService = telegramService.GetRequiredService<ChatAdminService>();
 
             if (telegramService.IsPrivateChat)
             {
@@ -1087,15 +1086,14 @@ public static class TelegramServiceMemberExtension
 
             var admins = await telegramService.GetChatAdmin();
 
-            await chatAdminRepository.SaveAll(
+            await chatAdminService.SaveAll(
                 admins.Select(
                     member =>
-                        new ChatAdmin()
+                        new GroupAdmin()
                         {
                             UserId = member.User.Id,
                             ChatId = telegramService.ChatId,
-                            Role = member.Status,
-                            CreatedAt = DateTime.UtcNow
+                            Role = member.Status
                         }
                 )
             );
@@ -1122,10 +1120,16 @@ public static class TelegramServiceMemberExtension
 
         var chatSettings = await telegramService.GetChatSetting();
 
+        var htmlMessage = HtmlMessage.Empty
+            .Bold("Chat Join Request ditolak").Br()
+            .Bold("ID: ").CodeBr(userChatJoinRequest.Id.ToString())
+            .Bold("Nama: ").TextBr(userChatJoinRequest.GetNameLink())
+            .Bold("Karena: ").Br();
+
         if (chatSettings.EnableWarnUsername &&
             userChatJoinRequest.Username.IsNullOrEmpty())
         {
-            reasons.Add("Belum menetapkan Username");
+            htmlMessage.Text("└ ").Url("https://t.me/WinTenDev/29", "Belum menetapkan Username").Br();
             needManualAccept = false;
         }
 
@@ -1144,22 +1148,50 @@ public static class TelegramServiceMemberExtension
         var antiSpamResult = await telegramService.AntiSpamService.CheckSpam(chatId, userId);
         if (antiSpamResult.IsAnyBanned)
         {
-            reasons.Add("Pengguna telah diblokir di Global Ban Fed");
+            var gbanReason = new StringBuilder();
+            gbanReason.AppendLine("Pengguna telah diblokir di Global Ban Fed");
+
+            if (antiSpamResult.IsEs2Banned)
+            {
+                gbanReason.AppendLine("\t\t└ WinTenDev ES2");
+            }
+
+            if (antiSpamResult.IsCasBanned)
+            {
+                gbanReason.AppendLine("\t\t└ CAS Fed");
+            }
+
+            if (antiSpamResult.IsSpamWatched)
+            {
+                gbanReason.AppendLine("\t\t└ Spamwatch Fed");
+            }
+
+            if (antiSpamResult.IsUsergeBanned)
+            {
+                gbanReason.AppendLine("\t\t└ Userge Fed");
+            }
+
+            reasons.Add(gbanReason.ToTrimmedString());
+
             needManualAccept = false;
         }
 
         if (chatSettings.EnableForceSubscription)
         {
             var checkSubscription = await telegramService.ChatService.CheckChatMemberSubscriptionToAllAsync(chatId, userId);
-            Log.Warning("Check subscription: {CheckSubscription}", checkSubscription.ToJson(true));
+            Log.Warning("Check subscription for UserId: {UserId} on ChatId: {ChatId}. Result: {CheckSubscription}",
+                userId,
+                chatId,
+                checkSubscription.ToJson(true)
+            );
 
             var listChannelStr = checkSubscription
-                .Select(result => $"\t└ <a href=\"{result.InviteLink}\">{result.ChannelName}</a>")
+                .Select(result => $"\t\t└ <a href=\"{result.InviteLink}\">{result.ChannelName}</a>")
                 .JoinStr("\n");
 
             if (checkSubscription.Count > 0)
             {
-                reasons.Add($"Belum subrek ke \n{listChannelStr}");
+                reasons.Add($"Belum berlanggan ke Kanal \n{listChannelStr}");
                 needManualAccept = false;
             }
         }
@@ -1169,7 +1201,7 @@ public static class TelegramServiceMemberExtension
 
         try
         {
-        await client.DeclineChatJoinRequest(chatId, userChatJoinRequest.Id);
+            await client.DeclineChatJoinRequest(chatId, userChatJoinRequest.Id);
         }
         catch (Exception exception)
         {
@@ -1188,12 +1220,6 @@ public static class TelegramServiceMemberExtension
                 );
             }
         }
-
-        var htmlMessage = HtmlMessage.Empty
-            .Bold("Chat Join Request ditolak").Br()
-            .Bold("ID: ").CodeBr(userChatJoinRequest.Id.ToString())
-            .Bold("Nama: ").TextBr(userChatJoinRequest.GetNameLink())
-            .Bold("Karena: ").Br();
 
         reasons.ForEach(s => htmlMessage.TextBr("└ " + s));
 

@@ -92,6 +92,7 @@ public static class CommandBuilderExtension
                                         .UseCommand<ImportGBanCommand>("import_gban")
                                         .UseCommand<ImportLearnCommand>("importlearn")
                                         .UseCommand<ImportRssCommand>("importrss")
+                                        .UseCommand<ImportSpellCommand>("importspell")
                                         .UseCommand<InactiveKickCommand>("inkick")
                                         .UseCommand<InsightStatusCommand>("instatus")
                                         .UseCommand<AppHostInfoCommand>("apphost")

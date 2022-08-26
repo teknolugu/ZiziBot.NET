@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Nito.AsyncEx.Synchronous;
 using Serilog;
 
 namespace WinTenDev.ZiziBot.AppHost;
@@ -23,6 +24,9 @@ public class Startup
     {
         services.AddTelegramBot();
         services.MappingAppSettings();
+        services.ConfigureAutoMapper();
+
+        services.AddTelegramBot();
 
         services.AddHealthChecks();
 
@@ -62,7 +66,7 @@ public class Startup
         app.UseFluentMigration();
         app.ConfigureNewtonsoftJson();
         app.ConfigureDapper();
-        app.ExecuteStartupTasks();
+        app.ExecuteStartupTasks().WaitAndUnwrapException();
 
         if (env.IsDevelopment()) app.UseDeveloperExceptionPage();
 
