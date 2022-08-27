@@ -380,12 +380,11 @@ public static class SerilogServiceExtension
         bool prettySize = false
     )
     {
-        var proc = Process.GetCurrentProcess();
-        var memorySize = proc.PrivateMemorySize64;
-
         return configuration.WithDynamicProperty(
             "MemoryUsage",
             () => {
+                var proc = Process.GetCurrentProcess();
+                var memorySize = proc.PrivateMemorySize64;
                 var mem = prettySize ? memorySize.SizeFormat() : memorySize.ToString();
 
                 return $" {mem} ";
