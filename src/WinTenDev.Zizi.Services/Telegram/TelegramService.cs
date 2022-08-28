@@ -1288,11 +1288,21 @@ public class TelegramService
         bool includeSenderMessage = false,
         MessageFlag messageFlag = default,
         bool preventDuplicateSend = false,
-        bool reappendText = false
+        bool reappendText = false,
+        int reappendCount = 0
     )
     {
+        // todo: bool of reappendText is no longer used. please use reappendCount instead.
         if (reappendText)
             AppendText = AppendText.RemoveLastLines(1);
+
+        if (reappendCount == AppendText?.LinesCount())
+        {
+            await DeleteSentMessageAsync();
+        }
+
+        if (reappendCount > 0)
+            AppendText = AppendText.RemoveLastLines(reappendCount);
 
         if (string.IsNullOrEmpty(AppendText))
         {
