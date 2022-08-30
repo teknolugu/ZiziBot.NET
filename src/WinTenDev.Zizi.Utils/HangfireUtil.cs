@@ -336,7 +336,8 @@ public static class HangfireUtil
                 MigrationStrategy = new MigrateMongoMigrationStrategy(),
                 BackupStrategy = new CollectionMongoBackupStrategy()
             },
-            CheckConnection = false
+            CheckConnection = false,
+            CheckQueuedJobsStrategy = CheckQueuedJobsStrategy.Poll
         });
 
         return mongoStorage;
