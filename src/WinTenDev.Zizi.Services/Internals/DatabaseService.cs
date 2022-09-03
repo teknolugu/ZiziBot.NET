@@ -271,6 +271,7 @@ public class DatabaseService
 
         DB.DatabaseFor<ForceSubscription>(meUsername);
         DB.DatabaseFor<GroupAdmin>(meUsername);
+        DB.DatabaseFor<RssSourceEntity>(meUsername);
         DB.DatabaseFor<SpellEntity>(meUsername);
         DB.DatabaseFor<UserInfo>(meUsername);
         DB.DatabaseFor<WarnMember>(meUsername);
@@ -288,6 +289,12 @@ public class DatabaseService
     public async Task MongoDbEnsureCollectionIndex()
     {
         _logger.LogInformation("Creating MongoDb Index..");
+
+        await DB.Index<RssSourceEntity>()
+            .Key(entity => entity.ChatId, KeyType.Ascending)
+            .Key(entity => entity.UrlFeed, KeyType.Ascending)
+            .Option(options => options.Unique = true)
+            .CreateAsync();
 
         await DB.Index<SpellEntity>()
             .Key(entity => entity.Typo, KeyType.Ascending)

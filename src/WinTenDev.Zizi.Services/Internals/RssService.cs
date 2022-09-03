@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
 using Hangfire;
 using Humanizer;
+using MongoDB.Entities;
 using MoreLinq;
-using Serilog;
 using SqlKata.Execution;
 using Telegram.Bot.Types.ReplyMarkups;
 
@@ -13,13 +14,18 @@ namespace WinTenDev.Zizi.Services.Internals;
 
 public class RssService
 {
+    private readonly IMapper _mapper;
     private readonly QueryService _queryService;
     private const string CacheKey = "rss-list";
     private const string RSSHistoryTable = "rss_history";
     private const string RSSSettingTable = "rss_settings";
 
-    public RssService(QueryService queryService)
+    public RssService(
+        IMapper mapper,
+        QueryService queryService
+    )
     {
+        _mapper = mapper;
         _queryService = queryService;
     }
 
@@ -51,14 +57,22 @@ public class RssService
         string urlFeed
     )
     {
-        var data = await _queryService
-            .CreateMySqlFactory()
-            .FromTable(RSSSettingTable)
-            .Where("chat_id", chatId)
-            .Where("url_feed", urlFeed)
-            .GetAsync<RssHistory>();
+        // var data = await _queryService
+        //     .CreateMySqlFactory()
+        //     .FromTable(RSSSettingTable)
+        //     .Where("chat_id", chatId)
+        //     .Where("url_feed", urlFeed)
+        //     .GetAsync<RssHistory>();
+        //
+        // var isExist = data.Any();
 
-        var isExist = data.Any();
+        var isExist = await DB.Find<RssSourceEntity>()
+            .Match(entity =>
+                entity.ChatId == chatId &&
+                entity.UrlFeed == urlFeed
+            )
+            .ExecuteAnyAsync();
+
         Log.Information("Check RSS Setting: {IsExist}", isExist);
 
         return isExist;
@@ -78,6 +92,22 @@ public class RssService
             .InsertAsync(data);
 
         return insert.ToBool();
+    }
+
+    public async Task<bool> SaveRssSettingAsync(RssSourceDto rssSourceDto)
+    {
+        var data = _mapper.Map<RssSourceEntity>(rssSourceDto);
+
+        await data.InsertAsync();
+
+        return true;
+    }
+
+    public async Task ImportRssSettingAsync(IEnumerable<RssSourceDto> rssSourceDto)
+    {
+        var rssSourceEntities = _mapper.Map<IEnumerable<RssSourceEntity>>(rssSourceDto);
+
+        var insert = await rssSourceEntities.InsertAsync();
     }
 
     public async Task<bool> UpdateRssSettingAsync(
@@ -123,26 +153,33 @@ public class RssService
         return insert;
     }
 
-    public async Task<IEnumerable<RssSetting>> GetRssSettingsAsync(long chatId)
+    public async Task<List<RssSourceEntity>> GetRssSettingsAsync(long chatId)
     {
-        var data = await _queryService
-            .CreateMySqlFactory()
-            .FromTable(RSSSettingTable)
-            .Where("chat_id", chatId)
-            .OrderBy("url_feed")
-            .GetAsync<RssSetting>();
+        // var data = await _queryService
+        //     .CreateMySqlFactory()
+        //     .FromTable(RSSSettingTable)
+        //     .Where("chat_id", chatId)
+        //     .OrderBy("url_feed")
+        //     .GetAsync<RssSetting>();
+
+        var data = await DB.Find<RssSourceEntity>()
+            .Match(entity => entity.ChatId == chatId)
+            .ExecuteAsync();
 
         Log.Verbose("RSSData: {@V}", data);
 
         return data;
     }
 
-    public async Task<IEnumerable<RssSetting>> GetAllRssSettingsAsync()
+    public async Task<List<RssSourceEntity>> GetAllRssSettingsAsync()
     {
-        var data = await _queryService
-            .CreateMySqlFactory()
-            .FromTable(RSSSettingTable)
-            .GetAsync<RssSetting>();
+        // var data = await _queryService
+        //     .CreateMySqlFactory()
+        //     .FromTable(RSSSettingTable)
+        //     .GetAsync<RssSetting>();
+
+        var data = await DB.Find<RssSourceEntity>()
+            .ExecuteAsync();
 
         Log.Verbose("RSSData: {@Data}", data);
 
@@ -171,12 +208,17 @@ public class RssService
         string urlFeed
     )
     {
-        var delete = await _queryService
-            .CreateMySqlFactory()
-            .FromTable(RSSSettingTable)
-            .Where("chat_id", chatId)
-            .Where("url_feed", urlFeed)
-            .DeleteAsync();
+        // var delete = await _queryService
+        //     .CreateMySqlFactory()
+        //     .FromTable(RSSSettingTable)
+        //     .Where("chat_id", chatId)
+        //     .Where("url_feed", urlFeed)
+        //     .DeleteAsync();
+
+        var delete = await DB.DeleteAsync<RssSourceEntity>(entity =>
+            entity.ChatId == chatId &&
+            entity.UrlFeed == urlFeed
+        );
 
         Log.Information(
             "Delete {UrlFeed} status: {V}",
@@ -231,19 +273,21 @@ public class RssService
     [JobDisplayName("Delete olds RSS History")]
     public async Task DeleteOldHistory()
     {
-        var dateTime = DateTime.UtcNow.AddMonths(-6).ToString("yyyy-MM-dd HH:mm:ss");
+        var dateTime = DateTime.UtcNow.AddMonths(-6);
 
-        var delete = await _queryService
-            .CreateMySqlFactory()
-            .FromTable(tableName: RSSHistoryTable)
-            .Where(
-                column: "created_at",
-                op: "<",
-                value: dateTime
-            )
-            .DeleteAsync();
+        // var delete = await _queryService
+        //     .CreateMySqlFactory()
+        //     .FromTable(tableName: RSSHistoryTable)
+        //     .Where(
+        //         column: "created_at",
+        //         op: "<",
+        //         value: dateTime
+        //     )
+        //     .DeleteAsync();
 
-        var rowsItems = "row".ToQuantity(delete);
+        var delete = await DB.DeleteAsync<ArticleSent>(sent => sent.CreatedOn < dateTime);
+
+        var rowsItems = "row".ToQuantity(delete.DeletedCount);
 
         Log.Information("About {RowItems} RSS History deleted", rowsItems);
     }
@@ -293,13 +337,13 @@ public class RssService
                 ) => {
                     var btnCtl = new List<InlineKeyboardButton>()
                     {
-                        InlineKeyboardButton.WithCallbackData("❌ Delete", $"rssctl delete {rssSetting.Id}"),
+                        InlineKeyboardButton.WithCallbackData("❌ Delete", $"rssctl delete {rssSetting.ID}"),
                     };
 
                     if (rssSetting.IsEnabled)
-                        btnCtl.Add(InlineKeyboardButton.WithCallbackData("✅ Started", $"rssctl stop {rssSetting.Id}"));
+                        btnCtl.Add(InlineKeyboardButton.WithCallbackData("✅ Started", $"rssctl stop {rssSetting.ID}"));
                     else
-                        btnCtl.Add(InlineKeyboardButton.WithCallbackData("🚫 Stopped", $"rssctl start {rssSetting.Id}"));
+                        btnCtl.Add(InlineKeyboardButton.WithCallbackData("🚫 Stopped", $"rssctl start {rssSetting.ID}"));
 
                     // if (rssSetting.UrlFeed.IsGithubReleaseUrl())
                     //     if (rssSetting.IncludeAttachment)
@@ -333,4 +377,5 @@ public class RssService
 
         return buttonMarkup;
     }
+
 }
