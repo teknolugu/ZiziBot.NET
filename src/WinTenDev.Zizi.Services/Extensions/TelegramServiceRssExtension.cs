@@ -133,7 +133,7 @@ public static class TelegramServiceRssExtension
 
         if (filePath.EndsWith(".csv"))
         {
-            var csv = filePath.ReadCsv<RssSourceDto>();
+            var csv = filePath.ReadCsv<RssSourceDto>().ToList();
 
             if (!(telegramService.IsCommand("/gimportrss") &&
                   telegramService.IsFromSudo))
@@ -153,6 +153,12 @@ public static class TelegramServiceRssExtension
             try
             {
                 await rssService.ImportRssSettingAsync(csv);
+
+                var htmlMessage = HtmlMessage.Empty
+                    .TextBr("RSS berhasil diimport")
+                    .Bold("Total: ").CodeBr(csv.Count.ToString());
+
+                await telegramService.AppendTextAsync(htmlMessage.ToString(), reappendCount: 2);
             }
             catch (MongoBulkWriteException<RssSourceEntity> bulkWriteException)
             {
