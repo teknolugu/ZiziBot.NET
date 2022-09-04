@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Hangfire;
 using Microsoft.Extensions.Logging;
 using MoreLinq;
-using Serilog;
 using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
 
@@ -74,6 +73,7 @@ namespace WinTenDev.Zizi.Services.Telegram
         }
 
         [JobDisplayName("Shalat Time: {0}")]
+        [Queue("shalat-time")]
         public async Task SendNotifyAsync(long chatId)
         {
             Log.Information("Starting send Shalat Time notification to ChatId: {ChatId}", chatId);
