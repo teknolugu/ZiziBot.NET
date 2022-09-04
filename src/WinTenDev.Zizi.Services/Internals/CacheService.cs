@@ -60,24 +60,37 @@ public class CacheService
         var expireAfterSpan = _expireAfter.ToTimeSpan();
         var staleAfterSpan = _staleAfter.ToTimeSpan();
 
-        _logger.LogDebug(
-            "Loading Cache value with Key: {CacheKey}. StaleAfter: {StaleAfter}. ExpireAfter: {ExpireAfter}",
-            cacheKey,
-            staleAfterSpan,
-            expireAfterSpan
-        );
+        try
+        {
+            _logger.LogDebug(
+                "Loading Cache value with Key: {CacheKey}. StaleAfter: {StaleAfter}. ExpireAfter: {ExpireAfter}",
+                cacheKey,
+                staleAfterSpan,
+                expireAfterSpan
+            );
 
-        var cacheSettings = new CacheSettings(expireAfterSpan, staleAfterSpan);
+            var cacheSettings = new CacheSettings(expireAfterSpan, staleAfterSpan);
 
-        var cache = await _cacheStack.GetOrSetAsync<T>(
-            cacheKey: cacheKey.Trim(),
-            valueFactory: async (_) => await action(),
-            settings: cacheSettings
-        );
+            var cache = await _cacheStack.GetOrSetAsync<T>(
+                cacheKey: cacheKey.Trim(),
+                valueFactory: async (_) => await action(),
+                settings: cacheSettings
+            );
 
-        if (evictAfter) await EvictAsync(cacheKey);
+            if (evictAfter) await EvictAsync(cacheKey);
 
-        return cache;
+            return cache;
+        }
+        catch (Exception exception)
+        {
+            _logger.LogWarning(exception, "Error on Loading cache with Key: {Key}", cacheKey);
+
+            await EvictAsync(cacheKey);
+
+            var data = await action();
+
+            return data;
+        }
     }
 
     public async Task<T> SetAsync<T>(
