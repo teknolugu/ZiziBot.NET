@@ -364,6 +364,11 @@ public class DatabaseService
             caption: caption.ToString(),
             parseMode: ParseMode.Html
         );
+
+        fileStream.Close();
+
+        saveTo.DeleteFile();
+        srcPath.DeleteDirectory();
     }
 
     private async Task MongoDbExportCore<T>(string fileType = "json") where T : IEntity
