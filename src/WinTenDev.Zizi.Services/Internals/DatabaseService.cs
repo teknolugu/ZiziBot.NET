@@ -328,7 +328,10 @@ public class DatabaseService
     [JobDisplayName("MongoDB AutoBackup")]
     public async Task MongoDbExport()
     {
+        await MongoDbExportCore<AfkEntity>("csv");
         await MongoDbExportCore<ForceSubscription>("csv");
+        await MongoDbExportCore<GroupAdmin>("csv");
+        await MongoDbExportCore<SpellEntity>("csv");
         await MongoDbExportCore<WarnMember>("csv");
         await MongoDbExportCore<WebHookChat>("csv");
 
