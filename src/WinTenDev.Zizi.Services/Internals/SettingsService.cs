@@ -37,7 +37,7 @@ public class SettingsService
 
     public string GetCacheKey(long chatId)
     {
-        return CacheKey + "-" + chatId.ReduceChatId();
+        return CacheKey + "_" + chatId.ReduceChatId();
     }
 
     public async Task<ChatSetting> GetSettingsByGroupCore(long chatId)
