@@ -5,40 +5,47 @@ using System.Threading.Tasks;
 using AngleSharp;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
+using Flurl.Http;
 using Humanizer;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using MongoDB.Entities;
-using Serilog;
 using SerilogTimings;
 using Telegram.Bot.Types.ReplyMarkups;
+using WinTenDev.Zizi.Services.Google;
 
 namespace WinTenDev.Zizi.Services.Externals;
 
 public class SubsceneService
 {
     private readonly SubsceneConfig _subsceneConfig;
+    private readonly GoogleCloudConfig _googleCloudConfig;
     private readonly ILogger<SubsceneService> _logger;
     private readonly CacheService _cacheService;
     private readonly EventLogService _eventLogService;
+    private readonly GoogleApiService _googleApiService;
     private readonly QueryService _queryService;
     private readonly DatabaseService _databaseService;
     private bool CanUseFeature => _subsceneConfig.IsEnabled;
 
     public SubsceneService(
+        IOptionsSnapshot<GoogleCloudConfig> googleCloudConfig,
         IOptionsSnapshot<SubsceneConfig> subsceneConfig,
         ILogger<SubsceneService> logger,
         CacheService cacheService,
         EventLogService eventLogService,
+        GoogleApiService googleApiService,
         QueryService queryService,
         DatabaseService databaseService
     )
     {
         _subsceneConfig = subsceneConfig.Value;
+        _googleCloudConfig = googleCloudConfig.Value;
         _logger = logger;
         _cacheService = cacheService;
         _eventLogService = eventLogService;
+        _googleApiService = googleApiService;
         _queryService = queryService;
         _databaseService = databaseService;
     }
@@ -298,7 +305,7 @@ public class SubsceneService
         var activeSource = await GetActiveSourceAsync();
         var searchSubtitleUrl = activeSource.SearchSubtitleUrl;
 
-        var movieDetail = new SubsceneMovieDetail();
+        var subsceneMovieDetail = new SubsceneMovieDetail();
         var subtitleItem = await DB.Find<SubsceneSubtitleItem>().OneAsync(subtitleId);
         var moviePath = subtitleItem.MovieUrl.Split("/").Skip(2).JoinStr("/");
 
@@ -311,8 +318,8 @@ public class SubsceneService
 
         if (all == null)
         {
-            movieDetail.SubtitleMovieUrl = "https://subscene.com/subtitles/" + moviePath;
-            return movieDetail;
+            subsceneMovieDetail.SubtitleMovieUrl = searchSubtitleUrl + "/" + moviePath;
+            return subsceneMovieDetail;
         }
 
         var subtitleListUrl = subtitleItem.MovieUrl;
@@ -327,7 +334,25 @@ public class SubsceneService
         var subtitleDownloadUrl = document.QuerySelectorAll<IHtmlAnchorElement>("a[href ^= '/subtitles']")
             .FirstOrDefault(element => element.Href.Contains("text"))?.Href;
 
-        movieDetail = new SubsceneMovieDetail()
+        var pathOnDrive = "subtitles/" + moviePath.Split("/").SkipLast(1).JoinStr("/");
+
+        var file = await _googleApiService.UploadFileToDrive(
+            parentId: _googleCloudConfig.ZiziBotDrive,
+            sourceFile: subtitleDownloadUrl,
+            locationPath: pathOnDrive,
+            preventDuplicate: true
+        );
+
+        var indexLocation = pathOnDrive + "/" + file.Name;
+
+        var subtitleDownloadCdn = _googleCloudConfig.DriveIndexCdnUrl + "/" + indexLocation;
+
+        subtitleItem.DriveFileId = file.Id;
+        subtitleItem.IndexLocation = indexLocation;
+
+        await subtitleItem.SaveAsync();
+
+        subsceneMovieDetail = new SubsceneMovieDetail()
         {
             SubtitleMovieUrl = subtitleListUrl,
             MovieName = movieTitle,
@@ -338,18 +363,13 @@ public class SubsceneService
             ReleaseInfo = releaseInfo?.JoinStr("\n"),
             ReleaseInfos = releaseInfo,
             Comment = comment?.TextContent.Trim(),
-            SubtitleDownloadUrl = subtitleDownloadUrl
+            SubtitleDownloadUrl = subtitleDownloadUrl,
+            IndexLocationUrl = subtitleDownloadCdn,
+            IndexLocation = indexLocation,
+            SubtitleItem = subtitleItem
         };
 
-        // var localPath = "subtitles/" + subtitleId;
-        // var fileName = releaseInfo?.FirstOrDefault() + ".zip";
-        //
-        // _logger.LogDebug("Downloading subtitle file. Save to  {Slug}", subtitleId);
-        // var filePath = await subtitleUrl.MultiThreadDownloadFileAsync(localPath, fileName: fileName);
-        //
-        // movieDetail.LocalFilePath = filePath;
-
-        return movieDetail;
+        return subsceneMovieDetail;
     }
 
     public async Task SaveSearchTitle(List<IHtmlAnchorElement> searchByTitles)
