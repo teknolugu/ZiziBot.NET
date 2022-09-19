@@ -204,7 +204,7 @@ public class SubsceneService
 
             await DB.DeleteAsync<SubsceneMovieSearch>(
                 search =>
-                    search.CreatedOn <= DateTime.UtcNow.AddDays(-7)
+                    search.CreatedOn <= DateTime.UtcNow.AddDays(-30)
             );
 
             var insert = await movieResult.SaveAsync();
