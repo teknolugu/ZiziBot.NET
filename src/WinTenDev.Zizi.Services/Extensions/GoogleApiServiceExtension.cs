@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Flurl.Http;
 using Google.Apis.Drive.v3;
+using Google.Apis.Drive.v3.Data;
 using Google.Apis.Services;
 using Google.Apis.Upload;
 using HeyRed.Mime;
@@ -16,7 +17,40 @@ namespace WinTenDev.Zizi.Services.Extensions;
 
 public static class GoogleApiServiceExtension
 {
-    public static async Task<string> CreateFolderOnGoogleDrive(
+    public static FilesResource.ListRequest GetRequestBase(
+        this GoogleApiService api,
+        string parentId,
+        bool folderOnly = false,
+        string additionalQuery = ""
+    )
+    {
+        var service = api.GetGoogleDriveService();
+
+        var listRequest = service.Files.List();
+        var folderOnlyStr = folderOnly ? "=" : "!=";
+        listRequest.Q = $"mimeType {folderOnlyStr} 'application/vnd.google-apps.folder' and trashed = false {additionalQuery} and '{parentId}' in parents";
+        listRequest.SupportsAllDrives = true;
+        listRequest.Corpora = "allDrives";
+        listRequest.IncludeItemsFromAllDrives = true;
+        listRequest.Fields = "nextPageToken, files(id,name,parents,size,mimeType,quotaBytesUsed,modifiedTime,exportLinks,webContentLink,webViewLink)";
+
+        return listRequest;
+    }
+
+    public static async Task<FileList> FindFileByName(
+        this GoogleApiService api,
+        string parentId,
+        string name
+    )
+    {
+        var request = api.GetRequestBase(parentId, folderOnly: false, $"and name = '{name}'");
+
+        var files = await request.ExecuteAsync();
+
+        return files;
+    }
+
+    public static async Task<string> CreateFolderOnDrive(
         this GoogleApiService api,
         string rootParentId,
         string locationPath
@@ -68,7 +102,7 @@ public static class GoogleApiServiceExtension
         return parentId;
     }
 
-    public static async Task<File> UploadFileToGoogleDrive(
+    public static async Task<File> UploadFileToDrive(
         this GoogleApiService api,
         string parentId,
         string sourceFile,
@@ -80,12 +114,7 @@ public static class GoogleApiServiceExtension
         var config = api.GetConfig();
 
         Log.Information("Uploading file to Google Drive. Source: {SourceFile}", sourceFile);
-        var credential = api.GetDefaultServiceAccount();
-
-        var service = new DriveService(new BaseClientService.Initializer()
-        {
-            HttpClientInitializer = credential
-        });
+        var service = api.GetGoogleDriveService();
 
         string fileName;
         Stream streamSource;
@@ -103,11 +132,21 @@ public static class GoogleApiServiceExtension
             streamSource = new FileStream(sourceFile, FileMode.Open, FileAccess.Read);
         }
 
-        var parent = parentId;
+        var updatedParentId = parentId;
         if (locationPath != null)
         {
-            parent = config.ZiziBotDrive;
-            parent = await api.CreateFolderOnGoogleDrive(parent, locationPath);
+            updatedParentId = config.ZiziBotDrive;
+            updatedParentId = await api.CreateFolderOnDrive(updatedParentId, locationPath);
+        }
+
+        var findByName = await api.FindFileByName(updatedParentId, fileName);
+        var file = findByName.Files.FirstOrDefault();
+
+        if (preventDuplicate && file != null)
+        {
+            Log.Information("File already exist on Google Drive. Source: {SourceFile}", sourceFile);
+
+            return file;
         }
 
         var fileMetadata = new File()
@@ -116,7 +155,7 @@ public static class GoogleApiServiceExtension
             Description = "Uploaded by ZiziBot",
             Parents = new List<string>()
             {
-                parent
+                updatedParentId
             }
         };
 

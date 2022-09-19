@@ -102,4 +102,16 @@ public class GoogleApiService
 
         return credential;
     }
+
+    public DriveService GetGoogleDriveService()
+    {
+        var credential = GetDefaultServiceAccount();
+
+        var service = new DriveService(new BaseClientService.Initializer()
+        {
+            HttpClientInitializer = credential
+        });
+
+        return service;
+    }
 }
