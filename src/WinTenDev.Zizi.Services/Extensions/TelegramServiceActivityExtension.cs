@@ -299,12 +299,13 @@ public static class TelegramServiceActivityExtension
 
         var muteUntil = result.FireRatio * 1.33;
         var untilDate = DateTime.Now.AddHours(muteUntil);
+        var untilDateStr = untilDate.ToDetailDateTimeString();
 
         var sendText = result.ResultNote;
 
         if (!await telegramService.CheckUserPermission())
         {
-            sendText += $"\nAnda di Mute sampai {untilDate} ";
+            sendText += $"\nAnda di Mute sampai {untilDateStr} ";
             await telegramService.RestrictMemberAsync(fromId, until: untilDate);
         }
 
