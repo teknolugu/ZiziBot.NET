@@ -226,10 +226,10 @@ public static class UrlUtil
 
     public static bool IsUrlRedirected(this string url)
     {
-        var req = (HttpWebRequest) HttpWebRequest.Create(url);
+        var req = (HttpWebRequest)HttpWebRequest.Create(url);
         req.Method = "HEAD";
         req.AllowAutoRedirect = false;
-        var resp = (HttpWebResponse) req.GetResponse();
+        var resp = (HttpWebResponse)req.GetResponse();
 
         return resp.StatusCode == HttpStatusCode.Redirect ||
                resp.StatusCode == HttpStatusCode.MovedPermanently ||
@@ -251,11 +251,11 @@ public static class UrlUtil
             HttpWebResponse webResponse = null;
             try
             {
-                webRequest = (HttpWebRequest) HttpWebRequest.Create(url);
+                webRequest = (HttpWebRequest)HttpWebRequest.Create(url);
                 webRequest.Method = "HEAD";
                 webRequest.AllowAutoRedirect = true;
-                webResponse = (HttpWebResponse) webRequest.GetResponse();
-                var statusCode = (int) webResponse.StatusCode;
+                webResponse = (HttpWebResponse)webRequest.GetResponse();
+                var statusCode = (int)webResponse.StatusCode;
                 Log.Debug("Response: {@Response}", webResponse);
 
                 if (statusCode >= 300 &&
@@ -334,10 +334,10 @@ public static class UrlUtil
     {
         if (!IsNeedRedirect(url)) return new Uri(url);
 
-        var webRequest = (HttpWebRequest) HttpWebRequest.Create(url);
+        var webRequest = (HttpWebRequest)HttpWebRequest.Create(url);
         webRequest.Method = "HEAD";
         webRequest.AllowAutoRedirect = true;
-        var webResponse = (HttpWebResponse) webRequest.GetResponse();
+        var webResponse = (HttpWebResponse)webRequest.GetResponse();
         Log.Debug("Response: {@WebResponse}", webResponse);
 
         return webResponse.ResponseUri;
@@ -438,5 +438,17 @@ public static class UrlUtil
         var isBaseUrl = baseUrl == url;
 
         return isBaseUrl;
+    }
+
+    public static string ToCacheKey(this string url)
+    {
+        var key = url
+            .Replace("//", "/")
+            .Replace("/", "_")
+            .Replace(":", "_")
+            .RegexReplace("_+", "_")
+            .TrimEnd('_');
+
+        return key;
     }
 }
