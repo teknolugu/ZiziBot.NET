@@ -50,6 +50,7 @@ public class BotService
     {
         var getMe = await _cacheService.GetOrSetAsync(
             cacheKey: "get-me",
+            staleAfter: "1m",
             action: async () => {
                 var getMe = await _botClient.GetMeAsync();
                 return getMe;
