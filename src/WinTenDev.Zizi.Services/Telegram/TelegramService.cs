@@ -1983,6 +1983,14 @@ public class TelegramService
 
             saveSettings = await SettingsService.SaveSettingsAsync(chatSettingsValues);
 
+            var chatSettingEntity = new ChatSettingDto()
+            {
+                ChatId = ChatId,
+                MemberCount = memberCount
+            };
+
+            await SettingsService.SaveSettingsAsync(chatSettingEntity);
+
             Log.Debug(
                 "Ensure Settings for ChatID: '{ChatId}' result {SaveSettings}",
                 ChatId,

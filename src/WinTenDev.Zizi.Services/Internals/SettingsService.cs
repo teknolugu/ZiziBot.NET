@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Data;
 using System.Threading.Tasks;
+using AutoMapper;
+using MongoDB.Entities;
 using Serilog;
 using SqlKata.Execution;
 
@@ -15,10 +17,12 @@ public class SettingsService
     private readonly QueryService _queryService;
 
     public SettingsService(
+        IMapper mapper,
         CacheService cacheService,
         QueryService queryService
     )
     {
+        _mapper = mapper;
         _cacheService = cacheService;
         _queryService = queryService;
     }
@@ -270,6 +274,28 @@ public class SettingsService
         UpdateCacheAsync(chatId).InBackground();
 
         return insert;
+    }
+
+    public async Task SaveSettingsAsync(ChatSettingDto chatSettingDto)
+    {
+        var data = _mapper.Map<ChatSettingEntity>(chatSettingDto);
+
+        var findEntity = await DB.Find<ChatSettingEntity>()
+            .Match(entity => entity.ChatId == data.ChatId)
+            .ExecuteFirstAsync();
+
+        if (findEntity == null)
+        {
+            await data.InsertAsync();
+        }
+        else
+        {
+            await DB.Update<ChatSettingEntity>()
+                .Match(match => match.ChatId == data.ChatId)
+                .ModifyExcept(entity => new { entity.ID, entity.CreatedOn }, data)
+                .Option(options => options.IsUpsert = true)
+                .ExecuteAsync();
+        }
     }
 
     public async Task<int> UpdateCell(
