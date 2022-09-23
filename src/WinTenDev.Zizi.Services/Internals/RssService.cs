@@ -7,6 +7,7 @@ using Hangfire;
 using Humanizer;
 using MongoDB.Entities;
 using MoreLinq;
+using Serilog;
 using SqlKata.Execution;
 using Telegram.Bot.Types.ReplyMarkups;
 

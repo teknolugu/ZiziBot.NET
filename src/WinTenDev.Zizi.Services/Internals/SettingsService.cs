@@ -9,7 +9,8 @@ namespace WinTenDev.Zizi.Services.Internals;
 public class SettingsService
 {
     private const string BaseTable = "group_settings";
-    private const string CacheKey = "setting";
+    private const string CacheKey = "chat_settings";
+    private readonly IMapper _mapper;
     private readonly CacheService _cacheService;
     private readonly QueryService _queryService;
 

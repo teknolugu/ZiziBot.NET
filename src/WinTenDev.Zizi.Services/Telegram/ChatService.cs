@@ -125,7 +125,7 @@ public class ChatService
         bool evictBefore = false
     )
     {
-        var cacheKey = "chat_" + chatId;
+        var cacheKey = "chat_info_" + chatId;
 
         var data = await _cacheService.GetOrSetAsync(
             cacheKey: cacheKey,
@@ -143,7 +143,7 @@ public class ChatService
     public async Task<long> GetMemberCountAsync(long chatId)
     {
         var reducedChatId = chatId.ReduceChatId();
-        var cacheKey = $"member-count_{reducedChatId}";
+        var cacheKey = $"chat_member-count_{reducedChatId}";
 
         var getMemberCount = await _cacheService.GetOrSetAsync(
             cacheKey,
@@ -164,7 +164,7 @@ public class ChatService
         bool evictAfter = false
     )
     {
-        var cacheKey = "chat-member_" + chatId + $"_{userId}";
+        var cacheKey = "chat_member_" + chatId + $"_{userId}";
 
         var data = await _cacheService.GetOrSetAsync(
             cacheKey: cacheKey,

@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Hangfire;
 using Microsoft.Extensions.Logging;
 using MoreLinq;
+using Serilog;
 using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
 

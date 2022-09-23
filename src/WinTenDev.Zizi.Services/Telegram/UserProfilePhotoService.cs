@@ -28,7 +28,7 @@ public class UserProfilePhotoService
 
     private string GetCacheKey(long userId)
     {
-        var cacheKey = "user-profile-photos_" + userId;
+        var cacheKey = "user_profile-photos_" + userId;
         return cacheKey;
     }
 
