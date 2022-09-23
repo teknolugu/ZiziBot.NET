@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 
 namespace WinTenDev.Zizi.Services.Extensions;
 
@@ -9,7 +8,7 @@ public static class WebHookGitHubExtension
 {
     public static async Task<WebHookResult> ProcessGithubWebHook(
         this WebHookService webHookService,
-        HttpRequest request
+        WebhookDto webhookDto
     )
     {
         var result = new WebHookResult
@@ -17,12 +16,12 @@ public static class WebHookGitHubExtension
             WebhookSource = WebhookSource.GitHub
         };
 
-        var eventName = request.Headers.FirstOrDefault(
+        var eventName = webhookDto.Headers.FirstOrDefault(
             pair =>
                 pair.Key.Contains("event", StringComparison.InvariantCultureIgnoreCase)
         ).Value;
 
-        var bodyString = await request.GetRawBodyAsync();
+        var bodyString = webhookDto.BodyString;
         var githubRoot = bodyString.MapObject<GithubRoot>();
 
         var message = eventName switch

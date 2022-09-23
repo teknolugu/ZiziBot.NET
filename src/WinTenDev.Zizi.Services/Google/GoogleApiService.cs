@@ -27,6 +27,11 @@ public class GoogleApiService
         _googleCloudConfig = googleCloudConfig.Value;
     }
 
+    public GoogleCloudConfig GetConfig()
+    {
+        return _googleCloudConfig;
+    }
+
     /// <summary>
     /// This function is used to create a new instance of ImageAnnotatorClient
     /// </summary>
@@ -83,6 +88,29 @@ public class GoogleApiService
                 ApplicationName = "ZiziBot"
             }
         );
+
+        return service;
+    }
+
+    public GoogleCredential GetDefaultServiceAccount()
+    {
+        var credentialPath = _googleCloudConfig.CredentialsPath;
+
+        // Load the Service account credentials and define the scope of its access.
+        var credential = GoogleCredential.FromFile(credentialPath)
+            .CreateScoped(DriveService.Scope.Drive);
+
+        return credential;
+    }
+
+    public DriveService GetGoogleDriveService()
+    {
+        var credential = GetDefaultServiceAccount();
+
+        var service = new DriveService(new BaseClientService.Initializer()
+        {
+            HttpClientInitializer = credential
+        });
 
         return service;
     }

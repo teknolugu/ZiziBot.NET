@@ -19,6 +19,7 @@ public class EpicGamesService
 {
     private readonly IRecurringJobManager _recurringJobManager;
     private readonly ITelegramBotClient _botClient;
+    private readonly ArticleSentService _articleSentService;
     private readonly CacheService _cacheService;
     private readonly RssService _rssService;
     private readonly FeatureService _featureService;
@@ -28,6 +29,7 @@ public class EpicGamesService
     public EpicGamesService(
         IRecurringJobManager recurringJobManager,
         ITelegramBotClient botClient,
+        ArticleSentService articleSentService,
         CacheService cacheService,
         RssService rssService,
         FeatureService featureService
@@ -35,6 +37,7 @@ public class EpicGamesService
     {
         _recurringJobManager = recurringJobManager;
         _botClient = botClient;
+        _articleSentService = articleSentService;
         _cacheService = cacheService;
         _rssService = rssService;
         _featureService = featureService;
@@ -72,7 +75,7 @@ public class EpicGamesService
             var chat = await _botClient.GetChatAsync(chatId);
             if (chat.LinkedChatId != null) chatId = chat.LinkedChatId.Value;
 
-            var isHistoryExist = await _rssService.IsHistoryExist(chatId, productUrl);
+            var isHistoryExist = await _articleSentService.IsSentAsync(chatId, productUrl);
             if (isHistoryExist)
             {
                 Log.Information(
@@ -90,15 +93,14 @@ public class EpicGamesService
                     parseMode: ParseMode.Html
                 );
 
-                await _rssService.SaveRssHistoryAsync(
-                    new RssHistory()
+                await _articleSentService.SaveAsync(
+                    new ArticleSentDto()
                     {
                         ChatId = chatId,
                         Title = productTitle,
                         Url = productUrl,
                         PublishDate = DateTime.UtcNow,
                         Author = "EpicGames Free",
-                        CreatedAt = DateTime.UtcNow,
                         RssSource = "https://store.epicgames.com"
                     }
                 );

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Telegram.Bot;
@@ -30,17 +29,17 @@ public class WebHookService
         _webHookChatService = webHookChatService;
     }
 
-    public async Task<WebHookResult> ProcessingRequest(HttpRequest request)
+    public async Task<WebHookResult> ProcessingRequest(WebhookDto webhookDto)
     {
         var stopwatch = Stopwatch.StartNew();
-        var requestStartedOn = (DateTime)request.HttpContext.Items["RequestStartedOn"]!;
+        var requestStartedOn = webhookDto.RequestOn;
         var responseTime = DateTime.UtcNow - requestStartedOn;
 
-        var webHookSource = request.GetWebHookSource();
+        var webHookSource = webhookDto.WebhookSource;
 
         var result = webHookSource switch
         {
-            WebhookSource.GitHub => await this.ProcessGithubWebHook(request),
+            WebhookSource.GitHub => await this.ProcessGithubWebHook(webhookDto),
             _ => new WebHookResult()
             {
                 WebhookSource = WebhookSource.Unknown,
@@ -48,8 +47,8 @@ public class WebHookService
             }
         };
 
-        var hookId = request.RouteValues.ElementAtOrDefault(2).Value;
-        _webHookChat = await _webHookChatService.GetWebHookById(hookId?.ToString());
+        var hookId = webhookDto.HookId;
+        _webHookChat = await _webHookChatService.GetWebHookById(hookId);
 
         if (_webHookChat == null)
         {
@@ -58,7 +57,7 @@ public class WebHookService
             return result;
         }
 
-        var isDebugMode = await CheckDebugMode(request);
+        var isDebugMode = await CheckDebugMode(webhookDto);
         _logger.LogInformation("WebHook Chat destination for HookId: {HookId} => {@WebHookChat}",
             hookId,
             _webHookChat
@@ -92,18 +91,18 @@ public class WebHookService
         return result;
     }
 
-    private async Task<bool> CheckDebugMode(HttpRequest request)
+    private async Task<bool> CheckDebugMode(WebhookDto webhookDto)
     {
-        var isDebug = request.Query
+        var isDebug = webhookDto.Query
             .FirstOrDefault(pair => pair.Key == "debug").Value
             .FirstOrDefault().ToBool();
 
         if (!isDebug) return false;
 
-        var requestStartedOn = (DateTime)request.HttpContext.Items["RequestStartedOn"]!;
-        var webHookSource = request.GetWebHookSource();
-        var bodyString = await request.GetRawBodyAsync();
-        var headerJson = request.Headers.ToJson(indented: true);
+        var requestStartedOn = webhookDto.RequestOn;
+        var webHookSource = webhookDto.WebhookSource;
+        var bodyString = webhookDto.BodyString;
+        var headerJson = webhookDto.Headers.ToJson(indented: true);
 
         // var dateStamp = requestStartedOn.ToString("yyyy-MM-dd/HH-mm-ss");
         // var requestPath = request.Path.Value;

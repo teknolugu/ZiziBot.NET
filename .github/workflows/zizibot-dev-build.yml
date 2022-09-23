@@ -1,4 +1,4 @@
-name: Zizi Bot Dev
+name: Zizi Bot Nightly
 
 on:
   push:
@@ -73,7 +73,7 @@ jobs:
 
 
   zizibot-sf-build:
-    name: Zizi Bot SF Build
+    name: Zizi Bot SF Nightly Build
     runs-on: ubuntu-latest
     defaults:
       run:

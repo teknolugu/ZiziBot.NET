@@ -1288,11 +1288,21 @@ public class TelegramService
         bool includeSenderMessage = false,
         MessageFlag messageFlag = default,
         bool preventDuplicateSend = false,
-        bool reappendText = false
+        bool reappendText = false,
+        int reappendCount = 0
     )
     {
+        // todo: bool of reappendText is no longer used. please use reappendCount instead.
         if (reappendText)
             AppendText = AppendText.RemoveLastLines(1);
+
+        if (reappendCount == AppendText?.LinesCount())
+        {
+            await DeleteSentMessageAsync();
+        }
+
+        if (reappendCount > 0)
+            AppendText = AppendText.RemoveLastLines(reappendCount);
 
         if (string.IsNullOrEmpty(AppendText))
         {
@@ -1889,45 +1899,6 @@ public class TelegramService
         await ScheduleKickJob(name);
     }
 
-    public async Task<StringAnalyzer> FireAnalyzer()
-    {
-        var settings = await GetChatSetting();
-        StringAnalyzer result = new();
-
-        if (!settings.EnableFireCheck)
-        {
-            Log.Information("Fire Check is disabled on ChatID '{ChatId}'", ChatId);
-            return result;
-        }
-
-        result = ChatService.FireAnalyzer(MessageOrEditedText);
-
-        if (!result.IsFired) return result;
-        var muteUntil = result.FireRatio * 1.33;
-        var untilDate = DateTime.Now.AddHours(muteUntil);
-
-        var sendText = result.ResultNote;
-
-        if (!await CheckUserPermission())
-        {
-            sendText += $"\nAnda di Mute sampai {untilDate} ";
-            await RestrictMemberAsync(FromId, until: untilDate);
-        }
-
-        var replyMarkup = new InlineKeyboardMarkup(
-            new[]
-            {
-                new[]
-                {
-                    InlineKeyboardButton.WithCallbackData("🧹 Hapus Debuff", $"un-restrict {FromId}")
-                }
-            }
-        );
-
-        await SendTextMessageAsync(sendText, replyMarkup: replyMarkup, scheduleDeleteAt: untilDate);
-        return result;
-    }
-
     public async Task ScheduleKickJob(StepHistoryName name)
     {
         Log.Information("Scheduling Job with name: {JobName}", name);
@@ -2011,6 +1982,14 @@ public class TelegramService
             }
 
             saveSettings = await SettingsService.SaveSettingsAsync(chatSettingsValues);
+
+            var chatSettingEntity = new ChatSettingDto()
+            {
+                ChatId = ChatId,
+                MemberCount = memberCount
+            };
+
+            await SettingsService.SaveSettingsAsync(chatSettingEntity);
 
             Log.Debug(
                 "Ensure Settings for ChatID: '{ChatId}' result {SaveSettings}",

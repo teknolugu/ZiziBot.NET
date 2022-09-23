@@ -14,6 +14,8 @@ public class SubsceneSubtitleItem : IEntity, ICreatedOn, IModifiedOn
     public string Language { get; set; }
     public string Owner { get; set; }
     public string Comment { get; set; }
+    public string IndexLocation { get; set; }
+    public string DriveFileId { get; set; }
     public DateTime CreatedOn { get; set; }
     public DateTime ModifiedOn { get; set; }
 

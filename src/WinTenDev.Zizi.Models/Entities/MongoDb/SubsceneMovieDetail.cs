@@ -19,6 +19,9 @@ public class SubsceneMovieDetail : Entity, ICreatedOn, IModifiedOn
     public string PosterUrl { get; set; }
     public string ImdbUrl { get; set; }
     public string LocalFilePath { get; set; }
+    public string IndexLocation { get; set; }
+    public string IndexLocationUrl { get; set; }
+    public SubsceneSubtitleItem SubtitleItem { get; set; }
     public DateTime CreatedOn { get; set; }
     public DateTime ModifiedOn { get; set; }
 }

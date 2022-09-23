@@ -32,9 +32,10 @@ Official repository WinTenDev Zizi Bot, written in .NET
 
 ### Binary
 
-| Source         | URL                                                                 |
-|----------------|---------------------------------------------------------------------|
-| Github Release | https://github.com/WinTenDev/ZiziBot.NET/releases                   |
+| Name           | URL                                                      |
+|----------------|----------------------------------------------------------|
+| ZiziBot Beta   | https://github.com/WinTenDev/ZiziBot.NET/releases        |
+| ZiziBot Stable | https://github.com/WinTenDev/ZiziBot.NET/releases/latest |
 
 ### Deployment
 
@@ -64,25 +65,24 @@ Official repository WinTenDev Zizi Bot, written in .NET
 
 # Main feature
 
-Here some main features, and some features is enabled by default.
+Here some main features, and some features are enabled by default.
 
-- Realtime AntiSpam check for Member. Powered by ES2, SpamWatch, UserGe and CAS.
+- Realtime AntiSpam check for Members. Powered by ES2, SpamWatch, UserGe and CAS.
 - Watching username, first Name and last Name changes (called Zizi Mata).
-- Scan Message for prevent message contains spam, badwords or unattended strings.
-- Force subscription into Linked and Added channel.
-- Flood Detector for reducing message sent by member (BETA).
+- Scan Message for a prevention message contains spam, bad words or unattended strings.
+- Force subscription into a Linked and Added channel.
+- Flood Detector to reduce a message sent by member (BETA).
 - Anti-CapsLock for reducing to many uppercase characters (BETA).
 - Anti-Spam detector based on User activity (for Public Group only) (BETA).
-- AutoAnswer for Chat Join Request. As per feature above if enabled, some member check above will be ran and action will
-  be
-  executed on the fly (Check Username, Profile Photo, Force Subscription etc.)
+- AutoAnswer for Chat Join Request. As per feature above if enabled, some member check above will be run and action will
+  be executed on the fly (Check Username, Profile Photo, Force Subscription etc.)
 
 # Additional feature
 
 - ShalatTime for Indonesia (can multiple city for one Private/Group).
 - OCR powered by OptiicDev API.
 - Generate and Read QR for replied Message.
-- RSS Feed (and Advanced RSS for source like GitHub release).
+- RSS Feed (and Advanced RSS for a source like GitHub release).
 - Translate message text for replied Message.
 - Generate random number with some expression.
 - Get random Cat images.
@@ -95,18 +95,19 @@ Here some main features, and some features is enabled by default.
 
 - Clone this repo and open .sln using your favorite IDE or Text Editor.
 - Install MySQL/MariaDB and create database e.g. `zizibot_data`.
+- Install MongoDB or use MongoDB Atlas.
 - Copy appsettings.example.json to appsettings.json and fill some property.
 - check an optional .json under Storage/AppSettings for some feature if you want, copy from Examples to Current and fill
   some property.
 - Press Start in your IDE to start debugging or via CLI.
-- Your bot has ran local as Development using Poll mode.
+- Your bot has run local as Development using a Poll mode.
 
 # Run Production
 
 Make sure you have fill appsettings.json and setup any requirement at Preparation section.
-For quick deployment you can get prebuilt binary, go to Releases tab or AppVeyor at artifacts section.
+For quick deployment, you can get a prebuilt binary, go to Releases tab.
 
-# Currently, available on following bot
+# Currently, available in the following bot
 
 - [Zizi Bot](https://t.me/MissZiziBot) from stable branch (Stable)
 - [Zizi Beta](https://t.me/MissZiziBetaBot) from main branch (Beta)

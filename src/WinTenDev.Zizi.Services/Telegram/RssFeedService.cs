@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using Flurl.Http;
 using Hangfire;
 using Hangfire.Storage;
 using MoreLinq;
@@ -18,6 +19,7 @@ public class RssFeedService
     private readonly IRecurringJobManager _recurringJobManager;
     private readonly ITelegramBotClient _botClient;
     private readonly ArticleSentService _articleSentService;
+    private readonly CacheService _cacheService;
     private readonly OctokitApiService _octokitApiService;
     private readonly JobsService _jobsService;
 
@@ -25,6 +27,7 @@ public class RssFeedService
         IRecurringJobManager recurringJobManager,
         ITelegramBotClient botClient,
         ArticleSentService articleSentService,
+        CacheService cacheService,
         OctokitApiService octokitApiService,
         JobsService jobsService,
         RssService rssService
@@ -33,6 +36,7 @@ public class RssFeedService
         _recurringJobManager = recurringJobManager;
         _botClient = botClient;
         _articleSentService = articleSentService;
+        _cacheService = cacheService;
         _octokitApiService = octokitApiService;
         _jobsService = jobsService;
         _rssService = rssService;
@@ -94,8 +98,15 @@ public class RssFeedService
             rssUrl
         );
 
-        // var rssFeeds = await FeedReader.ReadAsync(rssUrl, autoRedirect: false);
-        var rssFeeds = await RssFeedUtil.OpenSyndicationFeed(rssUrl);
+        var rssXmlContent  = await _cacheService.GetOrSetAsync(
+            cacheKey: "rss-url_xml-content_" + rssUrl.ToCacheKey(),
+            staleAfter: "1m",
+            action: async () => {
+                var content = await rssUrl.OpenFlurlSession().GetStringAsync();
+                return content;
+            });
+
+        var rssFeeds = RssFeedUtil.OpenSyndicationFeedFromString(rssXmlContent);
 
         // var rssTitle = rssFeeds.Title;
 

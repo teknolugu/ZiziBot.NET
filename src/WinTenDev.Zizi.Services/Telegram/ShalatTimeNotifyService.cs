@@ -74,6 +74,7 @@ namespace WinTenDev.Zizi.Services.Telegram
         }
 
         [JobDisplayName("Shalat Time: {0}")]
+        [Queue("shalat-time")]
         public async Task SendNotifyAsync(long chatId)
         {
             Log.Information("Starting send Shalat Time notification to ChatId: {ChatId}", chatId);

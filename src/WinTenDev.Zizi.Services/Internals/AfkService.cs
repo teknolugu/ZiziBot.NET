@@ -86,7 +86,7 @@ public class AfkService
         bool evictBefore = false
     )
     {
-        var key = CacheKey + $"-{userId}";
+        var key = $"{CacheKey}_{userId}";
 
         var data = await _cacheService.GetOrSetAsync(
             cacheKey: key,

@@ -95,7 +95,7 @@ public class PrivilegeService
     public async Task<ChatMember[]> GetChatAdministratorsAsync(long chatId)
     {
         var administrators = await _cacheService.GetOrSetAsync(
-            cacheKey: "chat-admin_" + chatId.ReduceChatId(),
+            cacheKey: "chat_admin_" + chatId.ReduceChatId(),
             action: async () =>
                 await _botClient.GetChatAdministratorsAsync(chatId)
         );

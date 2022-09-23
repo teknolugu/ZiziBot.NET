@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Reflection;
 using System.Threading;
 using BotFramework.Config;
 using Exceptionless;
@@ -9,6 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using NewRelic.LogEnrichers.Serilog;
+using Sentry;
 using Serilog;
 using Serilog.Configuration;
 using Serilog.Debugging;
@@ -17,6 +19,7 @@ using Serilog.Sinks.Datadog.Logs;
 using Serilog.Sinks.Grafana.Loki;
 using Serilog.Sinks.SystemConsole.Themes;
 using WinTenDev.Zizi.Models.Configs;
+using Xunit.Abstractions;
 
 namespace WinTenDev.Zizi.Utils.Extensions;
 
@@ -25,12 +28,20 @@ namespace WinTenDev.Zizi.Utils.Extensions;
 /// </summary>
 public static class SerilogServiceExtension
 {
-    private const string LogPath = "Storage/Logs/ZiziBot-.log";
     private const string DataDogHost = "intake.logs.datadoghq.com";
     private const RollingInterval RollingInterval = Serilog.RollingInterval.Day;
     private static readonly TimeSpan FlushInterval = TimeSpan.FromSeconds(1);
     private const string TemplateBase = $"[{{Level:u3}}]{{MemoryUsage}}{{ThreadId}} {{Message:lj}}{{NewLine}}{{Exception}}";
     private const string OutputTemplate = $"{{Timestamp:HH:mm:ss.fff}} {TemplateBase}";
+
+    private static string GetFilePath()
+    {
+        var assembly = Assembly.GetEntryAssembly();
+        var assemblyName = assembly?.GetName().Name;
+        var logPath = $"Storage/Logs/{assemblyName}-.log";
+
+        return logPath;
+    }
 
     /// <summary>
     /// Setup the serilog using the specified app
@@ -71,7 +82,7 @@ public static class SerilogServiceExtension
             .WriteTo.Async(
                 a =>
                     a.File(
-                        LogPath,
+                        path: GetFilePath(),
                         rollingInterval: RollingInterval,
                         flushToDiskInterval: FlushInterval,
                         shared: true,
@@ -158,7 +169,7 @@ public static class SerilogServiceExtension
             .WriteTo.Async(
                 a =>
                     a.File(
-                        LogPath,
+                        path: GetFilePath(),
                         rollingInterval: RollingInterval,
                         flushToDiskInterval: FlushInterval,
                         shared: true,
@@ -380,12 +391,11 @@ public static class SerilogServiceExtension
         bool prettySize = false
     )
     {
-        var proc = Process.GetCurrentProcess();
-        var memorySize = proc.PrivateMemorySize64;
-
         return configuration.WithDynamicProperty(
             "MemoryUsage",
             () => {
+                var proc = Process.GetCurrentProcess();
+                var memorySize = proc.PrivateMemorySize64;
                 var mem = prettySize ? memorySize.SizeFormat() : memorySize.ToString();
 
                 return $" {mem} ";

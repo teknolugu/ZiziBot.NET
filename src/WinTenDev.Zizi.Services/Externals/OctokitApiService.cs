@@ -54,11 +54,11 @@ public class OctokitApiService
                 var op = Operation.Begin("Getting Github Repo Info. Url: {Url}", url);
 
                 var repositoryClient = client.Repository;
-                var issues = await client.Issue.GetAllForRepository(repoOwner, repoName);
                 var repository = await repositoryClient.Get(repoOwner, repoName);
                 var releaseAll = await repositoryClient.Release.GetAll(repoOwner, repoName);
-                var commits = await repositoryClient.Commit.GetAll(repoOwner, repoName);
-                var pullRequests = await repositoryClient.PullRequest.GetAllForRepository(repoOwner, repoName);
+                // var issues = await client.Issue.GetAllForRepository(repoOwner, repoName);
+                // var commits = await repositoryClient.Commit.GetAll(repoOwner, repoName);
+                // var pullRequests = await repositoryClient.PullRequest.GetAllForRepository(repoOwner, repoName);
 
                 var githubRepoInfo = new GithubRepoInfo()
                 {
@@ -78,9 +78,9 @@ public class OctokitApiService
                     ForksCount = repository.ForksCount,
                     License = repository.License,
                     Releases = releaseAll,
-                    Commits = commits,
-                    PullRequests = pullRequests,
-                    Issues = issues
+                    // Commits = commits,
+                    // PullRequests = pullRequests,
+                    // Issues = issues
                 };
 
                 op.Complete();

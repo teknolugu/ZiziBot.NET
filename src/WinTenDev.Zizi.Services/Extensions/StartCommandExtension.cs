@@ -44,7 +44,8 @@ internal static class StartCommandExtension
 
                 var subsceneUrl = "https://subscene.com" + movieDetail.SubtitleMovieUrl;
                 var commentaryUrl = "https://subscene.com" + movieDetail.CommentaryUrl;
-                var serverFileName = await movieDetail.SubtitleDownloadUrl.GetServerFileName();
+                var subtitleDownloadUrl = movieDetail.SubtitleDownloadUrl;
+                var serverFileName = await subtitleDownloadUrl.GetServerFileName();
                 var fileName = movieDetail.ReleaseInfos?
                                    .OrderBy(s => s.Length).FirstOrDefault(movieDetail.MovieName)?
                                    .Replace(".", " ") ??
@@ -85,7 +86,7 @@ internal static class StartCommandExtension
                 await telegramService.DeleteSentMessageAsync();
 
                 await telegramService.SendMediaAsync(
-                    fileId: movieDetail.SubtitleDownloadUrl,
+                    fileId: subtitleDownloadUrl,
                     mediaType: MediaType.Document,
                     caption: subtitleInfo.ToString(),
                     customFileName: fileNameWithExt,

@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Nito.AsyncEx.Synchronous;
+using Serilog;
 using StackExchange.Redis;
 using WinTenDev.Zizi.Models.Configs;
 using WinTenDev.Zizi.Utils.IO;
@@ -24,11 +25,11 @@ public static class CacheTowerServiceExtension
 
         if (cacheConfig.InvalidateOnStart || shouldInvalidate)
         {
-            cacheTowerPath.DeleteDirectory().EnsureDirectory();
-        }
+            Log.Information("Invalidating Cache Files");
 
-        if (shouldInvalidate)
+            cacheTowerPath.DeleteDirectory().EnsureDirectory();
             "No Error".SaveErrorToText().WaitAndUnwrapException();
+        }
 
         services.AddCacheStack(
             builder => {

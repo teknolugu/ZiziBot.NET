@@ -36,8 +36,8 @@ public class WTelegramApiService
         var channelId = chatId.ReduceChatId();
 
         var channel = await _cacheService.GetOrSetAsync(
-            cacheKey: "tdlib-get-channel-" + channelId,
-            staleAfter: "1m",
+            cacheKey: "tdlib_get-channel_" + channelId,
+            staleAfter: "30s",
             action: async () => {
                 var chats = await _client.Messages_GetAllChats();
                 var channel = (Channel) chats.chats.Values.FirstOrDefault(chat => chat.ID == channelId);
@@ -52,7 +52,7 @@ public class WTelegramApiService
     public async Task<Users_UserFull> GetMeAsync()
     {
         var fullUser = await _cacheService.GetOrSetAsync(
-            cacheKey: "tdlib-get-me-probe",
+            cacheKey: "tdlib_get-me-probe",
             staleAfter: "5m",
             action: async () => {
                 var fullUser = await _client.Users_GetFullUser(new InputUserSelf());
@@ -123,7 +123,7 @@ public class WTelegramApiService
         var isProbeAdmin = await IsProbeAdminAsync(chatId);
 
         var channelParticipants = await _cacheService.GetOrSetAsync(
-            cacheKey: "tdlib-channel-participants-" + channelId,
+            cacheKey: "tdlib_channel-participants_" + channelId,
             evictAfter: evictAfter,
             disableCache: disableCache,
             staleAfter: "5m",
@@ -158,10 +158,10 @@ public class WTelegramApiService
         var channel = await GetChannel(chatId);
 
         var channelParticipants = await _cacheService.GetOrSetAsync(
-            cacheKey: "tdlib-channel-adminsistrator-" + channelId,
+            cacheKey: "tdlib_channel-administrator_" + channelId,
             evictAfter: evictAfter,
             disableCache: disableCache,
-            staleAfter: "5m",
+            staleAfter: "30s",
             action: async () => {
                 var channelsParticipants = await _client.Channels_GetParticipants(
                     channel: channel,
@@ -267,7 +267,7 @@ public class WTelegramApiService
         );
 
         var messageIds = await _cacheService.GetOrSetAsync(
-            cacheKey: "tdlib-list-message-id_" + chatId + "_" + userId,
+            cacheKey: "tdlib_list-message-id_" + chatId + "_" + userId,
             action: async () => {
                 var offset = 200;
                 var channel = await GetChannel(chatId);
@@ -354,7 +354,7 @@ public class WTelegramApiService
         try
         {
             var resolvedPeer = await _cacheService.GetOrSetAsync(
-                cacheKey: "tdlib-resolved-peer_" + username,
+                cacheKey: "tdlib_resolved-peer_" + username,
                 staleAfter: "1h",
                 expireAfter: "24h",
                 action: async () => {
@@ -380,7 +380,19 @@ public class WTelegramApiService
 
     public async Task<Users_UserFull> GetFullUser(long userId)
     {
+        var fullUser = await _cacheService.GetOrSetAsync(
+            cacheKey: "tdlib_full-user_" + userId,
+            staleAfter: "1h",
+            expireAfter: "24h",
+            action: async () => {
         var fullUser = await _client.Users_GetFullUser(new InputUser(userId, _client.GetAccessHashFor<Users_UserFull>(userId)));
+
+        return fullUser;
+            });
+
+        _logger.LogDebug("Full user for UserId: {UserId} => {@FullUser}",
+            userId, fullUser
+        );
 
         return fullUser;
     }

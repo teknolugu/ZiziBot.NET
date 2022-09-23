@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Serilog;
 using SerilogTimings;
 using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace WinTenDev.Zizi.Services.Extensions;
 
@@ -111,7 +111,7 @@ public static class TelegramServiceActivityExtension
             return false;
         }
 
-        if (!await telegramService.AnswerChatJoinRequestAsync()) return false;
+        await telegramService.AnswerChatJoinRequestAsync();
 
         var checkAntiSpamResult = await telegramService.AntiSpamCheckAsync();
 
@@ -276,6 +276,51 @@ public static class TelegramServiceActivityExtension
         }
 
         operation.Complete();
+    }
+
+    public static async Task<StringAnalyzer> FireAnalyzer(this TelegramService telegramService)
+    {
+        var chatId = telegramService.ChatId;
+        var fromId = telegramService.FromId;
+
+        var settings = await telegramService.GetChatSetting();
+        StringAnalyzer result = new();
+
+        if (!settings.EnableFireCheck)
+        {
+            Log.Information("Fire Check is disabled on ChatID '{ChatId}'", chatId);
+            return result;
+        }
+
+        var text = telegramService.MessageOrEditedText;
+        result = telegramService.ChatService.FireAnalyzer(text);
+
+        if (!result.IsFired) return result;
+
+        var muteUntil = result.FireRatio * 1.33;
+        var untilDate = DateTime.Now.AddHours(muteUntil);
+        var untilDateStr = untilDate.ToDetailDateTimeString();
+
+        var sendText = result.ResultNote;
+
+        if (!await telegramService.CheckUserPermission())
+        {
+            sendText += $"\nAnda di Mute sampai {untilDateStr} ";
+            await telegramService.RestrictMemberAsync(fromId, until: untilDate);
+        }
+
+        var replyMarkup = new InlineKeyboardMarkup(
+            new[]
+            {
+                new[]
+                {
+                    InlineKeyboardButton.WithCallbackData("🧹 Hapus Debuff", $"un-restrict {fromId}")
+                }
+            }
+        );
+
+        await telegramService.SendTextMessageAsync(sendText, replyMarkup: replyMarkup, scheduleDeleteAt: untilDate);
+        return result;
     }
 
     public static async Task SaveUpdateAsync(this TelegramService telegramService)

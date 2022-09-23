@@ -1,18 +1,18 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
 using Flurl.Http;
-using Serilog;
+using Microsoft.Extensions.Logging;
 
 namespace WinTenDev.Zizi.Services.Externals;
 
 public class UupDumpService
 {
-    private readonly ILogger _logger;
+    private readonly ILogger<UupDumpService> _logger;
     private readonly CacheService _cacheService;
     private const string ListUpdatesApi = "https://api.uupdump.net/listid.php";
 
     public UupDumpService(
-        ILogger logger,
+        ILogger<UupDumpService> logger,
         CacheService cacheService
     )
     {
@@ -23,7 +23,7 @@ public class UupDumpService
     public async Task<BuildUpdate> GetUpdatesAsync(string search = "")
     {
         var buildUpdate = await _cacheService.GetOrSetAsync(
-            cacheKey: ListUpdatesApi,
+            cacheKey: "uup_" + ListUpdatesApi.ToCacheKey(),
             action: async () => {
                 var obj = await ListUpdatesApi.OpenFlurlSession()
                     .GetJsonAsync<BuildUpdate>();
@@ -36,7 +36,7 @@ public class UupDumpService
             .Where(build => build.BuildNumber.Contains(search))
             .ToList();
 
-        _logger.Debug("Retrieve about {0} build(s)", buildUpdate.Response.Builds.Count);
+        _logger.LogDebug("Retrieve about {Count} build(s)", buildUpdate.Response.Builds.Count);
 
         var filteredUpdate = new BuildUpdate
         {

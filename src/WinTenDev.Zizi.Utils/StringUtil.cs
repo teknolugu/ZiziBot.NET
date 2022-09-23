@@ -352,6 +352,11 @@ public static class StringUtil
         return wordCount;
     }
 
+    public static int LinesCount(this string str)
+    {
+        return str.Split("\n").Length;
+    }
+
     public static IEnumerable<string> SplitInParts(
         this string s,
         int partLength
