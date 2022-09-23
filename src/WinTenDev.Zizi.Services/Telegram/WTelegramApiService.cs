@@ -380,7 +380,19 @@ public class WTelegramApiService
 
     public async Task<Users_UserFull> GetFullUser(long userId)
     {
+        var fullUser = await _cacheService.GetOrSetAsync(
+            cacheKey: "tdlib_full-user_" + userId,
+            staleAfter: "1h",
+            expireAfter: "24h",
+            action: async () => {
         var fullUser = await _client.Users_GetFullUser(new InputUser(userId, _client.GetAccessHashFor<Users_UserFull>(userId)));
+
+        return fullUser;
+            });
+
+        _logger.LogDebug("Full user for UserId: {UserId} => {@FullUser}",
+            userId, fullUser
+        );
 
         return fullUser;
     }
