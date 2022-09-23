@@ -63,11 +63,21 @@ public static class RssFeedUtil
         return isValid;
     }
 
-    public static async Task<SyndicationFeed> OpenSyndicationFeed(string url)
+    public static async Task<SyndicationFeed> OpenSyndicationFeed(this string url)
     {
         Log.Information("Opening SyndicationFeed: {Url} ..", url);
         var stream = await url.OpenFlurlSession().GetStreamAsync();
         var feed = SyndicationFeed.Load(XmlReader.Create(stream));
+
+        Log.Debug("SyndicationFeed count {@Feed} item(s)", feed.Items.Count());
+
+        return feed;
+    }
+
+    public static SyndicationFeed OpenSyndicationFeedFromString(this string rssContent)
+    {
+        Log.Information("Opening SyndicationFeed from String");
+        var feed = SyndicationFeed.Load(XmlReader.Create(rssContent.ToStream()));
 
         Log.Debug("SyndicationFeed count {@Feed} item(s)", feed.Items.Count());
 
