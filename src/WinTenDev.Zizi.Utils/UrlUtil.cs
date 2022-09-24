@@ -443,10 +443,9 @@ public static class UrlUtil
     public static string ToCacheKey(this string url)
     {
         var key = url
-            .Replace("//", "/")
+            .Replace("https://", "")
+            .Replace("http:/", "")
             .Replace("/", "_")
-            .Replace(":", "_")
-            .RegexReplace("_+", "_")
             .TrimEnd('_');
 
         return key;
