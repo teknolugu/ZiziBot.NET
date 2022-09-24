@@ -35,7 +35,7 @@ public class NotesService
     public async Task<IEnumerable<CloudTag>> GetNotesByChatId(long chatId)
     {
         var data = await _cacheService.GetOrSetAsync(
-            cacheKey: "notes" + chatId.ReduceChatId(),
+            cacheKey: "chat_notes_" + chatId.ReduceChatId(),
             action: () => {
                 var query = _queryService
                     .CreateMySqlFactory()

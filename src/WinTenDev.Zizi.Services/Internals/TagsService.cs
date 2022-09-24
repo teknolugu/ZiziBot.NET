@@ -41,15 +41,15 @@ public class TagsService
     public string GetCacheKey(long chatId)
     {
         var reducedChatId = chatId.ReduceChatId();
-        return $"tags-{reducedChatId}";
+        return $"chat_tags_{reducedChatId}";
     }
 
     public async Task<IEnumerable<CloudTag>> GetTagsByGroupAsync(long chatId)
     {
         var key = GetCacheKey(chatId);
         var data = await _cacheService.GetOrSetAsync(
-            key,
-            () =>
+            cacheKey: key,
+            action: () =>
                 GetTagsByGroupCoreAsync(chatId)
         );
 
