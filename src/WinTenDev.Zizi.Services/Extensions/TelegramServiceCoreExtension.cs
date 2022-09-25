@@ -117,13 +117,14 @@ public static class TelegramServiceCoreExtension
                           $"\n{botDescription}." +
                           $"\n\n";
 
-        var sendText = $"Adalah bot debugging dan manajemen grup yang di lengkapi dengan alat keamanan.";
+        var sendText = $"Adalah bot debugging dan manajemen grup yang dilengkapi dengan alat keamanan.";
 
         var result = startCmd switch
         {
             "rules" => await rulesProcessor.Execute(startArgs.ElementAtOrDefault(1)),
             "set-username" => usernameProcessor.Execute(startArgs.ElementAtOrDefault(1)),
             "sub-dl" => await telegramService.OnStartSubsceneDownloadAsync(startArgs.ElementAtOrDefault(1)),
+            "yt-dl" => await telegramService.OnStartYoutubeDownloadAsync(),
             _ => null
         };
 

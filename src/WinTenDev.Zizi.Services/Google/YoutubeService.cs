@@ -93,7 +93,7 @@ public class YoutubeService
         return streamManifest;
     }
 
-    public async Task<string> DownloadAsync(
+    public async Task<string> DownloadStreamAsync(
         IStreamInfo streamInfo,
         string fileName
     )

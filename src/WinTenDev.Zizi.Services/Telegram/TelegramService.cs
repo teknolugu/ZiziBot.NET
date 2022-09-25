@@ -464,6 +464,23 @@ public class TelegramService
         return GetCommand() == command;
     }
 
+    public StartCmdParse GetStartCommand()
+    {
+        var partText = Message.Text.SplitText(" ").ToArray();
+        var startArg = partText.ElementAtOrDefault(1);
+        var startArgs = startArg?.Split("_");
+        var startCmd = startArgs?.FirstOrDefault();
+
+        var startCmdParse = new StartCmdParse()
+        {
+            StartCmd = startCmd,
+            StartArgs = startArgs,
+            StartArg = startArg
+        };
+
+        return startCmdParse;
+    }
+
     public async Task<string> GetLocalizationString(
         Enum value,
         IEnumerable<(string placeholder, string value)> placeHolders = null
