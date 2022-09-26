@@ -10,7 +10,7 @@
         <!--        <Watch Include="..\**\*.cs" />-->
     </ItemGroup>
     <ItemGroup>
-    <PackageReference Include="BootstrapBlazor" Version="6.9.10" />
+    <PackageReference Include="BootstrapBlazor" Version="6.10.7" />
     <PackageReference Include="Dapper" Version="2.0.123" />
     <PackageReference Include="EasyCaching.Disk" Version="1.6.1" />
     <PackageReference Include="EasyCaching.SQLite" Version="1.6.1" />
@@ -26,19 +26,19 @@
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-    <PackageReference Include="Serilog" Version="2.11.0" />
+    <PackageReference Include="Serilog" Version="2.12.0" />
     <PackageReference Include="Serilog.AspNetCore" Version="6.0.1" />
     <PackageReference Include="Serilog.Extensions.Hosting" Version="5.0.1" />
-    <PackageReference Include="Serilog.Settings.Configuration" Version="3.3.0" />
-    <PackageReference Include="Serilog.Sinks.Console" Version="4.0.1" />
+    <PackageReference Include="Serilog.Settings.Configuration" Version="3.4.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="4.1.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
     <PackageReference Include="SerilogAnalyzer" Version="0.15.0" />
-    <PackageReference Include="SonarAnalyzer.CSharp" Version="8.44.0.52574">
+    <PackageReference Include="SonarAnalyzer.CSharp" Version="8.45.0.54064">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-    <PackageReference Include="SqlKata.Execution" Version="2.3.7" />
-    <PackageReference Include="Syncfusion.Blazor" Version="20.2.0.45" />
+    <PackageReference Include="SqlKata.Execution" Version="2.4.0" />
+    <PackageReference Include="Syncfusion.Blazor" Version="20.2.0.50" />
     <PackageReference Include="Telegram.Bot.Extensions.LoginWidget" Version="1.2.0" />
     </ItemGroup>
     <ItemGroup>

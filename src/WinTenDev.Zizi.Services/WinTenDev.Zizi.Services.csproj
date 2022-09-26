@@ -4,28 +4,31 @@
         <LangVersion>latest</LangVersion>
     </PropertyGroup>
     <ItemGroup>
-    <PackageReference Include="AWSSDK.Rekognition" Version="3.7.10.2" />
+    <PackageReference Include="AWSSDK.Rekognition" Version="3.7.10.18" />
+    <PackageReference Include="AWSSDK.S3" Version="3.7.9.58" />
     <PackageReference Include="CacheTower" Version="0.13.0" />
     <PackageReference Include="CliWrap" Version="3.5.0" />
     <PackageReference Include="CodeHollow.FeedReader" Version="1.2.4" />
-    <PackageReference Include="CodingSeb.ExpressionEvaluator" Version="1.4.38" />
+    <PackageReference Include="CodingSeb.ExpressionEvaluator" Version="1.4.39" />
     <PackageReference Include="CodingSeb.Localization" Version="1.2.0" />
     <PackageReference Include="CodingSeb.Localization.JsonFileLoader" Version="1.2.0" />
+    <PackageReference Include="DalSoft.Hosting.BackgroundQueue" Version="1.0.4" />
     <PackageReference Include="DotNurse.Injector" Version="2.5.2" />
     <PackageReference Include="EasyCaching.Core" Version="1.6.1" />
     <PackageReference Include="Fedorus.Telegram.Bot.Framework" Version="1.0.5" />
-    <PackageReference Include="FluentValidation" Version="11.2.0" />
+    <PackageReference Include="FluentValidation" Version="11.2.2" />
     <PackageReference Include="Flurl.Http" Version="3.2.4" />
     <PackageReference Include="Google.Apis.Auth" Version="1.57.0" />
-    <PackageReference Include="Google.Apis.Drive.v3" Version="1.57.0.2746" />
-    <PackageReference Include="Google.Apis.Iam.v1" Version="1.57.0.2702" />
+    <PackageReference Include="Google.Apis.Drive.v3" Version="1.57.0.2789" />
+    <PackageReference Include="Google.Apis.Iam.v1" Version="1.57.0.2793" />
     <PackageReference Include="Google.Cloud.Firestore" Version="3.0.0" />
-    <PackageReference Include="Google.Cloud.Vision.V1" Version="3.0.0" />
+    <PackageReference Include="Google.Cloud.Vision.V1" Version="3.2.0" />
     <PackageReference Include="Hangfire.Core" Version="1.7.31" />
     <PackageReference Include="Hangfire.MaximumConcurrentExecutions" Version="1.1.0" />
+    <PackageReference Include="JetBrains.dotMemoryUnit" Version="3.2.20220510" />
     <PackageReference Include="LazyProxy" Version="1.0.2" />
     <PackageReference Include="LazyProxy.ServiceProvider" Version="0.1.3" />
-    <PackageReference Include="linq2db.MySqlConnector" Version="4.1.1" />
+    <PackageReference Include="linq2db.MySqlConnector" Version="4.2.0" />
     <PackageReference Include="LiteDB.Async" Version="0.1.1" />
     <PackageReference Include="MegaApiClient" Version="1.10.2" />
         <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="6.0.0">
@@ -35,7 +38,7 @@
     <PackageReference Include="ModernTlSharp" Version="1.2.4" />
     <PackageReference Include="MongoDB.Entities" Version="20.26.5" />
     <PackageReference Include="MySqlBackup.NET.MySqlConnector" Version="2.3.6" />
-    <PackageReference Include="MySqlConnector" Version="2.1.12" />
+    <PackageReference Include="MySqlConnector" Version="2.1.13" />
     <PackageReference Include="Nerdicus.VirusTotal.NET" Version="1.0.0" />
     <PackageReference Include="Nito.AsyncEx" Version="5.1.2" />
     <PackageReference Include="NMemory" Version="3.1.4" />
@@ -45,20 +48,21 @@
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-    <PackageReference Include="Serilog" Version="2.11.0" />
+    <PackageReference Include="Serilog" Version="2.12.0" />
     <PackageReference Include="SerilogAnalyzer" Version="0.15.0" />
     <PackageReference Include="SerilogTimings" Version="3.0.1" />
-    <PackageReference Include="SonarAnalyzer.CSharp" Version="8.44.0.52574">
+    <PackageReference Include="SonarAnalyzer.CSharp" Version="8.45.0.54064">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
     <PackageReference Include="SpamWatch" Version="1.1.2" />
+    <PackageReference Include="supabase-storage-csharp" Version="1.1.1" />
     <PackageReference Include="TDLib" Version="1.8.1.1" />
     <PackageReference Include="Telega" Version="0.5.1" />
     <PackageReference Include="Telegram.Bot" Version="18.0.0" />
-    <PackageReference Include="TgBotFramework" Version="0.5.3" />
+    <PackageReference Include="TgBotFramework" Version="0.5.4" />
     <PackageReference Include="TinyMapper" Version="3.0.3" />
-    <PackageReference Include="WTelegramClient" Version="2.6.2" />
+    <PackageReference Include="WTelegramClient" Version="2.6.4" />
     </ItemGroup>
     <ItemGroup>
     <ProjectReference Include="..\WinTenDev.Zizi.Utils\WinTenDev.Zizi.Utils.csproj" />
