@@ -19,23 +19,29 @@ public static class InlineQueryExtension
     )
     {
         var inlineQuery = telegramService.InlineQuery;
+        var fromId = inlineQuery.From.Id;
         var inlineQueryId = inlineQuery.Id;
 
-        var reducedResult = inlineQueryResults.Take(50);
+        var reducedResult = inlineQueryResults
+            .DistinctBy(result => result.Id)
+            .Take(50)
+            .ToList();
 
         try
         {
             await telegramService.Client.AnswerInlineQueryAsync(
                 inlineQueryId: inlineQueryId,
-                results: reducedResult
+                results: reducedResult,
+                cacheTime: 5
             );
         }
         catch (Exception exception)
         {
             Log.Error(
                 exception,
-                "Error when answering inline query: {Id}",
-                inlineQueryId
+                "Error when answering inline query: {Id} fromId: {FromId}",
+                inlineQueryId,
+                fromId
             );
         }
     }
@@ -659,7 +665,7 @@ public static class InlineQueryExtension
                         {
                             InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Pencarian lanjut", $"yt {inlineValue} "),
                             InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Pencarian baru", "yt ")
-}
+                        }
                     }
                 )
             };
