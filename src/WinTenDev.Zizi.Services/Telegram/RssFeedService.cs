@@ -98,7 +98,7 @@ public class RssFeedService
             rssUrl
         );
 
-        var rssXmlContent  = await _cacheService.GetOrSetAsync(
+        var rssXmlContent = await _cacheService.GetOrSetAsync(
             cacheKey: "rss-url_xml-content_" + rssUrl.ToCacheKey(),
             staleAfter: "1m",
             action: async () => {

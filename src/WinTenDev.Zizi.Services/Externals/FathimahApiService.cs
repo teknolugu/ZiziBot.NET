@@ -36,7 +36,8 @@ namespace WinTenDev.Zizi.Services.Externals
         )
         {
             var dateStr = dateTime.ToString("yyyy-MM-dd");
-            var cacheKey = $"{BaseUrl}_shalat-time_{cityId}_{dateStr}";
+            var prefixCache = BaseUrl.ToCacheKey();
+            var cacheKey = $"vendor_{prefixCache}_shalat-time_{cityId}_{dateStr}";
 
             _logger.LogInformation(
                 "Get Shalat time for ChatId: {CityId} with Date: {DateStr}. Cache Key: {CacheKey}",
