@@ -67,7 +67,7 @@ public class WordFilterService
     public async Task<IEnumerable<WordFilter>> GetWordsList()
     {
         var data = await _cacheService.GetOrSetAsync(
-            cacheKey: CacheKey,
+            cacheKey: "internal_" + CacheKey,
             action: async () => {
                 var data = await GetWordsListCore();
 
