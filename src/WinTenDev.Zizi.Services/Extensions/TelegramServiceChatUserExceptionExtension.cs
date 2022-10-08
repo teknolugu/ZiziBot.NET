@@ -21,7 +21,12 @@ public static class TelegramServiceChatUserExceptionExtension
         var param = telegramService.GetCommandParamAt<string>(0);
         if (telegramService.ReplyToMessage != null)
         {
-            userId = telegramService.ReplyToMessage.From!.Id;
+            var replyToMessage = telegramService.ReplyToMessage;
+            userId = replyToMessage.From!.Id;
+            if (replyToMessage.SenderChat != null)
+            {
+                userId = replyToMessage.SenderChat.Id;
+            }
         }
         else if (param?.Contains('@') ?? false)
         {
