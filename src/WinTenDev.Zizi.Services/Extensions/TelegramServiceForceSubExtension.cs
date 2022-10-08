@@ -190,4 +190,27 @@ public static class TelegramServiceForceSubExtension
             preventDuplicateSend: true
         );
     }
+
+    public static async Task<bool> PreCheckForceSubscriptionAsync(this TelegramService telegramService)
+    {
+        var chatSettings = await telegramService.GetChatSetting();
+        if (!(telegramService.IsSenderChannel &&
+              chatSettings.EnableForceSubscription))
+        {
+            telegramService.IsShouldCheckChannelSubscription = true;
+            return true;
+        }
+
+        var sender = telegramService.SenderChat;
+        await telegramService.SendTextMessageAsync(
+            enumLang: ChannelSubscription.ShouldUseRealAccount,
+            scheduleDeleteAt: DateTime.Now.AddMinutes(1)
+        );
+
+        await telegramService.RestrictMemberAsync(sender.Id);
+
+        telegramService.IsShouldCheckChannelSubscription = false;
+
+        return false;
+    }
 }

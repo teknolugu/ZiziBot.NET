@@ -66,6 +66,9 @@ public class TelegramService
     public bool IsChannel { get; set; }
     public bool IsChatRestricted { get; set; }
 
+    public bool IsSenderChannel => SenderChat != null;
+    public bool IsShouldCheckChannelSubscription { get; set; }
+
     [Obsolete("Please read value from SentMessage")]
     public int SentMessageId { get; set; }
 

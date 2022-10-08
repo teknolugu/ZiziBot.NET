@@ -114,6 +114,13 @@ public static class TelegramServiceActivityExtension
 
         await telegramService.AnswerChatJoinRequestAsync();
 
+        var preCheckForceSubscription = await telegramService.PreCheckForceSubscriptionAsync();
+
+        if (!preCheckForceSubscription)
+        {
+            return false;
+        }
+
         var checkAntiSpamResult = await telegramService.AntiSpamCheckAsync();
 
         if (checkAntiSpamResult.IsAnyBanned)
