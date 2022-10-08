@@ -221,7 +221,7 @@ public static class TelegramServiceForceSubExtension
             scheduleDeleteAt: DateTime.Now.AddMinutes(1)
         );
 
-        await telegramService.RestrictMemberAsync(sender.Id);
+        await telegramService.BanSenderChatAsync(sender.Id);
 
         telegramService.IsShouldCheckChannelSubscription = false;
 

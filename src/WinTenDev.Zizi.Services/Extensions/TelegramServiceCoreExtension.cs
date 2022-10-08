@@ -91,6 +91,24 @@ public static class TelegramServiceCoreExtension
         return false;
     }
 
+    public static async Task BanSenderChatAsync(
+        this TelegramService telegramService,
+        long senderChatId
+    )
+    {
+        var chatId = telegramService.ChatId;
+
+        try
+        {
+            Log.Information("Banning {SenderChatId} from {ChatId}", senderChatId, chatId);
+            await telegramService.Client.BanChatSenderChatAsync(chatId, senderChatId);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Error while banning {SenderChatId} from {ChatId}", senderChatId, chatId);
+        }
+    }
+
     public static async Task SendStartAsync(this TelegramService telegramService)
     {
         var enginesConfig = telegramService.EnginesConfig;
