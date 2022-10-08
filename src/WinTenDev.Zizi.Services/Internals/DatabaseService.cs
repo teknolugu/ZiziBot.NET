@@ -274,6 +274,7 @@ public class DatabaseService
         DB.DatabaseFor<RssSourceEntity>(meUsername);
         DB.DatabaseFor<SpellEntity>(meUsername);
         DB.DatabaseFor<UserInfo>(meUsername);
+        DB.DatabaseFor<UserExceptionEntity>(meUsername);
         DB.DatabaseFor<WarnMember>(meUsername);
         DB.DatabaseFor<WebHookChat>(meUsername);
         DB.DatabaseFor<WTelegramSession>(meUsername);

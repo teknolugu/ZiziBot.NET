@@ -201,6 +201,20 @@ public static class TelegramServiceForceSubExtension
             return true;
         }
 
+        var chatId = telegramService.ChatId;
+        var userId = telegramService.FromId;
+        var senderChatId = telegramService.SenderChat.Id;
+
+        var userExceptionService = telegramService.GetRequiredService<UserExceptionService>();
+
+        var isExist = await userExceptionService.IsExist(chatId, senderChatId);
+
+        if (isExist)
+        {
+            telegramService.IsShouldCheckChannelSubscription = false;
+            return true;
+        }
+
         var sender = telegramService.SenderChat;
         await telegramService.SendTextMessageAsync(
             enumLang: ChannelSubscription.ShouldUseRealAccount,

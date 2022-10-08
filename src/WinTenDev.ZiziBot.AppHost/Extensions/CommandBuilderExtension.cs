@@ -53,6 +53,7 @@ public static class CommandBuilderExtension
                                         .UseCommand<AddForceSubCommand>("addfsub")
                                         .UseCommand<AddForceSubCommand>("add_fsub")
                                         .UseCommand<AddSubtitleSrcCommand>("add_sub_src")
+                                        .UseCommand<AddUserExceptionCommand>("ex")
                                         .UseCommand<AdminCommand>("admin")
                                         .UseCommand<AdminCommand>("adminlist")
                                         .UseCommand<AfkCommand>("afk")
