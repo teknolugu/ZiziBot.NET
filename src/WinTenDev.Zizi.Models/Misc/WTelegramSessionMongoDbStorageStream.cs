@@ -33,7 +33,7 @@ public class WTelegramSessionMongoDbStorageStream : Stream
     {
         Log.Information("Getting session: {SessionName}", _sessionName);
 
-        var session = await DB.Find<WTelegramSession>()
+        var session = await DB.Find<WTelegramSessionEntity>()
             .Match(session => session.SessionName == _sessionName)
             .ExecuteFirstAsync();
 
@@ -44,18 +44,18 @@ public class WTelegramSessionMongoDbStorageStream : Stream
         }
     }
 
-    private async Task SaveSessionAsync(WTelegramSession wTelegramSession)
+    private async Task SaveSessionAsync(WTelegramSessionEntity wTelegramSession)
     {
         Log.Information("Saving session: {SessionName}", _sessionName);
 
-        var wTelegramSessions = await DB.Find<WTelegramSession>()
+        var wTelegramSessions = await DB.Find<WTelegramSessionEntity>()
             .Match(telegramSession => telegramSession.SessionName == _sessionName)
             .ExecuteAsync();
 
         if (wTelegramSessions.Count > 0)
         {
             Log.Debug("Updating WTelegram session for {SessionName}", _sessionName);
-            await DB.Update<WTelegramSession>()
+            await DB.Update<WTelegramSessionEntity>()
                 .Match(telegramSession => telegramSession.SessionName == _sessionName)
                 .Modify(session => session.SessionData, wTelegramSession.SessionData)
                 .ExecuteAsync();
@@ -92,7 +92,7 @@ public class WTelegramSessionMongoDbStorageStream : Stream
         var left = 1000 - (int)(DateTime.UtcNow - _lastWrite).TotalMilliseconds;
         if (left < 0)
         {
-            var wTelegramSession = new WTelegramSession()
+            var wTelegramSession = new WTelegramSessionEntity()
             {
                 SessionName = _sessionName,
                 SessionData = count == buffer.Length ? buffer : buffer[offset..(offset + count)]
