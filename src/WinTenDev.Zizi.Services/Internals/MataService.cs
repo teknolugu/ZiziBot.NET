@@ -21,11 +21,11 @@ public class MataService
         _queryService = queryService;
     }
 
-    public async Task<UserInfo> GetLastMataAsync(long userId)
+    public async Task<UserInfoEntity> GetLastMataAsync(long userId)
     {
         var op = Operation.Begin("Getting last User History for {UserId}", userId);
 
-        var lastActivity = await DB.Find<UserInfo>()
+        var lastActivity = await DB.Find<UserInfoEntity>()
             .Match(info => info.UserId == userId)
             .Sort(info => info.CreatedOn, Order.Descending)
             .ExecuteFirstAsync();
@@ -40,11 +40,11 @@ public class MataService
         return lastActivity;
     }
 
-    public async Task<UserInfo> GetLastMataAsync(Expression<Func<UserInfo, bool>> expression)
+    public async Task<UserInfoEntity> GetLastMataAsync(Expression<Func<UserInfoEntity, bool>> expression)
     {
         var op = Operation.Begin("Getting last User History with expression {UserId}", expression);
 
-        var lastActivity = await DB.Find<UserInfo>()
+        var lastActivity = await DB.Find<UserInfoEntity>()
             .Match(expression)
             .Sort(info => info.CreatedOn, Order.Descending)
             .ExecuteFirstAsync();
@@ -59,7 +59,7 @@ public class MataService
         return lastActivity;
     }
 
-    public async Task SaveMataAsync(UserInfo userInfo)
+    public async Task SaveMataAsync(UserInfoEntity userInfo)
     {
         var op = Operation.Begin("Saving User History for {UserId}", userInfo.UserId);
 
@@ -70,7 +70,7 @@ public class MataService
 
     public async Task DeleteAsync()
     {
-        var deleteResult = await DB.DeleteAsync<UserInfo>(builder =>
+        var deleteResult = await DB.DeleteAsync<UserInfoEntity>(builder =>
             builder.CreatedOn < DateTime.Now.AddMonths(-6)
         );
 

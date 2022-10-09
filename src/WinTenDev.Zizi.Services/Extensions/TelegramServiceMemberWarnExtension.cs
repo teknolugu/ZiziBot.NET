@@ -16,7 +16,7 @@ public static class TelegramServiceMemberWarnExtension
         if (!await telegramService.CheckFromAdminOrAnonymous())
         {
             await telegramService.SendWarnMessageAsync(
-                new WarnMember
+                new WarnMemberEntity
                 {
                     ChatId = chatId,
                     MemberUserId = fromId,
@@ -44,7 +44,7 @@ public static class TelegramServiceMemberWarnExtension
         }
 
         await telegramService.SendWarnMessageAsync(
-            new WarnMember
+            new WarnMemberEntity
             {
                 ChatId = chatId,
                 MemberUserId = replyToMessage.From!.Id,
@@ -60,7 +60,7 @@ public static class TelegramServiceMemberWarnExtension
 
     private static async Task SendWarnMessageAsync(
         this TelegramService telegramService,
-        WarnMember warnMember,
+        WarnMemberEntity warnMember,
         string note = null
     )
     {

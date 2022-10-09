@@ -228,7 +228,7 @@ public static class TelegramServiceMemberExtension
 
             var botUser = await telegramService.GetMeAsync();
 
-            var userInfo = new UserInfo
+            var userInfo = new UserInfoEntity
             {
                 UserId = fromId,
                 FirstName = fromFirstName,
@@ -1100,7 +1100,7 @@ public static class TelegramServiceMemberExtension
             await chatAdminService.SaveAll(
                 admins.Select(
                     member =>
-                        new GroupAdmin()
+                        new GroupAdminEntity()
                         {
                             UserId = member.User.Id,
                             ChatId = telegramService.ChatId,

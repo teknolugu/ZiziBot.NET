@@ -1,17 +1,19 @@
 ﻿using System;
 using MongoDB.Bson;
 using MongoDB.Entities;
-using Telegram.Bot.Types.Enums;
 
 namespace WinTenDev.Zizi.Models.Entities.MongoDb.Internal;
 
-[Collection("ChatAdmin")]
-public class GroupAdmin : IEntity, ICreatedOn
+[Collection("ArticleSent")]
+public class ArticleSentEntity : IEntity, ICreatedOn
 {
     public string ID { get; set; }
     public long ChatId { get; set; }
-    public long UserId { get; set; }
-    public ChatMemberStatus Role { get; set; }
+    public string RssSource { get; set; }
+    public string Title { get; set; }
+    public string Url { get; set; }
+    public DateTime PublishDate { get; set; }
+    public string Author { get; set; }
     public DateTime CreatedOn { get; set; }
 
     public string GenerateNewID() => ObjectId.GenerateNewId().ToString();

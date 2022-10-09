@@ -19,32 +19,32 @@ public class WebHookChatService
         _webApiConfig = webApiConfig.Value;
     }
 
-    public async Task<WebHookChat> GetWebHookChat(long chatId)
+    public async Task<WebHookChatEntity> GetWebHookChat(long chatId)
     {
-        var findHook = await DB.Find<WebHookChat>()
+        var findHook = await DB.Find<WebHookChatEntity>()
             .Match(chat => chat.ChatId == chatId)
             .ExecuteFirstAsync();
 
         return findHook;
     }
 
-    public async Task<WebHookChat> GetWebHookById(string hookId)
+    public async Task<WebHookChatEntity> GetWebHookById(string hookId)
     {
-        var findHook = await DB.Find<WebHookChat>()
+        var findHook = await DB.Find<WebHookChatEntity>()
             .Match(chat => chat.ID == hookId)
             .ExecuteFirstAsync();
 
         return findHook;
     }
 
-    public async Task<WebHookChat> GenerateWebHookChat(long chatId)
+    public async Task<WebHookChatEntity> GenerateWebHookChat(long chatId)
     {
         var findHook = await GetWebHookChat(chatId);
 
         if (findHook != null)
             return findHook;
 
-        var webHookChat = new WebHookChat()
+        var webHookChat = new WebHookChatEntity()
         {
             ChatId = chatId
         };

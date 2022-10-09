@@ -198,10 +198,10 @@ public class RssFeedService
             );
 
             await _articleSentService.SaveAsync(new ArticleSentDto()
-                {
-                    ChatId = chatId,
+            {
+                ChatId = chatId,
                 RssSource = rssUrl,
-                    Title = rssFeedTitle,
+                Title = rssFeedTitle,
                 PublishDate = rssPublishDate.UtcDateTime,
                 Author = rssFeedAuthor ?? "Fulan",
                 Url = rssFeedLink

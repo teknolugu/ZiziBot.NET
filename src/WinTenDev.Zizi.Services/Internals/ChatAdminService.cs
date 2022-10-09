@@ -20,7 +20,7 @@ namespace WinTenDev.Zizi.Services.Internals
             return _queryService.CreateMysqlConnectionCore();
         }
 
-        public async Task<long> SaveAll(IEnumerable<GroupAdmin> entities)
+        public async Task<long> SaveAll(IEnumerable<GroupAdminEntity> entities)
         {
             // await using var connection = CreateConnection();
             //
@@ -32,7 +32,7 @@ namespace WinTenDev.Zizi.Services.Internals
             // var deletedRows = await connection.DeleteAllAsync(chatAdmins);
             // var insertRows = await connection.InsertAllAsync(entities);
 
-            var deleted = await DB.DeleteAsync<GroupAdmin>(admin => admin.ChatId == entities.First().ChatId);
+            var deleted = await DB.DeleteAsync<GroupAdminEntity>(admin => admin.ChatId == entities.First().ChatId);
             var insert = await entities.InsertAsync();
 
             var deletedRows = deleted.DeletedCount;

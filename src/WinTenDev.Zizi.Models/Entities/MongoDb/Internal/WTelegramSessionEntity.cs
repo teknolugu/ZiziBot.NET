@@ -4,7 +4,8 @@ using MongoDB.Entities;
 
 namespace WinTenDev.Zizi.Models.Entities.MongoDb.Internal;
 
-public class WTelegramSession : IEntity, ICreatedOn, IModifiedOn
+[Collection("WTelegramSession")]
+public class WTelegramSessionEntity : IEntity, ICreatedOn, IModifiedOn
 {
     public string GenerateNewID() => ObjectId.GenerateNewId().ToString();
 

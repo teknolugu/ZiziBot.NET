@@ -7,6 +7,6 @@ public class ArticleSentProfile : Profile
 {
     public ArticleSentProfile()
     {
-        CreateMap<ArticleSent, ArticleSentDto>().ReverseMap();
+        CreateMap<ArticleSentEntity, ArticleSentDto>().ReverseMap();
     }
 }

@@ -59,7 +59,7 @@ public static class TelegramServiceForceSubExtension
 
             await telegramService.AppendTextAsync($"Title: {chat.Title}", reappendText: true);
 
-            var fSubData = new ForceSubscription()
+            var fSubData = new ForceSubscriptionEntity()
             {
                 ChatId = telegramService.ChatId,
                 UserId = telegramService.FromId,
