@@ -18,7 +18,7 @@ public class HttpTunnelingHostedService : BackgroundService
     private readonly IOptionsSnapshot<HttpTunnelConfig> _httpTunnelConfigSnapshot;
     private readonly IServer _server;
     private readonly IHostApplicationLifetime _hostApplicationLifetime;
-    private readonly ILogger _logger;
+    private readonly ILogger<HttpTunnelingHostedService> _logger;
     private readonly LocalXposeService _localXposeService;
 
     private HttpTunnelConfig HttpTunnelConfig => _httpTunnelConfigSnapshot.Value;

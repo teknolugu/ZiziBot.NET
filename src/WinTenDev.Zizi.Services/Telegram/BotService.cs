@@ -153,7 +153,9 @@ public class BotService
 
     public async Task EnsureCommandRegistration()
     {
-        var botCommands = await GetCommandConfigs();
+        try
+        {
+            var botCommands = await GetCommandConfigs();
 
             if (botCommands != null &&
                 CommandConfig.EnsureOnStartup)
@@ -164,6 +166,11 @@ public class BotService
             {
                 await _botClient.DeleteMyCommandsAsync();
             }
+        }
+        catch (Exception exception)
+        {
+            await exception.SaveErrorToText();
+            _logger.LogError(exception, "Error on EnsureCommandRegistration");
         }
     }
 
