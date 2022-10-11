@@ -13,15 +13,17 @@ namespace WinTenDev.Zizi.Services.Telegram;
 public class FeatureService
 {
     private readonly ILogger<FeatureService> _logger;
+    private readonly IOptionsSnapshot<FeatureConfig> _featureConfigSnapshot;
     private readonly BotService _botService;
     private readonly RateLimitingInMemory _rateLimitingInMemory;
-    private readonly FeatureConfig _featureConfig;
 
-    public ITable<FeatureCooldown> FeatureCooldowns => _rateLimitingInMemory.FeatureCooldowns;
+    private ITable<FeatureCooldown> FeatureCooldowns => _rateLimitingInMemory.FeatureCooldowns;
+
+    private FeatureConfig FeatureConfig => _featureConfigSnapshot.Value;
 
     public FeatureService(
         ILogger<FeatureService> logger,
-        IOptionsSnapshot<FeatureConfig> featureConfig,
+        IOptionsSnapshot<FeatureConfig> featureConfigSnapshot,
         BotService botService,
         RateLimitingInMemory rateLimitingInMemory
     )
@@ -29,22 +31,22 @@ public class FeatureService
         _logger = logger;
         _botService = botService;
         _rateLimitingInMemory = rateLimitingInMemory;
-        _featureConfig = featureConfig.Value;
+        _featureConfigSnapshot = featureConfigSnapshot;
     }
 
     public bool IsEnabled()
     {
-        return _featureConfig.IsEnabled;
+        return FeatureConfig.IsEnabled;
     }
 
     public FeatureConfig GetFeatureConfigs()
     {
-        return _featureConfig;
+        return FeatureConfig;
     }
 
     public async Task<ButtonParsed> GetFeatureConfig(string featureName)
     {
-        var config = _featureConfig.Items?.FirstOrDefault(item => item.Key == featureName);
+        var config = FeatureConfig.Items?.FirstOrDefault(item => item.Key == featureName);
 
         var buttonMarkup = InlineKeyboardMarkup.Empty();
 

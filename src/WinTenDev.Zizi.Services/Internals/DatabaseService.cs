@@ -254,7 +254,7 @@ public class DatabaseService
             }
         );
 
-        op.Complete(); 
+        op.Complete();
     }
 
     public async Task MongoDbDatabaseMapping()

@@ -13,26 +13,30 @@ namespace WinTenDev.Zizi.Services.Telegram;
 
 public class BotService
 {
-    private readonly ILogger<BotService> _logger;
-    private readonly EventLogConfig _eventLogConfig;
-    private readonly CommandConfig _commandConfig;
-    private readonly ButtonConfig _buttonConfig;
     private readonly ITelegramBotClient _botClient;
+    private readonly ILogger<BotService> _logger;
+    private readonly IOptionsSnapshot<ButtonConfig> _buttonConfigSnapshot;
+    private readonly IOptionsSnapshot<CommandConfig> _commandConfigSnapshot;
+    private readonly IOptionsSnapshot<EventLogConfig> _eventLogConfigSnapshot;
     private readonly CacheService _cacheService;
+
+    private ButtonConfig ButtonConfig => _buttonConfigSnapshot.Value;
+    private CommandConfig CommandConfig => _commandConfigSnapshot.Value;
+    private EventLogConfig EventLogConfig => _eventLogConfigSnapshot.Value;
 
     public BotService(
         ILogger<BotService> logger,
-        IOptionsSnapshot<ButtonConfig> buttonConfig,
-        IOptionsSnapshot<CommandConfig> commandConfig,
-        IOptionsSnapshot<EventLogConfig> eventLogConfig,
+        IOptionsSnapshot<ButtonConfig> buttonConfigSnapshot,
+        IOptionsSnapshot<CommandConfig> commandConfigSnapshot,
+        IOptionsSnapshot<EventLogConfig> eventLogConfigSnapshot,
         ITelegramBotClient botClient,
         CacheService cacheService
     )
     {
         _logger = logger;
-        _eventLogConfig = eventLogConfig.Value;
-        _commandConfig = commandConfig.Value;
-        _buttonConfig = buttonConfig.Value;
+        _eventLogConfigSnapshot = eventLogConfigSnapshot;
+        _commandConfigSnapshot = commandConfigSnapshot;
+        _buttonConfigSnapshot = buttonConfigSnapshot;
         _botClient = botClient;
         _cacheService = cacheService;
     }
@@ -134,7 +138,7 @@ public class BotService
             ("BotName", getMe.GetFullName())
         };
 
-        var commandConfigs = _commandConfig
+        var commandConfigs = CommandConfig
             .CommandItems?
             .Select(
                 item => new BotCommand()
@@ -151,20 +155,21 @@ public class BotService
     {
         var botCommands = await GetCommandConfigs();
 
-        if (botCommands != null &&
-            _commandConfig.EnsureOnStartup)
-        {
-            await _botClient.SetMyCommandsAsync(botCommands);
-        }
-        else
-        {
-            await _botClient.DeleteMyCommandsAsync();
+            if (botCommands != null &&
+                CommandConfig.EnsureOnStartup)
+            {
+                await _botClient.SetMyCommandsAsync(botCommands);
+            }
+            else
+            {
+                await _botClient.DeleteMyCommandsAsync();
+            }
         }
     }
 
     public List<ButtonItem> GetButtonConfigAll()
     {
-        var buttonItems = _buttonConfig.Items;
+        var buttonItems = ButtonConfig.Items;
 
         return buttonItems;
     }
@@ -215,7 +220,7 @@ public class BotService
 
     public async Task SendStartupNotification()
     {
-        var channelId = _eventLogConfig.ChannelId;
+        var channelId = EventLogConfig.ChannelId;
         var appHostInfo = AppHostUtil.GetAppHostInfo(includePath: true);
 
         var htmlMessage = HtmlMessage.Empty

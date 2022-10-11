@@ -18,18 +18,20 @@ public class ChatService
     private const int PrivateSettingLimit = 365;
 
     private readonly ILogger<ChatService> _logger;
+    private readonly IOptionsSnapshot<RestrictionConfig> _restrictionConfigSnapshot;
     private readonly ITelegramBotClient _botClient;
     private readonly BotService _botService;
     private readonly ForceSubsService _forceSubsService;
     private readonly MessageHistoryService _messageHistoryService;
     private readonly SettingsService _settingsService;
     private readonly CacheService _cacheService;
-    private readonly RestrictionConfig _restrictionConfig;
+
+    private RestrictionConfig RestrictionConfig => _restrictionConfigSnapshot.Value;
 
     public ChatService(
         ILogger<ChatService> logger,
         CacheService cacheService,
-        IOptionsSnapshot<RestrictionConfig> restrictionConfig,
+        IOptionsSnapshot<RestrictionConfig> restrictionConfigSnapshot,
         ITelegramBotClient botClient,
         BotService botService,
         ForceSubsService forceSubsService,
@@ -37,7 +39,7 @@ public class ChatService
         SettingsService settingsService
     )
     {
-        _restrictionConfig = restrictionConfig.Value;
+        _restrictionConfigSnapshot = restrictionConfigSnapshot;
         _logger = logger;
         _botClient = botClient;
         _botService = botService;
@@ -49,7 +51,7 @@ public class ChatService
 
     public bool IsEnableRestriction()
     {
-        var isRestricted = _restrictionConfig.EnableRestriction;
+        var isRestricted = RestrictionConfig.EnableRestriction;
         Log.Debug("Global Restriction IsEnabled: {IsRestricted}", isRestricted);
 
         return isRestricted;
@@ -63,7 +65,7 @@ public class ChatService
 
             if (!IsEnableRestriction()) return false;
 
-            var restrictArea = _restrictionConfig.RestrictionArea;
+            var restrictArea = RestrictionConfig.RestrictionArea;
 
             if (restrictArea != null)
             {
@@ -95,7 +97,7 @@ public class ChatService
         try
         {
             var ignored = false;
-            var ignoredIds = _restrictionConfig.IgnoredIds;
+            var ignoredIds = RestrictionConfig.IgnoredIds;
             if (ignoredIds == null) return false;
 
             var find = ignoredIds.FirstOrDefault(l => l == userId);
@@ -407,13 +409,13 @@ public class ChatService
     {
         Log.Information("Checking Chat Restriction for {ChatId}", chatId);
 
-        if (!_restrictionConfig.EnableRestriction)
+        if (!RestrictionConfig.EnableRestriction)
         {
             Log.Debug("Chat Restriction is not enabled in this chat!");
             return false;
         }
 
-        var checkRestricted = !_restrictionConfig.RestrictionArea.Contains(chatId.ToString());
+        var checkRestricted = !RestrictionConfig.RestrictionArea.Contains(chatId.ToString());
         Log.Debug(
             "Is ChatId {ChatId} restricted? {Check}",
             chatId,

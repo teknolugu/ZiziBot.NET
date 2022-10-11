@@ -7,30 +7,32 @@ using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Polly;
-using Serilog;
 
 namespace WinTenDev.Zizi.Services.HostedServices;
 
 public class HttpTunnelingHostedService : BackgroundService
 {
-    private readonly HttpTunnelConfig _httpTunnelConfig;
+    private readonly IOptionsSnapshot<HttpTunnelConfig> _httpTunnelConfigSnapshot;
     private readonly IServer _server;
     private readonly IHostApplicationLifetime _hostApplicationLifetime;
     private readonly ILogger _logger;
     private readonly LocalXposeService _localXposeService;
 
+    private HttpTunnelConfig HttpTunnelConfig => _httpTunnelConfigSnapshot.Value;
+
     public HttpTunnelingHostedService(
-        IOptions<HttpTunnelConfig> httpTunnelConfig,
-        IServer server,
+        ILogger<HttpTunnelingHostedService> logger,
+        IOptionsSnapshot<HttpTunnelConfig> httpTunnelConfigSnapshot,
         IHostApplicationLifetime hostApplicationLifetime,
+        IServer server,
         IConfiguration config,
-        ILogger logger,
         IServiceProvider serviceProvider
     )
     {
-        _httpTunnelConfig = httpTunnelConfig.Value;
+        _httpTunnelConfigSnapshot = httpTunnelConfigSnapshot;
         _server = server;
         _hostApplicationLifetime = hostApplicationLifetime;
         _logger = logger;
@@ -41,9 +43,9 @@ public class HttpTunnelingHostedService : BackgroundService
     {
         await WaitForApplicationStarted();
 
-        if (!_httpTunnelConfig.IsEnabled)
+        if (!HttpTunnelConfig.IsEnabled)
         {
-            _logger.Information("Http Tunneling is disabled");
+            _logger.LogInformation("Http Tunneling is disabled");
             return;
         }
 
@@ -62,17 +64,17 @@ public class HttpTunnelingHostedService : BackgroundService
             )
             .Execute(
                 async () => {
-                    _logger.Information("Starting HTTP tunnel to {Host}", localUrl);
+                    _logger.LogInformation("Starting HTTP tunnel to {Host}", localUrl);
 
                     var commandResult = _localXposeService.CreateTunnel(localUrl);
 
                     if (commandResult == null)
                     {
-                        _logger.Warning("Seem NOT yet prepared for HTTP tunneling");
+                        _logger.LogWarning("Seem NOT yet prepared for HTTP tunneling");
                         return;
                     }
 
-                    _logger.Information("HTTP tunnel Result: {@TunnelId}", commandResult);
+                    _logger.LogInformation("HTTP tunnel Result: {@TunnelId}", commandResult);
 
                     await commandResult.ExecuteAsync();
                 }

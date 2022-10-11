@@ -16,27 +16,30 @@ namespace WinTenDev.Zizi.Services.Internals;
 
 public class QueryService
 {
-    private readonly HangfireConfig _hangfireConfig;
     private readonly ILogger<QueryService> _logger;
     private readonly BotService _botService;
-    private readonly ConnectionStrings _connectionStrings;
+    private readonly IOptionsSnapshot<ConnectionStrings> _connectionStringsSnapshot;
+    private readonly IOptionsSnapshot<HangfireConfig> _hangfireConfigSnapshot;
+
+    private HangfireConfig HangfireConfig => _hangfireConfigSnapshot.Value;
+    private ConnectionStrings ConnectionStrings => _connectionStringsSnapshot.Value;
 
     public QueryService(
-        IOptionsSnapshot<ConnectionStrings> connectionStrings,
-        IOptionsSnapshot<HangfireConfig> hangfireConfig,
+        IOptionsSnapshot<ConnectionStrings> connectionStringsSnapshot,
+        IOptionsSnapshot<HangfireConfig> hangfireConfigSnapshot,
         ILogger<QueryService> logger,
         BotService botService
     )
     {
         _logger = logger;
         _botService = botService;
-        _connectionStrings = connectionStrings.Value;
-        _hangfireConfig = hangfireConfig.Value;
+        _connectionStringsSnapshot = connectionStringsSnapshot;
+        _hangfireConfigSnapshot = hangfireConfigSnapshot;
     }
 
     public QueryFactory CreateMySqlFactory()
     {
-        var mysqlConn = _connectionStrings.MySql;
+        var mysqlConn = ConnectionStrings.MySql;
 
         var compiler = new MySqlCompiler();
         var connection = new MySqlConnection(mysqlConn);
@@ -50,7 +53,7 @@ public class QueryService
 
     public MySqlConnection CreateMysqlConnectionCore()
     {
-        var mysqlConn = _connectionStrings.MySql;
+        var mysqlConn = ConnectionStrings.MySql;
 
         var connection = new MySqlConnection(mysqlConn);
 
@@ -59,7 +62,7 @@ public class QueryService
 
     public MySqlConnection GetHangfireMysqlConnectionCore()
     {
-        var mysqlConn = _hangfireConfig.MysqlConnection;
+        var mysqlConn = HangfireConfig.MysqlConnection;
 
         var connection = new MySqlConnection(mysqlConn);
 
@@ -135,7 +138,7 @@ public class QueryService
 
     public async Task MongoDbOpen(string databaseName)
     {
-        var connectionString = _connectionStrings.MongoDb;
+        var connectionString = ConnectionStrings.MongoDb;
 
         await DB.InitAsync(databaseName, MongoClientSettings.FromConnectionString(connectionString));
     }
