@@ -33,6 +33,7 @@ public static class TelegramServiceMemberExtension
         if (telegramService.IsPrivateChat ||
             telegramService.ChannelPost != null ||
             telegramService.EditedChannelPost != null ||
+            telegramService.HasChatJoinRequest ||
             telegramService.CheckFromAnonymous() ||
             telegramService.CheckSenderChannel())
         {
