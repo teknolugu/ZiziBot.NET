@@ -98,92 +98,92 @@ public class RssFeedService
             rssUrl
         );
 
-        var rssXmlContent = await _cacheService.GetOrSetAsync(
-            cacheKey: "rss-url_xml-content_" + rssUrl.ToCacheKey(),
-            staleAfter: "1m",
-            action: async () => {
-                var content = await rssUrl.OpenFlurlSession().GetStringAsync();
-                return content;
-            });
-
-        var rssFeeds = RssFeedUtil.OpenSyndicationFeedFromString(rssXmlContent);
-
-        // var rssTitle = rssFeeds.Title;
-
-        var rssTitle = rssFeeds.Title.Text;
-        var rssFeed = rssFeeds.Items.FirstOrDefault();
-
-        var rssFeedTitle = rssFeed.Title.Text.Trim();
-        var rssPublishDate = rssFeed.PublishDate.Year.Equals(0001) ? rssFeed.LastUpdatedTime : rssFeed.PublishDate;
-        var rssPublishDateStr = rssPublishDate.ToString("yyyy-MM-dd HH:mm:ss");
-        var rssFeedAuthor = rssFeed.Authors.FirstOrDefault()?.Name;
-        var rssFeedLink = rssFeed.Links.FirstOrDefault()?.Uri.ToString();
-
-        Log.Debug(
-            "Getting last history for {ChatId} url {RssUrl}",
-            chatId,
-            rssUrl
-        );
-
-        Log.Debug("CurrentArticleDate: {Date}", rssPublishDate);
-        Log.Debug("Prepare sending article to ChatId {ChatId}", chatId);
-
-        var isExist = await _articleSentService.IsSentAsync(chatId, rssFeedLink);
-
-        if (isExist)
+        try
         {
+            var rssXmlContent = await _cacheService.GetOrSetAsync(
+                cacheKey: "rss-url_xml-content_" + rssUrl.ToCacheKey(),
+                staleAfter: "1m",
+                action: async () => {
+                    var content = await rssUrl.OpenFlurlSession().GetStringAsync();
+                    return content;
+                });
+
+            var rssFeeds = rssXmlContent.OpenSyndicationFeedFromString();
+
+            // var rssTitle = rssFeeds.Title;
+
+            var rssTitle = rssFeeds.Title.Text;
+            var rssFeed = rssFeeds.Items.FirstOrDefault();
+
+            var rssFeedTitle = rssFeed.Title.Text.Trim();
+            var rssPublishDate = rssFeed.PublishDate.Year.Equals(0001) ? rssFeed.LastUpdatedTime : rssFeed.PublishDate;
+            var rssPublishDateStr = rssPublishDate.ToString("yyyy-MM-dd HH:mm:ss");
+            var rssFeedAuthor = rssFeed.Authors.FirstOrDefault()?.Name;
+            var rssFeedLink = rssFeed.Links.FirstOrDefault()?.Uri.ToString();
+
+            Log.Debug(
+                "Getting last history for {ChatId} url {RssUrl}",
+                chatId,
+                rssUrl
+            );
+
+            Log.Debug("CurrentArticleDate: {Date}", rssPublishDate);
+            Log.Debug("Prepare sending article to ChatId {ChatId}", chatId);
+
+            var isExist = await _articleSentService.IsSentAsync(chatId, rssFeedLink);
+
+            if (isExist)
+            {
+                Log.Information(
+                    "Last article from feed '{RssUrl}' has sent to {ChatId}",
+                    rssUrl,
+                    chatId
+                );
+
+                return;
+            }
+
             Log.Information(
-                "Last article from feed '{RssUrl}' has sent to {ChatId}",
+                "Sending article from feed {RssUrl} to {ChatId}",
                 rssUrl,
                 chatId
             );
 
-            return;
-        }
+            var category = rssFeed.Categories.Select(syndicationCategory => syndicationCategory.Name).ToList().MkJoin(", ");
+            var htmlMessage = HtmlMessage.Empty;
 
-        Log.Information(
-            "Sending article from feed {RssUrl} to {ChatId}",
-            rssUrl,
-            chatId
-        );
+            var disableWebPagePreview = false;
 
-        var category = rssFeed.Categories.Select(syndicationCategory => syndicationCategory.Name).ToList().MkJoin(", ");
-        var htmlMessage = HtmlMessage.Empty;
-
-        var disableWebPagePreview = false;
-
-        if (rssUrl.IsGithubReleaseUrl())
-        {
-            var listUrlAssetsList = await _octokitApiService.GetLatestReleaseAssetsList(rssUrl);
-
-            if (listUrlAssetsList != null)
+            if (rssUrl.IsGithubReleaseUrl())
             {
-                htmlMessage.Br()
-                    .Append(listUrlAssetsList)
-                    .Br()
-                    .Br();
+                var listUrlAssetsList = await _octokitApiService.GetLatestReleaseAssetsList(rssUrl);
+
+                if (listUrlAssetsList != null)
+                {
+                    htmlMessage.Br()
+                        .Append(listUrlAssetsList)
+                        .Br()
+                        .Br();
+                }
+                else
+                {
+                    htmlMessage.Br();
+                }
+
+                htmlMessage.Text("#github #release");
+
+                disableWebPagePreview = true;
             }
             else
             {
-                htmlMessage.Br();
+                htmlMessage.TextBr($"{rssTitle} - {rssFeedTitle}");
+
+                htmlMessage.TextBr($"{rssFeedLink}");
+
+                if (category.IsNotNullOrEmpty())
+                    htmlMessage.Text($"\nTags: {category}");
             }
 
-            htmlMessage.Text("#github #release");
-
-            disableWebPagePreview = true;
-        }
-        else
-        {
-            htmlMessage.TextBr($"{rssTitle} - {rssFeedTitle}");
-
-            htmlMessage.TextBr($"{rssFeedLink}");
-
-            if (category.IsNotNullOrEmpty())
-                htmlMessage.Text($"\nTags: {category}");
-        }
-
-        try
-        {
             await _botClient.SendTextMessageAsync(
                 chatId: chatId,
                 text: htmlMessage.ToString(),
