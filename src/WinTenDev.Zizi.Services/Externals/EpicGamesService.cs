@@ -52,7 +52,7 @@ public class EpicGamesService
         allowAt?.ForEach(
             target => {
                 var chatId = target.ToInt64();
-                var jobId = "vendor_egs-free_" + chatId.ReduceChatId();
+                var jobId = "egs-free_" + chatId.ReduceChatId();
                 _recurringJobManager.AddOrUpdate(
                     recurringJobId: jobId,
                     methodCall: () => RunEpicGamesBroadcaster(chatId),
