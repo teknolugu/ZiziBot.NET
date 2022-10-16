@@ -3,7 +3,8 @@ using MongoDB.Entities;
 
 namespace WinTenDev.Zizi.Models.Entities.MongoDb.Internal;
 
-public class WebHookChat : IEntity, ICreatedOn, IModifiedOn
+[Collection("WebHookChat")]
+public class WebHookChatEntity : IEntity, ICreatedOn, IModifiedOn
 {
     public string ID { get; set; }
     public long ChatId { get; set; }

@@ -286,7 +286,7 @@ public class RssService
         //     )
         //     .DeleteAsync();
 
-        var delete = await DB.DeleteAsync<ArticleSent>(sent => sent.CreatedOn < dateTime);
+        var delete = await DB.DeleteAsync<ArticleSentEntity>(sent => sent.CreatedOn < dateTime);
 
         var rowsItems = "row".ToQuantity(delete.DeletedCount);
 

@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using AsyncAwaitBestPractices;
@@ -101,5 +102,31 @@ public static class TaskUtil
             block.Post(item);
         block.Complete();
         return block.Completion;
+    }
+
+    public static async Task<IEnumerable<TResult>> SelectAsync<TSource, TResult>(
+        this IEnumerable<TSource> source,
+        Func<TSource, Task<TResult>> selector,
+        int concurrency = int.MaxValue)
+    {
+        var semaphore = new SemaphoreSlim(concurrency);
+        try
+        {
+            return await Task.WhenAll(source.Select(async s => {
+                try
+                {
+                    await semaphore.WaitAsync();
+                    return await selector(s);
+                }
+                finally
+                {
+                    semaphore.Release();
+                }
+            }));
+        }
+        finally
+        {
+            semaphore.Dispose();
+        }
     }
 }

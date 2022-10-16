@@ -16,7 +16,7 @@ public class WebHookService
     private readonly ILogger<WebHookService> _logger;
     private readonly ITelegramBotClient _botClient;
     private readonly WebHookChatService _webHookChatService;
-    private WebHookChat _webHookChat;
+    private WebHookChatEntity _webHookChat;
 
     public WebHookService(
         ILogger<WebHookService> logger,

@@ -52,7 +52,7 @@ public class EpicGamesService
         allowAt?.ForEach(
             target => {
                 var chatId = target.ToInt64();
-                var jobId = "egs-free-" + chatId.ReduceChatId();
+                var jobId = "egs-free_" + chatId.ReduceChatId();
                 _recurringJobManager.AddOrUpdate(
                     recurringJobId: jobId,
                     methodCall: () => RunEpicGamesBroadcaster(chatId),
@@ -266,8 +266,8 @@ public class EpicGamesService
     public async Task<EgsFreeGameRaw> GetFreeGamesRawCore(EgsFreeGamesPromotionsDto promotionsDto)
     {
         var freeGamesObj = await _cacheService.GetOrSetAsync(
-            "egs-free-games",
-            () => {
+            cacheKey: "vendor_egs-free-games",
+            action: () => {
                 var queryParams = promotionsDto.ToDictionary();
 
                 var freeGamesObj = BaseUrl

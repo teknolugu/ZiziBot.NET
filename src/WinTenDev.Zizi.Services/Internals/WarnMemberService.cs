@@ -15,12 +15,12 @@ public class WarnMemberService
         _logger = logger;
     }
 
-    public async Task<List<WarnMember>> GetLatestWarn(
+    public async Task<List<WarnMemberEntity>> GetLatestWarn(
         long chatId,
         long userId
     )
     {
-        var latestWarn = await DB.Find<WarnMember>()
+        var latestWarn = await DB.Find<WarnMemberEntity>()
             .ManyAsync(
                 member =>
                     member.ChatId == chatId &&
@@ -30,7 +30,7 @@ public class WarnMemberService
         return latestWarn;
     }
 
-    public async Task SaveWarnAsync(WarnMember warnMember)
+    public async Task SaveWarnAsync(WarnMemberEntity warnMember)
     {
         await DB.SaveAsync(warnMember);
     }
@@ -40,7 +40,7 @@ public class WarnMemberService
         long userId
     )
     {
-        var delete = await DB.DeleteAsync<WarnMember>(
+        var delete = await DB.DeleteAsync<WarnMemberEntity>(
             member =>
                 member.ChatId == chatId &&
                 member.MemberUserId == userId

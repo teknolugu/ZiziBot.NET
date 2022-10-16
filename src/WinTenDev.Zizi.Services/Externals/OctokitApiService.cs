@@ -47,7 +47,7 @@ public class OctokitApiService
         var repoUrl = urlSplit.Take(5).JoinStr("/");
 
         var githubRepoInfo = await _cacheService.GetOrSetAsync(
-            cacheKey: repoUrl,
+            cacheKey: "vendor_github_" + repoUrl.ToCacheKey(),
             staleAfter: "5m",
             action: async () => {
                 var client = CreateClient();

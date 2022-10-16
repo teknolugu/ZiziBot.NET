@@ -10,6 +10,7 @@ using Google.Apis.Drive.v3.Data;
 using Google.Apis.Services;
 using Google.Apis.Upload;
 using HeyRed.Mime;
+using Serilog;
 using WinTenDev.Zizi.Services.Google;
 using File=Google.Apis.Drive.v3.Data.File;
 
@@ -112,6 +113,12 @@ public static class GoogleApiServiceExtension
     )
     {
         var config = api.GetConfig();
+
+        if (parentId == "default")
+        {
+            Log.Debug("Using default Google Drive parentId");
+            parentId = config.ZiziBotDrive;
+        }
 
         Log.Information("Uploading file to Google Drive. Source: {SourceFile}", sourceFile);
         var service = api.GetGoogleDriveService();

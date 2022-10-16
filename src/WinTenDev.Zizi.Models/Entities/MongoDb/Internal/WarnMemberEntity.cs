@@ -4,7 +4,8 @@ using MongoDB.Entities;
 
 namespace WinTenDev.Zizi.Models.Entities.MongoDb.Internal;
 
-public class WarnMember : IEntity, ICreatedOn
+[Collection("WarnMember")]
+public class WarnMemberEntity : IEntity, ICreatedOn
 {
     public string GenerateNewID() => ObjectId.GenerateNewId().ToString();
 

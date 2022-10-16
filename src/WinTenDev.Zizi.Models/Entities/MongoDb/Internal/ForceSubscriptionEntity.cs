@@ -5,7 +5,8 @@ using MongoDB.Entities;
 
 namespace WinTenDev.Zizi.Models.Entities.MongoDb.Internal;
 
-public class ForceSubscription : IEntity, ICreatedOn, IModifiedOn
+[Collection("ForceSubscription")]
+public class ForceSubscriptionEntity : IEntity, ICreatedOn, IModifiedOn
 {
     [ObjectId, BsonId]
     public string ID { get; set; }

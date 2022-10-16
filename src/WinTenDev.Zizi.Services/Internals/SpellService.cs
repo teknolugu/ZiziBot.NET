@@ -55,7 +55,7 @@ public class SpellService
     public async Task<List<SpellEntity>> GetSpellAll(bool evictBefore = false)
     {
         var spells = await _cacheService.GetOrSetAsync(
-            cacheKey: "spelling",
+            cacheKey: "internal_spelling",
             evictBefore: evictBefore,
             action: async () => {
                 // var spells = await DbConnection.QueryAllAsync<Spell>();

@@ -7,6 +7,7 @@ using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InlineQueryResults;
 using Telegram.Bot.Types.ReplyMarkups;
+using WinTenDev.Zizi.Services.Google;
 
 namespace WinTenDev.Zizi.Services.Extensions;
 
@@ -18,23 +19,29 @@ public static class InlineQueryExtension
     )
     {
         var inlineQuery = telegramService.InlineQuery;
+        var fromId = inlineQuery.From.Id;
         var inlineQueryId = inlineQuery.Id;
 
-        var reducedResult = inlineQueryResults.Take(50);
+        var reducedResult = inlineQueryResults
+            .DistinctBy(result => result.Id)
+            .Take(50)
+            .ToList();
 
         try
         {
             await telegramService.Client.AnswerInlineQueryAsync(
                 inlineQueryId: inlineQueryId,
-                results: reducedResult
+                results: reducedResult,
+                cacheTime: 5
             );
         }
         catch (Exception exception)
         {
             Log.Error(
                 exception,
-                "Error when answering inline query: {Id}",
-                inlineQueryId
+                "Error when answering inline query: {Id} fromId: {FromId}",
+                inlineQueryId,
+                fromId
             );
         }
     }
@@ -54,6 +61,7 @@ public static class InlineQueryExtension
             "subscene-dl" => await telegramService.OnInlineQuerySubsceneDownloadAsync(),
             "uup" => await telegramService.OnInlineQuerySearchUupAsync(),
             "kbbi" => await telegramService.OnInlineQuerySearchKbbiAsync(),
+            "yt" => await telegramService.OnInlineQuerySearchYoutubeAsync(),
             _ => await telegramService.OnInlineQueryGuideAsync()
         };
 
@@ -93,6 +101,10 @@ public static class InlineQueryExtension
                 new[]
                 {
                     InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Cari UUP dump", "uup ")
+                },
+                new[]
+                {
+                    InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Cari Youtube", "yt ")
                 },
             }
         );
@@ -612,5 +624,55 @@ public static class InlineQueryExtension
         );
 
         return default;
+    }
+
+    public static async Task<InlineQueryExecutionResult> OnInlineQuerySearchYoutubeAsync(this TelegramService telegramService)
+    {
+        var executionResult = new InlineQueryExecutionResult();
+        var inlineValue = telegramService.InlineQueryValue;
+        var youtubeService = telegramService.GetRequiredService<YoutubeService>();
+        var searchResults = await youtubeService.SearchVideoByTitle(inlineValue);
+
+        var urlStartBase = await telegramService.GetUrlStart("");
+
+        var inlineQueryResults = await searchResults.SelectAsync(async result => {
+            var header = result.Author + " - " + result.Duration;
+            var content = result.Title;
+            var thumbs = result.Thumbnails.FirstOrDefault();
+
+            var urlStart = await telegramService.GetUrlStart("start=yt-dl_" + result.Id);
+
+            return new InlineQueryResultArticle(
+                id: "yt_" + result.Url,
+                title: header,
+                inputMessageContent: new InputTextMessageContent(content)
+                {
+                    ParseMode = ParseMode.Html
+                }
+            )
+            {
+                ThumbUrl = thumbs?.Url,
+                Description = content,
+                ReplyMarkup = new InlineKeyboardMarkup(
+                    new[]
+                    {
+                        new[]
+                        {
+                            InlineKeyboardButton.WithUrl("🌐 Open", result.Url),
+                            InlineKeyboardButton.WithUrl("⬇ Download", urlStart),
+                        },
+                        new[]
+                        {
+                            InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Pencarian lanjut", $"yt {inlineValue} "),
+                            InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Pencarian baru", "yt ")
+                        }
+                    }
+                )
+            };
+        });
+
+        await telegramService.AnswerInlineQueryAsync(inlineQueryResults);
+
+        return executionResult;
     }
 }

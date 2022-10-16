@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Serilog;
 using SerilogTimings;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -112,6 +113,13 @@ public static class TelegramServiceActivityExtension
         }
 
         await telegramService.AnswerChatJoinRequestAsync();
+
+        var preCheckForceSubscription = await telegramService.PreCheckForceSubscriptionAsync();
+
+        if (!preCheckForceSubscription)
+        {
+            return false;
+        }
 
         var checkAntiSpamResult = await telegramService.AntiSpamCheckAsync();
 
@@ -309,15 +317,20 @@ public static class TelegramServiceActivityExtension
             await telegramService.RestrictMemberAsync(fromId, until: untilDate);
         }
 
-        var replyMarkup = new InlineKeyboardMarkup(
-            new[]
-            {
+        InlineKeyboardMarkup replyMarkup = InlineKeyboardMarkup.Empty();
+
+        if (!await telegramService.CheckFromAdmin())
+        {
+            replyMarkup = new InlineKeyboardMarkup(
                 new[]
                 {
-                    InlineKeyboardButton.WithCallbackData("🧹 Hapus Debuff", $"un-restrict {fromId}")
+                    new[]
+                    {
+                        InlineKeyboardButton.WithCallbackData("🧹 Hapus Debuff", $"un-restrict {fromId}")
+                    }
                 }
-            }
-        );
+            );
+        }
 
         await telegramService.SendTextMessageAsync(sendText, replyMarkup: replyMarkup, scheduleDeleteAt: untilDate);
         return result;

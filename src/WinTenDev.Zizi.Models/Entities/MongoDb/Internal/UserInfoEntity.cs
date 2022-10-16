@@ -4,7 +4,8 @@ using MongoDB.Entities;
 
 namespace WinTenDev.Zizi.Models.Entities.MongoDb.Internal;
 
-public class UserInfo : IEntity, ICreatedOn
+[Collection("UserInfo")]
+public class UserInfoEntity : IEntity, ICreatedOn
 {
     public string ID { get; set; }
     public long UserId { get; set; }

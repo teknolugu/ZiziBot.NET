@@ -24,7 +24,7 @@ public class ArticleSentService
         string url
     )
     {
-        var isAny = await DB.Find<ArticleSent>()
+        var isAny = await DB.Find<ArticleSentEntity>()
             .Match(sent =>
                 sent.ChatId == chatId &&
                 sent.Url == url
@@ -42,7 +42,7 @@ public class ArticleSentService
 
     public async Task SaveAsync(ArticleSentDto articleSentDto)
     {
-        var articleSent = _mapper.Map<ArticleSent>(articleSentDto);
+        var articleSent = _mapper.Map<ArticleSentEntity>(articleSentDto);
 
         await articleSent.InsertAsync();
     }

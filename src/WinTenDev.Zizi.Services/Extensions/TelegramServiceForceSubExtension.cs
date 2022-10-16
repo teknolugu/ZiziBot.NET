@@ -59,7 +59,7 @@ public static class TelegramServiceForceSubExtension
 
             await telegramService.AppendTextAsync($"Title: {chat.Title}", reappendText: true);
 
-            var fSubData = new ForceSubscription()
+            var fSubData = new ForceSubscriptionEntity()
             {
                 ChatId = telegramService.ChatId,
                 UserId = telegramService.FromId,
@@ -189,5 +189,42 @@ public static class TelegramServiceForceSubExtension
             includeSenderMessage: true,
             preventDuplicateSend: true
         );
+    }
+
+    public static async Task<bool> PreCheckForceSubscriptionAsync(this TelegramService telegramService)
+    {
+        var chatSettings = await telegramService.GetChatSetting();
+        if (!(telegramService.IsSenderChannel &&
+              chatSettings.EnableForceSubscription))
+        {
+            telegramService.IsShouldCheckChannelSubscription = true;
+            return true;
+        }
+
+        var chatId = telegramService.ChatId;
+        var userId = telegramService.FromId;
+        var senderChatId = telegramService.SenderChat.Id;
+
+        var userExceptionService = telegramService.GetRequiredService<UserExceptionService>();
+
+        var isExist = await userExceptionService.IsExist(chatId, senderChatId);
+
+        if (isExist)
+        {
+            telegramService.IsShouldCheckChannelSubscription = false;
+            return true;
+        }
+
+        var sender = telegramService.SenderChat;
+        await telegramService.SendTextMessageAsync(
+            enumLang: ChannelSubscription.ShouldUseRealAccount,
+            scheduleDeleteAt: DateTime.Now.AddMinutes(1)
+        );
+
+        await telegramService.BanSenderChatAsync(sender.Id);
+
+        telegramService.IsShouldCheckChannelSubscription = false;
+
+        return false;
     }
 }

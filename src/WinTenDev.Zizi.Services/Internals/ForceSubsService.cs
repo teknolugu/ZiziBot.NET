@@ -15,13 +15,13 @@ public class ForceSubsService
         _logger = logger;
     }
 
-    public async Task<int> SaveSubsAsync(ForceSubscription forceSubscription)
+    public async Task<int> SaveSubsAsync(ForceSubscriptionEntity forceSubscription)
     {
         int affectedRows = 0;
         var chatId = forceSubscription.ChatId;
         var channelId = forceSubscription.ChannelId;
 
-        var currentSubscriptions = await DB.Find<ForceSubscription>()
+        var currentSubscriptions = await DB.Find<ForceSubscriptionEntity>()
             .ManyAsync(
                 subscription =>
                     subscription.ChatId == chatId &&
@@ -30,16 +30,16 @@ public class ForceSubsService
 
         if (currentSubscriptions.Count == 0)
         {
-            await DB.SaveAsync<ForceSubscription>(forceSubscription);
+            await DB.SaveAsync<ForceSubscriptionEntity>(forceSubscription);
             affectedRows = 1;
         }
 
         return affectedRows;
     }
 
-    public async Task<List<ForceSubscription>> GetSubsAsync(long chatId)
+    public async Task<List<ForceSubscriptionEntity>> GetSubsAsync(long chatId)
     {
-        var subscriptions = await DB.Find<ForceSubscription>()
+        var subscriptions = await DB.Find<ForceSubscriptionEntity>()
             .ManyAsync(
                 subscription =>
                     subscription.ChatId == chatId
@@ -59,7 +59,7 @@ public class ForceSubsService
         long channelId
     )
     {
-        var deleteResult = await DB.DeleteAsync<ForceSubscription>(
+        var deleteResult = await DB.DeleteAsync<ForceSubscriptionEntity>(
             subscription =>
                 subscription.ChatId == chatId &&
                 subscription.ChannelId == channelId

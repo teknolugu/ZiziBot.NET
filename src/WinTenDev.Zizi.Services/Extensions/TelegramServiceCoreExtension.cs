@@ -91,6 +91,24 @@ public static class TelegramServiceCoreExtension
         return false;
     }
 
+    public static async Task BanSenderChatAsync(
+        this TelegramService telegramService,
+        long senderChatId
+    )
+    {
+        var chatId = telegramService.ChatId;
+
+        try
+        {
+            Log.Information("Banning {SenderChatId} from {ChatId}", senderChatId, chatId);
+            await telegramService.Client.BanChatSenderChatAsync(chatId, senderChatId);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Error while banning {SenderChatId} from {ChatId}", senderChatId, chatId);
+        }
+    }
+
     public static async Task SendStartAsync(this TelegramService telegramService)
     {
         var enginesConfig = telegramService.EnginesConfig;
@@ -117,13 +135,14 @@ public static class TelegramServiceCoreExtension
                           $"\n{botDescription}." +
                           $"\n\n";
 
-        var sendText = $"Adalah bot debugging dan manajemen grup yang di lengkapi dengan alat keamanan.";
+        var sendText = $"Adalah bot debugging dan manajemen grup yang dilengkapi dengan alat keamanan.";
 
         var result = startCmd switch
         {
             "rules" => await rulesProcessor.Execute(startArgs.ElementAtOrDefault(1)),
             "set-username" => usernameProcessor.Execute(startArgs.ElementAtOrDefault(1)),
             "sub-dl" => await telegramService.OnStartSubsceneDownloadAsync(startArgs.ElementAtOrDefault(1)),
+            "yt-dl" => await telegramService.OnStartYoutubeDownloadAsync(),
             _ => null
         };
 

@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Humanizer;
 using MoreLinq;
+using Serilog;
 using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -32,6 +33,7 @@ public static class TelegramServiceMemberExtension
         if (telegramService.IsPrivateChat ||
             telegramService.ChannelPost != null ||
             telegramService.EditedChannelPost != null ||
+            telegramService.HasChatJoinRequest ||
             telegramService.CheckFromAnonymous() ||
             telegramService.CheckSenderChannel())
         {
@@ -227,7 +229,7 @@ public static class TelegramServiceMemberExtension
 
             var botUser = await telegramService.GetMeAsync();
 
-            var userInfo = new UserInfo
+            var userInfo = new UserInfoEntity
             {
                 UserId = fromId,
                 FirstName = fromFirstName,
@@ -681,6 +683,16 @@ public static class TelegramServiceMemberExtension
                 return true;
             }
 
+            if (!telegramService.IsShouldCheckChannelSubscription)
+            {
+                Log.Debug("UserId: {UserId} at ChatId: {ChatId} is not Should Check Channel Subscription because using Sender Channel",
+                    fromId,
+                    chatId
+                );
+
+                return true;
+            }
+
             var settings = await telegramService.GetChatSetting();
             if (!settings.EnableForceSubscription)
             {
@@ -716,7 +728,7 @@ public static class TelegramServiceMemberExtension
             var keyboard = new InlineKeyboardMarkup(listKeyboard.Chunk(1));
 
             var sendText = $"Hai {fromNameLink}" +
-                           "\nKamu belum Subscribe ke Channel dibawah ini, silakan segera Subcribe agar tidak di tendang.";
+                           "\nKamu belum Subscribe ke Channel dibawah ini, silakan segera Subscribe agar tidak ditendang.";
 
             await telegramService.SendTextMessageAsync(
                 sendText: sendText,
@@ -1089,7 +1101,7 @@ public static class TelegramServiceMemberExtension
             await chatAdminService.SaveAll(
                 admins.Select(
                     member =>
-                        new GroupAdmin()
+                        new GroupAdminEntity()
                         {
                             UserId = member.User.Id,
                             ChatId = telegramService.ChatId,

@@ -3,6 +3,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
+using WinTenDev.Zizi.Services.Google;
+using YoutubeExplode.Videos.Streams;
 
 namespace WinTenDev.Zizi.Services.Extensions;
 
@@ -96,5 +98,56 @@ internal static class StartCommandExtension
         ).InBackground();
 
         return response;
+    }
+
+    public static async Task<MessageResponseDto> OnStartYoutubeDownloadAsync(
+        this TelegramService telegramService
+    )
+    {
+        var responseDto = new MessageResponseDto();
+
+        var youtubeService = telegramService.GetRequiredService<YoutubeService>();
+        var googleApiService = telegramService.GetRequiredService<GoogleApiService>();
+
+        var startCmdParse = telegramService.GetStartCommand();
+        var videoUrl = startCmdParse.StartArgs.LastOrDefault();
+
+        var htmlMessage = HtmlMessage.Empty
+            .Bold("Youtube Downloader").Br()
+            .Bold("URL: ").Text(videoUrl);
+
+        await telegramService.AppendTextAsync(htmlMessage.ToString());
+
+        await telegramService.AppendTextAsync("Mendapatkan informasi video...");
+        var streamManifest = await youtubeService.GetStreamManifestAsync(videoUrl);
+        var videoManifest = await youtubeService.GetVideoManifestAsync(videoUrl);
+
+        var streamInfo = streamManifest
+            .GetAudioOnlyStreams()
+            .GetWithHighestBitrate();
+
+        var ext = streamInfo.Container.Name;
+
+        await telegramService.AppendTextAsync("Sedang mengunduh berkas..");
+
+        var fileName = videoManifest.Title + "." + streamInfo.Container;
+        var filePath = await youtubeService.DownloadStreamAsync(streamInfo, fileName);
+        var locationOnDrive = "public/youtube";
+
+        await telegramService.AppendTextAsync("Sedang mengunggah ke Drive..");
+
+        var pathOnDrive = await googleApiService.UploadFileToDrive(
+            parentId: "default",
+            sourceFile: filePath,
+            locationPath: locationOnDrive,
+            preventDuplicate: true
+        );
+
+        await telegramService.AppendTextAsync("Selesai..");
+
+        await telegramService.SendChatActionAsync(ChatAction.UploadDocument);
+        await telegramService.SendMediaAsync(filePath, MediaType.LocalDocument, htmlMessage.ToString());
+
+        return responseDto;
     }
 }

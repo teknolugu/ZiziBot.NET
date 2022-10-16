@@ -66,6 +66,9 @@ public class TelegramService
     public bool IsChannel { get; set; }
     public bool IsChatRestricted { get; set; }
 
+    public bool IsSenderChannel => SenderChat != null;
+    public bool IsShouldCheckChannelSubscription { get; set; }
+
     [Obsolete("Please read value from SentMessage")]
     public int SentMessageId { get; set; }
 
@@ -462,6 +465,23 @@ public class TelegramService
     public bool IsCommand(string command)
     {
         return GetCommand() == command;
+    }
+
+    public StartCmdParse GetStartCommand()
+    {
+        var partText = Message.Text.SplitText(" ").ToArray();
+        var startArg = partText.ElementAtOrDefault(1);
+        var startArgs = startArg?.Split("_");
+        var startCmd = startArgs?.FirstOrDefault();
+
+        var startCmdParse = new StartCmdParse()
+        {
+            StartCmd = startCmd,
+            StartArgs = startArgs,
+            StartArg = startArg
+        };
+
+        return startCmdParse;
     }
 
     public async Task<string> GetLocalizationString(

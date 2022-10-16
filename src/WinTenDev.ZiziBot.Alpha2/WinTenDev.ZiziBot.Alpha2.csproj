@@ -5,24 +5,24 @@
     <ItemGroup>
     <PackageReference Include="DotNurse.Injector" Version="2.5.2" />
     <PackageReference Include="Serilog.AspNetCore" Version="6.0.1" />
-    <PackageReference Include="SonarAnalyzer.CSharp" Version="8.44.0.52574">
-            <PrivateAssets>all</PrivateAssets>
-            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        </PackageReference>
-    <PackageReference Include="TgBotFramework" Version="0.5.3" />
-    </ItemGroup>
-    <ItemGroup>
+    <PackageReference Include="SonarAnalyzer.CSharp" Version="8.46.0.54807">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="TgBotFramework" Version="0.5.4" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\WinTenDev.Zizi.DbMigrations\WinTenDev.Zizi.DbMigrations.csproj" />
     <ProjectReference Include="..\WinTenDev.Zizi.Extensions\WinTenDev.Zizi.Extensions.csproj" />
     <ProjectReference Include="..\WinTenDev.Zizi.Services\WinTenDev.Zizi.Services.csproj" />
     <ProjectReference Include="..\WinTenDev.Zizi.Utils\WinTenDev.Zizi.Utils.csproj" />
-    </ItemGroup>
-    <ItemGroup>
-        <Content Include="..\..\Resources\Language\**\*" LinkBase="Storage\Language">
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-        </Content>
-        <None Update="Storage\**">
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-        </None>
-    </ItemGroup>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\..\Resources\Language\**\*" LinkBase="Storage\Language">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <None Update="Storage\**">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>

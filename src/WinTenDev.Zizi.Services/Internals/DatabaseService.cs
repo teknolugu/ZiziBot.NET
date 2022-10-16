@@ -259,7 +259,7 @@ public class DatabaseService
 
     public async Task MongoDbDatabaseMapping()
     {
-        _logger.LogInformation("Mapping MongoDb Database..");
+        var op = Operation.Begin("Mapping MongoDb Database");
 
         var meUser = await _botService.GetMeAsync();
         var meUsername = meUser.FirstName.Underscore();
@@ -269,21 +269,25 @@ public class DatabaseService
         await DB.InitAsync(meUsername, MongoClientSettings.FromConnectionString(connectionString));
         await DB.InitAsync("shared", MongoClientSettings.FromConnectionString(connectionString));
 
-        DB.DatabaseFor<ForceSubscription>(meUsername);
-        DB.DatabaseFor<GroupAdmin>(meUsername);
+        DB.DatabaseFor<AfkEntity>(meUsername);
+        DB.DatabaseFor<ArticleSentEntity>(meUsername);
+        DB.DatabaseFor<ChatSettingEntity>(meUsername);
+        DB.DatabaseFor<ForceSubscriptionEntity>(meUsername);
+        DB.DatabaseFor<GroupAdminEntity>(meUsername);
         DB.DatabaseFor<RssSourceEntity>(meUsername);
         DB.DatabaseFor<SpellEntity>(meUsername);
-        DB.DatabaseFor<UserInfo>(meUsername);
-        DB.DatabaseFor<WarnMember>(meUsername);
-        DB.DatabaseFor<WebHookChat>(meUsername);
-        DB.DatabaseFor<WTelegramSession>(meUsername);
+        DB.DatabaseFor<UserInfoEntity>(meUsername);
+        DB.DatabaseFor<UserExceptionEntity>(meUsername);
+        DB.DatabaseFor<WarnMemberEntity>(meUsername);
+        DB.DatabaseFor<WebHookChatEntity>(meUsername);
+        DB.DatabaseFor<WTelegramSessionEntity>(meUsername);
 
         DB.DatabaseFor<SubsceneSource>("shared");
         DB.DatabaseFor<SubsceneMovieSearch>("shared");
         DB.DatabaseFor<SubsceneMovieItem>("shared");
         DB.DatabaseFor<SubsceneSubtitleItem>("shared");
 
-        _logger.LogInformation("Mapping MongoDb Database complete");
+        op.Complete();
     }
 
     public async Task MongoDbEnsureCollectionIndex()
@@ -329,11 +333,11 @@ public class DatabaseService
     public async Task MongoDbExport()
     {
         await MongoDbExportCore<AfkEntity>("csv");
-        await MongoDbExportCore<ForceSubscription>("csv");
-        await MongoDbExportCore<GroupAdmin>("csv");
+        await MongoDbExportCore<ForceSubscriptionEntity>("csv");
+        await MongoDbExportCore<GroupAdminEntity>("csv");
         await MongoDbExportCore<SpellEntity>("csv");
-        await MongoDbExportCore<WarnMember>("csv");
-        await MongoDbExportCore<WebHookChat>("csv");
+        await MongoDbExportCore<WarnMemberEntity>("csv");
+        await MongoDbExportCore<WebHookChatEntity>("csv");
 
         var dirStamp = DateTime.UtcNow.ToString("yyyy-MM-dd");
         var srcPath = Path.Combine("Storage", "Data", "MongoExport", dirStamp);

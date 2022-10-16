@@ -414,14 +414,24 @@ public static class UrlUtil
 
     public static async Task<string> GetServerFileName(this string url)
     {
-        var response = await url
-            .OpenFlurlSession()
-            .GetAsync();
+        string filename;
 
-        var filename = response.Headers
-            .FirstOrDefault("content-disposition").Replace("\"", "")
-            .Split(";").LastOrDefault()?
-            .Split("=").LastOrDefault();
+        try
+        {
+            var response = await url
+                .OpenFlurlSession()
+                .GetAsync();
+
+            filename = response.Headers
+                .FirstOrDefault("content-disposition").Replace("\"", "")
+                .Split(";").LastOrDefault()?
+                .Split("=").LastOrDefault();
+        }
+        catch (Exception e)
+        {
+            Log.Error(e, "Error when try get server file name");
+            filename = StringUtil.NewGuid();
+        }
 
         Log.Debug(
             "Server file name: {Filename} for Url: {Url}",
@@ -443,10 +453,9 @@ public static class UrlUtil
     public static string ToCacheKey(this string url)
     {
         var key = url
-            .Replace("//", "/")
+            .Replace("https://", "")
+            .Replace("http:/", "")
             .Replace("/", "_")
-            .Replace(":", "_")
-            .RegexReplace("_+", "_")
             .TrimEnd('_');
 
         return key;

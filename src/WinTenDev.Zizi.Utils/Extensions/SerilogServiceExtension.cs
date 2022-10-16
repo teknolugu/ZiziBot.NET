@@ -203,6 +203,16 @@ public static class SerilogServiceExtension
         return configuration;
     }
 
+    public static void UseSerilog(this ITestOutputHelper testOutputHelper)
+    {
+        Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Verbose()
+            // add the xunit test output sink to the serilog logger
+            // https://github.com/trbenning/serilog-sinks-xunit#serilog-sinks-xunit
+            .WriteTo.TestOutput(testOutputHelper, restrictedToMinimumLevel: LogEventLevel.Debug)
+            .CreateLogger();
+    }
+
     /// <summary>
     /// Adds the grafana using the specified logger for Serilog
     /// </summary>
