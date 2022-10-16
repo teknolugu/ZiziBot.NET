@@ -142,10 +142,9 @@ public class ChatService
         return data;
     }
 
-    public async Task<long> GetMemberCountAsync(long chatId)
+    public async Task<long> GetMemberCountAsync(ChatId chatId)
     {
-        var reducedChatId = chatId.ReduceChatId();
-        var cacheKey = $"chat_member-count_{reducedChatId}";
+        var cacheKey = $"chat_member-count_{chatId}";
 
         var getMemberCount = await _cacheService.GetOrSetAsync(
             cacheKey,
