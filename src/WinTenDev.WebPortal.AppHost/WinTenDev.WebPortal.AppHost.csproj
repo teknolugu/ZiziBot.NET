@@ -7,25 +7,25 @@
     <Watch Include="..\**\*.razor" />
     <Watch Include="..\**\*.scss" />
     <Watch Include="..\**\*.css" />
-        <!--        <Watch Include="..\**\*.cs" />-->
-    </ItemGroup>
-    <ItemGroup>
-    <PackageReference Include="BootstrapBlazor" Version="6.10.7" />
+    <!--        <Watch Include="..\**\*.cs" />-->
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="BootstrapBlazor" Version="6.11.14" />
     <PackageReference Include="Dapper" Version="2.0.123" />
     <PackageReference Include="EasyCaching.Disk" Version="1.6.1" />
     <PackageReference Include="EasyCaching.SQLite" Version="1.6.1" />
     <PackageReference Include="JetBrains.Annotations" Version="2022.1.0" />
     <PackageReference Include="MatBlazor" Version="2.8.0" />
-        <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="6.0.0">
-            <PrivateAssets>all</PrivateAssets>
-            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        </PackageReference>
+    <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="6.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="MySqlConnector.Logging.Serilog" Version="2.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-        <PackageReference Include="Roslynator.Analyzers" Version="4.1.1">
-            <PrivateAssets>all</PrivateAssets>
-            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        </PackageReference>
+    <PackageReference Include="Roslynator.Analyzers" Version="4.1.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Serilog" Version="2.12.0" />
     <PackageReference Include="Serilog.AspNetCore" Version="6.0.1" />
     <PackageReference Include="Serilog.Extensions.Hosting" Version="5.0.1" />
@@ -33,16 +33,16 @@
     <PackageReference Include="Serilog.Sinks.Console" Version="4.1.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
     <PackageReference Include="SerilogAnalyzer" Version="0.15.0" />
-    <PackageReference Include="SonarAnalyzer.CSharp" Version="8.45.0.54064">
-            <PrivateAssets>all</PrivateAssets>
-            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        </PackageReference>
+    <PackageReference Include="SonarAnalyzer.CSharp" Version="8.46.0.54807">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="SqlKata.Execution" Version="2.4.0" />
-    <PackageReference Include="Syncfusion.Blazor" Version="20.2.0.50" />
+    <PackageReference Include="Syncfusion.Blazor" Version="20.3.0.49" />
     <PackageReference Include="Telegram.Bot.Extensions.LoginWidget" Version="1.2.0" />
-    </ItemGroup>
-    <ItemGroup>
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\WinTenDev.Zizi.Services\WinTenDev.Zizi.Services.csproj" />
     <ProjectReference Include="..\WinTenDev.Zizi.Utils\WinTenDev.Zizi.Utils.csproj" />
-    </ItemGroup>
+  </ItemGroup>
 </Project>
