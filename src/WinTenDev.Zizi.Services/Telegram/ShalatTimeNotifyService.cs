@@ -75,6 +75,7 @@ namespace WinTenDev.Zizi.Services.Telegram
 
         [JobDisplayName("Shalat Time: {0}")]
         [Queue("shalat-time")]
+        [AutomaticRetry(Attempts = 0, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
         public async Task SendNotifyAsync(long chatId)
         {
             Log.Information("Starting send Shalat Time notification to ChatId: {ChatId}", chatId);
