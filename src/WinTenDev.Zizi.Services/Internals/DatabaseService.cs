@@ -271,6 +271,7 @@ public class DatabaseService
 
         DB.DatabaseFor<AfkEntity>(meUsername);
         DB.DatabaseFor<ArticleSentEntity>(meUsername);
+        DB.DatabaseFor<BotUpdateEntity>(meUsername);
         DB.DatabaseFor<ChatSettingEntity>(meUsername);
         DB.DatabaseFor<ForceSubscriptionEntity>(meUsername);
         DB.DatabaseFor<GroupAdminEntity>(meUsername);
