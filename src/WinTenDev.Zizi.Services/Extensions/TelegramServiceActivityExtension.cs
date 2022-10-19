@@ -374,6 +374,18 @@ public static class TelegramServiceActivityExtension
                     CreatedAt = DateTime.UtcNow
                 }
             );
+
+            await botUpdateService.SaveUpdateAsync(
+                new BotUpdateEntity()
+                {
+                    BotName = telegramService.BotUsername,
+                    UpdateId = telegramService.Update.Id,
+                    UpdateType = telegramService.Update.Type,
+                    UserId = telegramService.FromId,
+                    ChatId = chatId,
+                    Update = telegramService.Update,
+                }
+            );
         }
         catch (Exception exception)
         {

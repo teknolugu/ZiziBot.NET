@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Hangfire;
 using Microsoft.Extensions.Logging;
+using MongoDB.Entities;
 using MySqlConnector;
 using RepoDb;
 
@@ -50,6 +51,11 @@ public class BotUpdateService
     public async Task SaveUpdateAsync(BotUpdate botUpdate)
     {
         await DbConnection.InsertAsync(botUpdate, trace: new DefaultTraceLog());
+    }
+
+    public async Task SaveUpdateAsync(BotUpdateEntity botUpdateEntity)
+    {
+        await botUpdateEntity.InsertAsync();
     }
 
     public async Task<IEnumerable<BotUpdate>> GetUpdateAsync()
