@@ -24,8 +24,8 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore
 
-      - name: Update Project version
-        run: dotnet run --project src/WinTenDev.ZiziTools.Cli
+      #      - name: Update Project version
+      #        run: dotnet run --project src/WinTenDev.ZiziTools.Cli
 
       - name: Publish
         run: dotnet publish src/WinTenDev.ZiziBot.AppHost -r linux-x64 -c Release --self-contained=false /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true -o build/zizi-beta
