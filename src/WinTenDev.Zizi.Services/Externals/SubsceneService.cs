@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using MongoDB.Entities;
+using Serilog;
 using SerilogTimings;
 using Telegram.Bot.Types.ReplyMarkups;
 using WinTenDev.Zizi.Services.Google;

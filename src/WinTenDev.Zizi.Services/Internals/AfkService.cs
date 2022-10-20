@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using AutoMapper;
 using MongoDB.Entities;
+using Serilog;
 using SqlKata.Execution;
 
 namespace WinTenDev.Zizi.Services.Internals;
