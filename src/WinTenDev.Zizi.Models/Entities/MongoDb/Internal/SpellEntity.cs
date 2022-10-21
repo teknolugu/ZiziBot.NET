@@ -12,7 +12,7 @@ public class SpellEntity : IEntity, ICreatedOn
     public string ID { get; set; }
     public string Typo { get; set; }
     public string Fix { get; set; }
-    public long FromId { get; set; }
+    public long UserId { get; set; }
     public long ChatId { get; set; }
 
     public DateTime CreatedOn { get; set; }

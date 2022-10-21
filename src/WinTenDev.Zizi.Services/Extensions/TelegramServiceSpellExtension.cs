@@ -27,7 +27,7 @@ public static class TelegramServiceSpellExtension
             Typo = typo,
             Fix = fix,
             ChatId = chatId,
-            FromId = fromId,
+            UserId = fromId,
         };
 
         if (!(await spellDto.ValidateAsync<AddSpellDtoValidator, SpellDto>()).IsValid)

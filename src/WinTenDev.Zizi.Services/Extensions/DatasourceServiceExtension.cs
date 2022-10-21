@@ -17,6 +17,7 @@ public static class DatasourceServiceExtension
         }, type => true);
 
         await databaseService.MongoDbDatabaseMapping();
+        await databaseService.MongoDbMigration();
         await databaseService.MongoDbEnsureCollectionIndex();
 
         return app;

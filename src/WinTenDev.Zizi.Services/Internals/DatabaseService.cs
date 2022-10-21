@@ -291,6 +291,11 @@ public class DatabaseService
         op.Complete();
     }
 
+    public async Task MongoDbMigration()
+    {
+        await DB.MigrateAsync();
+    }
+
     public async Task MongoDbEnsureCollectionIndex()
     {
         _logger.LogInformation("Creating MongoDb Index..");
