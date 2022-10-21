@@ -19,6 +19,7 @@ using SqlKata.Execution;
 using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InputFiles;
+using WinTenDev.Zizi.DbMigrations.MongoDBEntities;
 
 namespace WinTenDev.Zizi.Services.Internals;
 
@@ -293,7 +294,7 @@ public class DatabaseService
 
     public async Task MongoDbMigration()
     {
-        await DB.MigrateAsync();
+        await DB.MigrateAsync<_001_spell_rename_fromid>();
     }
 
     public async Task MongoDbEnsureCollectionIndex()
