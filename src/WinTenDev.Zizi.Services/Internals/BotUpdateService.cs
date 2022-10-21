@@ -82,13 +82,30 @@ public class BotUpdateService
     public async Task DeleteOldUpdateAsync()
     {
         var oldOffset = DateTime.UtcNow.AddMonths(-2);
-        _logger.LogInformation("Deleting old updates. Older than {OldOffset}", oldOffset);
+        _logger.LogInformation("Deleting old updates. Older than offset: {OldOffset}", oldOffset);
         var delete = await DbConnection.DeleteAsync<BotUpdate>(
-            update =>
+            where: update =>
                 update.CreatedAt <= oldOffset,
             trace: new DefaultTraceLog()
         );
 
-        _logger.LogInformation("Deleted old Updates. Total {delete} item(s)", delete);
+        _logger.LogInformation("Deleted old Updates. Total {Delete} item(s)", delete);
+
+        var secondOldOffset = DateTime.UtcNow.AddDays(-14);
+        var secondOldOffsetStr = secondOldOffset.ToString("yyyy-MM-dd");
+        _logger.LogInformation("Deleting old updates. Older than second offset: {OldOffset}", oldOffset);
+
+        var sql =
+            "delete from bot_update " +
+            "where ( " +
+            "`update` not like '%@%' " +
+            "or `update` not like '%http%' " +
+            "or user_id in (0, 777000)) " +
+                  $"and created_at < '{secondOldOffsetStr}' " +
+            "order by created_at desc;";
+
+        var deleteSecond = await DbConnection.ExecuteNonQueryAsync(sql);
+
+        _logger.LogInformation("Deleted old Updates. Total {DeleteSecond} item(s)", deleteSecond);
     }
 }
