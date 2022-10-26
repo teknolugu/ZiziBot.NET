@@ -20,6 +20,7 @@ using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InputFiles;
 using WinTenDev.Zizi.DbMigrations.MongoDBEntities;
+using WinTenDev.Zizi.Models.Entities.MongoDb.Internal.Games;
 
 namespace WinTenDev.Zizi.Services.Internals;
 
@@ -283,6 +284,11 @@ public class DatabaseService
         DB.DatabaseFor<WarnMemberEntity>(meUsername);
         DB.DatabaseFor<WebHookChatEntity>(meUsername);
         DB.DatabaseFor<WTelegramSessionEntity>(meUsername);
+
+        DB.DatabaseFor<GameEntity>(meUsername);
+        DB.DatabaseFor<TebakKataQuestionEntity>(meUsername);
+        DB.DatabaseFor<TebakKataAnswerEntity>(meUsername);
+        DB.DatabaseFor<SessionChatTebakKataEntity>(meUsername);
 
         DB.DatabaseFor<SubsceneSource>("shared");
         DB.DatabaseFor<SubsceneMovieSearch>("shared");
