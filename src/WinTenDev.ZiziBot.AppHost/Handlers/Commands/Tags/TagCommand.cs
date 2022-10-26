@@ -142,6 +142,6 @@ public class TagCommand : CommandBase
             includeSenderMessage: true
         );
 
-        await _tagsService.UpdateCacheAsync(chatId);
+        await _tagsService.GetTagsByGroupAsync(chatId, true);
     }
 }
