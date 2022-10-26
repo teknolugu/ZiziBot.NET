@@ -91,4 +91,7 @@ public static class When
 
     public static bool InlineQuery(IUpdateContext context) =>
         context.Update.InlineQuery != null;
+
+    public static bool ChatJoinRequest(IUpdateContext context) =>
+        context.Update.ChatJoinRequest != null;
 }

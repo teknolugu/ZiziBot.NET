@@ -1,7 +1,6 @@
 ﻿using Serilog;
 using Telegram.Bot.Framework;
 using Telegram.Bot.Framework.Abstractions;
-using WinTenDev.ZiziBot.AppHost.Handlers.Commands.Donors;
 using WinTenDev.ZiziBot.AppHost.Handlers.Commands.Games;
 
 namespace WinTenDev.ZiziBot.AppHost.Extensions;
