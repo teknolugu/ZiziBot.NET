@@ -1,13 +1,14 @@
 using Microsoft.AspNetCore.Builder;
 using Serilog;
 using WinTenDev.Zizi.DbMigrations.Extensions;
+using WinTenDev.Zizi.Extensions;
 using WinTenDev.Zizi.Utils.Extensions;
-
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.MappingAppSettings();
 
-builder.Host.ConfigureAppConfiguration(
+builder.Host
+    .ConfigureAppConfiguration(
         (
             context,
             configurationBuilder
@@ -26,6 +27,7 @@ builder.Host.ConfigureAppConfiguration(
 builder.Logging.AddSerilog();
 
 builder.Services.AddFluentMigration();
+builder.Services.ConfigureAutoMapper();
 
 builder.Services.AddCommonService();
 
@@ -47,8 +49,12 @@ app.ConfigureLibrary();
 
 app.UseServiceInjection();
 
+await app.ExecuteStartupTasks();
+
 app.UseHangfireDashboardAndServer();
 
 app.MapGet("/", () => "Hello World!");
 
-app.Run();
+await app.RunStartupTasksAsync();
+
+await app.RunAsync();
