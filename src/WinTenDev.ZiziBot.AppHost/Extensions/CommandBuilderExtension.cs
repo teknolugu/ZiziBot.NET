@@ -16,6 +16,7 @@ public static class CommandBuilderExtension
                 .Use<ExceptionHandler>()
                 .UseWhen<WebhookLogger>(When.WebHook)
                 .UseWhen<InlineQueryHandler>(When.InlineQuery)
+                .UseWhen<ChatJoinRequestHandler>(When.ChatJoinRequest)
                 // .Use<CheckChatPhotoHandler>()
                 .Use<NewUpdateHandler>()
                 // .Use<CustomUpdateLogger>()
