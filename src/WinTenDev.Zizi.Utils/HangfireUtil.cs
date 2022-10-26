@@ -13,7 +13,6 @@ using Hangfire.Mongo.Migration.Strategies.Backup;
 using Hangfire.MySql;
 using Hangfire.Redis;
 using Hangfire.Storage;
-using Hangfire.Storage.Monitoring;
 using Hangfire.Storage.SQLite;
 using MongoDB.Driver;
 using Serilog;
@@ -26,8 +25,8 @@ public static class HangfireUtil
 {
     public static void PurgeJobs()
     {
-        JobStorage.Current.PurgeEnqueuedJobs();
         JobStorage.Current.PurgeOrphanedJobs();
+        JobStorage.Current.PurgeEnqueuedJobs();
         JobStorage.Current.PurgeRecurringJobs();
     }
 
@@ -287,7 +286,9 @@ public static class HangfireUtil
 
         var options = new SQLiteStorageOptions()
         {
-            QueuePollInterval = TimeSpan.FromSeconds(10)
+            QueuePollInterval = TimeSpan.FromSeconds(10),
+            AutoVacuumSelected = SQLiteStorageOptions.AutoVacuum.FULL,
+            InvisibilityTimeout = TimeSpan.FromHours(1)
         };
 
         var storage = new SQLiteStorage(connectionString, options);
