@@ -300,7 +300,12 @@ public class DatabaseService
 
     public async Task MongoDbMigration()
     {
-        await DB.MigrateAsync<_001_spell_rename_fromid>();
+        await DB.MigrationsAsync(new IMigration[]
+        {
+            new _001_Spell_Rename_FromId(),
+            new _002_Game_Initialize_Tebak_Kata_Sample(),
+            new _003_GlobalBan_Migrate_From_Mysql()
+        });
     }
 
     public async Task MongoDbEnsureCollectionIndex()
