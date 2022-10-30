@@ -305,7 +305,8 @@ public class DatabaseService
         {
             new _001_Spell_Rename_FromId(),
             new _002_Game_Initialize_Tebak_Kata_Sample(),
-            new _003_GlobalBan_Migrate_From_Mysql()
+            new _003_GlobalBan_Migrate_From_Mysql(),
+            new _004_City_Migrate_From_MySql()
         });
     }
 
