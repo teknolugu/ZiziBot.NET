@@ -275,6 +275,7 @@ public class DatabaseService
         DB.DatabaseFor<ArticleSentEntity>(meUsername);
         DB.DatabaseFor<BotUpdateEntity>(meUsername);
         DB.DatabaseFor<ChatSettingEntity>(meUsername);
+        DB.DatabaseFor<CityEntity>(meUsername);
         DB.DatabaseFor<ForceSubscriptionEntity>(meUsername);
         DB.DatabaseFor<GroupAdminEntity>(meUsername);
         DB.DatabaseFor<RssSourceEntity>(meUsername);

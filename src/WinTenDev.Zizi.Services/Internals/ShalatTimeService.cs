@@ -1,7 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
 using Microsoft.Extensions.Logging;
+using MongoDB.Entities;
 using MySqlConnector;
 using RepoDb;
 
@@ -10,14 +13,17 @@ namespace WinTenDev.Zizi.Services.Internals
     public class ShalatTimeService
     {
         private readonly ILogger<ShalatTimeService> _logger;
+        private readonly IMapper _mapper;
         private readonly QueryService _queryService;
 
         public ShalatTimeService(
             ILogger<ShalatTimeService> logger,
+            IMapper mapper,
             QueryService queryService
         )
         {
             _logger = logger;
+            _mapper = mapper;
             _queryService = queryService;
         }
 
@@ -28,10 +34,17 @@ namespace WinTenDev.Zizi.Services.Internals
             string cityName
         )
         {
-            var isExist = await DbConnection.ExistsAsync<ShalatTime>(
-                time =>
-                    time.ChatId == chatId && time.CityName == cityName
-            );
+            // var isExist = await DbConnection.ExistsAsync<ShalatTime>(
+            //     time =>
+            //         time.ChatId == chatId && time.CityName == cityName
+            // );
+
+            var isExist = await DB.Find<CityEntity>()
+                .Match(entity =>
+                    entity.ChatId == chatId &&
+                    string.Equals(entity.CityName, cityName, StringComparison.OrdinalIgnoreCase)
+                )
+                .ExecuteAnyAsync();
 
             return isExist;
         }
@@ -53,20 +66,40 @@ namespace WinTenDev.Zizi.Services.Internals
             );
         }
 
-        public async Task<IEnumerable<ShalatTime>> GetCities()
+        public async Task SaveCityAsync(CityDto city)
         {
-            var shalatTime = await DbConnection.QueryAllAsync<ShalatTime>();
+            _logger.LogDebug(
+                "Insert ShalatTime data. ChatId: {ChatId}, UserId: {UserId}",
+                city.ChatId,
+                city.UserId
+            );
 
-            return shalatTime;
+            var shalatTimeEntity = _mapper.Map<CityEntity>(city);
+            await DB.InsertAsync(shalatTimeEntity);
+
+            _logger.LogInformation(
+                "ShalatTime data saved. ChatId: {ChatId}, UserId: {UserId}",
+                city.ChatId,
+                city.UserId
+            );
         }
 
-        public async Task<List<ShalatTime>> GetCities(long chatId)
+        public async Task<List<CityEntity>> GetCities()
         {
-            var shalatTimes = await GetCities();
+            // var shalatTime = await DbConnection.QueryAllAsync<ShalatTime>();
+            var cities = await DB.Find<CityEntity>()
+                .ExecuteAsync();
 
-            return shalatTimes
-                .Where(shalatTime => shalatTime.ChatId == chatId)
-                .OrderBy(shalatTime => shalatTime.CityName)
+            return cities;
+        }
+
+        public async Task<List<CityEntity>> GetCities(long chatId)
+        {
+            var cities = await GetCities();
+
+            return cities
+                .Where(entity => entity.ChatId == chatId)
+                .OrderBy(entity => entity.CityName)
                 .ToList();
         }
 
@@ -78,17 +111,22 @@ namespace WinTenDev.Zizi.Services.Internals
             return shalatTime.FirstOrDefault();
         }
 
-        public async Task<int> DeleteCityAsync(
+        public async Task<long> DeleteCityAsync(
             long chatId,
             string cityName
         )
         {
-            var delete = await DbConnection.DeleteAsync<ShalatTime>(
-                time =>
-                    time.ChatId == chatId && time.CityName == cityName
+            // var delete = await DbConnection.DeleteAsync<ShalatTime>(
+            //     time =>
+            //         time.ChatId == chatId && time.CityName == cityName
+            // );
+
+            var deleteResult = await DB.DeleteAsync<CityEntity>(entity =>
+                entity.ChatId == chatId &&
+                entity.CityName.ToLower() == cityName
             );
 
-            return delete;
+            return deleteResult.DeletedCount;
         }
     }
 }
