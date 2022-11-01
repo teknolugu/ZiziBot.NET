@@ -77,19 +77,22 @@ public class WordFilterService
         return true;
     }
 
-    public async Task<IEnumerable<WordFilter>> GetWordsListCore()
+    public async Task<List<WordFilterEntity>> GetWordsListCore()
     {
         Log.Debug("Getting Words from Database");
 
-        var wordFilters = await _queryService
-            .CreateMySqlFactory()
-            .FromTable(TableName)
-            .GetAsync<WordFilter>();
+        // var wordFilters = await _queryService
+        //     .CreateMySqlFactory()
+        //     .FromTable(TableName)
+        //     .GetAsync<WordFilter>();
+
+        var wordFilters = await DB.Find<WordFilterEntity>()
+            .ExecuteAsync();
 
         return wordFilters;
     }
 
-    public async Task<IEnumerable<WordFilter>> GetWordsList()
+    public async Task<List<WordFilterEntity>> GetWordsList()
     {
         var data = await _cacheService.GetOrSetAsync(
             cacheKey: "internal_" + CacheKey,
