@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Serilog;
 using Telegram.Bot.Framework.Abstractions;
+using WinTenDev.Zizi.Models.Dto;
 
 namespace WinTenDev.ZiziBot.AppHost.Handlers.Commands.Words;
 
@@ -49,7 +50,7 @@ public class DeleteKataCommand : CommandBase
 
         await _telegramService.SendTextMessageAsync("Sedang menghapus Kata..");
 
-        var wordFilter = new WordFilter()
+        var wordFilter = new WordFilterDto()
         {
             Word = word
         };

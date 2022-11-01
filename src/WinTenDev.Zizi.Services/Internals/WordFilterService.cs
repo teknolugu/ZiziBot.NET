@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
+using MongoDB.Driver;
+using MongoDB.Entities;
 using MoreLinq;
 using Serilog;
 using SerilogTimings;
@@ -12,16 +15,19 @@ namespace WinTenDev.Zizi.Services.Internals;
 public class WordFilterService
 {
     private readonly CacheService _cacheService;
+    private readonly IMapper _mapper;
     private readonly QueryService _queryService;
     private const string TableName = "word_filter";
     private const string CacheKey = "word-filter";
 
     public WordFilterService(
+        IMapper mapper,
         CacheService cacheService,
         QueryService queryService
     )
     {
         _cacheService = cacheService;
+        _mapper = mapper;
         _queryService = queryService;
     }
 
@@ -40,6 +46,17 @@ public class WordFilterService
         return isExist;
     }
 
+    public async Task<bool> IsExistAsync(string word)
+    {
+        var isExist = await DB.Find<WordFilterEntity>()
+            .Match(entity => entity.Word == word)
+            .ExecuteAnyAsync();
+
+        Log.Debug("Group setting IsExist: {IsExist}", isExist);
+
+        return isExist;
+    }
+
     public async Task<bool> SaveWordAsync(WordFilter wordFilter)
     {
         Log.Debug("Saving Word to Database");
@@ -50,6 +67,14 @@ public class WordFilterService
             .InsertAsync(wordFilter);
 
         return insert > 0;
+    }
+
+    public async Task<bool> SaveWordAsync(WordFilterDto wordFilterDto)
+    {
+        var wordFilter = _mapper.Map<WordFilterEntity>(wordFilterDto);
+        await wordFilter.InsertAsync();
+
+        return true;
     }
 
     public async Task<IEnumerable<WordFilter>> GetWordsListCore()
@@ -91,6 +116,17 @@ public class WordFilterService
         var delete = await query.DeleteAsync();
 
         return delete;
+    }
+
+    public async Task<long> DeleteKata(WordFilterDto word)
+    {
+        var filterDefinition = word.ChatId == 0 ?
+            new ExpressionFilterDefinition<WordFilterEntity>(entity => entity.Word == word.Word) :
+            new ExpressionFilterDefinition<WordFilterEntity>(entity => entity.Word == word.Word && entity.ChatId == word.ChatId);
+
+        var delete = await DB.DeleteAsync<WordFilterEntity>(entity => filterDefinition);
+
+        return delete.DeletedCount;
     }
 
     public async Task UpdateWordListsCache()

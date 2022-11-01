@@ -1,9 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Serilog;
 using Telegram.Bot.Framework.Abstractions;
+using WinTenDev.Zizi.Models.Dto;
 
 namespace WinTenDev.ZiziBot.AppHost.Handlers.Commands.Words;
 
@@ -74,8 +74,7 @@ public class AddKataCommand : CommandBase
         }
         else
         {
-
-            var isExist = await _wordFilterService.IsExistAsync(@where);
+            var isExist = await _wordFilterService.IsExistAsync(word);
             if (isExist)
             {
                 await _telegramService.AppendTextAsync("Kata sudah di tambahkan");
@@ -83,13 +82,12 @@ public class AddKataCommand : CommandBase
             else
             {
                 await _telegramService.AppendTextAsync("Sedang menambahkan kata");
-                await _wordFilterService.SaveWordAsync(new WordFilter()
+                await _wordFilterService.SaveWordAsync(new WordFilterDto()
                 {
                     Word = word,
                     ChatId = chatId,
-                    IsGlobal = isGlobalBlock,
-                    FromId = fromId,
-                    CreatedAt = DateTime.Now
+                    IsGlobal = true,
+                    UserId = fromId,
                 });
 
                 await _telegramService.AppendTextAsync("Kata berhasil di tambahkan");

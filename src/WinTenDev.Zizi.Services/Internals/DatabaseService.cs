@@ -284,6 +284,7 @@ public class DatabaseService
         DB.DatabaseFor<UserExceptionEntity>(meUsername);
         DB.DatabaseFor<WarnMemberEntity>(meUsername);
         DB.DatabaseFor<WebHookChatEntity>(meUsername);
+        DB.DatabaseFor<WordFilterEntity>(meUsername);
         DB.DatabaseFor<WTelegramSessionEntity>(meUsername);
 
         DB.DatabaseFor<GameEntity>(meUsername);
