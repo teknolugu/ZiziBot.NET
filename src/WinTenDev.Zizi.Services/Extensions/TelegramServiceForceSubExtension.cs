@@ -206,10 +206,14 @@ public static class TelegramServiceForceSubExtension
         var senderChatId = telegramService.SenderChat.Id;
 
         var userExceptionService = telegramService.GetRequiredService<UserExceptionService>();
+        var chatService = telegramService.GetRequiredService<ChatService>();
 
+        var chat = await chatService.GetChatAsync(chatId);
         var isExist = await userExceptionService.IsExist(chatId, senderChatId);
 
-        if (isExist)
+        if (isExist
+            || chat.LinkedChatId == senderChatId
+        )
         {
             telegramService.IsShouldCheckChannelSubscription = false;
             return true;
