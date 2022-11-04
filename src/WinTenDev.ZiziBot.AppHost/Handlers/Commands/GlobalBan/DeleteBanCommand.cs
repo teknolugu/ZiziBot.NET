@@ -59,6 +59,8 @@ public class DeleteBanCommand : CommandBase
         var save = await _globalBanService.DeleteBanAsync(userId);
         Log.Information("SaveBan: {Save}", save);
 
+        await _telegramService.UnBanMemberAsync(userId);
+
         await _telegramService.EditMessageTextAsync("Memperbarui Cache..");
         await _globalBanService.UpdateCache(userId);
 

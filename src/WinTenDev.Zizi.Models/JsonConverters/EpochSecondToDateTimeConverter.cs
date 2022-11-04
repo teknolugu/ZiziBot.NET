@@ -13,7 +13,15 @@ public class EpochSecondToDateTimeConverter : JsonConverter
     )
     {
         var jObject = new JObject();
-        jObject["$date"] = new DateTimeOffset((DateTime) value).ToUnixTimeMilliseconds();
+        try
+        {
+            jObject["$date"] = new DateTimeOffset((DateTime)value).ToUnixTimeMilliseconds();
+        }
+        catch
+        {
+            jObject["$date"] = default;
+        }
+
         jObject.WriteTo(writer);
     }
 

@@ -66,7 +66,7 @@ public class UntagCommand : CommandBase
             }
 
             await _telegramService.EditMessageTextAsync(sendText);
-            await _tagsService.UpdateCacheAsync(chatId);
+            await _tagsService.GetTagsByGroupAsync(chatId, true);
         }
         else
         {

@@ -44,11 +44,15 @@ public class TagsService
         return $"chat_tags_{reducedChatId}";
     }
 
-    public async Task<IEnumerable<CloudTag>> GetTagsByGroupAsync(long chatId)
+    public async Task<IEnumerable<CloudTag>> GetTagsByGroupAsync(
+        long chatId,
+        bool evictBefore = false
+    )
     {
         var key = GetCacheKey(chatId);
         var data = await _cacheService.GetOrSetAsync(
             cacheKey: key,
+            evictBefore: evictBefore,
             action: () =>
                 GetTagsByGroupCoreAsync(chatId)
         );

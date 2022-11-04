@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using MongoDB.Entities;
 using Serilog;
 using SqlKata.Execution;
 
@@ -27,9 +28,14 @@ public class GlobalBanService
 
     public async Task<bool> IsExist(long userId)
     {
-        var query = await GetGlobalBanByIdCore(userId);
+        // var query = await GetGlobalBanByIdCore(userId);
 
-        var isBan = query != null;
+        // var isBan = query != null;
+
+        var isBan = await DB.Find<GlobalBanUserEntity>()
+            .Match(entity => entity.BannedUserId == userId)
+            .ExecuteAnyAsync();
+
         Log.Information(
             "UserId '{UserId}' Is ES2 Ban? {IsBan}",
             userId,
@@ -51,27 +57,35 @@ public class GlobalBanService
     /// <returns>A Task.</returns>
     public async Task<bool> SaveBanAsync(GlobalBanItem globalBanItem)
     {
-        var userId = globalBanItem.UserId;
-        var fromId = globalBanItem.BannedBy;
-        var chatId = globalBanItem.BannedFrom;
-        var reason = globalBanItem.ReasonBan;
+        // var userId = globalBanItem.UserId;
+        // var fromId = globalBanItem.BannedBy;
+        // var chatId = globalBanItem.BannedFrom;
+        // var reason = globalBanItem.ReasonBan;
+        //
+        // var data = new Dictionary<string, object>()
+        // {
+        //     { "user_id", userId },
+        //     { "from_id", fromId },
+        //     { "chat_id", chatId },
+        //     { "reason", reason }
+        // };
+        //
+        // Log.Information("Inserting new GBan: {@V}", globalBanItem);
+        //
+        // var query = await _queryService
+        //     .CreateMySqlFactory()
+        //     .FromTable(GBanTable)
+        //     .InsertAsync(data);
 
-        var data = new Dictionary<string, object>()
+        await DB.InsertAsync(new GlobalBanUserEntity()
         {
-            { "user_id", userId },
-            { "from_id", fromId },
-            { "chat_id", chatId },
-            { "reason", reason }
-        };
+            BannedUserId = globalBanItem.UserId,
+            UserId = globalBanItem.BannedBy,
+            Reason = globalBanItem.ReasonBan,
+            ChatId = globalBanItem.BannedFrom
+        });
 
-        Log.Information("Inserting new GBan: {@V}", globalBanItem);
-
-        var query = await _queryService
-            .CreateMySqlFactory()
-            .FromTable(GBanTable)
-            .InsertAsync(data);
-
-        return query > 0;
+        return true;
     }
 
     /// <summary>
@@ -81,13 +95,17 @@ public class GlobalBanService
     /// <returns>Delete GBan by userId</returns>
     public async Task<bool> DeleteBanAsync(long userId)
     {
-        var delete = await _queryService
-            .CreateMySqlFactory()
-            .FromTable(GBanTable)
-            .Where("user_id", userId)
-            .DeleteAsync();
+        // var delete = await _queryService
+        //     .CreateMySqlFactory()
+        //     .FromTable(GBanTable)
+        //     .Where("user_id", userId)
+        //     .DeleteAsync();
 
-        return delete > 0;
+        var deleteResult = await DB.DeleteAsync<GlobalBanUserEntity>(entity =>
+            entity.BannedUserId == userId
+        );
+
+        return deleteResult.DeletedCount > 0;
     }
 
     /// <summary>

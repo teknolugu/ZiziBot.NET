@@ -19,6 +19,8 @@ using SqlKata.Execution;
 using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InputFiles;
+using WinTenDev.Zizi.DbMigrations.MongoDBEntities;
+using WinTenDev.Zizi.Models.Entities.MongoDb.Internal.Games;
 
 namespace WinTenDev.Zizi.Services.Internals;
 
@@ -271,7 +273,9 @@ public class DatabaseService
 
         DB.DatabaseFor<AfkEntity>(meUsername);
         DB.DatabaseFor<ArticleSentEntity>(meUsername);
+        DB.DatabaseFor<BotUpdateEntity>(meUsername);
         DB.DatabaseFor<ChatSettingEntity>(meUsername);
+        DB.DatabaseFor<CityEntity>(meUsername);
         DB.DatabaseFor<ForceSubscriptionEntity>(meUsername);
         DB.DatabaseFor<GroupAdminEntity>(meUsername);
         DB.DatabaseFor<RssSourceEntity>(meUsername);
@@ -280,7 +284,13 @@ public class DatabaseService
         DB.DatabaseFor<UserExceptionEntity>(meUsername);
         DB.DatabaseFor<WarnMemberEntity>(meUsername);
         DB.DatabaseFor<WebHookChatEntity>(meUsername);
+        DB.DatabaseFor<WordFilterEntity>(meUsername);
         DB.DatabaseFor<WTelegramSessionEntity>(meUsername);
+
+        DB.DatabaseFor<GameEntity>(meUsername);
+        DB.DatabaseFor<TebakKataQuestionEntity>(meUsername);
+        DB.DatabaseFor<TebakKataAnswerEntity>(meUsername);
+        DB.DatabaseFor<SessionChatTebakKataEntity>(meUsername);
 
         DB.DatabaseFor<SubsceneSource>("shared");
         DB.DatabaseFor<SubsceneMovieSearch>("shared");
@@ -288,6 +298,18 @@ public class DatabaseService
         DB.DatabaseFor<SubsceneSubtitleItem>("shared");
 
         op.Complete();
+    }
+
+    public async Task MongoDbMigration()
+    {
+        await DB.MigrationsAsync(new IMigration[]
+        {
+            new _001_Spell_Rename_FromId(),
+            new _002_Game_Initialize_Tebak_Kata_Sample(),
+            new _003_GlobalBan_Migrate_From_Mysql(),
+            new _004_City_Migrate_From_MySql(),
+            new _005_Word_Migrate_From_MySql()
+        });
     }
 
     public async Task MongoDbEnsureCollectionIndex()

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -39,5 +40,21 @@ public static class InjectionUtil
         var appService = serviceProvider.GetRequiredService<TService>();
 
         return appService;
+    }
+
+    public static TService GetRequiredService<TService>()
+    {
+        var serviceScope = InjectionUtil.GetScope();
+        var serviceProvider = serviceScope.ServiceProvider;
+        var resolvedService = serviceProvider.GetRequiredService<TService>();
+
+        return resolvedService;
+    }
+
+    public static IEnumerable<TService> GetServices<TService>(this IApplicationBuilder app)
+    {
+        var services = app.ApplicationServices.GetServices<TService>();
+
+        return services;
     }
 }

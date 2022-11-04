@@ -1,6 +1,7 @@
 ﻿using Serilog;
 using Telegram.Bot.Framework;
 using Telegram.Bot.Framework.Abstractions;
+using WinTenDev.ZiziBot.AppHost.Handlers.Commands.Games;
 
 namespace WinTenDev.ZiziBot.AppHost.Extensions;
 
@@ -14,6 +15,7 @@ public static class CommandBuilderExtension
                 .Use<ExceptionHandler>()
                 .UseWhen<WebhookLogger>(When.WebHook)
                 .UseWhen<InlineQueryHandler>(When.InlineQuery)
+                .UseWhen<ChatJoinRequestHandler>(When.ChatJoinRequest)
                 // .Use<CheckChatPhotoHandler>()
                 .Use<NewUpdateHandler>()
                 // .Use<CustomUpdateLogger>()
@@ -77,9 +79,11 @@ public static class CommandBuilderExtension
                                         .UseCommand<DelCityCommand>("del_city")
                                         .UseCommand<DelRssCommand>("delrss")
                                         .UseCommand<DemoteCommand>("demote")
+                                        .UseCommand<EndGameCommand>("eg")
                                         .UseCommand<EpicFreeGamesCommand>("egs_free")
                                         .UseCommand<ExportRssCommand>("exportrss")
                                         .UseCommand<FireCommand>("fire")
+                                        .UseCommand<StartGameCommand>("sg")
                                         .UseCommand<GetCityCommand>("get_city")
                                         .UseCommand<GetUserCommand>("u")
                                         .UseCommand<GetUserCommand>("user")

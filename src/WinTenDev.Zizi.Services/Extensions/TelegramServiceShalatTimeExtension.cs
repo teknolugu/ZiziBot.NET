@@ -92,15 +92,13 @@ namespace WinTenDev.Zizi.Services.Extensions
 
             await telegramService.AppendTextAsync("Sedang menyimpan data kota");
             await shalatTimeService.SaveCityAsync(
-                new ShalatTime()
+                new CityDto()
                 {
                     ChatId = chatId,
                     UserId = userId,
                     CityId = firstCity.Id,
                     CityName = firstCity.Nama,
                     EnableNotification = true,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
                 }
             );
 

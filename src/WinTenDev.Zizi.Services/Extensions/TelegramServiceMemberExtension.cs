@@ -1145,68 +1145,81 @@ public static class TelegramServiceMemberExtension
             needManualAccept = false;
         }
 
-        if (chatSettings.EnableCheckProfilePhoto)
+        async Task CheckProfilePhotoAsync()
         {
-            var userProfilePhotoService = telegramService.GetRequiredService<UserProfilePhotoService>();
-            var userProfilePhotos = await userProfilePhotoService.GetUserProfilePhotosAsync(userId: userChatJoinRequest.Id, evictBefore: true);
-
-            if (userProfilePhotos.TotalCount == 0)
+            if (chatSettings.EnableCheckProfilePhoto)
             {
-                reasons.Add("Belum menetapkan/menyembunyikan Foto Profil");
+                var userProfilePhotoService = telegramService.GetRequiredService<UserProfilePhotoService>();
+                var userProfilePhotos = await userProfilePhotoService.GetUserProfilePhotosAsync(userId: userChatJoinRequest.Id, evictBefore: true);
+
+                if (userProfilePhotos.TotalCount == 0)
+                {
+                    reasons.Add("Belum menetapkan/menyembunyikan Foto Profil");
+                    needManualAccept = false;
+                }
+            }
+        }
+
+        async Task CheckAntiSpamAsync()
+        {
+            var antiSpamResult = await telegramService.AntiSpamService.CheckSpam(chatId, userId);
+            if (antiSpamResult.IsAnyBanned)
+            {
+                var gbanReason = new StringBuilder();
+                gbanReason.AppendLine("Pengguna telah diblokir di Global Ban Fed");
+
+                if (antiSpamResult.IsEs2Banned)
+                {
+                    gbanReason.AppendLine("\t\t└ WinTenDev ES2");
+                }
+
+                if (antiSpamResult.IsCasBanned)
+                {
+                    gbanReason.AppendLine("\t\t└ CAS Fed");
+                }
+
+                if (antiSpamResult.IsSpamWatched)
+                {
+                    gbanReason.AppendLine("\t\t└ Spamwatch Fed");
+                }
+
+                if (antiSpamResult.IsUsergeBanned)
+                {
+                    gbanReason.AppendLine("\t\t└ Userge Fed");
+                }
+
+                reasons.Add(gbanReason.ToTrimmedString());
+
                 needManualAccept = false;
             }
         }
 
-        var antiSpamResult = await telegramService.AntiSpamService.CheckSpam(chatId, userId);
-        if (antiSpamResult.IsAnyBanned)
+        async Task CheckChannelSubscription()
         {
-            var gbanReason = new StringBuilder();
-            gbanReason.AppendLine("Pengguna telah diblokir di Global Ban Fed");
-
-            if (antiSpamResult.IsEs2Banned)
+            if (chatSettings.EnableForceSubscription)
             {
-                gbanReason.AppendLine("\t\t└ WinTenDev ES2");
+                var checkSubscription = await telegramService.ChatService.CheckChatMemberSubscriptionToAllAsync(chatId, userId);
+                Log.Warning("Check subscription for UserId: {UserId} on ChatId: {ChatId}. Result: {CheckSubscription}",
+                    userId,
+                    chatId,
+                    checkSubscription.ToJson(true)
+                );
+
+                var listChannelStr = checkSubscription
+                    .Select(result => $"\t\t└ <a href=\"{result.InviteLink}\">{result.ChannelName}</a>")
+                    .JoinStr("\n");
+
+                if (checkSubscription.Count > 0)
+                {
+                    reasons.Add($"Belum berlanggan ke Kanal \n{listChannelStr}");
+                    needManualAccept = false;
+                }
             }
-
-            if (antiSpamResult.IsCasBanned)
-            {
-                gbanReason.AppendLine("\t\t└ CAS Fed");
-            }
-
-            if (antiSpamResult.IsSpamWatched)
-            {
-                gbanReason.AppendLine("\t\t└ Spamwatch Fed");
-            }
-
-            if (antiSpamResult.IsUsergeBanned)
-            {
-                gbanReason.AppendLine("\t\t└ Userge Fed");
-            }
-
-            reasons.Add(gbanReason.ToTrimmedString());
-
-            needManualAccept = false;
         }
 
-        if (chatSettings.EnableForceSubscription)
-        {
-            var checkSubscription = await telegramService.ChatService.CheckChatMemberSubscriptionToAllAsync(chatId, userId);
-            Log.Warning("Check subscription for UserId: {UserId} on ChatId: {ChatId}. Result: {CheckSubscription}",
-                userId,
-                chatId,
-                checkSubscription.ToJson(true)
-            );
+        async Task RunAllAsync() => await Task.WhenAll(CheckProfilePhotoAsync(), CheckAntiSpamAsync(), CheckChannelSubscription());
 
-            var listChannelStr = checkSubscription
-                .Select(result => $"\t\t└ <a href=\"{result.InviteLink}\">{result.ChannelName}</a>")
-                .JoinStr("\n");
-
-            if (checkSubscription.Count > 0)
-            {
-                reasons.Add($"Belum berlanggan ke Kanal \n{listChannelStr}");
-                needManualAccept = false;
-            }
-        }
+        await RunAllAsync();
 
         if (needManualAccept) return true;
         var eventLogService = telegramService.GetRequiredService<EventLogService>();

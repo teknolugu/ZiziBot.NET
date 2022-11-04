@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Threading.Tasks;
 using Flurl;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -8,7 +7,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
-using Microsoft.Extensions.Primitives;
 using Nito.AsyncEx.Synchronous;
 using Serilog;
 using Telegram.Bot;
@@ -154,26 +152,6 @@ internal static class AppStartupExtensions
         }
 
         Log.Information("Bot is ready in WebHook mode..");
-
-        return app;
-    }
-
-    public static async Task<IApplicationBuilder> ExecuteStartupTasks(this IApplicationBuilder app)
-    {
-        var config = app.GetRequiredService<IConfiguration>();
-        var botService = app.GetRequiredService<BotService>();
-
-        await app.GetRequiredService<DatabaseService>().FixTableCollation();
-
-        await botService.EnsureCommandRegistration();
-        // await botService.SendStartupNotification();
-
-        await app.RunMongoDbPreparation();
-
-        ChangeToken.OnChange(
-            changeTokenProducer: () => config.GetReloadToken(),
-            changeTokenConsumer: async () => await botService.EnsureCommandRegistration()
-        );
 
         return app;
     }

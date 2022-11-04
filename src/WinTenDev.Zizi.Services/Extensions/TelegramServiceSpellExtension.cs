@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using MongoDB.Driver;
+using Serilog;
 
 namespace WinTenDev.Zizi.Services.Extensions;
 
@@ -26,7 +27,7 @@ public static class TelegramServiceSpellExtension
             Typo = typo,
             Fix = fix,
             ChatId = chatId,
-            FromId = fromId,
+            UserId = fromId,
         };
 
         if (!(await spellDto.ValidateAsync<AddSpellDtoValidator, SpellDto>()).IsValid)
