@@ -2,9 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
 using Hangfire;
 using Humanizer;
 using Microsoft.Extensions.Logging;
+using MongoDB.Entities;
 using RepoDb;
 
 namespace WinTenDev.Zizi.Services.Internals;
@@ -12,16 +14,19 @@ namespace WinTenDev.Zizi.Services.Internals;
 public class StepHistoriesService
 {
     private readonly ILogger<StepHistoriesService> _logger;
+    private readonly IMapper _mapper;
     private readonly CacheService _cacheService;
     private readonly QueryService _queryService;
 
     public StepHistoriesService(
         ILogger<StepHistoriesService> logger,
+        IMapper mapper,
         CacheService cacheService,
         QueryService queryService
     )
     {
         _logger = logger;
+        _mapper = mapper;
         _cacheService = cacheService;
         _queryService = queryService;
     }
@@ -96,16 +101,23 @@ public class StepHistoriesService
         return data;
     }
 
-    public async Task<IEnumerable<StepHistory>> GetStepHistoryVerifyCore(StepHistory stepHistory)
+    public async Task<List<StepHistoryEntity>> GetStepHistoryVerifyCore(StepHistoryDto stepHistoryDto)
     {
-        var data = await _queryService
-            .CreateMysqlConnectionCore()
-            .QueryAsync<StepHistory>(
-                history =>
-                    history.ChatId == stepHistory.ChatId &&
-                    history.UserId == stepHistory.UserId &&
-                    history.Status == StepHistoryStatus.NeedVerify
-            );
+        // var data = await _queryService
+        //     .CreateMysqlConnectionCore()
+        //     .QueryAsync<StepHistory>(
+        //         history =>
+        //             history.ChatId == stepHistoryDto.ChatId &&
+        //             history.UserId == stepHistoryDto.UserId &&
+        //             history.Status == StepHistoryStatus.NeedVerify
+        //     );
+
+        var data = await DB.Find<StepHistoryEntity>()
+            .Match(entity =>
+                entity.ChatId == stepHistoryDto.ChatId &&
+                entity.UserId == stepHistoryDto.UserId &&
+                entity.Status == StepHistoryStatus.NeedVerify)
+            .ExecuteAsync();
 
         return data;
     }
@@ -163,6 +175,19 @@ public class StepHistoriesService
         }
 
         UpdateCache(chatId, userId).InBackground();
+
+        return true;
+    }
+
+    public async Task<object> SaveStepHistory(StepHistoryDto stepHistoryDto)
+    {
+        var stepHistoryEntity = _mapper.Map<StepHistoryEntity>(stepHistoryDto);
+
+        await stepHistoryEntity.ExSaveAsync(entity =>
+            entity.ChatId == stepHistoryDto.ChatId
+            && entity.UserId == stepHistoryDto.UserId
+            && entity.Name == stepHistoryDto.Name
+        );
 
         return true;
     }
@@ -268,8 +293,8 @@ public class StepHistoriesService
     )
     {
         var data = await _cacheService.SetAsync(
-            CacheKey(chatId),
-            async () => {
+            cacheKey: CacheKey(chatId),
+            action: async () => {
                 var data = await _queryService
                     .CreateMysqlConnectionCore()
                     .QueryAsync<StepHistory>(

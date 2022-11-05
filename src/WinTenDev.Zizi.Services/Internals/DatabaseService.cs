@@ -280,6 +280,7 @@ public class DatabaseService
         DB.DatabaseFor<GroupAdminEntity>(meUsername);
         DB.DatabaseFor<RssSourceEntity>(meUsername);
         DB.DatabaseFor<SpellEntity>(meUsername);
+        DB.DatabaseFor<StepHistoryEntity>(meUsername);
         DB.DatabaseFor<UserInfoEntity>(meUsername);
         DB.DatabaseFor<UserExceptionEntity>(meUsername);
         DB.DatabaseFor<WarnMemberEntity>(meUsername);

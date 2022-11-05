@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
 using Serilog;
 using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
@@ -128,6 +129,7 @@ public static class CallbackQueryExtension
 
         var stepHistoriesService = telegramService.GetRequiredService<StepHistoriesService>();
         var userProfilePhotoService = telegramService.GetRequiredService<UserProfilePhotoService>();
+        var autoMapper = telegramService.GetRequiredService<IMapper>();
 
         Log.Debug(
             "CallbackData: {CallbackData} from {FromId}",
@@ -143,7 +145,7 @@ public static class CallbackQueryExtension
 
         Log.Information("Starting Verify from History for UserId: {UserId}", fromId);
         var needVerifyList = (await stepHistoriesService.GetStepHistoryVerifyCore(
-            new StepHistory()
+            new StepHistoryDto()
             {
                 ChatId = chatId,
                 UserId = fromId
@@ -160,8 +162,11 @@ public static class CallbackQueryExtension
 
             foreach (var step in needVerifyList)
             {
-                var updateHistory = step;
-                updateHistory.UpdatedAt = DateTime.Now;
+                var stepHistoryDto = new StepHistoryDto();
+                stepHistoryDto = autoMapper.Map<StepHistoryDto>(step);
+
+                // var updateHistory = step;
+                // updateHistory.UpdatedAt = DateTime.Now;
 
                 switch (step.Name)
                 {
@@ -169,7 +174,7 @@ public static class CallbackQueryExtension
                         Log.Debug("Verifying Username for UserId {UserId}", fromId);
                         if (telegramService.HasUsername)
                         {
-                            updateHistory.Status = StepHistoryStatus.HasVerify;
+                            stepHistoryDto.Status = StepHistoryStatus.HasVerify;
                         }
                         break;
 
@@ -177,7 +182,7 @@ public static class CallbackQueryExtension
                         Log.Debug("Verifying User Profile Photo for UserId {UserId}", fromId);
                         if (await userProfilePhotoService.HasUserProfilePhotosAsync(fromId))
                         {
-                            updateHistory.Status = StepHistoryStatus.HasVerify;
+                            stepHistoryDto.Status = StepHistoryStatus.HasVerify;
                         }
                         break;
 
@@ -189,23 +194,23 @@ public static class CallbackQueryExtension
                         );
 
                         if (chatMember.Status != ChatMemberStatus.Left)
-                            updateHistory.Status = StepHistoryStatus.HasVerify;
+                            stepHistoryDto.Status = StepHistoryStatus.HasVerify;
 
                         break;
 
                     case StepHistoryName.HumanVerification:
-                        updateHistory.Status = StepHistoryStatus.HasVerify;
+                        stepHistoryDto.Status = StepHistoryStatus.HasVerify;
                         break;
 
                     default:
                         break;
                 }
 
-                await stepHistoriesService.SaveStepHistory(updateHistory);
+                await stepHistoriesService.SaveStepHistory(stepHistoryDto);
             }
 
             var afterVerify = await stepHistoriesService.GetStepHistoryVerifyCore(
-                new StepHistory()
+                new StepHistoryDto()
                 {
                     ChatId = chatId,
                     UserId = fromId
