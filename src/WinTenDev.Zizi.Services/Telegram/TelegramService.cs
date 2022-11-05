@@ -1929,9 +1929,8 @@ public class TelegramService
             KickTimeOffset
         );
 
-        await _stepHistoriesService.SaveStepHistory
-        (
-            new StepHistory
+        await _stepHistoriesService.SaveStepHistory(
+            new StepHistoryDto()
             {
                 Name = name,
                 ChatId = ChatId,
@@ -1941,9 +1940,7 @@ public class TelegramService
                 Reason = $"User don't have {name.Humanize()}",
                 Status = StepHistoryStatus.NeedVerify,
                 HangfireJobId = jobId,
-                LastWarnMessageId = SentMessage?.MessageId ?? -1,
-                CreatedAt = DateTime.Now,
-                UpdatedAt = DateTime.Now
+                WarnMessageId = SentMessage?.MessageId ?? -1,
             }
         );
     }
