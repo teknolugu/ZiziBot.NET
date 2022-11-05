@@ -4,9 +4,9 @@ using WinTenDev.Zizi.Models.Entities.MongoDb.Internal;
 
 namespace WinTenDev.Zizi.Models.AutoMapper;
 
-public class StepHistory : Profile
+public class StepHistoryProfile : Profile
 {
-    public StepHistory()
+    public StepHistoryProfile()
     {
         CreateMap<StepHistoryEntity, StepHistoryDto>().ReverseMap();
     }
