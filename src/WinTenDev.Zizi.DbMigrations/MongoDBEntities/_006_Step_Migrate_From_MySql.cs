@@ -34,7 +34,9 @@ public class _006_Step_Migrate_From_MySql : IMigration
             LastName = item.LastName,
             HangfireJobId = item.HangfireJobId,
             WarnMessageId = item.LastWarnMessageId
-        });
+        }).ToList();
+
+        if (stepHistoryEntities.Count <= 0) return;
 
         await stepHistoryEntities.InsertAsync();
     }

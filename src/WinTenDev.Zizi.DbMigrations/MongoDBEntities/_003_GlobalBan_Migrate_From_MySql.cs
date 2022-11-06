@@ -15,7 +15,7 @@ namespace WinTenDev.Zizi.DbMigrations.MongoDBEntities;
 
 [UsedImplicitly]
 [SuppressMessage("Minor Code Smell", "S101:Types should be named in PascalCase")]
-public class _003_GlobalBan_Migrate_From_Mysql : IMigration
+public class _003_GlobalBan_Migrate_From_MySql : IMigration
 {
     public async Task UpgradeAsync()
     {
@@ -32,7 +32,9 @@ public class _003_GlobalBan_Migrate_From_Mysql : IMigration
             UserId = item.UserId,
             Reason = item.ReasonBan,
             BannedUserId = item.BannedUserId
-        });
+        }).ToList();
+
+        if (globalBanUserEntities.Count <= 0) return;
 
         await globalBanUserEntities.InsertAsync();
     }

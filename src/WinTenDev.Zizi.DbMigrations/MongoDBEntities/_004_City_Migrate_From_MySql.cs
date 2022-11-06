@@ -32,7 +32,9 @@ public class _004_City_Migrate_From_MySql : IMigration
             CityId = item.CityId,
             CityName = item.CityName,
             EnableNotification = item.EnableNotification
-        });
+        }).ToList();
+
+        if (cityEntities.Count <= 0) return;
 
         await cityEntities.InsertAsync();
     }
