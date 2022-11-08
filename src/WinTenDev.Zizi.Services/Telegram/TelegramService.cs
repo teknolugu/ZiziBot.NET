@@ -1025,7 +1025,9 @@ public class TelegramService
         bool preventDuplicateSend = false
     )
     {
+        if (replyToMsgId == -1) replyToMsgId = AnyMessage?.MessageId ?? -1;
         var targetChatId = customChatId == -1 ? ChatId : customChatId;
+
         Log.Information(
             messageTemplate: "Sending media: {MediaType}, fileId: {FileId} to {ChatId}",
             mediaType,
@@ -1049,7 +1051,7 @@ public class TelegramService
                     var stream = await fileId
                         .OpenFlurlSession()
                         .GetStreamAsync();
-                    
+
                     inputFile = new InputOnlineFile(stream, customFileName);
                 }
 
