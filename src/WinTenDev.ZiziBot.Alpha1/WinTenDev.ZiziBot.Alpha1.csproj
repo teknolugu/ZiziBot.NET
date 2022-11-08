@@ -4,34 +4,34 @@
         <LangVersion>latest</LangVersion>
     </PropertyGroup>
     <ItemGroup>
-    <PackageReference Include="AleXr64.BotFramework" Version="0.6.0-g3acd012c7b" IncludePrerelease="true" />
-    <PackageReference Include="DotNurse.Injector" Version="2.5.2" />
-    <PackageReference Include="FluentValidation" Version="11.2.2" />
-    <PackageReference Include="Google.Cloud.Vision.V1" Version="3.2.0" />
+        <PackageReference Include="AleXr64.BotFramework" Version="0.6.0-g3acd012c7b" IncludePrerelease="true"/>
+        <PackageReference Include="DotNurse.Injector" Version="2.5.2"/>
+        <PackageReference Include="FluentValidation" Version="11.2.2"/>
+        <PackageReference Include="Google.Cloud.Vision.V1" Version="3.2.0"/>
         <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="6.0.0">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-    <PackageReference Include="morelinq" Version="3.3.2" />
-    <PackageReference Include="Nito.AsyncEx" Version="5.1.2" />
-        <PackageReference Include="Roslynator.Analyzers" Version="4.1.1">
+        <PackageReference Include="morelinq" Version="3.3.2"/>
+        <PackageReference Include="Nito.AsyncEx" Version="5.1.2"/>
+        <PackageReference Include="Roslynator.Analyzers" Version="4.1.2">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-    <PackageReference Include="Serilog" Version="2.12.0" />
-    <PackageReference Include="Serilog.AspNetCore" Version="6.0.1" />
-    <PackageReference Include="Serilog.Extensions.Hosting" Version="5.0.1" />
-    <PackageReference Include="Serilog.Settings.Configuration" Version="3.4.0" />
-    <PackageReference Include="SerilogTimings" Version="3.0.1" />
-    <PackageReference Include="SonarAnalyzer.CSharp" Version="8.45.0.54064">
+        <PackageReference Include="Serilog" Version="2.12.0"/>
+        <PackageReference Include="Serilog.AspNetCore" Version="6.0.1"/>
+        <PackageReference Include="Serilog.Extensions.Hosting" Version="5.0.1"/>
+        <PackageReference Include="Serilog.Settings.Configuration" Version="3.4.0"/>
+        <PackageReference Include="SerilogTimings" Version="3.0.1"/>
+        <PackageReference Include="SonarAnalyzer.CSharp" Version="8.48.0.56517">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-    <PackageReference Include="Telegram.Bot" Version="18.0.0" />
+        <PackageReference Include="Telegram.Bot" Version="18.0.0"/>
     </ItemGroup>
     <ItemGroup>
-    <ProjectReference Include="..\WinTenDev.Zizi.DbMigrations\WinTenDev.Zizi.DbMigrations.csproj" />
-    <ProjectReference Include="..\WinTenDev.Zizi.Services\WinTenDev.Zizi.Services.csproj" />
-    <ProjectReference Include="..\WinTenDev.Zizi.Utils\WinTenDev.Zizi.Utils.csproj" />
+        <ProjectReference Include="..\WinTenDev.Zizi.DbMigrations\WinTenDev.Zizi.DbMigrations.csproj"/>
+        <ProjectReference Include="..\WinTenDev.Zizi.Services\WinTenDev.Zizi.Services.csproj"/>
+        <ProjectReference Include="..\WinTenDev.Zizi.Utils\WinTenDev.Zizi.Utils.csproj"/>
     </ItemGroup>
 </Project>
