@@ -767,6 +767,12 @@ public static class TelegramServiceMemberExtension
         var replyToMessage = telegramService.ReplyToMessage;
         var replyFromId = replyToMessage?.From?.Id ?? 0;
 
+        if (fromId == replyFromId)
+        {
+            Log.Information("Sender and replied User is same");
+            return;
+        }
+
         var privateSetting = await telegramService.GetChatSetting(replyFromId);
 
         if (!privateSetting.EnableReplyNotification)
