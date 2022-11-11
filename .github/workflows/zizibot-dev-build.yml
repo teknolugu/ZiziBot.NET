@@ -38,7 +38,7 @@ jobs:
         uses: kzrnm/get-net-sdk-project-versions-action@v1
         id: get-version
         with:
-          proj-path: src/WinTenDev.ZiziTools.Cli/WinTenDev.ZiziTools.Cli.csproj
+          proj-path: Directory.Build.props
 
       - name: Creating ZiziBot Linux-x64 package
         run: dotnet publish src/WinTenDev.ZiziBot.AppHost -r linux-x64 -c Release --self-contained=false /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true /t:CreateZip
