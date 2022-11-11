@@ -16,6 +16,7 @@ public class ProjectTool
 
     public static void UpdateProjectVersion()
     {
+        var buildProps = "Directory.Build.props";
         var baseDirectory = Directory.GetCurrentDirectory();
 
         var majorNumber = DateTime.UtcNow.Year.ToString().Replace("0", "");
@@ -25,7 +26,15 @@ public class ProjectTool
         var projectVersion = $"{majorNumber}.{minorNumber}.{buildNumber}.{revNumber}";
 
         Environment.SetEnvironmentVariable("VERSION_NUMBER", projectVersion);
-        RunRecursive(baseDirectory: baseDirectory, version: projectVersion);
+        if (File.Exists(buildProps))
+        {
+            Console.WriteLine($"Updating {buildProps}...");
+            SetVersion(projectVersion, buildProps);
+        }
+        else
+        {
+            RunRecursive(baseDirectory: baseDirectory, version: projectVersion);
+        }
 
         var envVersionNumber = Environment.GetEnvironmentVariable("VERSION_NUMBER");
         Console.WriteLine($"Project version updated to {projectVersion}");
