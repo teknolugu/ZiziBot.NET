@@ -85,7 +85,6 @@ public static class UrlUtil
             ChunkCount = 8,
             ParallelDownload = true,
             MaxTryAgainOnFailover = 10,
-            OnTheFlyDownload = false,
             RequestConfiguration = // config and customize request headers
             {
                 Accept = "*/*",

@@ -64,7 +64,7 @@ public class JobsService
     {
         var needVerify = await _stepHistoriesService.GetStepHistoryVerifyCore
         (
-            new StepHistory()
+            new StepHistoryDto()
             {
                 ChatId = chatId,
                 UserId = userId
@@ -85,8 +85,8 @@ public class JobsService
 
         await _botClient.BanChatMemberAsync(chatId, userId);
         await _botClient.UnbanChatMemberAsync(chatId, userId);
-        if (history.LastWarnMessageId != -1)
-            await _botClient.DeleteMessageAsync(chatId, history.LastWarnMessageId);
+        if (history.WarnMessageId != -1)
+            await _botClient.DeleteMessageAsync(chatId, history.WarnMessageId);
 
         await UpdateStepHistoryStatus(chatId, userId);
 

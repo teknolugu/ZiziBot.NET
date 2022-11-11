@@ -57,7 +57,6 @@ public static class TelegramServiceNotesExtension
 
         await telegramService.SendTextMessageAsync(
             sendText: htmlMessage.ToString(),
-            replyToMsgId: 0,
             scheduleDeleteAt: DateTime.UtcNow.AddDays(1),
             includeSenderMessage: true,
             preventDuplicateSend: true

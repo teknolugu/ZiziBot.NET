@@ -1025,7 +1025,9 @@ public class TelegramService
         bool preventDuplicateSend = false
     )
     {
+        if (replyToMsgId == -1) replyToMsgId = AnyMessage?.MessageId ?? -1;
         var targetChatId = customChatId == -1 ? ChatId : customChatId;
+
         Log.Information(
             messageTemplate: "Sending media: {MediaType}, fileId: {FileId} to {ChatId}",
             mediaType,
@@ -1049,7 +1051,7 @@ public class TelegramService
                     var stream = await fileId
                         .OpenFlurlSession()
                         .GetStreamAsync();
-                    
+
                     inputFile = new InputOnlineFile(stream, customFileName);
                 }
 
@@ -1929,9 +1931,8 @@ public class TelegramService
             KickTimeOffset
         );
 
-        await _stepHistoriesService.SaveStepHistory
-        (
-            new StepHistory
+        await _stepHistoriesService.SaveStepHistory(
+            new StepHistoryDto()
             {
                 Name = name,
                 ChatId = ChatId,
@@ -1941,9 +1942,7 @@ public class TelegramService
                 Reason = $"User don't have {name.Humanize()}",
                 Status = StepHistoryStatus.NeedVerify,
                 HangfireJobId = jobId,
-                LastWarnMessageId = SentMessage?.MessageId ?? -1,
-                CreatedAt = DateTime.Now,
-                UpdatedAt = DateTime.Now
+                WarnMessageId = SentMessage?.MessageId ?? -1,
             }
         );
     }

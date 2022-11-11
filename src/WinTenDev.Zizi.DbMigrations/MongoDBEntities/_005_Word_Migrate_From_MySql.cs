@@ -30,7 +30,9 @@ public class _005_Word_Migrate_From_MySql : IMigration
             UserId = item.FromId,
             Word = item.Word,
             IsGlobal = item.IsGlobal
-        });
+        }).ToList();
+
+        if (wordFilterEntities.Count <= 0) return;
 
         await wordFilterEntities.InsertAsync();
     }

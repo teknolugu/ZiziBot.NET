@@ -15,27 +15,27 @@ namespace WinTenDev.Zizi.DbMigrations.MongoDBEntities;
 
 [UsedImplicitly]
 [SuppressMessage("Minor Code Smell", "S101:Types should be named in PascalCase")]
-public class _004_City_Migrate_From_MySql : IMigration
+public class _003_GlobalBan_Migrate_From_MySql : IMigration
 {
     public async Task UpgradeAsync()
     {
         var injection = InjectionUtil.GetRequiredService<IOptions<ConnectionStrings>>().Value;
-
         var mysqlConnectionString = injection.MySql;
-        var connection = new MySqlConnection(mysqlConnectionString);
-        var shalatTimes = await connection.QueryAllAsync<ShalatTime>();
 
-        var cityEntities = shalatTimes.Select(item => new CityEntity()
+        var connection = new MySqlConnection(mysqlConnectionString);
+
+        var globalBans = await connection.QueryAllAsync<GlobalBanItem>();
+
+        var globalBanUserEntities = globalBans.Select(item => new GlobalBanUserEntity()
         {
             ChatId = item.ChatId,
             UserId = item.UserId,
-            CityId = item.CityId,
-            CityName = item.CityName,
-            EnableNotification = item.EnableNotification
+            Reason = item.ReasonBan,
+            BannedUserId = item.BannedUserId
         }).ToList();
 
-        if (cityEntities.Count <= 0) return;
+        if (globalBanUserEntities.Count <= 0) return;
 
-        await cityEntities.InsertAsync();
+        await globalBanUserEntities.InsertAsync();
     }
 }

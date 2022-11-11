@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
 using Microsoft.Extensions.Options;
 using MongoDB.Entities;
 using MySqlConnector;
@@ -13,9 +12,8 @@ using WinTenDev.Zizi.Utils;
 
 namespace WinTenDev.Zizi.DbMigrations.MongoDBEntities;
 
-[UsedImplicitly]
 [SuppressMessage("Minor Code Smell", "S101:Types should be named in PascalCase")]
-public class _004_City_Migrate_From_MySql : IMigration
+public class _006_Step_Migrate_From_MySql : IMigration
 {
     public async Task UpgradeAsync()
     {
@@ -23,19 +21,23 @@ public class _004_City_Migrate_From_MySql : IMigration
 
         var mysqlConnectionString = injection.MySql;
         var connection = new MySqlConnection(mysqlConnectionString);
-        var shalatTimes = await connection.QueryAllAsync<ShalatTime>();
+        var stepHistories = await connection.QueryAllAsync<StepHistory>();
 
-        var cityEntities = shalatTimes.Select(item => new CityEntity()
+        var stepHistoryEntities = stepHistories.Select(item => new StepHistoryEntity()
         {
             ChatId = item.ChatId,
             UserId = item.UserId,
-            CityId = item.CityId,
-            CityName = item.CityName,
-            EnableNotification = item.EnableNotification
+            Name = item.Name,
+            Status = item.Status,
+            Reason = item.Reason,
+            FirstName = item.FirstName,
+            LastName = item.LastName,
+            HangfireJobId = item.HangfireJobId,
+            WarnMessageId = item.LastWarnMessageId
         }).ToList();
 
-        if (cityEntities.Count <= 0) return;
+        if (stepHistoryEntities.Count <= 0) return;
 
-        await cityEntities.InsertAsync();
+        await stepHistoryEntities.InsertAsync();
     }
 }
