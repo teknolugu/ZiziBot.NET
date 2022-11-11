@@ -323,6 +323,9 @@ public static class SerilogServiceExtension
 
         botToken ??= tgBotConfig.ApiToken;
 
+        if (botToken.IsNullOrEmpty() || channelId == 0)
+            return logger;
+
         logger.WriteTo.Telegram(
             botToken: botToken,
             chatId: channelId.ToString(),
