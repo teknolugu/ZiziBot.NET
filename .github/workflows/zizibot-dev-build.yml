@@ -1,4 +1,4 @@
-name: Zizi Bot Nightly
+name: Zizi Bot Nightly Build
 
 on:
   push:
@@ -7,73 +7,9 @@ on:
     branches: [ main ]
 
 jobs:
-  #  zizibot-fd-build:
-  #    runs-on: ubuntu-latest
-  #    defaults:
-  #      run:
-  #        working-directory: /home/runner/work/ZiziBot.NET/ZiziBot.NET
-  
-  #    steps:
-  #      - uses: actions/checkout@v2
-  #      - name: Setup .NET
-  #        uses: actions/setup-dotnet@v1
-  #        with:
-  #          dotnet-version: 6.0.x
-  #
-  #      - name: Preparing Environment
-  #        run:
-  #          dotnet tool install --global dotnet-zip &&
-  #          dotnet zip install
-  #
-  #      - name: Install dependencies
-  #        run: dotnet restore WinTenDev.ZiziBot.sln
-  #
-  #      - name: Update Project version
-  #        run: dotnet run --project src/WinTenDev.ZiziTools.Cli
-  #
-  #      - uses: kzrnm/get-net-sdk-project-versions-action@v1
-  #        id: get-version
-  #        with:
-  #          proj-path: src/WinTenDev.ZiziTools.Cli/WinTenDev.ZiziTools.Cli.csproj
-  #
-  #      - name: Print version
-  #        run: echo "${{steps.get-version.outputs.version}}"
-  #
-  #      - name: Creating Linux-x64 package
-  #        run: dotnet publish src/WinTenDev.ZiziBot.AppHost -r linux-x64 -c Release --self-contained=false /t:CreateZip
-  #
-  #      - name: Creating Win-x64 package
-  #        run: dotnet publish src/WinTenDev.ZiziBot.AppHost -r win-x64 -c Release --self-contained=false /t:CreateZip
-  #
-  #      - name: Creating Osx-x64 package
-  #        run: dotnet publish src/WinTenDev.ZiziBot.AppHost -r osx-x64 -c Release --self-contained=false /t:CreateZip
-  #
-  #      - name: Create Release Asset
-  #        uses: softprops/action-gh-release@v1
-  #        with:
-  #          name: "Zizi Bot {{steps.get-version.outputs.version}}"
-  #          tag_name: "v${{steps.get-version.outputs.version}}"
-  #          files: |
-  #            src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/linux-x64/*.zip
-  #            src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/win-x64/*.zip
-  #            src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/osx-x64/*.zip
-  #          draft: true
-  #          prerelease: true
-  #        env:
-  #          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
-  
-  #      - name: Uploading Artifacs
-  #        uses: actions/upload-artifact@v2
-  #        with:
-  #          name: ZiziBot FD Build
-  #          path: |
-  #            src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/linux-x64/*.zip
-  #            src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/win-x64/*.zip
-  #            src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/osx-x64/*.zip
-
 
   zizibot-sf-build:
-    name: Zizi Bot SF Nightly Build
+    name: Zizi Bot Nightly Build
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -104,14 +40,64 @@ jobs:
         with:
           proj-path: src/WinTenDev.ZiziTools.Cli/WinTenDev.ZiziTools.Cli.csproj
 
-      - name: Creating Linux-x64 package
+      - name: Creating ZiziBot Linux-x64 package
         run: dotnet publish src/WinTenDev.ZiziBot.AppHost -r linux-x64 -c Release --self-contained=false /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true /t:CreateZip
 
-      - name: Creating Win-x64 package
+      - name: Creating ZiziBot Win-x64 package
         run: dotnet publish src/WinTenDev.ZiziBot.AppHost -r win-x64 -c Release --self-contained=false /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true /t:CreateZip
 
-      - name: Creating Osx-x64 package
+      - name: Creating ZiziBot Osx-x64 package
         run: dotnet publish src/WinTenDev.ZiziBot.AppHost -r osx-x64 -c Release --self-contained=false /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true /t:CreateZip
+
+      - name: Publishing ZiziBot for Linux Server
+        run: dotnet publish src/WinTenDev.ZiziBot.AppHost -r linux-x64 -c Release --self-contained=false /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true -o build/zizi-beta
+
+      - name: Send notify to Telegram before deployment
+        uses: appleboy/telegram-action@v0.1.1
+        with:
+          # telegram user
+          to: ${{ secrets.TG_LOG_CHAT_ID }}
+          # telegram token
+          token: ${{ secrets.TG_DEV_BOT_TOKEN }}
+          # telegram message
+          message: |
+            Zizi Beta entering Maintenance Mode
+          # disables link previews for links in this message
+          disable_web_page_preview: true
+
+      - name: ssh-scp-ssh-pipelines
+        # You may pin to the exact commit or the version.
+        # uses: cross-the-world/ssh-scp-ssh-pipelines@78e864b4890087a58248ff39320406971ca88b89
+        uses: cross-the-world/ssh-scp-ssh-pipelines@v1.1.4
+        with:
+          # ssh remote host
+          host: ${{ secrets.VPS_HOST }}
+          # ssh remote user
+          user: ${{ secrets.VPS_USER }}
+          # ssh remote password
+          pass: ${{ secrets.VPS_PASS }}
+          # execute pre-commands before scp
+          first_ssh: ${{ secrets.CMD_STOP_ZIZIBETA }}
+          # scp from local to remote
+          scp: |
+            build/zizi-beta/* => ${{ secrets.VPS_REMOTE_DIR }}
+          # execute post-commands after scp
+          last_ssh: ${{ secrets.CMD_START_ZIZIBETA }}
+
+      - name: Send notify to Telegram after deployment
+        uses: appleboy/telegram-action@v0.1.1
+        with:
+          # telegram user
+          to: ${{ secrets.TG_LOG_CHAT_ID }}
+          # telegram token
+          token: ${{ secrets.TG_DEV_BOT_TOKEN }}
+          # telegram message
+          message: |
+            Zizi Beta Deployment success
+            Repo: ${{ github.repository }}
+            Changes: https://github.com/${{ github.repository }}/commit/${{github.sha}}
+          # disables link previews for links in this message
+          disable_web_page_preview: true
 
       - name: Create Release Assets
         uses: softprops/action-gh-release@v1
@@ -126,57 +112,3 @@ jobs:
           prerelease: true
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
-
-#      - name: Uploading Artifacts
-#        uses: actions/upload-artifact@v2
-#        with:
-#          name: ZiziBot SF Build
-#          path: |
-#            src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/linux-x64/*.zip
-#            src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/win-x64/*.zip
-#            src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/osx-x64/*.zip
-
-#  zizibot-win64-fd-build:
-#    runs-on: ubuntu-latest
-#    defaults:
-#      run:
-#        working-directory: /home/runner/work/ZiziBot.NET/ZiziBot.NET
-#
-#    steps:
-#      - uses: actions/checkout@v2
-#      - name: Setup .NET
-#        uses: actions/setup-dotnet@v1
-#        with:
-#          dotnet-version: 6.0.x
-#      - name: Install dependencies
-#        run: dotnet restore WinTenDev.ZiziBot.sln
-#      - name: Win64 FD Build
-#        run: dotnet publish src/WinTenDev.ZiziBot.AppHost -r win-x64 -c Release --self-contained=false
-#      - name: Upload Win64 FD Artifacs
-#        uses: actions/upload-artifact@v2
-#        with:
-#          name: zizibot-win64-fd-build
-#          path: src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/win-x64/publish
-
-#  zizibot-win64-sf-build:
-#    runs-on: ubuntu-latest
-#    defaults:
-#      run:
-#        working-directory: /home/runner/work/ZiziBot.NET/ZiziBot.NET
-#
-#    steps:
-#      - uses: actions/checkout@v2
-#      - name: Setup .NET
-#        uses: actions/setup-dotnet@v1
-#        with:
-#          dotnet-version: 6.0.x
-#      - name: Install dependencies
-#        run: dotnet restore WinTenDev.ZiziBot.sln
-#
-#      - name: Win64 FD Single-File Build
-#        run: dotnet publish src/WinTenDev.ZiziBot.AppHost -r win-x64 -c Release --self-contained=false /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true
-#      - name: Upload Win64 SF Artifacs
-#        uses: actions/upload-artifact@v2
-#        with:
-#          name: zizibot-win64-sf-build
-#          path: src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/win-x64/publish
