@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using System.Xml.Linq;
+using Serilog;
 
 namespace WinTenDev.ZiziTools.Cli.Tools;
 
@@ -8,7 +9,7 @@ namespace WinTenDev.ZiziTools.Cli.Tools;
  * Copyright (c) ThymineC
  */
 
-public class ProjectTool
+public static class ProjectTool
 {
     internal const int ExitSuccess = 0;
     internal const int ExitFailure = 1;
@@ -28,7 +29,7 @@ public class ProjectTool
         Environment.SetEnvironmentVariable("VERSION_NUMBER", projectVersion);
         if (File.Exists(buildProps))
         {
-            Console.WriteLine($"Updating {buildProps}...");
+            Log.Information("Updating {BuildProps}...", buildProps);
             SetVersion(projectVersion, buildProps);
         }
         else
@@ -37,8 +38,8 @@ public class ProjectTool
         }
 
         var envVersionNumber = Environment.GetEnvironmentVariable("VERSION_NUMBER");
-        Console.WriteLine($"Project version updated to {projectVersion}");
-        Console.WriteLine($"Environment variable VERSION_NUMBER set to {envVersionNumber}");
+        Log.Information("Project version updated to {ProjectVersion}", projectVersion);
+        Log.Information("Environment variable VERSION_NUMBER set to {EnvVersionNumber}", envVersionNumber);
     }
 
     private static int RunRecursive(
