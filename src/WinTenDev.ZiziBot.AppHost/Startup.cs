@@ -34,7 +34,6 @@ public class Startup
         services.AddExceptionless();
         services.AddHttpContextAccessor();
 
-        services.AddEasyCachingSqlite();
         services.AddCacheTower();
 
         services.AddRepoDb();
