@@ -4,7 +4,6 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="DotNurse.Injector" Version="2.5.2" />
     <PackageReference Include="FluentAssertions" Version="6.8.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="6.0.0">
       <PrivateAssets>all</PrivateAssets>

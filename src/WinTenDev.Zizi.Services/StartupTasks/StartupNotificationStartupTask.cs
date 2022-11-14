@@ -1,18 +1,20 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
-using DotNurse.Injector.Attributes;
-using WinTenDev.Zizi.Models.Interfaces;
-using WinTenDev.Zizi.Services.Telegram;
 
 namespace WinTenDev.Zizi.Services.StartupTasks;
 
+[StartupTask(AfterHostReady = true)]
 public class StartupNotificationStartupTask : IStartupTask
 {
-    [InjectService]
-    private BotService BotService { get; set; }
+    private readonly BotService _botService;
+
+    public StartupNotificationStartupTask(BotService botService)
+    {
+        _botService = botService;
+    }
 
     public async Task ExecuteAsync(CancellationToken cancellationToken = default)
     {
-
+        await _botService.SendStartupNotification();
     }
 }

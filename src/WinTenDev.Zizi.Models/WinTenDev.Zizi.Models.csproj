@@ -4,40 +4,38 @@
         <TargetFramework>net7.0</TargetFramework>
     </PropertyGroup>
     <ItemGroup>
-    <PackageReference Include="AleXr64.BotFramework" Version="0.6.0-g3acd012c7b" IncludePrerelease="true" />
-    <PackageReference Include="AutoMapper" Version="12.0.0" />
-    <PackageReference Include="CodingSeb.Localization" Version="1.2.0" />
-    <PackageReference Include="CsvHelper" Version="30.0.0" />
-    <PackageReference Include="Dapper" Version="2.0.123" />
-    <PackageReference Include="Dapper.FluentMap" Version="2.0.0" />
-    <PackageReference Include="DotNurse.Injector" Version="2.5.2" />
-    <PackageReference Include="EasyCaching.Core" Version="1.7.0" />
-    <PackageReference Include="Fedorus.Telegram.Bot.Framework" Version="1.0.5" />
-    <PackageReference Include="FluentValidation" Version="11.2.2" />
-    <PackageReference Include="Flurl.Http" Version="3.2.4" />
-    <PackageReference Include="Hangfire.Core" Version="1.7.31" />
-    <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="6.0.0">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="7.0.0" />
-    <PackageReference Include="Microsoft.ML" Version="2.0.0" />
-    <PackageReference Include="MongoDB.Entities" Version="21.0.1" />
-    <PackageReference Include="morelinq" Version="3.3.2" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    <PackageReference Include="Octokit" Version="4.0.1" />
-    <PackageReference Include="RepoDb" Version="1.13.0" />
-    <PackageReference Include="Roslynator.Analyzers" Version="4.1.2">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="Serilog" Version="2.12.0" />
-    <PackageReference Include="SonarAnalyzer.CSharp" Version="8.48.0.56517">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="SqlKata" Version="2.4.0" />
-    <PackageReference Include="Telegram.Bot" Version="18.0.0" />
-    <PackageReference Include="WTelegramClient" Version="3.0.3" />
-  </ItemGroup>
+        <PackageReference Include="AleXr64.BotFramework" Version="0.6.0-g3acd012c7b" IncludePrerelease="true"/>
+        <PackageReference Include="AutoMapper" Version="12.0.0"/>
+        <PackageReference Include="CodingSeb.Localization" Version="1.2.0"/>
+        <PackageReference Include="CsvHelper" Version="30.0.0"/>
+        <PackageReference Include="Dapper" Version="2.0.123"/>
+        <PackageReference Include="Dapper.FluentMap" Version="2.0.0"/>
+        <PackageReference Include="Fedorus.Telegram.Bot.Framework" Version="1.0.5"/>
+        <PackageReference Include="FluentValidation" Version="11.3.0"/>
+        <PackageReference Include="Flurl.Http" Version="3.2.4"/>
+        <PackageReference Include="Hangfire.Core" Version="1.7.31"/>
+        <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="6.0.0">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="7.0.0"/>
+        <PackageReference Include="Microsoft.ML" Version="2.0.0"/>
+        <PackageReference Include="MongoDB.Entities" Version="21.0.1"/>
+        <PackageReference Include="morelinq" Version="3.3.2"/>
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.1"/>
+        <PackageReference Include="Octokit" Version="4.0.1"/>
+        <PackageReference Include="RepoDb" Version="1.13.0"/>
+        <PackageReference Include="Roslynator.Analyzers" Version="4.1.2">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Serilog" Version="2.12.0"/>
+        <PackageReference Include="SonarAnalyzer.CSharp" Version="8.48.0.56517">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="SqlKata" Version="2.4.0"/>
+        <PackageReference Include="Telegram.Bot" Version="18.0.0"/>
+        <PackageReference Include="WTelegramClient" Version="3.0.3"/>
+    </ItemGroup>
 </Project>

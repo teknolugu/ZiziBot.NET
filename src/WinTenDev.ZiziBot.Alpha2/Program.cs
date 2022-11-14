@@ -39,7 +39,6 @@ builder.Services.AddRepoDb();
 builder.Services.AddSqlKataMysql();
 
 builder.Services.AddCacheTower();
-builder.Services.AddEasyCachingDisk();
 
 builder.Services.AddHangfireServerAndConfig();
 
