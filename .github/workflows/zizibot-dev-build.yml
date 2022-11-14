@@ -105,9 +105,9 @@ jobs:
           name: "Zizi Bot ${{steps.get-version.outputs.version}}"
           tag_name: "v${{steps.get-version.outputs.version}}"
           files: |
-            src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/linux-x64/*.zip
-            src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/win-x64/*.zip
-            src/WinTenDev.ZiziBot.AppHost/bin/Release/net6.0/osx-x64/*.zip
+            src/WinTenDev.ZiziBot.AppHost/bin/Release/net*/linux-x64/*.zip
+            src/WinTenDev.ZiziBot.AppHost/bin/Release/net*/win-x64/*.zip
+            src/WinTenDev.ZiziBot.AppHost/bin/Release/net*/osx-x64/*.zip
           draft: false
           prerelease: true
         env:
