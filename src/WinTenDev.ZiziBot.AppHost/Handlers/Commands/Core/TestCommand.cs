@@ -2,9 +2,7 @@ using System;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using EasyCaching.Core;
 using Flurl;
-using LiteDB.Async;
 using MoreLinq;
 using Serilog;
 using Telegram.Bot;
@@ -16,31 +14,35 @@ namespace WinTenDev.ZiziBot.AppHost.Handlers.Commands.Core;
 
 public class TestCommand : CommandBase
 {
-    private readonly LiteDatabaseAsync _liteDatabaseAsync;
     private readonly TelegramService _telegramService;
-    private readonly IEasyCachingProvider _easyCachingProvider;
+    private readonly EpicGamesService _epicGamesService;
     private readonly SettingsService _settingsService;
     private readonly DeepAiService _deepAiService;
     private readonly BlockListService _blockListService;
+    private readonly WTelegramApiService _wTelegramApiService;
 
     public TestCommand(
-        LiteDatabaseAsync liteDatabaseAsync,
-        IEasyCachingProvider easyCachingProvider,
+        EpicGamesService epicGamesService,
         TelegramService telegramService,
         DeepAiService deepAiService,
         SettingsService settingsService,
-        BlockListService blockListService
+        BlockListService blockListService,
+        WTelegramApiService wTelegramApiService
     )
     {
         _telegramService = telegramService;
-        _liteDatabaseAsync = liteDatabaseAsync;
         _deepAiService = deepAiService;
-        _easyCachingProvider = easyCachingProvider;
+        _epicGamesService = epicGamesService;
         _settingsService = settingsService;
         _blockListService = blockListService;
+        _wTelegramApiService = wTelegramApiService;
     }
 
-    public override async Task HandleAsync(IUpdateContext context, UpdateDelegate next, string[] args)
+    public override async Task HandleAsync(
+        IUpdateContext context,
+        UpdateDelegate next,
+        string[] args
+    )
     {
         await _telegramService.AddUpdateContext(context);
 
@@ -58,9 +60,6 @@ public class TestCommand : CommandBase
             Log.Warning("Test only for Sudo!");
             return;
         }
-
-        Log.Information("Adding easy caching..");
-        await _easyCachingProvider.SetAsync(msgId.ToString(), msg, TimeSpan.FromMinutes(1));
 
         Log.Information("Test started..");
         await _telegramService.AppendTextAsync("Sedang mengetes sesuatu");
@@ -105,10 +104,6 @@ public class TestCommand : CommandBase
 
             case "nsfw-detect":
                 await NsfwDetect();
-                break;
-
-            case "ldb-save-current":
-                await LiteDbSaveCurrent();
                 break;
 
             case "sysinfo":
@@ -171,34 +166,6 @@ public class TestCommand : CommandBase
         }
 
         await _telegramService.AppendTextAsync($"RawBtn: {sb}");
-    }
-
-    // private void MonkeyCacheRemoveAll()
-    // {
-    //     MonkeyCacheUtil.DeleteKeys();
-    //     MonkeyCacheUtil.GetKeys();
-    // }
-    //
-    // private void MonkeyCacheRemoveExpires()
-    // {
-    //     MonkeyCacheUtil.DeleteExpired();
-    // }
-
-    // private void MonkeyCacheSaveCurrent()
-    // {
-    //     var msg = _telegramService.AnyMessage;
-    //     _telegramService.SetChatCache("messages", msg);
-    // }
-
-    // private void MonkeyCacheViewAll()
-    // {
-    //     var keys = MonkeyCacheUtil.GetKeys();
-    // }
-
-    private async Task LiteDbSaveCurrent()
-    {
-        var message = _liteDatabaseAsync.GetCollection<Message>();
-        await message.InsertAsync(_telegramService.AnyMessage);
     }
 
     private async Task WebhookCheck()
