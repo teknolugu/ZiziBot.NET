@@ -22,7 +22,6 @@ public class Startup
 
     public void ConfigureServices(IServiceCollection services)
     {
-        services.AddTelegramBot();
         services.MappingAppSettings();
         services.ConfigureAutoMapper();
 
@@ -44,8 +43,8 @@ public class Startup
         // services.AddFluentMigration();
 
         services.AddWtTelegramApi();
-
         services.AddCommonService();
+        services.AddHostedServices();
         services.AddCommandHandlers();
 
         services.AddLocalTunnelClient();
@@ -94,6 +93,8 @@ public class Startup
                 endpoints.MapHealthChecks("/health");
             }
         );
+
+        app.RunStartupTasksAsync().WaitAndUnwrapException();
 
         Log.Information("App is ready..");
     }
