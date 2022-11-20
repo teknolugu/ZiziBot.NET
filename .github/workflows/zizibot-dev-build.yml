@@ -32,7 +32,7 @@ jobs:
         run: dotnet restore WinTenDev.ZiziBot.sln
 
       - name: Update Project version
-        run: dotnet run --project src/WinTenDev.ZiziTools.Cli --toolName UpdateVersionRoot
+        run: dotnet run --project src/WinTenDev.ZiziTools.Cli --toolName UpdateVersion --mode RootAndAllProjects
 
       - name: Getting Project Version
         uses: kzrnm/get-net-sdk-project-versions-action@v1
