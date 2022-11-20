@@ -15,7 +15,7 @@ public static class ProjectTool
     internal const int ExitFailure = 1;
     internal static bool UseVersionPrefix = false;
 
-    public static void UpdateProjectVersion()
+    public static void UpdateProjectVersion(string mode)
     {
         var buildProps = "Directory.Build.props";
         var baseDirectory = Directory.GetCurrentDirectory();
@@ -27,14 +27,35 @@ public static class ProjectTool
         var projectVersion = $"{majorNumber}.{minorNumber}.{buildNumber}.{revNumber}";
 
         Environment.SetEnvironmentVariable("VERSION_NUMBER", projectVersion);
-        if (File.Exists(buildProps))
+
+        switch (mode)
         {
-            Log.Information("Updating {BuildProps}...", buildProps);
-            SetVersion(projectVersion, buildProps);
-        }
-        else
-        {
-            RunRecursive(baseDirectory: baseDirectory, version: projectVersion);
+            case "DependsOnCondition":
+                if (File.Exists(buildProps))
+                {
+                    Log.Information("Updating {BuildProps}...", buildProps);
+                    SetVersion(projectVersion, buildProps);
+                }
+                else
+                {
+                    RunRecursive(baseDirectory: baseDirectory, version: projectVersion);
+                }
+                break;
+            case "RootOnly":
+                Log.Information("Updating {BuildProps}...", buildProps);
+                SetVersion(projectVersion, buildProps);
+                break;
+            case "RootAndAllProjects":
+                Log.Information("Updating {BuildProps}...", buildProps);
+
+                SetVersion(projectVersion, buildProps);
+                RunRecursive(baseDirectory: baseDirectory, version: projectVersion);
+                break;
+            case "AllProjectsOnly":
+                RunRecursive(baseDirectory: baseDirectory, version: projectVersion);
+                break;
+            default:
+                break;
         }
 
         var envVersionNumber = Environment.GetEnvironmentVariable("VERSION_NUMBER");
@@ -78,7 +99,7 @@ public static class ProjectTool
                 searchOption: recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly
             ).ToArray();
 
-        Console.WriteLine("Found {0} project files", projectFiles.Length);
+        Log.Information("Found {Count} project files", projectFiles.Length);
 
         return projectFiles;
     }
@@ -183,11 +204,11 @@ public static class ProjectTool
         params string[] files
     )
     {
-        Console.WriteLine($"Set version to {version} in:");
+        Log.Information("Set version to {Version} in:", version);
 
         foreach (var file in files)
         {
-            Console.WriteLine($"\t> {file}");
+            Log.Information("==> {File}", file);
         }
     }
 }

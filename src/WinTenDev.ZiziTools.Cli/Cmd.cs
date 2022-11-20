@@ -14,7 +14,8 @@ public static class Cmd
     {
         var root = new RootCommand("help -h")
         {
-            new Option<string>("--toolName", "Tool name")
+            new Option<string>("--toolName", "Tool name"),
+            new Option<string>("--mode", "Mode"),
         };
 
         root.Handler = CommandHandler.Create<ToolOptions, IHost>(Run);
@@ -39,8 +40,8 @@ public static class Cmd
 
         switch (toolName)
         {
-            case "UpdateVersionRoot":
-                ProjectTool.UpdateProjectVersion();
+            case "UpdateVersion":
+                ProjectTool.UpdateProjectVersion(options.Mode);
                 break;
             default:
                 logger.LogWarning("Tool name not found!");
