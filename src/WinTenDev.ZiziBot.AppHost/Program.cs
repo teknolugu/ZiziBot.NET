@@ -51,7 +51,7 @@ builder.Services.AddLiteDb();
 builder.Services.AddClickHouse();
 builder.Services.AddRepoDb();
 builder.Services.AddSqlKataMysql();
-builder.Services.AddRedisOm();
+// builder.Services.AddRedisOm();
 
 builder.Services.AddCacheTower();
 
