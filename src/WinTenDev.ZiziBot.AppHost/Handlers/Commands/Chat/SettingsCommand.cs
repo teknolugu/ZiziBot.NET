@@ -48,8 +48,9 @@ public class SettingsCommand : CommandBase
 
         await _telegramService.EditMessageTextAsync(
             sendText: "Pengaturan Obrolan",
-            btnMarkup,
-            scheduleDeleteAt: DateTime.UtcNow.AddMinutes(10)
+            replyMarkup: btnMarkup,
+            scheduleDeleteAt: DateTime.UtcNow.AddMinutes(10),
+            includeSenderMessage: true
         );
     }
 }
