@@ -10,6 +10,9 @@ public class ChatSettingEntity : IEntity, ICreatedOn, IModifiedOn
     public long ChatId { get; set; }
     public long MemberCount { get; set; }
 
+    public long TopicWelcome { get; set; }
+    public long TopicRss { get; set; }
+
     public DateTime CreatedOn { get; set; }
     public DateTime ModifiedOn { get; set; }
 

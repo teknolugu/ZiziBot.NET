@@ -7,6 +7,7 @@ using CodingSeb.Localization;
 using Humanizer;
 using Serilog;
 using SerilogTimings;
+using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 
 namespace WinTenDev.Zizi.Services.Extensions;
@@ -520,4 +521,26 @@ public static class TelegramServiceSettingsExtension
         op.Complete();
     }
 
+    public static async Task<Message> SetTopicAsync(this TelegramService ts)
+    {
+        var chatId = ts.ChatId;
+        var topicName = ts.GetCommandParamAt<string>(0);
+
+        if (topicName.IsNullOrEmpty())
+        {
+            return await ts.SendTextMessageAsync("Silakan atur nama target Topik");
+        }
+
+        var topicId = ts.ReplyToMessage.MessageId;
+
+        await ts.SettingsService.UpdateTopicTarget(
+            chatId: chatId,
+            topicName: topicName,
+            topicId: topicId
+        );
+
+        await ts.SendTextMessageAsync("Topik berhasil diatur");
+
+        return default;
+    }
 }
