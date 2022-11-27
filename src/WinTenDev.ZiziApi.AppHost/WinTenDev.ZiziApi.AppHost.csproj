@@ -10,10 +10,15 @@
         <PackageReference Include="DalSoft.Hosting.BackgroundQueue" Version="1.0.4"/>
         <PackageReference Include="DeepCloner" Version="0.10.4"/>
         <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="7.0.0"/>
-        <PackageReference Include="Sentry.AspNetCore" Version="3.23.1"/>
+        <PackageReference Include="Roslynator.Analyzers" Version="4.1.2">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Sentry.AspNetCore" Version="3.24.0"/>
         <PackageReference Include="Serilog.AspNetCore" Version="6.0.1"/>
         <PackageReference Include="Serilog.Extensions.Hosting" Version="5.0.1"/>
-        <PackageReference Include="SonarAnalyzer.CSharp" Version="8.48.0.56517">
+        <PackageReference Include="SerilogAnalyzer" Version="0.15.0"/>
+        <PackageReference Include="SonarAnalyzer.CSharp" Version="8.49.0.57237">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
