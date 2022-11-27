@@ -531,6 +531,11 @@ public static class TelegramServiceSettingsExtension
             return await ts.SendTextMessageAsync("Silakan atur nama target Topik");
         }
 
+        if (ts.ReplyToMessage == null)
+        {
+            return await ts.SendTextMessageAsync("Sepertinya Obrolan ini tidak ada Topik");
+        }
+
         var topicId = ts.ReplyToMessage.MessageId;
 
         await ts.SettingsService.UpdateTopicTarget(
@@ -539,8 +544,6 @@ public static class TelegramServiceSettingsExtension
             topicId: topicId
         );
 
-        await ts.SendTextMessageAsync("Topik berhasil diatur");
-
-        return default;
+        return await ts.SendTextMessageAsync("Topik berhasil diatur");
     }
 }
