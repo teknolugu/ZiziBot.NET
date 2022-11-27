@@ -50,6 +50,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "7 - Dashboard", "7 - Dashbo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinTenDev.ZiziBot.Alpha4", "src\WinTenDev.ZiziBot.Alpha4\WinTenDev.ZiziBot.Alpha4.csproj", "{628F8C38-ACEF-4E37-8609-97AEF8134FB3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinTenDev.Zizi.Hangfire", "src\WinTenDev.Zizi.Hangfire\WinTenDev.Zizi.Hangfire.csproj", "{57AF737C-AB8E-414C-8D3C-753F638FF49A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -108,6 +110,10 @@ Global
 		{628F8C38-ACEF-4E37-8609-97AEF8134FB3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{628F8C38-ACEF-4E37-8609-97AEF8134FB3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{628F8C38-ACEF-4E37-8609-97AEF8134FB3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{57AF737C-AB8E-414C-8D3C-753F638FF49A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{57AF737C-AB8E-414C-8D3C-753F638FF49A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{57AF737C-AB8E-414C-8D3C-753F638FF49A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{57AF737C-AB8E-414C-8D3C-753F638FF49A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -126,6 +132,7 @@ Global
 		{9A7D4E70-3CEF-4C20-80EF-AAF8E6FD3E79} = {4D3C448F-B4CB-4622-93CC-23140D616ED2}
 		{CDD94700-0207-42EB-8C91-A50A2650EB63} = {470FE321-069C-4E10-987E-2D6BAB9D5875}
 		{628F8C38-ACEF-4E37-8609-97AEF8134FB3} = {4D3C448F-B4CB-4622-93CC-23140D616ED2}
+		{57AF737C-AB8E-414C-8D3C-753F638FF49A} = {F51169C8-34B3-474D-9400-BAF8BEB9D206}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {AFE8345E-016B-4B6D-A95A-3D62AEF8BA8A}

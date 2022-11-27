@@ -1,25 +1,28 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
-using Nito.AsyncEx.Synchronous;
+using Serilog.Events;
+using SerilogTimings;
 
-namespace WinTenDev.Zizi.Services.Extensions;
+namespace WinTenDev.Zizi.Hangfire;
 
 public static class HangfireJobsExtension
 {
-    public static IApplicationBuilder RegisterHangfireJobs(this IApplicationBuilder app)
+    public static async Task<IApplicationBuilder> RegisterHangfireJobs(this IApplicationBuilder app)
     {
-        HangfireUtil.PurgeJobs();
+        var op = Operation.At(LogEventLevel.Warning).Begin("Registering Hangfire Jobs");
 
         var serviceProvider = app.GetServiceProvider();
         var jobService = serviceProvider.GetRequiredService<JobsService>();
 
-        serviceProvider.GetRequiredService<StorageService>().ResetHangfireRedisStorage().WaitAndUnwrapException();
-        serviceProvider.GetRequiredService<RssFeedService>().RegisterJobAllRssScheduler().InBackground();
-        serviceProvider.GetRequiredService<EpicGamesService>().RegisterJobEpicGamesBroadcaster().InBackground();
-        serviceProvider.GetRequiredService<ShalatTimeNotifyService>().RegisterJobShalatTimeAsync().InBackground();
-
+        HangfireUtil.PurgeJobs();
         jobService.ClearPendingJobs();
-        jobService.RegisterJobChatCleanUp().InBackground();
+        await jobService.RegisterJobChatCleanUp();
+
+        await serviceProvider.GetRequiredService<StorageService>().ResetHangfireRedisStorage();
+        await serviceProvider.GetRequiredService<RssFeedService>().RegisterJobAllRssScheduler();
+        await serviceProvider.GetRequiredService<EpicGamesService>().RegisterJobEpicGamesBroadcaster();
+        await serviceProvider.GetRequiredService<ShalatTimeNotifyService>().RegisterJobShalatTimeAsync();
+
         jobService.RegisterJobClearLog();
         jobService.RegisterJobClearTempFiles();
         jobService.RegisterJobDeleteOldStep();
@@ -30,16 +33,16 @@ public static class HangfireJobsExtension
         jobService.RegisterJobRunDeleteOldUpdates();
 
         var botService = app.GetRequiredService<BotService>();
-        var botEnvironment = botService.CurrentEnvironment()
-            .Result;
+        var botEnvironment = await botService.CurrentEnvironment();
 
         // This job enabled for non Production,
         // Daily demote for free Administrator at Testing Group
         if (botEnvironment != BotEnvironmentLevel.Production)
         {
-            serviceProvider.GetRequiredService<JobsService>()
-                .RegisterJobAdminCleanUp();
+            jobService.RegisterJobAdminCleanUp();
         }
+
+        op.Complete();
 
         return app;
     }

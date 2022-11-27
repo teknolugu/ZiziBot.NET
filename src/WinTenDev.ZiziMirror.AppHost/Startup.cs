@@ -7,6 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Telegram.Bot.Framework.Extensions;
+using WinTenDev.Zizi.Hangfire;
 using WinTenDev.Zizi.Utils.Extensions;
 using WinTenDev.ZiziMirror.AppHost.Extensions;
 
