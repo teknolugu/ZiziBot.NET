@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using CacheTower;
 using Microsoft.Extensions.Logging;
@@ -8,23 +9,25 @@ namespace WinTenDev.Zizi.Services.Internals;
 
 public class CacheService
 {
-    private readonly CacheConfig _cacheConfig;
+    private readonly IOptionsSnapshot<CacheConfig> _cacheConfigSnapshot;
     private readonly ILogger<CacheService> _logger;
     private readonly ICacheStack _cacheStack;
     private string _expireAfter;
     private string _staleAfter;
 
+    private CacheConfig CacheConfig => _cacheConfigSnapshot.Value;
+
     public CacheService(
-        IOptionsSnapshot<CacheConfig> cachingConfig,
+        IOptionsSnapshot<CacheConfig> cachingConfigSnapshot,
         ILogger<CacheService> logger,
         ICacheStack cacheStack
     )
     {
-        _cacheConfig = cachingConfig.Value;
+        _cacheConfigSnapshot = cachingConfigSnapshot;
         _logger = logger;
         _cacheStack = cacheStack;
 
-        (_expireAfter, _staleAfter) = cachingConfig.Value;
+        (_expireAfter, _staleAfter) = CacheConfig;
     }
 
     /// <summary>
@@ -50,7 +53,8 @@ public class CacheService
         string staleAfter = null
     )
     {
-        if (disableCache) return await action();
+        if (disableCache || !CacheConfig.IsEnableCache)
+            return await action();
 
         if (evictBefore) await EvictAsync(cacheKey);
 
@@ -83,7 +87,8 @@ public class CacheService
         }
         catch (Exception exception)
         {
-            _logger.LogWarning(exception, "Error on Loading cache with Key: {Key}", cacheKey);
+            _logger.LogError(exception.Demystify(), "Error loading cache with Key: {Key}",
+                cacheKey);
 
             await EvictAsync(cacheKey);
 
