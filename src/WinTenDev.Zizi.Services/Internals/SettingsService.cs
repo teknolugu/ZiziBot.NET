@@ -101,9 +101,15 @@ public class SettingsService
 
     public async Task<ChatSettingEntity> GetSettingsMongo(long chatId)
     {
-        var chatSettings = await DB.Find<ChatSettingEntity>()
-            .Match(entity => entity.ChatId == chatId)
-            .ExecuteFirstAsync();
+        var chatSettings = await _cacheService.GetOrSetAsync(
+            cacheKey: $"chat_new-settings_{chatId}",
+            action: async () => {
+                var chatSettings = await DB.Find<ChatSettingEntity>()
+                    .Match(entity => entity.ChatId == chatId)
+                    .ExecuteFirstAsync();
+
+                return chatSettings;
+            });
 
         return chatSettings;
     }
