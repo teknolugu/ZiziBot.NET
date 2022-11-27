@@ -99,6 +99,15 @@ public class SettingsService
         return chatGroups;
     }
 
+    public async Task<ChatSettingEntity> GetSettingsMongo(long chatId)
+    {
+        var chatSettings = await DB.Find<ChatSettingEntity>()
+            .Match(entity => entity.ChatId == chatId)
+            .ExecuteFirstAsync();
+
+        return chatSettings;
+    }
+
     public async Task UpdateCacheAsync(long chatId)
     {
         Log.Debug("Updating cache for {ChatId}", chatId);

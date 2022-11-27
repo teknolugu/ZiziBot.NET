@@ -352,6 +352,7 @@ public static class TelegramServiceSettingsExtension
         var op = Operation.Begin("New Chat Members on ChatId {ChatId}", chatId);
 
         var chatSetting = await telegramService.SettingsService.GetSettingsByGroup(chatId);
+        var chatSettingMongo = await telegramService.SettingsService.GetSettingsMongo(chatId);
 
         if (!chatSetting.EnableWelcomeMessage)
         {
@@ -477,6 +478,8 @@ public static class TelegramServiceSettingsExtension
 
         var inlineKeyboardMarkup = listKeyboardButton.ToButtonMarkup();
 
+        var topicId = chatSettingMongo.TopicWelcome;
+
         if (chatSetting.WelcomeMediaType > 0 &&
             chatSetting.WelcomeMedia.IsNotNullOrEmpty())
         {
@@ -488,10 +491,10 @@ public static class TelegramServiceSettingsExtension
                 mediaType: mediaType,
                 caption: fixedWelcomeMessage,
                 replyMarkup: inlineKeyboardMarkup,
-                replyToMsgId: 0,
+                replyToMsgId: topicId.ToInt(),
                 scheduleDeleteAt: DateTime.UtcNow.AddDays(1),
-                preventDuplicateSend: true,
-                messageFlag: MessageFlag.NewChatMembers
+                messageFlag: MessageFlag.NewChatMembers,
+                preventDuplicateSend: true
             );
         }
         else
@@ -499,11 +502,11 @@ public static class TelegramServiceSettingsExtension
             await telegramService.SendTextMessageAsync(
                 sendText: fixedWelcomeMessage,
                 replyMarkup: inlineKeyboardMarkup,
-                replyToMsgId: 0,
+                replyToMsgId: topicId.ToInt(),
                 disableWebPreview: true,
                 scheduleDeleteAt: DateTime.UtcNow.AddDays(1),
-                preventDuplicateSend: true,
-                messageFlag: MessageFlag.NewChatMembers
+                messageFlag: MessageFlag.NewChatMembers,
+                preventDuplicateSend: true
             );
         }
 
