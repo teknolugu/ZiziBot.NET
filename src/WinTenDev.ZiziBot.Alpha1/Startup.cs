@@ -31,7 +31,6 @@ namespace WinTenDev.ZiziBot.Alpha1
             services.AddLiteDb();
 
             services.AddCacheTower();
-            services.AddEasyCachingSqlite();
 
             services.AddCommonService();
             services.AddCommandHandlers();
@@ -49,8 +48,6 @@ namespace WinTenDev.ZiziBot.Alpha1
 
             app.ConfigureNewtonsoftJson();
             app.ConfigureDapper();
-
-            app.UseEasyCaching();
 
             app.UseHangfireDashboardAndServer();
 
