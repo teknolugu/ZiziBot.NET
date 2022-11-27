@@ -10,7 +10,7 @@ namespace WinTenDev.Zizi.Services.Internals;
 public class AfkService
 {
     private const string BaseTable = "afk";
-    private const string CacheKey = "afk";
+    private const string CacheKey = "user_afk";
     private readonly IMapper _mapper;
     private readonly CacheService _cacheService;
     private readonly QueryService _queryService;
