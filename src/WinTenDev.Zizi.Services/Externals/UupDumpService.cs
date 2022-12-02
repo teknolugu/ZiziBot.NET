@@ -23,7 +23,7 @@ public class UupDumpService
     public async Task<BuildUpdate> GetUpdatesAsync(string search = "")
     {
         var buildUpdate = await _cacheService.GetOrSetAsync(
-            cacheKey: "uup_" + ListUpdatesApi.ToCacheKey(),
+            cacheKey: "vendor_uup_" + ListUpdatesApi.ToCacheKey(),
             action: async () => {
                 var obj = await ListUpdatesApi.OpenFlurlSession()
                     .GetJsonAsync<BuildUpdate>();
