@@ -1,6 +1,4 @@
-﻿using System;
-using System.Linq;
-using Hangfire;
+﻿using Hangfire;
 using Hangfire.Dashboard.Dark;
 using Hangfire.Heartbeat;
 using Hangfire.Heartbeat.Server;
@@ -13,13 +11,11 @@ using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 using Nito.AsyncEx.Synchronous;
 using Serilog;
-using WinTenDev.Zizi.Models.Configs;
-using WinTenDev.Zizi.Models.Enums;
-using WinTenDev.Zizi.Models.Interfaces;
 
-namespace WinTenDev.Zizi.Utils.Extensions;
+namespace WinTenDev.Zizi.Hangfire;
 
 public static class HangfireServiceExtension
 {
@@ -77,6 +73,11 @@ public static class HangfireServiceExtension
                     .UseRecommendedSerializerSettings()
                     .UseColouredConsoleLogProvider()
                     .UseSerilogLogProvider();
+
+                config.UseSerializerSettings(new JsonSerializerSettings()
+                {
+                    ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+                });
             }
         );
 
@@ -110,12 +111,15 @@ public static class HangfireServiceExtension
                 break;
         }
 
+        JobStorage.Current.JobExpirationTimeout = TimeSpan.FromHours(1);
+
         services.AddHangfireServer(
             (
                 provider,
                 options
             ) => {
                 options.WorkerCount = Environment.ProcessorCount * hangfireConfig.WorkerMultiplier;
+                options.ServerTimeout = TimeSpan.FromMinutes(10);
                 options.Queues = hangfireConfig.Queues.Distinct().ToArray();
             },
             storage: JobStorage.Current,
@@ -181,7 +185,8 @@ public static class HangfireServiceExtension
             {
                 new HangfireCustomBasicAuthenticationFilter
                 {
-                    User = username, Pass = password
+                    User = username,
+                    Pass = password
                 }
             };
         }

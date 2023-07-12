@@ -10,18 +10,13 @@ namespace WinTenDev.Zizi.Extensions;
 
 public static class StartupTaskHostExtensions
 {
-    public static async Task RunWithTasksAsync(
+    public static async Task RunPreStartupTasksAsync(
         this IHost host,
         bool taskOnly = true,
         CancellationToken cancellationToken = default
     )
     {
         await host.Services.ExecuteStartupTask(false, cancellationToken: cancellationToken);
-
-        if (taskOnly) return;
-
-        // Start the tasks as normal
-        await host.RunAsync(cancellationToken);
     }
 
     public static async Task RunStartupTasksAsync(
@@ -46,7 +41,7 @@ public static class StartupTaskHostExtensions
         var log = serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger(typeof(IStartupTask));
 
         // Load all tasks from DI
-        var startupTasks = serviceProvider.GetServices<IStartupTask>().ToList();
+        var startupTasks = serviceProvider.GetServices<IStartupTask>();
         var filteredTasks = startupTasks
             .Where(task => task.GetType().GetCustomAttribute<StartupTaskAttribute>()?.AfterHostReady == executeOnReady)
             .ToList();
@@ -61,6 +56,6 @@ public static class StartupTaskHostExtensions
             await startupTask.ExecuteAsync(cancellationToken);
         }
 
-        log.LogInformation("About {Count} startup Task successfully executed.", filteredTasks.Count);
+        log.LogInformation("About {Count} startup Task successfully executed", filteredTasks.Count);
     }
 }

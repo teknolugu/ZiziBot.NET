@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Builder;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using WinTenDev.Zizi.DbMigrations.EfMigrations;
 using WinTenDev.Zizi.Utils;
@@ -8,13 +7,14 @@ namespace WinTenDev.Zizi.DbMigrations.Extensions;
 
 public static class ContextsExtension
 {
-    public static IServiceCollection AddDbContexts(this IServiceCollection services, string connStr)
+    public static IServiceCollection AddDbContexts(this IServiceCollection services,
+        string connStr)
     {
-        services.AddDbContextPool<BlockListContext>(options =>
-            options.UseMySql(connStr, ServerVersion.AutoDetect(connStr))
-                .EnableDetailedErrors()
-                .EnableSensitiveDataLogging()
-        );
+        // services.AddDbContextPool<BlockListContext>(options =>
+        //     options.UseMySql(connStr, ServerVersion.AutoDetect(connStr))
+        //         .EnableDetailedErrors()
+        //         .EnableSensitiveDataLogging()
+        // );
 
 
         return services;

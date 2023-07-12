@@ -1,14 +1,13 @@
 using System;
-using EasyCaching.SQLite;
 using LiteDB.Async;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Telegram.Bot.Framework.Extensions;
+using WinTenDev.Zizi.Hangfire;
 using WinTenDev.Zizi.Utils.Extensions;
 using WinTenDev.ZiziMirror.AppHost.Extensions;
 
@@ -19,7 +18,8 @@ namespace WinTenDev.ZiziMirror.AppHost
         private IConfiguration Configuration { get; }
         private IWebHostEnvironment _environment;
 
-        public Startup(IConfiguration configuration, IWebHostEnvironment environment)
+        public Startup(IConfiguration configuration,
+            IWebHostEnvironment environment)
         {
             //ServiceAccountService.GenerateServiceAccount(2);
             //ServiceAccountService.ListServiceAccounts("zizibot-295007");
@@ -38,28 +38,6 @@ namespace WinTenDev.ZiziMirror.AppHost
             //     .AddTransient<ZiziMirror>()
             //     .Configure<BotOptions<ZiziMirror>>(Configuration.GetSection(nameof(ZiziMirror)));
             services.AddZiziBot();
-
-            services.AddEasyCaching(options => {
-                options.UseSQLite(sqLiteOptions => {
-                    sqLiteOptions.EnableLogging = true;
-                    sqLiteOptions.DBConfig = new SQLiteDBOptions()
-                    {
-                        CacheMode = SqliteCacheMode.Shared,
-                        FilePath = "Storage/EasyCaching/",
-                        FileName = "LocalCache.db",
-                        OpenMode = SqliteOpenMode.ReadWriteCreate
-                    };
-                });
-
-                // options.UseDisk(diskOptions =>
-                // {
-                //     diskOptions.EnableLogging = true;
-                //     diskOptions.DBConfig = new DiskDbOptions()
-                //     {
-                //         BasePath = "Storage/EasyCaching/Disk/"
-                //     };
-                // });
-            });
 
             services.AddScoped(_ => new LiteDatabaseAsync("Filename=Storage/Data/Local_LiteDB.db;Connection=shared;"));
             // services.AddDbContext<AuthorizationContext>(builder => builder.UseSqlite(Configuration.GetConnectionString("LocalContext")));
@@ -85,11 +63,11 @@ namespace WinTenDev.ZiziMirror.AppHost
                     .FromApplicationDependencies(assembly =>
                         assembly.FullName.StartsWith("WinTenDev"))
                     .AddClasses(filter => filter.Where(type =>
-                        type.FullName.Contains("Handlers")
-                        || type.FullName.Contains("Services")
-                        || !type.FullName.Contains("TelegramService")
-                        || !type.FullName.Contains("BotService")
-                    )
+                            type.FullName.Contains("Handlers")
+                            || type.FullName.Contains("Services")
+                            || !type.FullName.Contains("TelegramService")
+                            || !type.FullName.Contains("BotService")
+                        )
                     )
                     .AsSelf()
                     .WithScopedLifetime();
@@ -118,7 +96,8 @@ namespace WinTenDev.ZiziMirror.AppHost
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app,
+            IWebHostEnvironment env)
         {
             var botBuilder = CommandBuilderExtension.ConfigureBot();
 

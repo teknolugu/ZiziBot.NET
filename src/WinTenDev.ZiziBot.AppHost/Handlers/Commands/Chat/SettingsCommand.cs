@@ -30,8 +30,6 @@ public class SettingsCommand : CommandBase
         var chatId = _telegramService.ChatId;
         var fromId = _telegramService.FromId;
 
-        await _telegramService.DeleteSenderMessageAsync();
-
         if (!await _telegramService.CheckUserPermission())
         {
             Log.Warning(
@@ -42,7 +40,7 @@ public class SettingsCommand : CommandBase
             return;
         }
 
-        await _telegramService.SendTextMessageAsync("Sedang mengambil pengaturan..", replyToMsgId: 0);
+        await _telegramService.SendTextMessageAsync("Sedang mengambil pengaturan..");
         var settings = await _settingsService.GetSettingButtonByGroup(chatId);
 
         var btnMarkup = await settings.ToJson().JsonToButton(chunk: 2);
@@ -50,8 +48,9 @@ public class SettingsCommand : CommandBase
 
         await _telegramService.EditMessageTextAsync(
             sendText: "Pengaturan Obrolan",
-            btnMarkup,
-            scheduleDeleteAt: DateTime.UtcNow.AddMinutes(10)
+            replyMarkup: btnMarkup,
+            scheduleDeleteAt: DateTime.UtcNow.AddMinutes(10),
+            includeSenderMessage: true
         );
     }
 }

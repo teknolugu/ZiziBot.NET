@@ -272,6 +272,7 @@ public class RssService
     }
 
     [JobDisplayName("Delete olds RSS History")]
+    [AutomaticRetry(Attempts = 3, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
     public async Task DeleteOldHistory()
     {
         var dateTime = DateTime.UtcNow.AddMonths(-6);

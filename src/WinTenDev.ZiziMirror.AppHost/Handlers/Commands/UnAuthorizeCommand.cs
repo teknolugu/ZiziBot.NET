@@ -1,6 +1,5 @@
 using System;
 using System.Threading.Tasks;
-using EasyCaching.Core;
 using LiteDB.Async;
 using Serilog;
 using Telegram.Bot.Framework.Abstractions;
@@ -16,18 +15,22 @@ namespace WinTenDev.ZiziMirror.AppHost.Handlers.Commands
         private TelegramService _telegramService;
         private readonly AppConfig _appConfig;
         private LiteDatabaseAsync _liteDb;
-        private IEasyCachingProvider _easyCachingProvider;
         private readonly AuthService _authService;
 
-        public UnAuthorizeCommand(AppConfig appConfig, LiteDatabaseAsync liteDb, IEasyCachingProvider easyCachingProvider, AuthService authService)
+        public UnAuthorizeCommand(
+            AppConfig appConfig,
+            LiteDatabaseAsync liteDb,
+            AuthService authService
+        )
         {
             _appConfig = appConfig;
-            _easyCachingProvider = easyCachingProvider;
             _authService = authService;
             _liteDb = liteDb;
         }
 
-        public override async Task HandleAsync(IUpdateContext context, UpdateDelegate next, string[] args)
+        public override async Task HandleAsync(IUpdateContext context,
+            UpdateDelegate next,
+            string[] args)
         {
             await _telegramService.AddUpdateContext(context);
 

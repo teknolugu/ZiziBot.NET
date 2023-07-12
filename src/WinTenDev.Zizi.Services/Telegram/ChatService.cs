@@ -590,13 +590,11 @@ public class ChatService
                 {
                     Log.Debug("Creating Chat Jobs for ChatID '{ChatId}'", chatId);
 
-                    HangfireUtil.RegisterJob(
+                    RecurringJob.AddOrUpdate(
                         adminCheckerId,
-                        (PrivilegeService service) =>
-                            service.AdminCheckerJobAsync(chatId),
+                        methodCall: (PrivilegeService service) => service.AdminCheckerJobAsync(chatId),
                         Cron.Daily,
-                        queue: "admin-checker",
-                        fireAfterRegister: false
+                        queue: "admin-checker"
                     );
                 }
                 else

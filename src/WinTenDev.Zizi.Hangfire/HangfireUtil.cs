@@ -1,10 +1,6 @@
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Threading.Tasks;
 using Hangfire;
 using Hangfire.LiteDB;
 using Hangfire.Mongo;
@@ -17,9 +13,8 @@ using Hangfire.Storage.SQLite;
 using MongoDB.Driver;
 using Serilog;
 using StackExchange.Redis;
-using WinTenDev.Zizi.Utils.IO;
 
-namespace WinTenDev.Zizi.Utils;
+namespace WinTenDev.Zizi.Hangfire;
 
 public static class HangfireUtil
 {
@@ -81,7 +76,8 @@ public static class HangfireUtil
         {
             for (var i = 0; i < Math.Ceiling(queue.Length / 1000d); i++)
             {
-                monitor.EnqueuedJobs(queue.Name, 1000 * i, 1000)
+                monitor.EnqueuedJobs(queue.Name, 1000 * i,
+                        1000)
                     .ForEach(x => toDelete.Add(x.Key));
             }
         }
@@ -330,16 +326,17 @@ public static class HangfireUtil
 
         mongoClient.GetDatabase(mongoUrlBuilder.DatabaseName);
 
-        var mongoStorage = new MongoStorage(mongoClient, mongoUrlBuilder.DatabaseName, new MongoStorageOptions()
-        {
-            MigrationOptions = new MongoMigrationOptions
+        var mongoStorage = new MongoStorage(mongoClient, mongoUrlBuilder.DatabaseName,
+            new MongoStorageOptions()
             {
-                MigrationStrategy = new MigrateMongoMigrationStrategy(),
-                BackupStrategy = new CollectionMongoBackupStrategy()
-            },
-            CheckConnection = false,
-            CheckQueuedJobsStrategy = CheckQueuedJobsStrategy.Poll
-        });
+                MigrationOptions = new MongoMigrationOptions
+                {
+                    MigrationStrategy = new MigrateMongoMigrationStrategy(),
+                    BackupStrategy = new CollectionMongoBackupStrategy()
+                },
+                CheckConnection = false,
+                CheckQueuedJobsStrategy = CheckQueuedJobsStrategy.Poll
+            });
 
         return mongoStorage;
     }

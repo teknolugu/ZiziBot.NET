@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using System.Xml.Linq;
+using Serilog;
 
 namespace WinTenDev.ZiziTools.Cli.Tools;
 
@@ -8,14 +9,15 @@ namespace WinTenDev.ZiziTools.Cli.Tools;
  * Copyright (c) ThymineC
  */
 
-public class ProjectTool
+public static class ProjectTool
 {
     internal const int ExitSuccess = 0;
     internal const int ExitFailure = 1;
     internal static bool UseVersionPrefix = false;
 
-    public static void UpdateProjectVersion()
+    public static void UpdateProjectVersion(string mode)
     {
+        var buildProps = "Directory.Build.props";
         var baseDirectory = Directory.GetCurrentDirectory();
 
         var majorNumber = DateTime.UtcNow.Year.ToString().Replace("0", "");
@@ -25,11 +27,40 @@ public class ProjectTool
         var projectVersion = $"{majorNumber}.{minorNumber}.{buildNumber}.{revNumber}";
 
         Environment.SetEnvironmentVariable("VERSION_NUMBER", projectVersion);
-        RunRecursive(baseDirectory: baseDirectory, version: projectVersion);
+
+        switch (mode)
+        {
+            case "DependsOnCondition":
+                if (File.Exists(buildProps))
+                {
+                    Log.Information("Updating {BuildProps}...", buildProps);
+                    SetVersion(projectVersion, buildProps);
+                }
+                else
+                {
+                    RunRecursive(baseDirectory: baseDirectory, version: projectVersion);
+                }
+                break;
+            case "RootOnly":
+                Log.Information("Updating {BuildProps}...", buildProps);
+                SetVersion(projectVersion, buildProps);
+                break;
+            case "RootAndAllProjects":
+                Log.Information("Updating {BuildProps}...", buildProps);
+
+                SetVersion(projectVersion, buildProps);
+                RunRecursive(baseDirectory: baseDirectory, version: projectVersion);
+                break;
+            case "AllProjectsOnly":
+                RunRecursive(baseDirectory: baseDirectory, version: projectVersion);
+                break;
+            default:
+                break;
+        }
 
         var envVersionNumber = Environment.GetEnvironmentVariable("VERSION_NUMBER");
-        Console.WriteLine($"Project version updated to {projectVersion}");
-        Console.WriteLine($"Environment variable VERSION_NUMBER set to {envVersionNumber}");
+        Log.Information("Project version updated to {ProjectVersion}", projectVersion);
+        Log.Information("Environment variable VERSION_NUMBER set to {EnvVersionNumber}", envVersionNumber);
     }
 
     private static int RunRecursive(
@@ -68,7 +99,7 @@ public class ProjectTool
                 searchOption: recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly
             ).ToArray();
 
-        Console.WriteLine("Found {0} project files", projectFiles.Length);
+        Log.Information("Found {Count} project files", projectFiles.Length);
 
         return projectFiles;
     }
@@ -173,11 +204,11 @@ public class ProjectTool
         params string[] files
     )
     {
-        Console.WriteLine($"Set version to {version} in:");
+        Log.Information("Set version to {Version} in:", version);
 
         foreach (var file in files)
         {
-            Console.WriteLine($"\t> {file}");
+            Log.Information("==> {File}", file);
         }
     }
 }

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Builder;
 using Serilog;
 using WinTenDev.Zizi.DbMigrations.Extensions;
 using WinTenDev.Zizi.Extensions;
+using WinTenDev.Zizi.Hangfire;
 using WinTenDev.Zizi.Utils.Extensions;
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,7 +40,6 @@ builder.Services.AddRepoDb();
 builder.Services.AddSqlKataMysql();
 
 builder.Services.AddCacheTower();
-builder.Services.AddEasyCachingDisk();
 
 builder.Services.AddHangfireServerAndConfig();
 

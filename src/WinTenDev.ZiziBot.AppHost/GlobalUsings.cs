@@ -1,6 +1,7 @@
 ﻿// Global using directives
 global using WinTenDev.Zizi.DbMigrations.Extensions;
 global using WinTenDev.Zizi.Extensions;
+global using WinTenDev.Zizi.Hangfire;
 global using WinTenDev.Zizi.Models.Bots.Options;
 global using WinTenDev.Zizi.Models.Configs;
 global using WinTenDev.Zizi.Models.Enums;

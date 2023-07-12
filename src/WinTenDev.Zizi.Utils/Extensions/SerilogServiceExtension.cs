@@ -150,13 +150,18 @@ public static class SerilogServiceExtension
         var grafanaConfig = serviceProvider.GetRequiredService<IOptions<GrafanaConfig>>().Value;
         var tgBotConfig = serviceProvider.GetRequiredService<IOptions<TgBotConfig>>().Value;
         var sentryConfig = serviceProvider.GetRequiredService<IOptions<SentryConfig>>().Value;
+        var serilogConfig = serviceProvider.GetRequiredService<IOptions<SerilogConfig>>().Value;
 
         eventLogConfig.TgBotConfig = tgBotConfig;
 
+        if (serilogConfig.WithThreadId)
+            configuration.Enrich.WithThreadId();
+
+        if (serilogConfig.WithMemoryUsage)
+            configuration.Enrich.WithMemoryUsage(true);
+
         configuration
             .Enrich.FromLogContext()
-            // .Enrich.WithThreadId()
-            // .Enrich.WithMemoryUsage(true)
             .MinimumLevel.Override(
                 "Hangfire",
                 LogEventLevel.Information
@@ -322,6 +327,9 @@ public static class SerilogServiceExtension
         var channelId = config.ChannelId;
 
         botToken ??= tgBotConfig.ApiToken;
+
+        if (botToken.IsNullOrEmpty() || channelId == 0)
+            return logger;
 
         logger.WriteTo.Telegram(
             botToken: botToken,

@@ -1,121 +1,102 @@
-using System;
-using System.Diagnostics;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore;
-using Microsoft.AspNetCore.Hosting;
+using DotNurse.Injector;
+using Exceptionless;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.DependencyInjection;
 using Serilog;
+var builder = WebApplication.CreateBuilder(args);
 
-namespace WinTenDev.ZiziBot.AppHost;
+builder.Services.MappingAppSettings();
 
-public static class Program
-{
-    public static async Task Main(string[] args)
-    {
-        try
-        {
-            await CreateHostBuilder(args)
-                .Build()
-                .RunAsync();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine(@"Error Start {0}", ex.Demystify());
+builder.Configuration
+    .AddJsonFile(
+        path: "appsettings.json",
+        optional: true,
+        reloadOnChange: true
+    )
+    .AddAppSettingsJson();
 
-            if (ex.StackTrace.Contains("Hangfire"))
-            {
-                Log.Warning("Seem error about Hangfire!");
-            }
+builder
+    .Host
+    .UseSerilog(
+        (
+            context,
+            provider,
+            logger
+        ) => logger.AddSerilogBootstrapper(provider)
+    );
 
-            Log.Fatal(ex.Demystify(), "Host terminated unexpectedly");
+builder.Logging.AddSerilog();
 
-            await ex.SaveErrorToText();
-        }
-        finally
-        {
-            Log.CloseAndFlush();
-        }
+builder.Services.MappingAppSettings();
+builder.Services.ConfigureAutoMapper();
+
+builder.Services.AddFluentMigration();
+
+builder.Services.AddHealthChecks();
+
+builder.Services.AddSentry();
+builder.Services.AddExceptionless();
+builder.Services.AddHttpContextAccessor();
+
+builder.Services.AddServicesByAttributes();
+builder.Services.AddCommonService();
+builder.Services.AddHostedServices();
+
+builder.Services.AddTelegramBot();
+builder.Services.AddWtTelegramApi();
+builder.Services.AddCommandHandlers();
+
+builder.Services.AddLiteDb();
+builder.Services.AddClickHouse();
+builder.Services.AddRepoDb();
+builder.Services.AddSqlKataMysql();
+// builder.Services.AddRedisOm();
+
+builder.Services.AddCacheTower();
+
+builder.Services.AddLocalTunnelClient();
+
+builder.Services.AddHangfireServerAndConfig();
+
+var app = builder.Build();
+
+await app.RunPreStartupTasksAsync();
+
+app.MapGet("/", () => "Hello World!");
+
+app.UseServiceInjection();
+app.PrintAboutApp();
+app.LoadJsonLocalization();
+
+app.UseFluentMigration();
+app.ConfigureNewtonsoftJson();
+app.ConfigureDapper();
+
+await app.ExecuteStartupTasks();
+
+// if (env.IsDevelopment())
+// app.UseDeveloperExceptionPage();
+
+app.UseRouting();
+app.UseStaticFiles();
+
+app.UseSerilogRequestLogging();
+app.UseSentryTracing();
+app.UseExceptionless();
+
+app.RunTelegramBot();
+
+app.UseHangfireDashboardAndServer();
+
+app.RegisterHangfireJobs();
+
+app.UseEndpoints(
+    endpoints => {
+        endpoints.MapHealthChecks("/health");
     }
+);
 
-    private static IHostBuilder CreateHostBuilder(string[] args)
-    {
-        var hostBuilder = Host.CreateDefaultBuilder(args)
-            .UseSerilog
-            (
-                (
-                    hostBuilderContext,
-                    serviceProvider,
-                    loggerConfiguration
-                ) => {
-                    loggerConfiguration.AddSerilogBootstrapper(serviceProvider);
-                }
-            )
-            .ConfigureAppConfiguration
-            (
-                (
-                    context,
-                    builder
-                ) => {
-                    builder.AddJsonFile(
-                        path: "appsettings.json",
-                        optional: true,
-                        reloadOnChange: true
-                    );
-                    builder.AddAppSettingsJson();
-                }
-            )
-            .ConfigureServices
-            (
-                (
-                    context,
-                    services
-                ) => {
-                    services.MappingAppSettings();
-                }
-            )
-            .ConfigureWebHostDefaults
-            (
-                webBuilder => {
-                    webBuilder.UseStartup<Startup>();
-                }
-            )
-            .ConfigureLogging
-            (
-                (
-                    context,
-                    builder
-                ) => {
-                    builder.AddSerilog();
-                }
-            );
+await app.RunStartupTasksAsync();
 
-        // if (Directory.Exists("wwwroot")) hostBuilder.UseContentRoot("wwwroot");
-
-        return hostBuilder;
-    }
-
-    [Obsolete("WebHostBuilder will replaced with CreateHostBuilder")]
-    private static IWebHostBuilder CreateWebHostBuilder(string[] args)
-    {
-        return WebHost.CreateDefaultBuilder(args)
-            .ConfigureAppConfiguration
-            (
-                (
-                    webHostBuilder,
-                    configBuilder
-                ) => {
-                    configBuilder
-                        .AddJsonFile(
-                            path: "appsettings.json",
-                            optional: true,
-                            reloadOnChange: true
-                        )
-                        // .AddJsonFile($"appsettings.{hostBuilder.HostingEnvironment.EnvironmentName}.json", true, true)
-                        // .AddJsonFile("Storage/Config/security-base.json", true, true)
-                        .AddJsonEnvVar("QUICKSTART_SETTINGS", true);
-                }
-            ).UseStartup<Startup>()
-            .UseSerilog();
-    }
-}
+await app.RunAsync();

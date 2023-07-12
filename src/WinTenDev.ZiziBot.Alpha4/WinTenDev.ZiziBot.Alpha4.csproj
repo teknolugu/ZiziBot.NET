@@ -1,14 +1,26 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
-  <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-  </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="Allowed.Telegram.Bot" Version="3.3.0" />
-    <PackageReference Include="SonarAnalyzer.CSharp" Version="8.48.0.56517">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-  </ItemGroup>
+    <PropertyGroup>
+        <TargetFramework>net7.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="Allowed.Telegram.Bot" Version="3.3.0"/>
+        <PackageReference Include="Hangfire.AspNetCore" Version="1.7.32"/>
+        <PackageReference Include="Roslynator.Analyzers" Version="4.1.2">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="SerilogAnalyzer" Version="0.15.0"/>
+        <PackageReference Include="SonarAnalyzer.CSharp" Version="8.49.0.57237">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\WinTenDev.Zizi.Extensions\WinTenDev.Zizi.Extensions.csproj"/>
+        <ProjectReference Include="..\WinTenDev.Zizi.Hangfire\WinTenDev.Zizi.Hangfire.csproj"/>
+        <ProjectReference Include="..\WinTenDev.Zizi.Services\WinTenDev.Zizi.Services.csproj"/>
+        <ProjectReference Include="..\WinTenDev.Zizi.Utils\WinTenDev.Zizi.Utils.csproj"/>
+    </ItemGroup>
 </Project>

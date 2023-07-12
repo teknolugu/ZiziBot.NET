@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Threading.Tasks;
 using AutoMapper;
@@ -96,6 +97,21 @@ public class SettingsService
             .GetAsync<ChatSetting>();
 
         return chatGroups;
+    }
+
+    public async Task<ChatSettingEntity> GetSettingsMongo(long chatId)
+    {
+        var chatSettings = await _cacheService.GetOrSetAsync(
+            cacheKey: $"chat_new-settings_{chatId}",
+            action: async () => {
+                var chatSettings = await DB.Find<ChatSettingEntity>()
+                    .Match(entity => entity.ChatId == chatId)
+                    .ExecuteFirstAsync();
+
+                return chatSettings;
+            });
+
+        return chatSettings;
     }
 
     public async Task UpdateCacheAsync(long chatId)
@@ -288,14 +304,14 @@ public class SettingsService
         {
             await data.InsertAsync();
         }
-        else
-        {
-            await DB.Update<ChatSettingEntity>()
-                .Match(match => match.ChatId == data.ChatId)
-                .ModifyExcept(entity => new { entity.ID, entity.CreatedOn }, data)
-                .Option(options => options.IsUpsert = true)
-                .ExecuteAsync();
-        }
+        // else
+        // {
+        //     await DB.Update<ChatSettingEntity>()
+        //         .Match(match => match.ChatId == data.ChatId)
+        //         .ModifyExcept(entity => new { entity.ID, entity.CreatedOn }, data)
+        //         .Option(options => options.IsUpsert = true)
+        //         .ExecuteAsync();
+        // }
     }
 
     public async Task<int> UpdateCell(
@@ -322,5 +338,30 @@ public class SettingsService
         await UpdateCacheAsync(chatId);
 
         return save;
+    }
+
+    public async Task<int> UpdateTopicTarget(
+        long chatId,
+        string topicName,
+        long topicId
+    )
+    {
+        var findBuilder = DB.Update<ChatSettingEntity>()
+            .Match(entity => entity.ChatId == chatId);
+
+        var updateEntity = topicName switch
+        {
+            "rss" => findBuilder.Modify(entity => entity.Set(x => x.TopicRss, topicId)),
+            "welcome" => findBuilder.Modify(entity => entity.Set(x => x.TopicWelcome, topicId)),
+            _ => throw new ArgumentOutOfRangeException(
+                paramName: nameof(topicName),
+                actualValue: topicName,
+                message: "Topic name invalid"
+            )
+        };
+
+        var updateResult = await updateEntity.ExecuteAsync();
+
+        return 1;
     }
 }

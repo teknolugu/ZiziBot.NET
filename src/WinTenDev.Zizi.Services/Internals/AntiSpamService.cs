@@ -211,7 +211,7 @@ public class AntiSpamService
     public async Task<bool> CheckSpamWatch(long userId)
     {
         var op = Operation.Begin("SpamWatch Fed check for UserId: {UserId}", userId);
-        var cacheKey = $"ban-sw_{userId}";
+        var cacheKey = $"ban_spamwatch_{userId}";
 
         var isEnabled = _spamWatchConfig.IsEnabled;
         var baseUrl = _spamWatchConfig.BaseUrl;
@@ -315,7 +315,7 @@ public class AntiSpamService
     public async Task<bool> CheckCasBan(long userId)
     {
         var op = Operation.Begin("CAS Fed check for UserId: {UserId}", userId);
-        var casCacheKey = $"ban-cas_{userId}";
+        var casCacheKey = $"ban_cas_{userId}";
 
         if (!_chatSetting.EnableFedCasBan)
         {
@@ -372,7 +372,7 @@ public class AntiSpamService
         try
         {
             var usergeGBanResult = await _cacheService.GetOrSetAsync(
-                cacheKey: "ban-userge_" + userId,
+                cacheKey: "ban_userge_" + userId,
                 action: async () => {
                     var usergeGBanResult = await _usergeFedConfig.BaseUrl
                         .OpenFlurlSession()

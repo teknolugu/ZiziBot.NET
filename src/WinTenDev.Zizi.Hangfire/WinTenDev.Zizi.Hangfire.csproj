@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net7.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="Hangfire.AspNetCore" Version="1.7.32"/>
+        <PackageReference Include="Hangfire.Core" Version="1.7.32"/>
+        <PackageReference Include="Hangfire.Dashboard.Basic.Authentication" Version="5.0.0"/>
+        <PackageReference Include="Hangfire.Dashboard.Dark" Version="2.0.4"/>
+        <PackageReference Include="Hangfire.Heartbeat" Version="0.5.1"/>
+        <PackageReference Include="Hangfire.LiteDB" Version="0.4.1"/>
+        <PackageReference Include="Hangfire.MemoryStorage" Version="1.7.0"/>
+        <PackageReference Include="Hangfire.Mongo" Version="1.7.3"/>
+        <PackageReference Include="Hangfire.MySqlStorage" Version="2.0.3"/>
+        <PackageReference Include="Hangfire.Redis.StackExchange" Version="1.8.6"/>
+        <PackageReference Include="Hangfire.Storage.SQLite" Version="0.3.2"/>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0"/>
+        <PackageReference Include="Microsoft.Extensions.Options" Version="7.0.0"/>
+        <PackageReference Include="Roslynator.Analyzers" Version="4.1.2">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Serilog" Version="2.12.0"/>
+        <PackageReference Include="SerilogAnalyzer" Version="0.15.0"/>
+        <PackageReference Include="SonarAnalyzer.CSharp" Version="8.49.0.57237">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\WinTenDev.Zizi.Models\WinTenDev.Zizi.Models.csproj"/>
+        <ProjectReference Include="..\WinTenDev.Zizi.Services\WinTenDev.Zizi.Services.csproj"/>
+        <ProjectReference Include="..\WinTenDev.Zizi.Utils\WinTenDev.Zizi.Utils.csproj"/>
+    </ItemGroup>
+</Project>

@@ -1,6 +1,6 @@
 using AutoWrapper;
 using Serilog;
-
+using WinTenDev.Zizi.Hangfire;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Host
@@ -58,7 +58,7 @@ app.UseSerilogRequestLogging();
 app.UseRequestTimestamp();
 
 app.UseAuthorization();
-app.RunMongoDbPreparation();
+await app.RunMongoDbPreparation();
 
 app.UseHangfireDashboardAndServer();
 

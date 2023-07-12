@@ -47,7 +47,7 @@ public class GlobalBanService
 
     public string GetCacheKey(long userId)
     {
-        return $"ban-es2_{userId}";
+        return $"ban_es2_{userId}";
     }
 
     /// <summary>

@@ -7,6 +7,7 @@ using CodingSeb.Localization;
 using Humanizer;
 using Serilog;
 using SerilogTimings;
+using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 
 namespace WinTenDev.Zizi.Services.Extensions;
@@ -351,6 +352,7 @@ public static class TelegramServiceSettingsExtension
         var op = Operation.Begin("New Chat Members on ChatId {ChatId}", chatId);
 
         var chatSetting = await telegramService.SettingsService.GetSettingsByGroup(chatId);
+        var chatSettingMongo = await telegramService.SettingsService.GetSettingsMongo(chatId);
 
         if (!chatSetting.EnableWelcomeMessage)
         {
@@ -476,6 +478,8 @@ public static class TelegramServiceSettingsExtension
 
         var inlineKeyboardMarkup = listKeyboardButton.ToButtonMarkup();
 
+        var topicId = chatSettingMongo.TopicWelcome;
+
         if (chatSetting.WelcomeMediaType > 0 &&
             chatSetting.WelcomeMedia.IsNotNullOrEmpty())
         {
@@ -487,10 +491,10 @@ public static class TelegramServiceSettingsExtension
                 mediaType: mediaType,
                 caption: fixedWelcomeMessage,
                 replyMarkup: inlineKeyboardMarkup,
-                replyToMsgId: 0,
+                replyToMsgId: topicId.ToInt(),
                 scheduleDeleteAt: DateTime.UtcNow.AddDays(1),
-                preventDuplicateSend: true,
-                messageFlag: MessageFlag.NewChatMembers
+                messageFlag: MessageFlag.NewChatMembers,
+                preventDuplicateSend: true
             );
         }
         else
@@ -498,11 +502,11 @@ public static class TelegramServiceSettingsExtension
             await telegramService.SendTextMessageAsync(
                 sendText: fixedWelcomeMessage,
                 replyMarkup: inlineKeyboardMarkup,
-                replyToMsgId: 0,
+                replyToMsgId: topicId.ToInt(),
                 disableWebPreview: true,
                 scheduleDeleteAt: DateTime.UtcNow.AddDays(1),
-                preventDuplicateSend: true,
-                messageFlag: MessageFlag.NewChatMembers
+                messageFlag: MessageFlag.NewChatMembers,
+                preventDuplicateSend: true
             );
         }
 
@@ -520,4 +524,29 @@ public static class TelegramServiceSettingsExtension
         op.Complete();
     }
 
+    public static async Task<Message> SetTopicAsync(this TelegramService ts)
+    {
+        var chatId = ts.ChatId;
+        var topicName = ts.GetCommandParamAt<string>(0);
+
+        if (topicName.IsNullOrEmpty())
+        {
+            return await ts.SendTextMessageAsync("Silakan atur nama target Topik");
+        }
+
+        if (ts.ReplyToMessage == null)
+        {
+            return await ts.SendTextMessageAsync("Sepertinya Obrolan ini tidak ada Topik");
+        }
+
+        var topicId = ts.ReplyToMessage.MessageId;
+
+        await ts.SettingsService.UpdateTopicTarget(
+            chatId: chatId,
+            topicName: topicName,
+            topicId: topicId
+        );
+
+        return await ts.SendTextMessageAsync("Topik berhasil diatur");
+    }
 }
